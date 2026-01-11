@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.4.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: imstargg
+      TZ: Asia/Seoul
+      MYSQL_ROOT_PASSWORD: secret
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./docker/mysql/var/lib/mysql:/var/lib/mysql # data
+      - ./docker/mysql/etc/mysql/conf.d:/etc/mysql/conf.d # config
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d # init
+  redis:
+    image: redis:8.4.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis/data:/data

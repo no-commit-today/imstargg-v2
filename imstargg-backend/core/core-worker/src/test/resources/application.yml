@@ -1,0 +1,35 @@
+spring:
+
+  task:
+    execution:
+      thread-name-prefix: "worker-task-"
+      pool:
+        core-size: 10
+        max-size: 10
+        queue-capacity: 10000
+      shutdown:
+        await-termination: true
+        await-termination-period: 10000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        default_batch_fetch_size: 300
+        query.fail_on_pagination_over_collection_fetch: true
+        format_sql: true
+        use_sql_comments: true
+
+  sql:
+    init:
+      mode: never
+
+storage:
+  datasource:
+    core:
+      driver-class-name: org.h2.Driver
+      jdbc-url: jdbc:h2:mem:test-db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+      username: sa
+      password:

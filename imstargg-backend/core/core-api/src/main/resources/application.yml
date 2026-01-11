@@ -1,0 +1,52 @@
+spring:
+
+  profiles:
+    active: local
+    include:
+      - db
+
+  config.import:
+    - logging.yml
+    - monitoring.yml
+
+  task:
+    execution:
+      thread-name-prefix: "core-task-"
+      pool:
+        core-size: 10
+        max-size: 10
+        queue-capacity: 10000
+      shutdown:
+        await-termination: true
+        await-termination-period: 10000
+
+server:
+  tomcat:
+    max-connections: 20000
+    threads:
+      max: 600
+      min-spare: 100
+---
+spring:
+  config.activate.on-profile: local
+
+logging:
+  level:
+    org.apache.coyote.http11: trace
+---
+spring:
+  config.activate.on-profile: local-dev
+
+logging:
+  level:
+    org.apache.coyote.http11: trace
+
+---
+spring:
+  config.activate.on-profile: dev
+
+---
+spring:
+  config.activate.on-profile: live
+
+  web.resources.add-mappings: false
