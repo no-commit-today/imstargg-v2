@@ -7,6 +7,8 @@ data class BrawlerStatResponse(
     val rank: Int,
     val trophies: Int,
     val highestTrophies: Int,
+    val maxWinStreak: Int,
+    val currentWinStreak: Int,
     val gears: List<GearStatResponse>,
     val starPowers: List<AccessoryResponse>,
     val gadgets: List<AccessoryResponse>,

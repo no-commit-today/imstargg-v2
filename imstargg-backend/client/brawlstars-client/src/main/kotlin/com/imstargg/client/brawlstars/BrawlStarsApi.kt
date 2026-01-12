@@ -4,9 +4,9 @@ import com.imstargg.client.brawlstars.request.PagingParam
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BrawlerResponse
 import com.imstargg.client.brawlstars.response.ClubMemberResponse
-import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.client.brawlstars.response.ClubRankingResponse
 import com.imstargg.client.brawlstars.response.ClubResponse
+import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.client.brawlstars.response.ListResponse
 import com.imstargg.client.brawlstars.response.PlayerRankingResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
