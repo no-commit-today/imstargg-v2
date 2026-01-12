@@ -1,0 +1,13 @@
+spring.cloud.openfeign:
+  client:
+    config:
+      brawlstars:
+        connect-timeout: 5000
+        read-timeout: 10000
+
+resilience4j.ratelimiter:
+  instances:
+    brawlstars-api:
+      limit-for-period: 10
+      limit-refresh-period: 1s
+      timeout-duration: 60s
