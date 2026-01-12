@@ -4,6 +4,7 @@ import com.imstargg.client.brawlstars.request.PagingParam
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BrawlerResponse
 import com.imstargg.client.brawlstars.response.ClubMemberResponse
+import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.client.brawlstars.response.ClubRankingResponse
 import com.imstargg.client.brawlstars.response.ClubResponse
 import com.imstargg.client.brawlstars.response.ListResponse
@@ -127,4 +128,12 @@ internal interface BrawlStarsApi {
      */
     @GetMapping(value = ["/v1/events/rotation"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun getEventRotation(): List<ScheduledEventResponse>
+
+    /**
+     * Get list of available game modes.
+     */
+    @GetMapping(value = ["/v1/gamemodes"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    fun getGameModes(
+        @ModelAttribute paging: PagingParam,
+    ): ListResponse<EventTypeResponse>
 }
