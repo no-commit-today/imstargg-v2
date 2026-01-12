@@ -73,7 +73,7 @@ subprojects {
         }
     }
 
-    tasks.withType<Test> {
+    tasks.test {
         useJUnitPlatform {
             excludeTags("develop")
         }

@@ -10,5 +10,5 @@ import org.springframework.context.annotation.Configuration
 internal class BrawlStarsApiConfig {
     @Bean
     fun brawlStarsApiKeyInterceptor(properties: BrawlStarsClientProperties): RequestInterceptor =
-        BrawlStarsApiKeyInterceptor(properties.keys)
+        BrawlStarsApiKeyInterceptor(properties.apiKeys)
 }

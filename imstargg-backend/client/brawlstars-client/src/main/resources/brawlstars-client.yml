@@ -23,7 +23,7 @@ app:
   client:
     brawlstars:
       url: https://api.brawlstars.com
-      keys:
+      api-keys:
         - ${BRAWLSTARS_API_KEYS:}
 
 ---
