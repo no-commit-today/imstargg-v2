@@ -1,0 +1,53 @@
+spring.cloud.openfeign:
+  client:
+    config:
+      brawlstars-api:
+        connect-timeout: 2100
+        read-timeout: 5000
+        logger-level: full
+  compression:
+    response:
+      enabled: false
+  httpclient:
+    max-connections: 2000
+    max-connections-per-route: 500
+
+resilience4j.ratelimiter:
+  instances:
+    brawlstars-api:
+      limit-for-period: 1
+      limit-refresh-period: 1s
+      timeout-duration: 600s
+
+app:
+  client:
+    brawlstars:
+      url: https://api.brawlstars.com
+      keys:
+        - ${BRAWLSTARS_API_KEYS:}
+
+---
+spring:
+  config.activate.on-profile: local
+
+---
+spring:
+  config.activate.on-profile:
+    - local-dev
+    - dev
+
+---
+spring:
+  config.activate.on-profile:
+    - live
+
+  cloud.openfeign:
+    client:
+      config:
+        brawlstars:
+          logger-level: basic
+
+resilience4j.ratelimiter:
+  instances:
+    brawlstars-api:
+      limit-for-period: 10

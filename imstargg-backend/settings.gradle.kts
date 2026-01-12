@@ -6,7 +6,7 @@ include(
     "core:core-batch",
     "core:core-worker",
     "infrastructure:db-core",
-//    "client:client-example",
+    "client:brawlstars-client",
     "support:logging",
     "support:monitoring"
 )
