@@ -1,9 +1,8 @@
 package com.imstargg
 
-import com.imstargg.core.ContextTest
 import org.junit.jupiter.api.Test
 
-class CoreApiApplicationTest : ContextTest() {
+class CoreApiApplicationTest : CoreApiContextTest() {
     @Test
     fun contextLoads() {
     }

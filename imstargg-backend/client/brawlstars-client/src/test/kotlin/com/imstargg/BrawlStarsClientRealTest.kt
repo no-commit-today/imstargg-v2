@@ -1,5 +1,6 @@
-package com.imstargg.client.brawlstars
+package com.imstargg
 
+import com.imstargg.client.brawlstars.BrawlStarsClient
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.TestPropertySource
 
@@ -8,9 +9,9 @@ import org.springframework.test.context.TestPropertySource
         "app.client.brawlstars.api-keys=",
     ]
 )
-class BrawlStarsClientDevelopTest(
+class BrawlStarsClientRealTest(
     private val brawlStarsClient: BrawlStarsClient,
-) : DevelopTest() {
+) : BrawlStarsClientDevelopTest() {
     companion object {
         const val PLAYER_TAG = "%2388J8Q9RPV"
         const val CLUB_TAG = "%232U8CVLQQ9"

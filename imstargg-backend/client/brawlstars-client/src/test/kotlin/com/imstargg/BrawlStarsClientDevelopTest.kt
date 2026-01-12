@@ -1,4 +1,4 @@
-package com.imstargg.client.brawlstars
+package com.imstargg
 
 import org.junit.jupiter.api.Tag
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,4 +13,4 @@ import org.springframework.test.context.TestPropertySource
         "app.client.brawlstars.url=https://api.brawlstars.com",
     ],
 )
-abstract class DevelopTest
+abstract class BrawlStarsClientDevelopTest
