@@ -74,7 +74,44 @@ subprojects {
     }
 
     tasks.withType<Test> {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            excludeTags("develop")
+        }
+    }
+
+    testing {
+        suites {
+            named<JvmTestSuite>("test") {
+                targets {
+                    register("unitTest") {
+                        testTask.configure {
+                            group = "verification"
+                            useJUnitPlatform {
+                                excludeTags("develop", "context")
+                            }
+                        }
+                    }
+
+                    register("contextTest") {
+                        testTask.configure {
+                            group = "verification"
+                            useJUnitPlatform {
+                                includeTags("context")
+                            }
+                        }
+                    }
+
+                    register("developTest") {
+                        testTask.configure {
+                            group = "verification"
+                            useJUnitPlatform {
+                                includeTags("develop")
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }
