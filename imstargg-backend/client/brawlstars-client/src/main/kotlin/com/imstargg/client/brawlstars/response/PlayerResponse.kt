@@ -1,5 +1,7 @@
 package com.imstargg.client.brawlstars.response
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class PlayerResponse(
     val tag: String,
     val name: String,
@@ -10,9 +12,12 @@ data class PlayerResponse(
     val expLevel: Int,
     val expPoints: Int,
     val isQualifiedFromChampionshipChallenge: Boolean,
+    @field:JsonProperty("3vs3Victories")
     val victories3vs3: Int,
-    val soloVictories: Int,
-    val duoVictories: Int,
+    @field:JsonProperty("soloVictories")
+    val victoriesSolo: Int,
+    @field:JsonProperty("duoVictories")
+    val victoriesDuo: Int,
     val bestRoboRumbleTime: Int,
     val bestTimeAsBigBrawler: Int,
     val club: PlayerClubResponse?,

@@ -3,4 +3,5 @@ dependencies {
     implementation("io.github.openfeign:feign-hc5")
     implementation("io.github.openfeign:feign-micrometer")
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }

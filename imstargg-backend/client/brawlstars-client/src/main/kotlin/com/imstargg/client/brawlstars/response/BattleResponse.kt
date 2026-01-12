@@ -1,9 +1,11 @@
 package com.imstargg.client.brawlstars.response
 
-import java.time.OffsetDateTime
+import com.fasterxml.jackson.annotation.JsonFormat
+import java.time.Instant
 
 data class BattleResponse(
-    val battleTime: OffsetDateTime,
+    @field:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyyMMdd'T'HHmmss.SSSX")
+    val battleTime: Instant,
     val event: EventResponse,
     val battle: BattleResultResponse,
 )
