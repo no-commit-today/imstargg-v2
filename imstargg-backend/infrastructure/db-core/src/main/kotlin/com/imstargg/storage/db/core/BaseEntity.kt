@@ -8,7 +8,6 @@ import java.time.LocalDateTime
 
 @MappedSuperclass
 abstract class BaseEntity {
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime? = null

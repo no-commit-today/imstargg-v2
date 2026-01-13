@@ -72,6 +72,24 @@ imstargg-backend/
 - **JPA Entity**: allOpen 플러그인 적용 (`@Entity`, `@MappedSuperclass`, `@Embeddable`)
 - **QueryDSL**: KSP 코드 생성 (`infrastructure/db-core`)
 
+### DB & Entity Conventions
+
+- **스키마 관리**: DB 변경사항 발생 시 `infrastructure/db-core/src/main/resources/schema.sql`에 반영
+- **BaseEntity 상속**: 모든 엔티티는 `BaseEntity` 상속 (createdAt, updatedAt, deleted 필드 포함)
+- **변경 가능한 컬럼 패턴**: 생성자 파라미터 → `var` + `protected set`
+
+```kotlin
+class SomeEntity(
+    @Column(name = "immutable_field", updatable = false, nullable = false)
+    val immutableField: String,  // 변경 불가 필드는 val
+    mutableField: String,        // 변경 가능 필드는 생성자 파라미터로
+) : BaseEntity() {
+    @Column(name = "mutable_field", nullable = false)
+    var mutableField: String = mutableField
+        protected set            // 외부에서 직접 변경 방지
+}
+```
+
 ## Test Tags
 
 ```kotlin

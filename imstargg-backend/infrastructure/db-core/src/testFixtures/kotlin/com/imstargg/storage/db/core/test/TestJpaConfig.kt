@@ -9,12 +9,9 @@ import org.springframework.jdbc.core.JdbcTemplate
 @TestConfiguration
 @EnableJpaAuditing
 class TestJpaConfig {
-
     @Bean
     fun testDataManager(
         jdbcTemplate: JdbcTemplate,
-        entityManagerFactory: EntityManagerFactory
-    ): TestDataManager {
-        return TestDataManager(jdbcTemplate, entityManagerFactory)
-    }
+        entityManagerFactory: EntityManagerFactory,
+    ): TestDataManager = TestDataManager(jdbcTemplate, entityManagerFactory)
 }

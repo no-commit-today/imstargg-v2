@@ -7,13 +7,18 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 
 @Entity
-@Table(name = "player")
+@Table(
+    name = "player",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_player__brawlstarstag", columnNames = ["brawlstars_tag"]),
+    ],
+)
 class PlayerEntity(
     @Column(name = "brawlstars_tag", length = 45, updatable = false, nullable = false)
     val brawlStarsTag: String,
-
     name: String,
     nameColor: String?,
     iconBrawlStarsId: Long,
@@ -29,7 +34,6 @@ class PlayerEntity(
     bestTimeAsBigBrawler: Int,
     brawlStarsClubTag: String?,
 ) : BaseEntity() {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "player_id")
@@ -90,5 +94,4 @@ class PlayerEntity(
     @Column(name = "brawlstars_club_tag", length = 45)
     var brawlStarsClubTag: String? = brawlStarsClubTag
         protected set
-
 }

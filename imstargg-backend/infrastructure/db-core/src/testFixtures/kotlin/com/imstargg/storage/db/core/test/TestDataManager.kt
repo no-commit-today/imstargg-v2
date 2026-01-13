@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional
 
 open class TestDataManager(
     private val jdbcTemplate: JdbcTemplate,
-    entityManagerFactory: EntityManagerFactory
+    entityManagerFactory: EntityManagerFactory,
 ) {
     private val tem = TestEntityManager(entityManagerFactory)
 
@@ -18,16 +18,16 @@ open class TestDataManager(
     }
 
     @Transactional
-    open fun <E : Any> find(entityClass: Class<E>, primaryKey: Any): E? {
-        return tem.find(entityClass, primaryKey)
-    }
+    open fun <E : Any> find(
+        entityClass: Class<E>,
+        primaryKey: Any,
+    ): E? = tem.find(entityClass, primaryKey)
 
     @Transactional(readOnly = true)
-    open fun <E : Any> findAll(entityClass: Class<E>): List<E> {
-        return tem.entityManager
+    open fun <E : Any> findAll(entityClass: Class<E>): List<E> =
+        tem.entityManager
             .createQuery("SELECT e FROM ${entityClass.simpleName} e", entityClass)
             .resultList
-    }
 
     @Transactional
     open fun cleanUp() {
@@ -38,12 +38,12 @@ open class TestDataManager(
             }
     }
 
-    fun <T> getTableName(entityType: Class<T>): String {
-        return entityType.getAnnotation(Table::class.java)
+    fun <T> getTableName(entityType: Class<T>): String =
+        entityType
+            .getAnnotation(Table::class.java)
             ?.name
             ?.takeIf { it.isNotBlank() }
             ?: throw IllegalArgumentException(
-                "Entity[${entityType.name}] does not have @Table annotation or name attribute is empty."
+                "Entity[${entityType.name}] does not have @Table annotation or name attribute is empty.",
             )
-    }
 }
