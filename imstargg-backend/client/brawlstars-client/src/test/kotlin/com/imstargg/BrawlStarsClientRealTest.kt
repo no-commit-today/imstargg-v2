@@ -7,7 +7,7 @@ import org.springframework.test.context.TestPropertySource
 @TestPropertySource(
     properties = [
         "app.client.brawlstars.api-keys=",
-    ]
+    ],
 )
 class BrawlStarsClientRealTest(
     private val brawlStarsClient: BrawlStarsClient,

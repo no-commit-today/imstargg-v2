@@ -23,13 +23,15 @@ internal class BrawlStarsApiConfig {
 
     @Bean
     fun brawlStarsFeignDecoder(): Decoder {
-        val objectMapper = ObjectMapper()
-            .registerModule(JavaTimeModule())
-            .registerModule(KotlinModule.Builder().build())
+        val objectMapper =
+            ObjectMapper()
+                .registerModule(JavaTimeModule())
+                .registerModule(KotlinModule.Builder().build())
         val converter = MappingJackson2HttpMessageConverter(objectMapper)
-        val messageConverters: ObjectFactory<HttpMessageConverters> = ObjectFactory {
-            HttpMessageConverters(converter)
-        }
+        val messageConverters: ObjectFactory<HttpMessageConverters> =
+            ObjectFactory {
+                HttpMessageConverters(converter)
+            }
         return ResponseEntityDecoder(SpringDecoder(messageConverters))
     }
 }
