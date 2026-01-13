@@ -19,5 +19,5 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
 
     // Test
-    testRuntimeOnly("com.h2database:h2")
+    testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

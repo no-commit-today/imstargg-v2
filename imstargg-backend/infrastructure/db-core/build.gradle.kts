@@ -20,5 +20,8 @@ dependencies {
 
     // DB
     runtimeOnly("com.mysql:mysql-connector-j")
-    testRuntimeOnly("com.h2database:h2")
+
+    // Test Fixtures
+    testFixturesRuntimeOnly("com.h2database:h2")
+    testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
 }

@@ -15,5 +15,5 @@ dependencies {
 
     // Test
     testImplementation("org.springframework.batch:spring-batch-test")
-    testRuntimeOnly("com.h2database:h2")
+    testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

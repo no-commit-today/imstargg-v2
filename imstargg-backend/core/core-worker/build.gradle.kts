@@ -15,5 +15,5 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
 
     // Test
-    testRuntimeOnly("com.h2database:h2")
+    testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

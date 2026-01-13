@@ -25,6 +25,8 @@ subprojects {
     apply(plugin = "io.spring.dependency-management")
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "com.google.devtools.ksp")
+    apply(plugin = "java-library")
+    apply(plugin = "java-test-fixtures")
 
     java {
         toolchain {
