@@ -86,3 +86,37 @@ imstargg-backend/
 - `local-dev`: DEV 환경 연결
 - `dev`: DEV 배포
 - `live`: 프로덕션 배포
+
+## Test Code Conventions
+
+### 검증 라이브러리
+- AssertJ 사용 (`assertThat()`)
+
+### 테스트 클래스 구조
+- `@Nested` 클래스 사용 기준:
+  - 메서드가 여러 개여서 테스트 구분이 어려운 경우 → 메서드명을 `@Nested` 클래스명으로 사용
+  - 메서드 구현이 복잡하여 여러 조건이 발생하는 경우 → 조건을 클래스명(한글)으로 하는 등 유연하게 대응
+- 테스트 메서드명은 한글로 작성
+- 테스트 대상 변수명은 `sut` (System Under Test) 사용
+- `// given`, `// when`, `// then` 주석 패턴 사용
+- 타입은 직접 명시하지 않고 타입 추론 사용
+
+### 테스트 픽스처 패턴
+- `{Entity}Fixture` 클래스: `a{Entity}()` → `with{Field}()` → `build()`
+
+```kotlin
+// 사용 예시
+val entity = aPlayer().withName("test").build()
+val sut = SomeClass(entity)
+val result = sut.someMethod()
+assertThat(result).isEqualTo(expected)
+```
+
+### 테스트 베이스 클래스
+- Repository: `DbCoreContextTest` (`@DataJpaTest`)
+- Service/Component: `CoreApiContextTest` 등 (`@SpringBootTest`)
+- 통합 테스트 데이터 관리: `TestDataManager` 클래스 참고
+
+### 예외 검증
+- `catchThrowableOfType(Class, ThrowingCallable)` 사용 (Class가 첫 번째 파라미터)
+- ❌ `catchThrowableOfType(ThrowingCallable, Class)` - deprecated, 사용 금지
