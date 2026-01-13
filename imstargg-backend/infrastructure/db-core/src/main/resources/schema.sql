@@ -74,3 +74,37 @@ create table if not exists player_brawler_gadget
     deleted                  boolean     not null default false,
     constraint uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid unique (player_brawler_id, gadget_brawlstars_id)
 );
+
+-- club table
+create table if not exists club
+(
+    club_id              bigint auto_increment primary key,
+    brawlstars_tag       varchar(45)  not null,
+    badge_brawlstars_id  bigint       not null,
+    name                 varchar(105) not null,
+    description          varchar(500) null,
+    type                 varchar(45)  not null,
+    required_trophies    int          not null,
+    trophies             int          not null,
+    created_at           datetime(6)  not null,
+    updated_at           datetime(6)  not null,
+    deleted              boolean      not null default false,
+    constraint uk_club__brawlstarstag unique (brawlstars_tag)
+);
+
+-- club member table
+create table if not exists club_member
+(
+    club_member_id      bigint auto_increment primary key,
+    club_id             bigint      not null,
+    brawlstars_tag      varchar(45) not null,
+    name                varchar(45) not null,
+    name_color          varchar(45) null,
+    role                varchar(25) not null,
+    trophies            int         not null,
+    icon_brawlstars_id  bigint      not null,
+    created_at          datetime(6) not null,
+    updated_at          datetime(6) not null,
+    deleted             boolean     not null default false,
+    constraint uk_clubmember__clubid_brawlstarstag unique (club_id, brawlstars_tag)
+);
