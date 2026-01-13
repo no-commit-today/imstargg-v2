@@ -22,7 +22,7 @@ class ClubEntity(
     @Column(name = "badge_brawlstars_id", updatable = false, nullable = false)
     val badgeBrawlStarsId: Long,
     name: String,
-    description: String?,
+    description: String,
     type: String,
     requiredTrophies: Int,
     trophies: Int,
@@ -36,8 +36,8 @@ class ClubEntity(
     var name: String = name
         protected set
 
-    @Column(name = "description", length = 500)
-    var description: String? = description
+    @Column(name = "description", length = 500, nullable = false)
+    var description: String = description
         protected set
 
     @Column(name = "type", length = 45, nullable = false)

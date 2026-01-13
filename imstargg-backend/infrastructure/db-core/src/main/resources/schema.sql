@@ -17,8 +17,8 @@ create table if not exists player
     best_robo_rumble_time                 int          not null,
     best_time_as_big_brawler              int          not null,
     brawlstars_club_tag                   varchar(45)  null,
-    created_at                            datetime(6)  not null,
-    updated_at                            datetime(6)  not null,
+    created_at                            timestamp(6)  not null default current_timestamp(6),
+    updated_at                            timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     deleted                               boolean      not null default false,
     constraint uk_player__brawlstarstag unique (brawlstars_tag)
 );
@@ -33,8 +33,8 @@ create table if not exists player_brawler
     trophy_rank           int         not null,
     trophies              int         not null,
     highest_trophies      int         not null,
-    created_at            datetime(6) not null,
-    updated_at            datetime(6) not null,
+    created_at            timestamp(6) not null default current_timestamp(6),
+    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted               boolean     not null default false,
     constraint uk_playerbrawler__playerid_brawlerbrawlstarsid unique (player_id, brawler_brawlstars_id)
 );
@@ -45,8 +45,8 @@ create table if not exists player_brawler_gear
     player_brawler_gear_id bigint auto_increment primary key,
     player_brawler_id      bigint      not null,
     gear_brawlstars_id     bigint      not null,
-    created_at             datetime(6) not null,
-    updated_at             datetime(6) not null,
+    created_at             timestamp(6) not null default current_timestamp(6),
+    updated_at             timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted                boolean     not null default false,
     constraint uk_playerbrawlergear__playerbrawlerid_gearbrawlstarsid unique (player_brawler_id, gear_brawlstars_id)
 );
@@ -57,8 +57,8 @@ create table if not exists player_brawler_star_power
     player_brawler_star_power_id bigint auto_increment primary key,
     player_brawler_id            bigint      not null,
     star_power_brawlstars_id     bigint      not null,
-    created_at                   datetime(6) not null,
-    updated_at                   datetime(6) not null,
+    created_at                   timestamp(6) not null default current_timestamp(6),
+    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted                      boolean     not null default false,
     constraint uk_playerbrawlerstarpower__playerbrawlerid_starpowerbrawlstarsid unique (player_brawler_id, star_power_brawlstars_id)
 );
@@ -69,8 +69,8 @@ create table if not exists player_brawler_gadget
     player_brawler_gadget_id bigint auto_increment primary key,
     player_brawler_id        bigint      not null,
     gadget_brawlstars_id     bigint      not null,
-    created_at               datetime(6) not null,
-    updated_at               datetime(6) not null,
+    created_at               timestamp(6) not null default current_timestamp(6),
+    updated_at               timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted                  boolean     not null default false,
     constraint uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid unique (player_brawler_id, gadget_brawlstars_id)
 );
@@ -82,12 +82,12 @@ create table if not exists club
     brawlstars_tag       varchar(45)  not null,
     badge_brawlstars_id  bigint       not null,
     name                 varchar(105) not null,
-    description          varchar(500) null,
+    description          varchar(500) not null,
     type                 varchar(45)  not null,
     required_trophies    int          not null,
     trophies             int          not null,
-    created_at           datetime(6)  not null,
-    updated_at           datetime(6)  not null,
+    created_at           timestamp(6)  not null default current_timestamp(6),
+    updated_at           timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     deleted              boolean      not null default false,
     constraint uk_club__brawlstarstag unique (brawlstars_tag)
 );
@@ -103,8 +103,8 @@ create table if not exists club_member
     role                varchar(25) not null,
     trophies            int         not null,
     icon_brawlstars_id  bigint      not null,
-    created_at          datetime(6) not null,
-    updated_at          datetime(6) not null,
+    created_at          timestamp(6) not null default current_timestamp(6),
+    updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted             boolean     not null default false,
     constraint uk_clubmember__clubid_brawlstarstag unique (club_id, brawlstars_tag)
 );

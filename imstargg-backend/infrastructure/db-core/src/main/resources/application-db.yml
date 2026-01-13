@@ -10,6 +10,10 @@ spring:
         query.fail_on_pagination_over_collection_fetch: true
         format_sql: true
         use_sql_comments: true
+        jdbc:
+          time_zone: UTC
+        timezone:
+          default_storage: NORMALIZE
 
   sql:
     init:
@@ -42,6 +46,8 @@ storage:
           cacheServerConfiguration: true
           elideSetAutoCommits: true
           maintainTimeStats: false
+          serverTimezone: UTC
+          connectionTimeZone: UTC
 
 ---
 spring:
