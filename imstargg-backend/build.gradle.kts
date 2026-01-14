@@ -28,6 +28,12 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "java-test-fixtures")
 
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        filter {
+            exclude { it.file.path.contains("/generated/") }
+        }
+    }
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of("${property("javaVersion")}")
@@ -75,44 +81,33 @@ subprojects {
         }
     }
 
-    tasks.test {
+    tasks.withType<Test> {
         useJUnitPlatform {
             excludeTags("develop")
         }
     }
 
-    testing {
-        suites {
-            named<JvmTestSuite>("test") {
-                targets {
-                    register("unitTest") {
-                        testTask.configure {
-                            group = "verification"
-                            useJUnitPlatform {
-                                excludeTags("develop", "context")
-                            }
-                        }
-                    }
+    tasks.register<Test>("unitTest") {
+        description = "Runs the unit tests."
+        group = "verification"
+        useJUnitPlatform {
+            excludeTags("develop", "context")
+        }
+    }
 
-                    register("contextTest") {
-                        testTask.configure {
-                            group = "verification"
-                            useJUnitPlatform {
-                                includeTags("context")
-                            }
-                        }
-                    }
+    tasks.register<Test>("contextTest") {
+        description = "Runs the context tests."
+        group = "verification"
+        useJUnitPlatform {
+            includeTags("context")
+        }
+    }
 
-                    register("developTest") {
-                        testTask.configure {
-                            group = "verification"
-                            useJUnitPlatform {
-                                includeTags("develop")
-                            }
-                        }
-                    }
-                }
-            }
+    tasks.register<Test>("developTest") {
+        description = "Runs the development tests."
+        group = "verification"
+        useJUnitPlatform {
+            includeTags("develop")
         }
     }
 
