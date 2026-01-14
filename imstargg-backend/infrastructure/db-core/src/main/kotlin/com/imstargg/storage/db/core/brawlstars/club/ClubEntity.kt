@@ -19,8 +19,7 @@ import jakarta.persistence.UniqueConstraint
 class ClubEntity(
     @Column(name = "brawlstars_tag", length = 45, updatable = false, nullable = false)
     val brawlStarsTag: String,
-    @Column(name = "badge_brawlstars_id", updatable = false, nullable = false)
-    val badgeBrawlStarsId: Long,
+    badgeBrawlStarsId: Long,
     name: String,
     description: String,
     type: String,
@@ -31,6 +30,10 @@ class ClubEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "club_id")
     val id: Long? = null
+
+    @Column(name = "badge_brawlstars_id", nullable = false)
+    var badgeBrawlStarsId: Long = badgeBrawlStarsId
+        protected set
 
     @Column(name = "name", length = 105, nullable = false)
     var name: String = name
