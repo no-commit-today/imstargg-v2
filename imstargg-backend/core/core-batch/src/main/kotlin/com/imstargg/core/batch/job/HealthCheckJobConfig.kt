@@ -29,21 +29,19 @@ class HealthCheckJobConfig(
     }
 
     @Bean(JOB_NAME)
-    fun job(): Job =
-        JobBuilder(JOB_NAME, jobRepository)
-            .incrementer(RunIdIncrementer())
-            .start(step())
-            .build()
+    fun job(): Job = JobBuilder(JOB_NAME, jobRepository)
+        .incrementer(RunIdIncrementer())
+        .start(step())
+        .build()
 
     @Bean(STEP_NAME)
-    fun step(): Step =
-        StepBuilder(STEP_NAME, jobRepository)
-            .tasklet({ _, _ ->
-                log.info("<<<<<<<<<<<< 헬스체크 >>>>>>>>>>>>")
-                log.info("timezone: {}", clock.zone)
-                log.info("date: {}", LocalDate.now(clock))
-                log.info("time: {}", OffsetDateTime.now(clock))
-                RepeatStatus.FINISHED
-            }, txManager)
-            .build()
+    fun step(): Step = StepBuilder(STEP_NAME, jobRepository)
+        .tasklet({ _, _ ->
+            log.info("<<<<<<<<<<<< 헬스체크 >>>>>>>>>>>>")
+            log.info("timezone: {}", clock.zone)
+            log.info("date: {}", LocalDate.now(clock))
+            log.info("time: {}", OffsetDateTime.now(clock))
+            RepeatStatus.FINISHED
+        }, txManager)
+        .build()
 }

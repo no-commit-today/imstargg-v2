@@ -14,12 +14,11 @@ sealed class BrawlStarsApiException(
         fun from(
             message: String,
             ex: FeignException,
-        ): BrawlStarsApiException =
-            when {
-                isClientError(ex.status()) -> BrawlStarsApiClientException.from(message, ex)
-                isServerError(ex.status()) -> BrawlStarsApiServerException.from(message, ex)
-                else -> BrawlStarsApiClientException(message, ex)
-            }
+        ): BrawlStarsApiException = when {
+            isClientError(ex.status()) -> BrawlStarsApiClientException.from(message, ex)
+            isServerError(ex.status()) -> BrawlStarsApiServerException.from(message, ex)
+            else -> BrawlStarsApiClientException(message, ex)
+        }
 
         private fun isClientError(status: Int): Boolean = status in 400..499
 
@@ -45,12 +44,11 @@ open class BrawlStarsApiClientException(
         fun from(
             message: String,
             ex: FeignException,
-        ): BrawlStarsApiClientException =
-            when (ex.status()) {
-                404 -> NotFound(message, ex)
-                429 -> TooManyRequests(message, ex)
-                else -> BrawlStarsApiClientException(message, ex)
-            }
+        ): BrawlStarsApiClientException = when (ex.status()) {
+            404 -> NotFound(message, ex)
+            429 -> TooManyRequests(message, ex)
+            else -> BrawlStarsApiClientException(message, ex)
+        }
     }
 }
 
@@ -67,10 +65,9 @@ open class BrawlStarsApiServerException(
         fun from(
             message: String,
             ex: FeignException,
-        ): BrawlStarsApiServerException =
-            when (ex.status()) {
-                503 -> ServiceUnavailable(message, ex)
-                else -> BrawlStarsApiServerException(message, ex)
-            }
+        ): BrawlStarsApiServerException = when (ex.status()) {
+            503 -> ServiceUnavailable(message, ex)
+            else -> BrawlStarsApiServerException(message, ex)
+        }
     }
 }

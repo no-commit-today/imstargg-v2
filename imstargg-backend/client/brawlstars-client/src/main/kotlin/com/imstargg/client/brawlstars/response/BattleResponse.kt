@@ -1,7 +1,6 @@
 package com.imstargg.client.brawlstars.response
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import java.time.Instant
 import java.time.OffsetDateTime
 
 data class BattleResponse(

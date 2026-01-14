@@ -24,10 +24,9 @@ open class TestDataManager(
     ): E? = tem.find(entityClass, primaryKey)
 
     @Transactional(readOnly = true)
-    open fun <E : Any> findAll(entityClass: Class<E>): List<E> =
-        tem.entityManager
-            .createQuery("SELECT e FROM ${entityClass.simpleName} e", entityClass)
-            .resultList
+    open fun <E : Any> findAll(entityClass: Class<E>): List<E> = tem.entityManager
+        .createQuery("SELECT e FROM ${entityClass.simpleName} e", entityClass)
+        .resultList
 
     @Transactional
     open fun cleanUp() {
@@ -38,12 +37,11 @@ open class TestDataManager(
             }
     }
 
-    fun <T> getTableName(entityType: Class<T>): String =
-        entityType
-            .getAnnotation(Table::class.java)
-            ?.name
-            ?.takeIf { it.isNotBlank() }
-            ?: throw IllegalArgumentException(
-                "Entity[${entityType.name}] does not have @Table annotation or name attribute is empty.",
-            )
+    fun <T> getTableName(entityType: Class<T>): String = entityType
+        .getAnnotation(Table::class.java)
+        ?.name
+        ?.takeIf { it.isNotBlank() }
+        ?: throw IllegalArgumentException(
+            "Entity[${entityType.name}] does not have @Table annotation or name attribute is empty.",
+        )
 }

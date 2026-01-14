@@ -14,32 +14,26 @@ import feign.FeignException
 class BrawlStarsClient internal constructor(
     private val brawlStarsApi: BrawlStarsApi,
 ) {
-    fun getPlayerRecentBattles(playerTag: String): ListResponse<BattleResponse> =
-        execute("playerTag=$playerTag") { brawlStarsApi.getLogOfRecentBattlesForAPlayer(playerTag) }
+    fun getPlayerRecentBattles(playerTag: String): ListResponse<BattleResponse> = execute("playerTag=$playerTag") { brawlStarsApi.getLogOfRecentBattlesForAPlayer(playerTag) }
 
-    fun getPlayerInformation(playerTag: String): PlayerResponse =
-        execute("playerTag=$playerTag") { brawlStarsApi.getPlayerInformation(playerTag) }
+    fun getPlayerInformation(playerTag: String): PlayerResponse = execute("playerTag=$playerTag") { brawlStarsApi.getPlayerInformation(playerTag) }
 
-    fun getBrawlers(): ListResponse<BrawlerResponse> =
-        execute("getBrawlers") { brawlStarsApi.getListOfAvailableBrawlers(PagingParam.DEFAULT) }
+    fun getBrawlers(): ListResponse<BrawlerResponse> = execute("getBrawlers") { brawlStarsApi.getListOfAvailableBrawlers(PagingParam.DEFAULT) }
 
     fun getEventRotation(): List<ScheduledEventResponse> = execute("getEventRotation") { brawlStarsApi.getEventRotation() }
 
-    fun getPlayerRanking(country: String): ListResponse<PlayerRankingResponse> =
-        execute("country=$country") { brawlStarsApi.getPlayerRankingsForACountryOrGlobalRankings(country, PagingParam.DEFAULT) }
+    fun getPlayerRanking(country: String): ListResponse<PlayerRankingResponse> = execute("country=$country") { brawlStarsApi.getPlayerRankingsForACountryOrGlobalRankings(country, PagingParam.DEFAULT) }
 
     fun getBrawlerRanking(
         country: String,
         brawlerId: Long,
-    ): ListResponse<PlayerRankingResponse> =
-        execute("country=$country, brawlerId=$brawlerId") {
-            brawlStarsApi.getBrawlerRankingsForACountryOrGlobalRankings(country, brawlerId, PagingParam.DEFAULT)
-        }
+    ): ListResponse<PlayerRankingResponse> = execute("country=$country, brawlerId=$brawlerId") {
+        brawlStarsApi.getBrawlerRankingsForACountryOrGlobalRankings(country, brawlerId, PagingParam.DEFAULT)
+    }
 
     fun getClub(clubTag: String): ClubResponse = execute("clubTag=$clubTag") { brawlStarsApi.getClubInformation(clubTag) }
 
-    fun getClubRanking(country: String): ListResponse<ClubRankingResponse> =
-        execute("country=$country") { brawlStarsApi.getClubRankingsForACountryOrGlobalRankings(country, PagingParam.DEFAULT) }
+    fun getClubRanking(country: String): ListResponse<ClubRankingResponse> = execute("country=$country") { brawlStarsApi.getClubRankingsForACountryOrGlobalRankings(country, PagingParam.DEFAULT) }
 
     private fun <T> execute(
         message: String,

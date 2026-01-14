@@ -25,31 +25,22 @@ import java.time.OffsetDateTime
 class BattleEntity(
     @Column(name = "battle_key", updatable = false, nullable = false)
     val battleKey: String,
-
     @Column(name = "battle_time", updatable = false, nullable = false)
     val battleTime: OffsetDateTime,
-
     @Embedded
     val event: BattleEntityEvent,
-
     @Column(name = "mode", length = 105, updatable = false, nullable = false)
     val mode: String,
-
     @Column(name = "type", length = 105, updatable = false)
     val type: String?,
-
     @Column(name = "result", length = 25, updatable = false)
     val result: String?,
-
     @Column(name = "duration", updatable = false)
     val duration: Int?,
-
     @Column(name = "star_player_brawlstars_tag", length = 45, updatable = false)
     val starPlayerBrawlStarsTag: String?,
-
     @Embedded
     val player: BattleEntityPlayer,
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
     val teams: List<List<BattleEntityTeamPlayer>>,

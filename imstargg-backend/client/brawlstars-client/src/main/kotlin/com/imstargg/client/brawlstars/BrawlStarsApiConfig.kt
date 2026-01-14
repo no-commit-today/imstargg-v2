@@ -18,8 +18,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 @EnableConfigurationProperties(BrawlStarsClientProperties::class)
 internal class BrawlStarsApiConfig {
     @Bean
-    fun brawlStarsApiKeyInterceptor(properties: BrawlStarsClientProperties): RequestInterceptor =
-        BrawlStarsApiKeyInterceptor(properties.apiKeys)
+    fun brawlStarsApiKeyInterceptor(properties: BrawlStarsClientProperties): RequestInterceptor = BrawlStarsApiKeyInterceptor(properties.apiKeys)
 
     @Bean
     fun brawlStarsFeignDecoder(): Decoder {
