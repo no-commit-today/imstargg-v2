@@ -13,19 +13,16 @@ import jakarta.persistence.UniqueConstraint
 @Table(
     name = "battle_event",
     uniqueConstraints = [
-        UniqueConstraint(name = "uk_battle_event__brawlstarsid", columnNames = ["brawlstars_id"])
-    ]
+        UniqueConstraint(name = "uk_battle_event__brawlstarsid", columnNames = ["brawlstars_id"]),
+    ],
 )
 class BattleEventEntity(
     @Column(name = "brawlstars_id", updatable = false, nullable = false)
     val brawlStarsId: Long,
-
     @Column(name = "mode", length = 45, updatable = false, nullable = false)
     val mode: String,
-
     @Column(name = "map_brawlstars_name", length = 105, updatable = false)
     val mapBrawlStarsName: String?,
-
     @Column(name = "solo_ranked", nullable = false, updatable = false)
     val soloRanked: Boolean,
 ) : BaseEntity() {

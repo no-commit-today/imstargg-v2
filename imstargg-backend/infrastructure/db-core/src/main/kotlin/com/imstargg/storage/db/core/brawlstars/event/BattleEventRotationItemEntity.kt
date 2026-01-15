@@ -15,25 +15,20 @@ import java.time.OffsetDateTime
 @Entity
 @Table(
     name = "battle_event_rotation_item",
-    indexes = [Index(name = "ix_battle_event_rotation_item__1", columnList = "battle_event_rotation_id")]
+    indexes = [Index(name = "ix_battle_event_rotation_item__1", columnList = "battle_event_rotation_id")],
 )
 class BattleEventRotationItemEntity(
     @Column(name = "battle_event_rotation_id", updatable = false, nullable = false)
     val battleEventRotationId: Long,
-
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "modifiers", columnDefinition = "json", updatable = false, nullable = false)
     val modifiers: List<String>,
-
     @Column(name = "slot_id", updatable = false, nullable = false)
     val slotId: Int,
-
     @Column(name = "start_time", updatable = false, nullable = false)
     val startTime: OffsetDateTime,
-
     @Column(name = "end_time", updatable = false, nullable = false)
     val endTime: OffsetDateTime,
 ) : BaseEntity() {
