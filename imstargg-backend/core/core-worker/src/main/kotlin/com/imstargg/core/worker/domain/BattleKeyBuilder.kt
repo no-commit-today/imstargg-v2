@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.domain.battle
+package com.imstargg.core.worker.domain
 
 import java.nio.ByteBuffer
 import java.security.MessageDigest

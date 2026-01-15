@@ -1,0 +1,79 @@
+app:
+  pubsub:
+    topic:
+      player-renewal:
+        name: player-renewal-topic
+      club-renewal:
+        name: club-renewal-topic
+
+spring:
+  cloud:
+    gcp:
+      project-id: ${GCP_PROJECT_ID}
+      pubsub:
+        subscriber:
+          executor-threads: 4
+          parallel-pull-count: 1
+          max-ack-extension-period: 0
+          flow-control:
+            max-outstanding-element-count: 1000
+            max-outstanding-request-bytes: 100000000
+        publisher:
+          executor-threads: 4
+          enable-message-ordering: false
+          batching:
+            enabled: true
+            element-count-threshold: 100
+            request-byte-threshold: 1024
+            delay-threshold-seconds: 1
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  cloud:
+    gcp:
+      project-id: imstargg-local
+      pubsub:
+        emulator-host: localhost:8085
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local-dev
+
+  cloud:
+    gcp:
+      credentials:
+        encoded-key: ${GCP_CREDENTIALS_ENCODED_KEY}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  cloud:
+    gcp:
+      credentials:
+        encoded-key: ${GCP_CREDENTIALS_ENCODED_KEY}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: live
+
+  cloud:
+    gcp:
+      credentials:
+        encoded-key: ${GCP_CREDENTIALS_ENCODED_KEY}
+      pubsub:
+        subscriber:
+          executor-threads: 8
+          parallel-pull-count: 2
+        publisher:
+          executor-threads: 8

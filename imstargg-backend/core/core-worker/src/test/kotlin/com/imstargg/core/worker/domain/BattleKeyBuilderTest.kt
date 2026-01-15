@@ -1,6 +1,6 @@
-package com.imstargg.core.worker.domain.battle
+package com.imstargg.core.worker.domain
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -21,7 +21,7 @@ class BattleKeyBuilderTest {
                 .build()
 
         // then
-        assertThat(result).hasSize(64)
+        Assertions.assertThat(result).hasSize(64)
     }
 
     @Test
@@ -45,7 +45,7 @@ class BattleKeyBuilderTest {
                 .build()
 
         // then
-        assertThat(result1).isEqualTo(result2)
+        Assertions.assertThat(result1).isEqualTo(result2)
     }
 
     @Test
@@ -69,7 +69,7 @@ class BattleKeyBuilderTest {
                 .build()
 
         // then
-        assertThat(result1).isEqualTo(result2)
+        Assertions.assertThat(result1).isEqualTo(result2)
     }
 
     @Test
@@ -93,7 +93,7 @@ class BattleKeyBuilderTest {
                 .build()
 
         // then
-        assertThat(result1).isNotEqualTo(result2)
+        Assertions.assertThat(result1).isNotEqualTo(result2)
     }
 
     @Test
@@ -116,7 +116,7 @@ class BattleKeyBuilderTest {
                 .build()
 
         // then
-        assertThat(result1).isNotEqualTo(result2)
+        Assertions.assertThat(result1).isNotEqualTo(result2)
     }
 
     @Test
@@ -140,6 +140,6 @@ class BattleKeyBuilderTest {
                 .build()
 
         // then
-        assertThat(result1).isNotEqualTo(result2)
+        Assertions.assertThat(result1).isNotEqualTo(result2)
     }
 }
