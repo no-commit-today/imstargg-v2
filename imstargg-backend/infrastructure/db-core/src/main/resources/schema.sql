@@ -108,3 +108,18 @@ create table if not exists club_member
     deleted             boolean     not null default false,
     constraint uk_clubmember__clubid_brawlstarstag unique (club_id, brawlstars_tag)
 );
+
+-- renewal table
+create table if not exists renewal
+(
+    renewal_id     bigint auto_increment primary key,
+    brawlstars_tag varchar(45) not null,
+    type           varchar(25) not null,
+    status         varchar(25) not null,
+    renewed_at     timestamp(6) not null,
+    version        int         not null default 0,
+    created_at     timestamp(6) not null default current_timestamp(6),
+    updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    deleted        boolean     not null default false,
+    constraint uk_renewal__brawlstarstag_type unique (brawlstars_tag, type)
+);
