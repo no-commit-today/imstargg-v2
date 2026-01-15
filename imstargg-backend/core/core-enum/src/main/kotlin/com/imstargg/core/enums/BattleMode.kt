@@ -29,6 +29,9 @@ enum class BattleMode(
     HOLD_THE_TROPHY("holdTheTrophy"),
     ;
 
-    override val title: String
-        get() = code
+    companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(BattleMode::class.java)
+        }
+    }
 }

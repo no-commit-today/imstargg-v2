@@ -8,6 +8,9 @@ enum class RenewalStatus(
     COMPLETED("completed"),
     ;
 
-    override val title: String
-        get() = code
+    companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(RenewalStatus::class.java)
+        }
+    }
 }

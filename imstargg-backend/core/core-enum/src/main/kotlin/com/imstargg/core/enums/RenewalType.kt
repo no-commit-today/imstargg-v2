@@ -7,6 +7,9 @@ enum class RenewalType(
     PLAYER("player"),
     ;
 
-    override val title: String
-        get() = code
+    companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(RenewalType::class.java)
+        }
+    }
 }

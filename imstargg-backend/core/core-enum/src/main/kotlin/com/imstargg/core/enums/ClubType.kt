@@ -11,6 +11,9 @@ enum class ClubType(
     UNKNOWN("unknown"),
     ;
 
-    override val title: String
-        get() = code
+    companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(ClubType::class.java)
+        }
+    }
 }

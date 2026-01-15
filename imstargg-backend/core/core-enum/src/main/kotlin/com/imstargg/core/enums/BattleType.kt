@@ -13,14 +13,15 @@ enum class BattleType(
     CHAMPIONSHIP_CHALLENGE("championshipChallenge"),
     ;
 
-    override val title: String
-        get() = code
-
     fun isRegular(): Boolean = this in REGULAR_TYPES
 
     fun isOfficial(): Boolean = this in OFFICIAL_TYPES
 
     companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(BattleType::class.java)
+        }
+
         private val REGULAR_TYPES = setOf(RANKED, SOLO_RANKED)
 
         private val OFFICIAL_TYPES = setOf(RANKED, SOLO_RANKED, CHALLENGE, TOURNAMENT, CHAMPIONSHIP_CHALLENGE)

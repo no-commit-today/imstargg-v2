@@ -46,10 +46,11 @@ enum class BattleEventMode(
     UNKNOWN("unknown"),
     ;
 
-    override val title: String
-        get() = code
-
     companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(BattleEventMode::class.java)
+        }
+
         fun showdowns(): Set<BattleEventMode> = setOf(SOLO_SHOWDOWN, DUO_SHOWDOWN, TRIO_SHOWDOWN)
     }
 }

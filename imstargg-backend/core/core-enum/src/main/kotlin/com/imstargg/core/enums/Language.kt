@@ -7,10 +7,11 @@ enum class Language(
     ENGLISH("en"),
     ;
 
-    override val title: String
-        get() = code
-
     companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(Language::class.java)
+        }
+
         val DEFAULT: Language = ENGLISH
     }
 }

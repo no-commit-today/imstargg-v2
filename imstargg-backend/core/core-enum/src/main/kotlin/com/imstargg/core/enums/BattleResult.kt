@@ -8,13 +8,16 @@ enum class BattleResult(
     DRAW("draw"),
     ;
 
-    override val title: String
-        get() = code
-
     fun opposite(): BattleResult =
         when (this) {
             DEFEAT -> VICTORY
             VICTORY -> DEFEAT
             DRAW -> DRAW
         }
+
+    companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(BattleResult::class.java)
+        }
+    }
 }

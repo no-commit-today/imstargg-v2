@@ -7,6 +7,9 @@ enum class Country(
     KOREA("kr"),
     ;
 
-    override val title: String
-        get() = code
+    companion object {
+        init {
+            EnumCodeType.validateNoDuplicateCodes(Country::class.java)
+        }
+    }
 }
