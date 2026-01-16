@@ -2,11 +2,16 @@ package com.imstargg.storage.db.core.brawlstars.player
 
 import com.imstargg.storage.db.core.BaseEntity
 import jakarta.persistence.Column
+import jakarta.persistence.ConstraintMode
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.ForeignKey
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
 @Entity
@@ -21,8 +26,9 @@ import jakarta.persistence.Table
     ],
 )
 class PlayerBrawlerGadgetEntity(
-    @Column(name = "player_brawler_id", updatable = false, nullable = false)
-    val playerBrawlerId: Long,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_brawler_id", updatable = false, foreignKey = ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    val playerBrawler: PlayerBrawlerEntity,
     @Column(name = "gadget_brawlstars_id", updatable = false, nullable = false)
     val gadgetBrawlStarsId: Long,
 ) : BaseEntity() {
