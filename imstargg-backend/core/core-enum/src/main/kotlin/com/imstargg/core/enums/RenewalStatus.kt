@@ -1,17 +1,8 @@
 package com.imstargg.core.enums
 
-enum class RenewalStatus(
-    override val code: String,
-) : EnumCodeType {
-    PENDING("pending"),
-    EXECUTING("executing"),
-    COMPLETED("completed"),
-    DELETED("deleted"),
-    ;
-
-    companion object {
-        init {
-            EnumCodeType.validateNoDuplicateCodes(RenewalStatus::class.java)
-        }
-    }
+enum class RenewalStatus {
+    PENDING,
+    EXECUTING,
+    COMPLETED,
+    NOT_FOUND,
 }
