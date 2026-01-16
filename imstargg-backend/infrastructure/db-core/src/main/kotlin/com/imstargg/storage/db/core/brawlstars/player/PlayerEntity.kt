@@ -6,14 +6,14 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 
 @Entity
 @Table(
     name = "player",
-    uniqueConstraints = [
-        UniqueConstraint(name = "uk_player__brawlstarstag", columnNames = ["brawlstars_tag"]),
+    indexes = [
+        Index(name = "uk_player__brawlstarstag", columnList = "brawlstars_tag", unique = true),
     ],
 )
 class PlayerEntity(

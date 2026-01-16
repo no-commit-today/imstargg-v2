@@ -10,17 +10,14 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 
 @Entity
 @Table(
     name = "brawler_ranking",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_brawler_ranking__country_brawler_rank",
-            columnNames = ["country", "brawler_brawlstars_id", "rank_value"],
-        ),
+    indexes = [
+        Index(name = "uk_brawler_ranking__country_brawler_rank", columnList = "country, brawler_brawlstars_id, rank_value", unique = true),
     ],
 )
 class BrawlerRankingEntity(

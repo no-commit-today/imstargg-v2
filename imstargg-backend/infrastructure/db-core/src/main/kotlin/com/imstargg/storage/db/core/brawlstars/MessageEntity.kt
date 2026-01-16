@@ -9,14 +9,14 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 
 @Entity
 @Table(
     name = "message",
-    uniqueConstraints = [
-        UniqueConstraint(name = "uk_message__code_lang", columnNames = ["code", "lang"]),
+    indexes = [
+        Index(name = "uk_message__code_lang", columnList = "code, lang", unique = true),
     ],
 )
 class MessageEntity(

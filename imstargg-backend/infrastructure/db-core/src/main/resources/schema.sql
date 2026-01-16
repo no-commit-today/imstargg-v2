@@ -20,7 +20,7 @@ create table if not exists player
     created_at                            timestamp(6)  not null default current_timestamp(6),
     updated_at                            timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     deleted                               boolean      not null default false,
-    constraint uk_player__brawlstarstag unique (brawlstars_tag)
+    unique index uk_player__brawlstarstag (brawlstars_tag)
 );
 
 -- player brawler table
@@ -36,7 +36,7 @@ create table if not exists player_brawler
     created_at            timestamp(6) not null default current_timestamp(6),
     updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted               boolean     not null default false,
-    constraint uk_playerbrawler__playerid_brawlerbrawlstarsid unique (player_id, brawler_brawlstars_id)
+    unique index uk_playerbrawler__playerid_brawlerbrawlstarsid (player_id, brawler_brawlstars_id)
 );
 
 -- player brawler gear table
@@ -48,7 +48,7 @@ create table if not exists player_brawler_gear
     created_at             timestamp(6) not null default current_timestamp(6),
     updated_at             timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted                boolean     not null default false,
-    constraint uk_playerbrawlergear__playerbrawlerid_gearbrawlstarsid unique (player_brawler_id, gear_brawlstars_id)
+    unique index uk_playerbrawlergear__playerbrawlerid_gearbrawlstarsid (player_brawler_id, gear_brawlstars_id)
 );
 
 -- player brawler star power table
@@ -60,7 +60,7 @@ create table if not exists player_brawler_star_power
     created_at                   timestamp(6) not null default current_timestamp(6),
     updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted                      boolean     not null default false,
-    constraint uk_playerbrawlerstarpower__playerbrawlerid_starpowerbrawlstarsid unique (player_brawler_id, star_power_brawlstars_id)
+    unique index uk_playerbrawlerstarpower__playerbrawlerid_starpowerbrawlstarsid (player_brawler_id, star_power_brawlstars_id)
 );
 
 -- player brawler gadget table
@@ -72,7 +72,7 @@ create table if not exists player_brawler_gadget
     created_at               timestamp(6) not null default current_timestamp(6),
     updated_at               timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted                  boolean     not null default false,
-    constraint uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid unique (player_brawler_id, gadget_brawlstars_id)
+    unique index uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid (player_brawler_id, gadget_brawlstars_id)
 );
 
 -- club table
@@ -89,7 +89,7 @@ create table if not exists club
     created_at           timestamp(6)  not null default current_timestamp(6),
     updated_at           timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     deleted              boolean      not null default false,
-    constraint uk_club__brawlstarstag unique (brawlstars_tag)
+    unique index uk_club__brawlstarstag (brawlstars_tag)
 );
 
 -- club member table
@@ -106,7 +106,7 @@ create table if not exists club_member
     created_at          timestamp(6) not null default current_timestamp(6),
     updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted             boolean     not null default false,
-    constraint uk_clubmember__clubid_brawlstarstag unique (club_id, brawlstars_tag)
+    unique index uk_clubmember__clubid_brawlstarstag (club_id, brawlstars_tag)
 );
 
 -- renewal table
@@ -116,10 +116,11 @@ create table if not exists renewal
     brawlstars_tag varchar(45) not null,
     type           varchar(25) not null,
     status         varchar(25) not null,
-    renewed_at     timestamp(6) not null,
+    requested_at   timestamp(6) not null,
+    completed_at   timestamp(6) null,
     version        int         not null default 0,
     created_at     timestamp(6) not null default current_timestamp(6),
     updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted        boolean     not null default false,
-    constraint uk_renewal__brawlstarstag_type unique (brawlstars_tag, type)
+    index ix_renewal__brawlstarstag_type_requestedat (brawlstars_tag, type, requested_at desc)
 );
