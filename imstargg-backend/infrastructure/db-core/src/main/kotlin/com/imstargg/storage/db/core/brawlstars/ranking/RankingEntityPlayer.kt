@@ -4,7 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class RankingPlayer(
+data class RankingEntityPlayer(
     @Column(name = "player_brawlstars_tag", length = 45, nullable = false)
     val brawlStarsTag: String,
     @Column(name = "player_name", length = 105, nullable = false)
@@ -15,6 +15,4 @@ class RankingPlayer(
     val iconBrawlStarsId: Long,
     @Column(name = "player_club_name", length = 105, nullable = false)
     val clubName: String,
-) {
-    protected constructor() : this("", "", null, 0, "")
-}
+)

@@ -31,7 +31,7 @@ class BrawlerRankingEntity(
     val brawlerBrawlStarsId: Long,
     @Column(name = "rank_value", nullable = false, updatable = false)
     val rank: Int,
-    player: RankingPlayer,
+    player: RankingEntityPlayer,
     trophies: Int,
     rankChange: Int?,
 ) : BaseEntity() {
@@ -41,7 +41,7 @@ class BrawlerRankingEntity(
     val id: Long? = null
 
     @Embedded
-    var player: RankingPlayer = player
+    var player: RankingEntityPlayer = player
         protected set
 
     @Column(name = "trophies", nullable = false)

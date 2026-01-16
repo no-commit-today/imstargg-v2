@@ -29,7 +29,7 @@ class PlayerRankingEntity(
     val country: Country,
     @Column(name = "rank_value", nullable = false, updatable = false)
     val rank: Int,
-    player: RankingPlayer,
+    player: RankingEntityPlayer,
     trophies: Int,
     rankChange: Int?,
 ) : BaseEntity() {
@@ -39,7 +39,7 @@ class PlayerRankingEntity(
     val id: Long? = null
 
     @Embedded
-    var player: RankingPlayer = player
+    var player: RankingEntityPlayer = player
         protected set
 
     @Column(name = "trophies", nullable = false)
