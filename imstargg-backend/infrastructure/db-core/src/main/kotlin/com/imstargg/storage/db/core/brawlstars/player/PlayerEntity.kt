@@ -94,4 +94,36 @@ class PlayerEntity(
     @Column(name = "brawlstars_club_tag", length = 45)
     var brawlStarsClubTag: String? = brawlStarsClubTag
         protected set
+
+    fun update(
+        name: String,
+        nameColor: String?,
+        iconBrawlStarsId: Long,
+        trophies: Int,
+        highestTrophies: Int,
+        expLevel: Int,
+        expPoints: Int,
+        qualifiedFromChampionshipChallenge: Boolean,
+        victories3vs3: Int,
+        victoriesSolo: Int,
+        victoriesDuo: Int,
+        bestRoboRumbleTime: Int,
+        bestTimeAsBigBrawler: Int,
+        brawlStarsClubTag: String?,
+    ) {
+        this.name = name
+        this.nameColor = nameColor
+        this.iconBrawlStarsId = iconBrawlStarsId
+        this.trophies = trophies
+        this.highestTrophies = highestTrophies
+        this.expLevel = expLevel
+        this.expPoints = expPoints
+        this.qualifiedFromChampionshipChallenge = qualifiedFromChampionshipChallenge
+        this.victories3vs3 = victories3vs3
+        this.victoriesSolo = victoriesSolo
+        this.victoriesDuo = victoriesDuo
+        this.bestRoboRumbleTime = bestRoboRumbleTime
+        this.bestTimeAsBigBrawler = bestTimeAsBigBrawler
+        this.brawlStarsClubTag = brawlStarsClubTag
+    }
 }
