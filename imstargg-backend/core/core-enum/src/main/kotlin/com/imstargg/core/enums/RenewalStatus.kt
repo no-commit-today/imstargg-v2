@@ -6,6 +6,7 @@ enum class RenewalStatus(
     PENDING("pending"),
     EXECUTING("executing"),
     COMPLETED("completed"),
+    DELETED("deleted"),
     ;
 
     companion object {
