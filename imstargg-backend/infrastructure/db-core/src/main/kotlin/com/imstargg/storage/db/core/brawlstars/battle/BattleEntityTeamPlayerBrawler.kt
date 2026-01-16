@@ -1,6 +1,6 @@
 package com.imstargg.storage.db.core.brawlstars.battle
 
-class BattleEntityTeamPlayerBrawler(
+data class BattleEntityTeamPlayerBrawler(
     val brawlStarsId: Long = 0L,
     val name: String = "",
     val power: Int = 0,
