@@ -3,8 +3,6 @@ package com.imstargg.core.enums
 enum class BattleEventMode(
     override val code: String,
 ) : EnumCodeType {
-    NOT_FOUND("notFound"),
-
     SOLO_SHOWDOWN("soloShowdown"),
     DUO_SHOWDOWN("duoShowdown"),
     TRIO_SHOWDOWN("trioShowdown"),

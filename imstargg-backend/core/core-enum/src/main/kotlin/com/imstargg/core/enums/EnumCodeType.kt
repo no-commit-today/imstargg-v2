@@ -28,11 +28,7 @@ interface EnumCodeType {
                         "code '${entry.key}' is used by: ${entry.value.joinToString(", ") { it.name }}"
                     }
 
-            if (duplicates.isNotEmpty()) {
-                throw IllegalStateException(
-                    "[${enumClass.simpleName}] has duplicate codes: ${duplicates.joinToString("; ")}",
-                )
-            }
+            check(duplicates.isEmpty()) { "[${enumClass.simpleName}] has duplicate codes: ${duplicates.joinToString("; ")}" }
         }
     }
 }

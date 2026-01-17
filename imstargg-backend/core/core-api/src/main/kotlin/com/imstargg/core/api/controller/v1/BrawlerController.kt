@@ -1,7 +1,7 @@
 package com.imstargg.core.api.controller.v1
 
-import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.api.controller.ListResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping

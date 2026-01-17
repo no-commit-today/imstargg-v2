@@ -3,8 +3,6 @@ package com.imstargg.core.enums
 enum class BattleMode(
     override val code: String,
 ) : EnumCodeType {
-    NOT_FOUND("notFound"),
-
     KNOCKOUT("knockout"),
     GEM_GRAB("gemGrab"),
     HEIST("heist"),

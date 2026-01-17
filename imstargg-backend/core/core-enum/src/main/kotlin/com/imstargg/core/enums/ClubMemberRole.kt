@@ -3,8 +3,6 @@ package com.imstargg.core.enums
 enum class ClubMemberRole(
     override val code: String,
 ) : EnumCodeType {
-    NOT_FOUND("notFound"),
-
     NOT_MEMBER("notMember"),
     MEMBER("member"),
     PRESIDENT("president"),

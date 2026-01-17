@@ -22,15 +22,13 @@ class BattleEventEntity(
     val brawlStarsId: Long,
     @Column(name = "mode", length = 45, updatable = false, nullable = false)
     val mode: String,
-    @Column(name = "map_brawlstars_name", length = 105, updatable = false)
-    val mapBrawlStarsName: String?,
-    @Column(name = "solo_ranked", nullable = false, updatable = false)
-    val soloRanked: Boolean,
+    @Column(name = "map_name", length = 105, updatable = false)
+    val mapName: String?,
 ) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battle_event_id")
     val id: Long? = null
 
-    fun mapMessageCode(): MessageCode? = mapBrawlStarsName?.let { MessageCode.of("event", "map", it, "name") }
+    fun mapNameMessageCode(): MessageCode? = mapName?.let { MessageCode.of("event", "map", it, "name") }
 }
