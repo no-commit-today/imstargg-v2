@@ -37,8 +37,8 @@ class ApiExceptionHandler(
 
     @ExceptionHandler(ConstraintViolationException::class)
     fun handleConstraintViolationException(ex: ConstraintViolationException): ResponseEntity<ProblemDetail> {
-        errorLogger.log(ex, ErrorType.VALIDATION_FAILED)
-        val problemDetail = createProblemDetail(ErrorType.VALIDATION_FAILED)
+        errorLogger.log(ex, ErrorType.INVALID_REQUEST)
+        val problemDetail = createProblemDetail(ErrorType.INVALID_REQUEST)
         val invalidFields =
             ex.constraintViolations.map { violation ->
                 FieldErrorResponse(
@@ -49,7 +49,7 @@ class ApiExceptionHandler(
             }
         problemDetail.setProperty(fieldsKey, invalidFields)
         return ResponseEntity
-            .status(ErrorType.VALIDATION_FAILED.status)
+            .status(ErrorType.INVALID_REQUEST.status)
             .body(problemDetail)
     }
 
@@ -79,7 +79,7 @@ class ApiExceptionHandler(
                 }
             }
 
-        val problemDetail = createProblemDetail(ErrorType.VALIDATION_FAILED)
+        val problemDetail = createProblemDetail(ErrorType.INVALID_REQUEST)
         problemDetail.setProperty(fieldsKey, invalidFields)
         return createResponseEntity(problemDetail, headers, status, request)
     }
@@ -112,7 +112,7 @@ class ApiExceptionHandler(
             )
         }
 
-        val problemDetail = createProblemDetail(ErrorType.VALIDATION_FAILED)
+        val problemDetail = createProblemDetail(ErrorType.INVALID_REQUEST)
         problemDetail.setProperty(fieldsKey, invalidFields)
 
         return createResponseEntity(problemDetail, headers, status, request)
