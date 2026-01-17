@@ -12,4 +12,5 @@ data class Club(
     val badgeId: BrawlStarsId,
     val requiredTrophies: Int,
     val trophies: Int,
+    val members: List<ClubMember>,
 )
