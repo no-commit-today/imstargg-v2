@@ -1,6 +1,7 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -29,4 +30,6 @@ class GadgetEntity(
     val id: Long? = null
 
     fun nameMessageCode(): MessageCode = MessageCode.of("gadget", brawlStarsId, "name")
+
+    fun imageCode(): BrawlStarsImageCode = BrawlStarsImageCode.of("gadget", brawlStarsId)
 }

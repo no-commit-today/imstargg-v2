@@ -1,7 +1,9 @@
 package com.imstargg.infrastructure.db.core.brawlstars
 
 import com.imstargg.infrastructure.db.core.BaseEntity
+import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -17,8 +19,9 @@ import jakarta.persistence.Table
     ],
 )
 class BrawlStarsImageEntity(
-    @Column(name = "code", length = 65, updatable = false, nullable = false)
-    val code: String,
+    @Embedded
+    @AttributeOverride(name = "value", column = Column(name = "code", length = 65, updatable = false, nullable = false))
+    val code: BrawlStarsImageCode,
     @Column(name = "stored_name", updatable = false, nullable = false)
     val storedName: String,
 ) : BaseEntity() {

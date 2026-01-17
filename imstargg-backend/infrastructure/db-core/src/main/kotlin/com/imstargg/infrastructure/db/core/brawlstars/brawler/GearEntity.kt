@@ -2,6 +2,7 @@ package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.core.enums.GearRarity
 import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -33,4 +34,6 @@ class GearEntity(
     val id: Long? = null
 
     fun nameMessageCode(): MessageCode = MessageCode.of("gear", brawlStarsId, "name")
+
+    fun imageCode(): BrawlStarsImageCode = BrawlStarsImageCode.of("gear", brawlStarsId)
 }

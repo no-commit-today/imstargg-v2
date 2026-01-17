@@ -8,25 +8,25 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.concurrent.TimeUnit
 
-
 @Configuration
 @EnableCaching
 class CacheConfig {
     @Bean
     fun cacheManager(): CacheManager {
-        val cacheManager = CaffeineCacheManager(
-            CacheNames.BRAWLER,
-            CacheNames.EVENT
-        )
+        val cacheManager =
+            CaffeineCacheManager(
+                CacheNames.BRAWLER,
+                CacheNames.EVENT,
+            )
         cacheManager.setCaffeine(caffeineBuilder())
         return cacheManager
     }
 
     @Bean
-    fun caffeineBuilder(): Caffeine<Any, Any> {
-        return Caffeine.newBuilder()
+    fun caffeineBuilder(): Caffeine<Any, Any> =
+        Caffeine
+            .newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(300, TimeUnit.SECONDS)
             .recordStats()
-    }
 }
