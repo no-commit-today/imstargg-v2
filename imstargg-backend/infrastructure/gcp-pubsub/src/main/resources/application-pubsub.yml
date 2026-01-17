@@ -1,11 +1,3 @@
-app:
-  pubsub:
-    topic:
-      player-renewal:
-        name: player-renewal-topic
-      club-renewal:
-        name: club-renewal-topic
-
 spring:
   cloud:
     gcp:
@@ -26,6 +18,19 @@ spring:
             element-count-threshold: 100
             request-byte-threshold: 1024
             delay-threshold-seconds: 1
+
+app:
+  pubsub:
+    topic:
+      player-renewal:
+        name: player-renewal-topic
+      club-renewal:
+        name: club-renewal-topic
+    subscription:
+      player-renewal:
+        name: player-renewal-subscription
+      club-renewal:
+        name: club-renewal-subscription
 
 ---
 spring:
