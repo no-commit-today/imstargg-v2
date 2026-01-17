@@ -2,6 +2,7 @@ package com.imstargg.core.worker.domain
 
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.storage.db.core.brawlstars.player.PlayerEntity
+import com.imstargg.storage.db.core.brawlstars.player.PlayerEntityClub
 
 fun PlayerEntity.update(response: PlayerResponse) {
     update(
@@ -18,6 +19,6 @@ fun PlayerEntity.update(response: PlayerResponse) {
         victoriesDuo = response.victoriesDuo,
         bestRoboRumbleTime = response.bestRoboRumbleTime,
         bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
-        brawlStarsClubTag = response.club?.tag,
+        club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
     )
 }

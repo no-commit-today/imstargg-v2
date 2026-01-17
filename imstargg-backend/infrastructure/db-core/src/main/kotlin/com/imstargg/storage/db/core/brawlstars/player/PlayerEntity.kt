@@ -2,6 +2,7 @@ package com.imstargg.storage.db.core.brawlstars.player
 
 import com.imstargg.storage.db.core.BaseEntity
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -32,7 +33,7 @@ class PlayerEntity(
     victoriesDuo: Int,
     bestRoboRumbleTime: Int,
     bestTimeAsBigBrawler: Int,
-    brawlStarsClubTag: String?,
+    club: PlayerEntityClub?,
 ) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -91,8 +92,8 @@ class PlayerEntity(
     var bestTimeAsBigBrawler: Int = bestTimeAsBigBrawler
         protected set
 
-    @Column(name = "brawlstars_club_tag", length = 45)
-    var brawlStarsClubTag: String? = brawlStarsClubTag
+    @Embedded
+    var club: PlayerEntityClub? = club
         protected set
 
     fun update(
@@ -109,7 +110,7 @@ class PlayerEntity(
         victoriesDuo: Int,
         bestRoboRumbleTime: Int,
         bestTimeAsBigBrawler: Int,
-        brawlStarsClubTag: String?,
+        club: PlayerEntityClub?,
     ) {
         this.name = name
         this.nameColor = nameColor
@@ -124,6 +125,6 @@ class PlayerEntity(
         this.victoriesDuo = victoriesDuo
         this.bestRoboRumbleTime = bestRoboRumbleTime
         this.bestTimeAsBigBrawler = bestTimeAsBigBrawler
-        this.brawlStarsClubTag = brawlStarsClubTag
+        this.club = club
     }
 }
