@@ -8,7 +8,7 @@ data class Club(
     val tag: BrawlStarsTag,
     val name: String,
     val description: String,
-    val type: ClubType,
+    val type: ClubType?,
     val badgeId: BrawlStarsId,
     val requiredTrophies: Int,
     val trophies: Int,

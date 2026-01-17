@@ -6,6 +6,6 @@ import com.imstargg.core.enums.BattleEventMode
 
 data class Event(
     val id: BrawlStarsId,
-    val mode: BattleEventMode,
+    val mode: BattleEventMode?,
     val mapName: Messages,
 )

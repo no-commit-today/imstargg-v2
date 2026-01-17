@@ -1,6 +1,7 @@
 package com.imstargg.core.domain.brawlstars.battle
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
+import com.imstargg.core.domain.brawlstars.event.Event
 import com.imstargg.core.enums.BattleMode
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
@@ -8,7 +9,7 @@ import java.time.OffsetDateTime
 
 data class Battle(
     val battleTime: OffsetDateTime,
-    val event: BattleEvent,
+    val event: Event?,
     val mode: BattleMode?,
     val type: BattleType?,
     val result: BattleResult?,
