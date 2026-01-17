@@ -1,15 +1,11 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.CoreWorkerContextTest
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityPlayer
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
 import com.imstargg.infrastructure.db.core.test.TestDataManager
+import com.imstargg.infrastructure.db.core.test.fixture.BattleEntityFixture.Companion.aBattleEntity
+import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -101,63 +97,21 @@ class BattleUpdateApplierTest(
     }
 
     private fun createPlayer(tag: String) =
-        PlayerEntity(
-            brawlStarsTag = tag,
-            name = "TestPlayer",
-            nameColor = "#FFFFFF",
-            iconBrawlStarsId = 1L,
-            trophies = 1000,
-            highestTrophies = 1500,
-            expLevel = 100,
-            expPoints = 5000,
-            qualifiedFromChampionshipChallenge = false,
-            victories3vs3 = 100,
-            victoriesSolo = 50,
-            victoriesDuo = 30,
-            bestRoboRumbleTime = 0,
-            bestTimeAsBigBrawler = 0,
-            club = PlayerEntityClub(brawlStarsTag = "#TESTCLUB", name = "TestClub"),
-        )
+        aPlayerEntity()
+            .withBrawlStarsTag(tag)
+            .build()
 
     private fun createBattleEntity(
         playerId: Long,
         battleTime: OffsetDateTime,
-    ) = BattleEntity(
-        battleKey = "battle_key_${battleTime.toEpochSecond()}",
-        battleTime = battleTime,
-        event =
-            BattleEntityEvent(
-                brawlStarsId = 1L,
-                mode = "gemGrab",
-                map = "TestMap",
-            ),
-        mode = "gemGrab",
-        type = "ranked",
-        result = "victory",
-        duration = 120,
-        starPlayerBrawlStarsTag = null,
-        player =
+    ) = aBattleEntity()
+        .withBattleKey("battle_key_${battleTime.toEpochSecond()}")
+        .withBattleTime(battleTime)
+        .withPlayer(
             BattleEntityPlayer(
                 playerId = playerId,
                 rank = null,
                 trophyChange = 8,
             ),
-        teams =
-            listOf(
-                listOf(
-                    BattleEntityTeamPlayer(
-                        brawlStarsTag = "#PLAYER1",
-                        name = "Player1",
-                        brawler =
-                            BattleEntityTeamPlayerBrawler(
-                                brawlStarsId = 1L,
-                                name = "Shelly",
-                                power = 11,
-                                trophies = 500,
-                                trophyChange = 8,
-                            ),
-                    ),
-                ),
-            ),
-    )
+        ).build()
 }

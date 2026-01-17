@@ -18,7 +18,7 @@ class PlayerEntityFixture {
     private var victoriesDuo: Int = 300
     private var bestRoboRumbleTime: Int = 0
     private var bestTimeAsBigBrawler: Int = 0
-    private var club: PlayerEntityClub? = null
+    private var club: PlayerEntityClub? = defaultPlayerEntityClub()
 
     companion object {
         fun aPlayerEntity() = PlayerEntityFixture()
