@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.domain
+package com.imstargg.core.worker.application
 
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.storage.db.core.brawlstars.battle.BattleEntity

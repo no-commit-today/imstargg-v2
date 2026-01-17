@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.domain
+package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.BrawlerStatResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
