@@ -52,4 +52,16 @@ class PlayerBrawlerEntity(
     @Column(name = "highest_trophies", nullable = false)
     var highestTrophies: Int = highestTrophies
         protected set
+
+    fun update(
+        power: Int,
+        rank: Int,
+        trophies: Int,
+        highestTrophies: Int,
+    ) {
+        this.power = power
+        this.rank = rank
+        this.trophies = trophies
+        this.highestTrophies = highestTrophies
+    }
 }
