@@ -6,6 +6,6 @@ import java.time.OffsetDateTime
 
 data class ClubRenewalCreate(
     val tag: BrawlStarsTag,
-    val status : RenewalStatus,
+    val status: RenewalStatus,
     val requestedAt: OffsetDateTime,
 )
