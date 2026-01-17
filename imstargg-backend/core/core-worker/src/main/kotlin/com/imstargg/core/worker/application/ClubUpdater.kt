@@ -2,10 +2,10 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.ClubMemberResponse
 import com.imstargg.client.brawlstars.response.ClubResponse
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubEntity
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubMemberEntity
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubMemberJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberJpaRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 

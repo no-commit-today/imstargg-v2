@@ -1,7 +1,7 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubEntity
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubMemberEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
 import com.imstargg.infrastructure.db.core.test.fixture.ClubEntityFixture.Companion.aClubEntity
 
 class ClubMemberEntityFixture {

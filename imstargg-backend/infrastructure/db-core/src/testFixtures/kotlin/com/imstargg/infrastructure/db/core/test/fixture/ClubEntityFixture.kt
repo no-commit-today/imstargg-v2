@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
-import com.imstargg.infrastructure.db.core.brawlstars.club.ClubEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
 
 class ClubEntityFixture {
     private var brawlStarsTag: String = "#CLUB12345"

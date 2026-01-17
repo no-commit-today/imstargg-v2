@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.brawlstars.club
+package com.imstargg.infrastructure.db.core.brawlstars.player
 
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
