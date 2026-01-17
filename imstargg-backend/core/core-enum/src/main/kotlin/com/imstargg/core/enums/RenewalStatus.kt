@@ -5,4 +5,5 @@ enum class RenewalStatus {
     EXECUTING,
     COMPLETED,
     NOT_FOUND,
+    FAILED,
 }

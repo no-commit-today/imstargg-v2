@@ -13,6 +13,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import java.time.Clock
 import java.time.OffsetDateTime
 
 @Entity
@@ -41,10 +42,48 @@ class RenewalEntity(
     var status: RenewalStatus = RenewalStatus.PENDING
         protected set
 
+    @Column(name = "executed_at", nullable = true)
+    var executedAt: OffsetDateTime? = null
+        protected set
+
     @Column(name = "completed_at", nullable = true)
     var completedAt: OffsetDateTime? = null
         protected set
 
     @Version
     val version: Int = 0
+
+    fun toExecuting(clock: Clock) {
+        check(status == RenewalStatus.PENDING || status == RenewalStatus.EXECUTING) {
+            "Cannot transition to EXECUTING from $status"
+        }
+        if (executedAt == null) {
+            executedAt = OffsetDateTime.now(clock)
+        }
+        status = RenewalStatus.EXECUTING
+    }
+
+    fun toCompleted(clock: Clock) {
+        check(status == RenewalStatus.EXECUTING) {
+            "Cannot transition to COMPLETED from $status"
+        }
+        completedAt = OffsetDateTime.now(clock)
+        status = RenewalStatus.COMPLETED
+    }
+
+    fun toNotFound(clock: Clock) {
+        check(status == RenewalStatus.EXECUTING) {
+            "Cannot transition to NOT_FOUND from $status"
+        }
+        completedAt = OffsetDateTime.now(clock)
+        status = RenewalStatus.NOT_FOUND
+    }
+
+    fun toFailed(clock: Clock) {
+        check(status == RenewalStatus.EXECUTING) {
+            "Cannot transition to FAILED from $status"
+        }
+        completedAt = OffsetDateTime.now(clock)
+        status = RenewalStatus.FAILED
+    }
 }

@@ -118,6 +118,7 @@ create table if not exists renewal
     type           varchar(25) not null,
     status         varchar(25) not null,
     requested_at   timestamp(6) not null,
+    executed_at    timestamp(6) null,
     completed_at   timestamp(6) null,
     version        int         not null default 0,
     created_at     timestamp(6) not null default current_timestamp(6),
