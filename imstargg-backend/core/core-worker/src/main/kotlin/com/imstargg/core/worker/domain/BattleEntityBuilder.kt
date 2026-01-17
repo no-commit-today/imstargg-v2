@@ -40,7 +40,7 @@ class BattleEntityBuilder(
         val event = battleResponse.event
         return BattleEntity(
             battleKey = battleKey,
-            battleTime = battleResponse.battleTime,
+            battleAt = battleResponse.battleTime,
             event =
                 BattleEntityEvent(
                     brawlStarsId = event.id,

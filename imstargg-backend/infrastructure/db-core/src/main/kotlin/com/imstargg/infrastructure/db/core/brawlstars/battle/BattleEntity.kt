@@ -17,14 +17,14 @@ import java.time.OffsetDateTime
 @Table(
     name = "battle",
     indexes = [
-        Index(name = "ix_battle__playerid_battletime", columnList = "player_id, battle_time desc")
+        Index(name = "ix_battle__playerid_battleat", columnList = "player_id, battle_at desc")
     ],
 )
 class BattleEntity(
     @Column(name = "battle_key", updatable = false, nullable = false)
     val battleKey: String,
-    @Column(name = "battle_time", updatable = false, nullable = false)
-    val battleTime: OffsetDateTime,
+    @Column(name = "battle_at", updatable = false, nullable = false)
+    val battleAt: OffsetDateTime,
     @Embedded
     val event: BattleEntityEvent,
     @Column(name = "mode", length = 105, updatable = false)

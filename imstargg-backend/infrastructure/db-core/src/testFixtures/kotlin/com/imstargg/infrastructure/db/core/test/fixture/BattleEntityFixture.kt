@@ -9,7 +9,7 @@ import java.time.OffsetDateTime
 
 class BattleEntityFixture {
     private var battleKey: String = "battle-key-12345"
-    private var battleTime: OffsetDateTime = OffsetDateTime.now()
+    private var battleAt: OffsetDateTime = OffsetDateTime.now()
     private var event: BattleEntityEvent = defaultBattleEntityEvent()
     private var mode: String? = "gemGrab"
     private var type: String? = "ranked"
@@ -143,7 +143,7 @@ class BattleEntityFixture {
 
     fun withBattleKey(value: String) = apply { battleKey = value }
 
-    fun withBattleTime(value: OffsetDateTime) = apply { battleTime = value }
+    fun withBattleAt(value: OffsetDateTime) = apply { battleAt = value }
 
     fun withEvent(value: BattleEntityEvent) = apply { event = value }
 
@@ -164,7 +164,7 @@ class BattleEntityFixture {
     fun build() =
         BattleEntity(
             battleKey = battleKey,
-            battleTime = battleTime,
+            battleAt = battleAt,
             event = event,
             mode = mode,
             type = type,

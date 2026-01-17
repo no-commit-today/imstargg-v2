@@ -65,7 +65,7 @@ class BattleUpdateApplierTest(
 
         // then
         assertThat(result).hasSize(2)
-        assertThat(result.map { it.battleTime.toEpochSecond() }).containsExactlyInAnyOrder(
+        assertThat(result.map { it.battleAt.toEpochSecond() }).containsExactlyInAnyOrder(
             OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC).toEpochSecond(),
             OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC).toEpochSecond(),
         )
@@ -106,7 +106,7 @@ class BattleUpdateApplierTest(
         battleTime: OffsetDateTime,
     ) = aBattleEntity()
         .withBattleKey("battle_key_${battleTime.toEpochSecond()}")
-        .withBattleTime(battleTime)
+        .withBattleAt(battleTime)
         .withPlayer(
             BattleEntityPlayer(
                 playerId = playerId,

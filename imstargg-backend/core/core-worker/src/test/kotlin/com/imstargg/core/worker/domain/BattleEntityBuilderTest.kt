@@ -625,7 +625,7 @@ class BattleEntityBuilderTest {
         playerEntity: PlayerEntity,
     ) {
         assertThat(actual.id).isNull()
-        assertThat(actual.battleTime).isEqualTo(expected.battleTime)
+        assertThat(actual.battleAt).isEqualTo(expected.battleTime)
         assertThat(actual.event.brawlStarsId).isEqualTo(expected.event.id)
         assertThat(actual.event.mode).isEqualTo(expected.event.mode)
         assertThat(actual.event.map).isEqualTo(expected.event.map)

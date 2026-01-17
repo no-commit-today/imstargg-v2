@@ -13,12 +13,12 @@ class BattleUpdateApplier(
         player: PlayerEntity,
         battles: List<BattleEntity>,
     ): List<BattleEntity> {
-        val latestBattle = battleRepository.findTopByPlayerPlayerIdOrderByBattleTimeDesc(player.id!!)
-        val latestBattleTime = latestBattle?.battleTime
+        val latestBattle = battleRepository.findTopByPlayerPlayerIdOrderByBattleAtDesc(player.id!!)
+        val latestBattleTime = latestBattle?.battleAt
 
         val newBattles =
             if (latestBattleTime != null) {
-                battles.filter { it.battleTime.isAfter(latestBattleTime) }
+                battles.filter { it.battleAt.isAfter(latestBattleTime) }
             } else {
                 battles
             }
