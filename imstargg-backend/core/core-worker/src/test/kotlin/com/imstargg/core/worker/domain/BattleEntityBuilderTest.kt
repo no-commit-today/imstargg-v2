@@ -5,8 +5,8 @@ import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 import com.imstargg.client.brawlstars.response.BattleResultResponse
 import com.imstargg.client.brawlstars.response.EventResponse
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntityTeamPlayer
-import com.imstargg.storage.db.core.brawlstars.player.PlayerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -620,7 +620,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattle(
-        actual: com.imstargg.storage.db.core.brawlstars.battle.BattleEntity,
+        actual: com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity,
         expected: BattleResponse,
         playerEntity: PlayerEntity,
     ) {

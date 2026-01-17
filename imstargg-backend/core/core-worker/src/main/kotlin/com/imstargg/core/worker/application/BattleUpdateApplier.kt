@@ -1,8 +1,8 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.storage.db.core.brawlstars.battle.BattleJpaRepository
-import com.imstargg.storage.db.core.brawlstars.player.PlayerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import org.springframework.stereotype.Component
 
 @Component

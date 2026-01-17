@@ -3,12 +3,12 @@ package com.imstargg.core.worker.domain
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntityEvent
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntityPlayer
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntityTeamPlayer
-import com.imstargg.storage.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
-import com.imstargg.storage.db.core.brawlstars.player.PlayerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityPlayer
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 
 class BattleEntityBuilder(
     private val playerEntity: PlayerEntity,
