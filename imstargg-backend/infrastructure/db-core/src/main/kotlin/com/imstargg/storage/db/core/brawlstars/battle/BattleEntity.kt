@@ -29,8 +29,8 @@ class BattleEntity(
     val battleTime: OffsetDateTime,
     @Embedded
     val event: BattleEntityEvent,
-    @Column(name = "mode", length = 105, updatable = false, nullable = false)
-    val mode: String,
+    @Column(name = "mode", length = 105, updatable = false)
+    val mode: String?,
     @Column(name = "type", length = 105, updatable = false)
     val type: String?,
     @Column(name = "result", length = 25, updatable = false)
