@@ -11,8 +11,9 @@ import org.springframework.stereotype.Service
 class PlayerService(
     private val playerRepository: PlayerRepository,
 ) {
-    fun get(tag: BrawlStarsTag): Player = playerRepository.find(tag)
-        ?: throw CoreException(ErrorType.NOT_FOUND, "tag=$tag")
+    fun get(tag: BrawlStarsTag): Player =
+        playerRepository.find(tag)
+            ?: throw CoreException(ErrorType.NOT_FOUND, "tag=$tag")
 
     fun getPlayerBrawlers(tag: BrawlStarsTag): List<PlayerBrawler> = playerRepository.findAllPlayerBrawler(tag)
 }

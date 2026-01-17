@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 class ClubService(
     private val clubRepository: ClubRepository,
 ) {
-    fun get(tag: BrawlStarsTag): Club = clubRepository.find(tag)
-        ?: throw CoreException(ErrorType.NOT_FOUND, "tag=$tag")
+    fun get(tag: BrawlStarsTag): Club =
+        clubRepository.find(tag)
+            ?: throw CoreException(ErrorType.NOT_FOUND, "tag=$tag")
 }
