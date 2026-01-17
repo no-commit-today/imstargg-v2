@@ -26,8 +26,13 @@ app:
       api-keys:
         - test-api-key
   pubsub:
-    topic:
-      player-renewal:
+    player-renewal:
+      topic:
         name: test-player-renewal-topic
-      club-renewal:
+      subscription:
+        name: test-player-renewal-subscription
+    club-renewal:
+      topic:
         name: test-club-renewal-topic
+      subscription:
+        name: test-club-renewal-subscription
