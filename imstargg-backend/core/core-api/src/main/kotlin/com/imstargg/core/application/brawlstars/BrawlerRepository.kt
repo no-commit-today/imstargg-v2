@@ -65,7 +65,7 @@ class BrawlerRepository(
                         .mapNotNull { gearsById[it.gearBrawlStarsId] }
                         .map { toGear(it, messagesByCode, imagesByCode) },
                 starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, messagesByCode, imagesByCode) },
-                imagePath = imagesByCode[brawlerEntity.portraitImageCode()]?.storedName,
+                portraitImagePath = imagesByCode[brawlerEntity.portraitImageCode()]?.storedName,
             )
         }
     }
