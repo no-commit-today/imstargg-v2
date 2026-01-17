@@ -54,4 +54,20 @@ class ClubEntity(
     @Column(name = "trophies", nullable = false)
     var trophies: Int = trophies
         protected set
+
+    fun update(
+        badgeBrawlStarsId: Long,
+        name: String,
+        description: String,
+        type: String,
+        requiredTrophies: Int,
+        trophies: Int,
+    ) {
+        this.badgeBrawlStarsId = badgeBrawlStarsId
+        this.name = name
+        this.description = description
+        this.type = type
+        this.requiredTrophies = requiredTrophies
+        this.trophies = trophies
+    }
 }

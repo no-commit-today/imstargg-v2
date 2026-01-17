@@ -57,4 +57,18 @@ class ClubMemberEntity(
     @Column(name = "icon_brawlstars_id", nullable = false)
     var iconBrawlStarsId: Long = iconBrawlStarsId
         protected set
+
+    fun update(
+        name: String,
+        nameColor: String?,
+        role: String,
+        trophies: Int,
+        iconBrawlStarsId: Long,
+    ) {
+        this.name = name
+        this.nameColor = nameColor
+        this.role = role
+        this.trophies = trophies
+        this.iconBrawlStarsId = iconBrawlStarsId
+    }
 }

@@ -1,5 +1,10 @@
 package com.imstargg.infrastructure.db.core.brawlstars.club
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 
-interface ClubJpaRepository : JpaRepository<ClubEntity, Long>
+interface ClubJpaRepository : JpaRepository<ClubEntity, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findWithLockByBrawlStarsTag(brawlStarsTag: String): ClubEntity?
+}
