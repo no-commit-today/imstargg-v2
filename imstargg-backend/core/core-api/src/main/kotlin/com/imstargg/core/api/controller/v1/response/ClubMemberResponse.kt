@@ -7,7 +7,7 @@ data class ClubMemberResponse(
     val tag: String,
     val name: String,
     val nameColor: String?,
-    val role: ClubMemberRole,
+    val role: ClubMemberRole?,
     val trophies: Int,
     val iconId: Long,
 ) {

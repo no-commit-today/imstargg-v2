@@ -40,7 +40,12 @@ class BrawlerRepository(
         val gearEntities = gearJpaRepository.findAll().toList()
         val brawlerGearEntities = brawlerGearJpaRepository.findAll().toList()
 
-        val messagesByCode = messageJpaRepository.findAll().groupBy { it.code }
+        val messageCodes =
+            brawlerEntities.map { it.nameMessageCode() } +
+                gadgetEntities.map { it.nameMessageCode() } +
+                starPowerEntities.map { it.nameMessageCode() } +
+                gearEntities.map { it.nameMessageCode() }
+        val messagesByCode = messageJpaRepository.findAllByCodeIn(messageCodes).groupBy { it.code }
 
         val imagesByCode = brawlStarsImageJpaRepository.findAll().associateBy { it.code }
 

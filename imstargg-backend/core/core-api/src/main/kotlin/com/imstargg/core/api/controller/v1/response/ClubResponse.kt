@@ -7,7 +7,7 @@ data class ClubResponse(
     val tag: String,
     val name: String,
     val description: String,
-    val type: ClubType,
+    val type: ClubType?,
     val badgeId: Long,
     val requiredTrophies: Int,
     val trophies: Int,
