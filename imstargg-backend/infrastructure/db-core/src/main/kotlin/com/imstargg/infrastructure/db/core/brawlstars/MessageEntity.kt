@@ -2,7 +2,9 @@ package com.imstargg.infrastructure.db.core.brawlstars
 
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.BaseEntity
+import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -20,8 +22,9 @@ import jakarta.persistence.Table
     ],
 )
 class MessageEntity(
-    @Column(name = "code", length = 65, updatable = false, nullable = false)
-    val code: String,
+    @Embedded
+    @AttributeOverride(name = "value", column = Column(name = "code", length = 65, updatable = false, nullable = false))
+    val code: MessageCode,
     @Enumerated(EnumType.STRING)
     @Column(name = "lang", length = 25, updatable = false, nullable = false)
     val lang: Language,
