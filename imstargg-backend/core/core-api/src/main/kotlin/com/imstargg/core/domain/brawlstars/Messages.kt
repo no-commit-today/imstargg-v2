@@ -8,12 +8,8 @@ data class Messages(
     fun find(language: Language): Message? = messages[language] ?: messages[Language.DEFAULT]
 
     companion object {
-        fun create(
-            messages: List<Message>,
-        ): Messages = Messages(messages.associateBy { it.language })
+        fun create(messages: List<Message>): Messages = Messages(messages.associateBy { it.language })
 
-        fun newDefault(
-            content: String,
-        ): Messages = create(listOf(Message(Language.DEFAULT, content)))
+        fun newDefault(content: String): Messages = create(listOf(Message(Language.DEFAULT, content)))
     }
 }

@@ -11,5 +11,4 @@ internal class BrawlStarsApiConfig {
     @Bean
     fun brawlStarsApiKeyInterceptor(properties: BrawlStarsClientProperties): RequestInterceptor =
         BrawlStarsApiKeyInterceptor(properties.apiKeys)
-
 }
