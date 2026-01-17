@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
 @Table(
     name = "battle",
     indexes = [
-        Index(name = "ix_battle__playerid_battleat", columnList = "player_id, battle_at desc")
+        Index(name = "ix_battle__playerid_battleat", columnList = "player_id, battle_at desc"),
     ],
 )
 class BattleEntity(

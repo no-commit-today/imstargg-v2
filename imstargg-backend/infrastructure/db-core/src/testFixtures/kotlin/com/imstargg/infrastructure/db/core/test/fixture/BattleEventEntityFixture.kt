@@ -21,6 +21,6 @@ class BattleEventEntityFixture {
         BattleEventEntity(
             brawlStarsId = brawlStarsId,
             mode = mode,
-            mapName = mapName
+            mapName = mapName,
         )
 }
