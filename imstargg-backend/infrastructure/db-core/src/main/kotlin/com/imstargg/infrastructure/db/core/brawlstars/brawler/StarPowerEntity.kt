@@ -1,6 +1,7 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -27,6 +28,5 @@ class StarPowerEntity(
     @Column(name = "star_power_id")
     val id: Long? = null
 
-    @Column(name = "name_message_code", length = 105, updatable = false, nullable = false)
-    val nameMessageCode: String = "star-power.$brawlStarsId.name"
+    fun nameMessageCode(): MessageCode = MessageCode.of("star-power", brawlStarsId, "name")
 }

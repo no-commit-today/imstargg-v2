@@ -2,6 +2,7 @@ package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.core.enums.GearRarity
 import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -31,6 +32,5 @@ class GearEntity(
     @Column(name = "gear_id")
     val id: Long? = null
 
-    @Column(name = "name_message_code", length = 105, updatable = false, nullable = false)
-    val nameMessageCode: String = "gear.$brawlStarsId.name"
+    fun nameMessageCode(): MessageCode = MessageCode.of("gear", brawlStarsId, "name")
 }
