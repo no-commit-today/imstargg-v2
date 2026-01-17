@@ -21,15 +21,15 @@ spring:
 
 app:
   pubsub:
-    topic:
-      player-renewal:
+    player-renewal:
+      topic:
         name: player-renewal-topic
-      club-renewal:
-        name: club-renewal-topic
-    subscription:
-      player-renewal:
+      subscription:
         name: player-renewal-subscription
-      club-renewal:
+    club-renewal:
+      topic:
+        name: club-renewal-topic
+      subscription:
         name: club-renewal-subscription
 
 ---
