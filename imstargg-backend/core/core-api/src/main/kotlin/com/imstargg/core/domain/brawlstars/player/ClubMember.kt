@@ -1,4 +1,4 @@
-package com.imstargg.core.domain.brawlstars.club
+package com.imstargg.core.domain.brawlstars.player
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
