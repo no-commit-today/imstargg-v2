@@ -7,7 +7,7 @@ import com.imstargg.core.enums.BrawlerRole
 
 data class Brawler(
     val id: BrawlStarsId,
-    val names: Messages,
+    val name: Messages,
     val rarity: BrawlerRarity,
     val role: BrawlerRole,
     val gadgets: List<Gadget>,

@@ -5,6 +5,6 @@ import com.imstargg.core.domain.brawlstars.Messages
 
 data class StarPower(
     val id: BrawlStarsId,
-    val names: Messages,
+    val name: Messages,
     val imagePath: String?,
 )

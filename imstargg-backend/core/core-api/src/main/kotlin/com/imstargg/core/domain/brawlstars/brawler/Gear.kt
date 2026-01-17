@@ -7,6 +7,6 @@ import com.imstargg.core.enums.GearRarity
 data class Gear(
     val id: BrawlStarsId,
     val rarity: GearRarity,
-    val names: Messages,
+    val name: Messages,
     val imagePath: String?,
 )
