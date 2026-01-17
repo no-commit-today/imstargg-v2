@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import jakarta.persistence.Version
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -49,9 +48,6 @@ class RenewalEntity(
     @Column(name = "completed_at", nullable = true)
     var completedAt: OffsetDateTime? = null
         protected set
-
-    @Version
-    val version: Int = 0
 
     fun toExecuting(clock: Clock) {
         check(status == RenewalStatus.PENDING || status == RenewalStatus.EXECUTING) {
