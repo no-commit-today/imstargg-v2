@@ -126,3 +126,27 @@ create table if not exists renewal
     deleted        boolean     not null default false,
     index ix_renewal__brawlstarstag_type_requestedat (brawlstars_tag, type, requested_at desc)
 );
+
+-- battle table
+create table if not exists battle
+(
+    battle_id                  bigint auto_increment primary key,
+    battle_key                 varchar(255)  not null,
+    battle_time                timestamp(6)  not null,
+    event_brawlstars_id        bigint        null,
+    event_mode                 varchar(65)   null,
+    event_map                  varchar(65)   null,
+    mode                       varchar(105)  null,
+    type                       varchar(105)  null,
+    result                     varchar(25)   null,
+    duration                   int           null,
+    star_player_brawlstars_tag varchar(45)   null,
+    player_id                  bigint        not null,
+    battle_rank                int           null,
+    trophy_change              int           null,
+    teams                      json          not null,
+    created_at                 timestamp(6)  not null default current_timestamp(6),
+    updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    deleted                    boolean       not null default false,
+    index ix_battle__playerid_battletime (player_id, battle_time desc)
+);
