@@ -12,3 +12,22 @@ spring:
       shutdown:
         await-termination: true
         await-termination-period: 10000
+
+  cloud:
+    gcp:
+      project-id: test-project
+      pubsub:
+        emulator-host: localhost:8085
+
+app:
+  client:
+    brawlstars:
+      url: https://api.brawlstars.com
+      api-keys:
+        - test-api-key
+  pubsub:
+    topic:
+      player-renewal:
+        name: test-player-renewal-topic
+      club-renewal:
+        name: test-club-renewal-topic
