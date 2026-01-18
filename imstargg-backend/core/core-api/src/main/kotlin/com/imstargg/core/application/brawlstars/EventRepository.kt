@@ -10,8 +10,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
+@Transactional(readOnly = true)
 class EventRepository(
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,

@@ -22,8 +22,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerJpaRepository
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
+@Transactional(readOnly = true)
 class BrawlerRepository(
     private val brawlerJpaRepository: BrawlerJpaRepository,
     private val gadgetJpaRepository: GadgetJpaRepository,

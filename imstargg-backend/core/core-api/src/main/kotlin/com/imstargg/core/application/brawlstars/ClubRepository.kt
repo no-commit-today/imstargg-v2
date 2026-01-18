@@ -12,8 +12,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.player.ClubJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberJpaRepository
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
+@Transactional(readOnly = true)
 class ClubRepository(
     private val clubJpaRepository: ClubJpaRepository,
     private val clubMemberJpaRepository: ClubMemberJpaRepository,

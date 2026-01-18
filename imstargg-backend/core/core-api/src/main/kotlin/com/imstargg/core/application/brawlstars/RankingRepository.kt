@@ -21,8 +21,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingItemJ
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
+@Transactional(readOnly = true)
 class RankingRepository(
     private val playerRankingJpaRepository: PlayerRankingJpaRepository,
     private val playerRankingItemJpaRepository: PlayerRankingItemJpaRepository,

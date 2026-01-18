@@ -11,8 +11,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerJpaRep
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
+@Transactional(readOnly = true)
 class PlayerRepository(
     private val playerJpaRepository: PlayerJpaRepository,
     private val playerBrawlerJpaRepository: PlayerBrawlerJpaRepository,
