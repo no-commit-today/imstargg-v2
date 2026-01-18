@@ -9,7 +9,7 @@ value class BrawlStarsTag(
     }
 
     companion object {
-        private val PATTERN = Regex("#[A-Z0-9]{6,16}")
+        private val PATTERN = Regex("#[A-Z0-9]+")
 
         fun isValid(value: String): Boolean = PATTERN.matches(value)
     }
