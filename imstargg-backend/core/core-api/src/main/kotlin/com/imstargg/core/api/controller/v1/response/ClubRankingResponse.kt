@@ -11,6 +11,7 @@ data class ClubRankingResponse(
     val trophies: Int,
     val rank: Int,
     val memberCount: Int,
+    val rankChange: Int?,
 ) {
     companion object {
         fun of(ranking: ClubRanking) =
@@ -22,6 +23,7 @@ data class ClubRankingResponse(
                 trophies = ranking.trophies,
                 rank = ranking.rank,
                 memberCount = ranking.memberCount,
+                rankChange = ranking.rankChange,
             )
     }
 }

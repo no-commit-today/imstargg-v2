@@ -11,51 +11,24 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import java.time.OffsetDateTime
 
 @Entity
 @Table(
     name = "club_ranking",
     indexes = [
-        Index(name = "uk_club_ranking__country_rank", columnList = "country, rank_value", unique = true),
+        Index(name = "uk_club_ranking__country_collected_at", columnList = "country, collected_at", unique = true),
     ],
 )
 class ClubRankingEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "country", columnDefinition = "varchar(25)", nullable = false, updatable = false)
     val country: Country,
-    brawlStarsTag: String,
-    name: String,
-    badgeBrawlStarsId: Long,
-    trophies: Int,
-    rank: Int,
-    memberCount: Int,
+    @Column(name = "collected_at", nullable = false, updatable = false)
+    val collectedAt: OffsetDateTime,
 ) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "club_ranking_id")
     val id: Long? = null
-
-    @Column(name = "brawlstars_tag", length = 45, nullable = false)
-    var brawlStarsTag: String = brawlStarsTag
-        protected set
-
-    @Column(name = "name", length = 45, nullable = false)
-    var name: String = name
-        protected set
-
-    @Column(name = "badge_brawlstars_id", nullable = false)
-    var badgeBrawlStarsId: Long = badgeBrawlStarsId
-        protected set
-
-    @Column(name = "trophies", nullable = false)
-    var trophies: Int = trophies
-        protected set
-
-    @Column(name = "rank_value", nullable = false)
-    var rank: Int = rank
-        protected set
-
-    @Column(name = "member_count", nullable = false)
-    var memberCount: Int = memberCount
-        protected set
 }

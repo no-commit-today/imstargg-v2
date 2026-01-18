@@ -12,4 +12,5 @@ data class ClubRanking(
     val trophies: Int,
     val rank: Int,
     val memberCount: Int,
+    val rankChange: Int?,
 )
