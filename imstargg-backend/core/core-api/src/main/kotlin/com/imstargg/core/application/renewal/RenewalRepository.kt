@@ -39,17 +39,14 @@ class RenewalRepository(
     }
 
     @Transactional
-    fun update(renewal: Renewal) {
+    fun toPending(renewal: Renewal): Renewal {
         val entity =
             renewalJpaRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
                 renewal.tag.value,
                 renewal.type,
             ) ?: throw NoSuchElementException("Renewal not found: tag=${renewal.tag}, type=${renewal.type}")
-        entity.update(
-            status = renewal.status,
-            executedAt = renewal.executedAt,
-            completedAt = renewal.completedAt,
-        )
+        entity.toPending()
+        return toRenewal(entity)
     }
 
     private fun toRenewal(entity: RenewalEntity): Renewal =

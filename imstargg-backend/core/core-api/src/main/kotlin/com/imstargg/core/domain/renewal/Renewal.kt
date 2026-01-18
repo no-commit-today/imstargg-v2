@@ -27,11 +27,4 @@ data class Renewal(
             }
             else -> true
         }
-
-    fun toPending(): Renewal {
-        check(status == RenewalStatus.REQUESTED) {
-            "Cannot transition to PENDING from $status"
-        }
-        return copy(status = RenewalStatus.PENDING)
-    }
 }

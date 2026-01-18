@@ -46,14 +46,10 @@ class RenewalService(
             throw CoreException(ErrorType.RENEWAL_ALREADY_IN_PROGRESS, "tag=$tag, type=$type")
         }
 
-        val renewalCreate = RenewalCreate(tag, type, now)
-        val renewal = renewalRepository.create(renewalCreate)
+        val renewal = renewalRepository.create(RenewalCreate(tag, type, now))
 
         publishAction()
 
-        val pendingRenewal = renewal.toPending()
-        renewalRepository.update(pendingRenewal)
-
-        return pendingRenewal
+        return renewalRepository.toPending(renewal)
     }
 }

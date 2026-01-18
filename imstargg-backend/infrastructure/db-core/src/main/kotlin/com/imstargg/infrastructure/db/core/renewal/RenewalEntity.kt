@@ -49,16 +49,6 @@ class RenewalEntity(
     var completedAt: OffsetDateTime? = null
         protected set
 
-    fun update(
-        status: RenewalStatus,
-        executedAt: OffsetDateTime?,
-        completedAt: OffsetDateTime?,
-    ) {
-        this.status = status
-        this.executedAt = executedAt
-        this.completedAt = completedAt
-    }
-
     fun toPending() {
         check(status == RenewalStatus.REQUESTED) {
             "Cannot transition to PENDING from $status"
