@@ -13,7 +13,7 @@ class BattleUpdateApplier(
         player: PlayerEntity,
         battles: List<BattleEntity>,
     ): List<BattleEntity> {
-        val latestBattle = battleRepository.findTopByPlayerPlayerIdOrderByBattleAtDesc(player.id!!)
+        val latestBattle = battleRepository.findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
         val latestBattleTime = latestBattle?.battleAt
 
         val newBattles =

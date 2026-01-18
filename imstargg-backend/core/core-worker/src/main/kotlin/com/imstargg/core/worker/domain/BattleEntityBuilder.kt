@@ -5,7 +5,6 @@ import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
@@ -52,12 +51,9 @@ class BattleEntityBuilder(
             result = battle.result,
             duration = battle.duration,
             starPlayerBrawlStarsTag = battle.starPlayer?.tag,
-            player =
-                BattleEntityPlayer(
-                    playerId = playerEntity.id!!,
-                    rank = battle.rank,
-                    trophyChange = battle.trophyChange,
-                ),
+            player = playerEntity,
+            battleRank = battle.rank,
+            trophyChange = battle.trophyChange,
             teams = teams,
         )
     }

@@ -1,8 +1,8 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.CoreWorkerContextTest
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.test.TestDataManager
 import com.imstargg.infrastructure.db.core.test.fixture.BattleEntityFixture.Companion.aBattleEntity
 import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
@@ -30,8 +30,8 @@ class BattleUpdateApplierTest(
 
         val battles =
             listOf(
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
@@ -49,15 +49,15 @@ class BattleUpdateApplierTest(
         testDataManager.add(player)
 
         val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)
-        val existingBattle = createBattleEntity(player.id!!, existingBattleTime)
+        val existingBattle = createBattleEntity(player, existingBattleTime)
         testDataManager.add(existingBattle)
 
         val battles =
             listOf(
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
@@ -79,13 +79,13 @@ class BattleUpdateApplierTest(
         testDataManager.add(player)
 
         val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)
-        val existingBattle = createBattleEntity(player.id!!, existingBattleTime)
+        val existingBattle = createBattleEntity(player, existingBattleTime)
         testDataManager.add(existingBattle)
 
         val battles =
             listOf(
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntity(player.id!!, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattleEntity(player, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
@@ -102,16 +102,13 @@ class BattleUpdateApplierTest(
             .build()
 
     private fun createBattleEntity(
-        playerId: Long,
+        player: PlayerEntity,
         battleTime: OffsetDateTime,
     ) = aBattleEntity()
         .withBattleKey("battle_key_${battleTime.toEpochSecond()}")
         .withBattleAt(battleTime)
-        .withPlayer(
-            BattleEntityPlayer(
-                playerId = playerId,
-                rank = null,
-                trophyChange = 8,
-            ),
-        ).build()
+        .withPlayer(player)
+        .withBattleRank(null)
+        .withTrophyChange(8)
+        .build()
 }

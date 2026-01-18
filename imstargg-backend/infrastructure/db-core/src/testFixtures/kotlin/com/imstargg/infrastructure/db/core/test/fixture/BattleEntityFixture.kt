@@ -2,9 +2,10 @@ package com.imstargg.infrastructure.db.core.test.fixture
 
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
+import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
 import java.time.OffsetDateTime
 
 class BattleEntityFixture {
@@ -16,7 +17,9 @@ class BattleEntityFixture {
     private var result: String? = "victory"
     private var duration: Int? = 120
     private var starPlayerBrawlStarsTag: String? = "#TEST12345"
-    private var player: BattleEntityPlayer = defaultBattleEntityPlayer()
+    private var player: PlayerEntity = aPlayerEntity().build()
+    private var battleRank: Int? = 1
+    private var trophyChange: Int? = 8
     private var teams: List<List<BattleEntityTeamPlayer>> = defaultTeams()
 
     companion object {
@@ -27,13 +30,6 @@ class BattleEntityFixture {
                 brawlStarsId = 15000001L,
                 mode = "gemGrab",
                 map = "Hard Rock Mine",
-            )
-
-        fun defaultBattleEntityPlayer(playerId: Long = 1L) =
-            BattleEntityPlayer(
-                playerId = playerId,
-                rank = 1,
-                trophyChange = 8,
             )
 
         fun defaultBattleEntityTeamPlayerBrawler(
@@ -157,7 +153,11 @@ class BattleEntityFixture {
 
     fun withStarPlayerBrawlStarsTag(value: String?) = apply { starPlayerBrawlStarsTag = value }
 
-    fun withPlayer(value: BattleEntityPlayer) = apply { player = value }
+    fun withPlayer(value: PlayerEntity) = apply { player = value }
+
+    fun withBattleRank(value: Int?) = apply { battleRank = value }
+
+    fun withTrophyChange(value: Int?) = apply { trophyChange = value }
 
     fun withTeams(value: List<List<BattleEntityTeamPlayer>>) = apply { teams = value }
 
@@ -172,6 +172,8 @@ class BattleEntityFixture {
             duration = duration,
             starPlayerBrawlStarsTag = starPlayerBrawlStarsTag,
             player = player,
+            battleRank = battleRank,
+            trophyChange = trophyChange,
             teams = teams,
         )
 }

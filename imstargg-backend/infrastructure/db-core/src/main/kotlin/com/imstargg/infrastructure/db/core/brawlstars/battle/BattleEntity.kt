@@ -1,13 +1,19 @@
 package com.imstargg.infrastructure.db.core.brawlstars.battle
 
 import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import jakarta.persistence.Column
+import jakarta.persistence.ConstraintMode
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.ForeignKey
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -37,8 +43,13 @@ class BattleEntity(
     val duration: Int?,
     @Column(name = "star_player_brawlstars_tag", length = 45, updatable = false)
     val starPlayerBrawlStarsTag: String?,
-    @Embedded
-    val player: BattleEntityPlayer,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", updatable = false, foreignKey = ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    val player: PlayerEntity,
+    @Column(name = "battle_rank", updatable = false)
+    val battleRank: Int?,
+    @Column(name = "trophy_change", updatable = false)
+    val trophyChange: Int?,
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
     val teams: List<List<BattleEntityTeamPlayer>>,

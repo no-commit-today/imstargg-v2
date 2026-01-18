@@ -14,7 +14,6 @@ import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.SoloRankTier
-import com.imstargg.core.error.CoreException
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
@@ -36,7 +35,7 @@ class BattleRepository(
         val playerEntity = playerJpaRepository.findByBrawlStarsTag(player.tag.value)!!
 
         val battleSlice =
-            battleJpaRepository.findSliceByPlayerPlayerIdAndDeletedFalseOrderByBattleAtDesc(
+            battleJpaRepository.findSliceByPlayerIdAndDeletedFalseOrderByBattleAtDesc(
                 playerEntity.id!!,
                 offsetLimit.toPageable(),
             )
@@ -59,8 +58,8 @@ class BattleRepository(
             result = entity.result?.let { EnumCodeType.findByCode<BattleResult>(it) },
             duration = entity.duration,
             starPlayerTag = entity.starPlayerBrawlStarsTag?.let { BrawlStarsTag(it) },
-            rank = entity.player.rank,
-            trophyChange = entity.player.trophyChange,
+            rank = entity.battleRank,
+            trophyChange = entity.trophyChange,
             teams = toTeams(battleType, entity.teams, brawlers),
         )
     }

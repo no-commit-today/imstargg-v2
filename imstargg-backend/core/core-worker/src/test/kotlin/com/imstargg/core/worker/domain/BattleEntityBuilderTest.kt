@@ -634,9 +634,9 @@ class BattleEntityBuilderTest {
         assertThat(actual.result).isEqualTo(expected.battle.result)
         assertThat(actual.duration).isEqualTo(expected.battle.duration)
         assertThat(actual.starPlayerBrawlStarsTag).isEqualTo(expected.battle.starPlayer?.tag)
-        assertThat(actual.player.playerId).isEqualTo(playerEntity.id)
-        assertThat(actual.player.rank).isEqualTo(expected.battle.rank)
-        assertThat(actual.player.trophyChange).isEqualTo(expected.battle.trophyChange)
+        assertThat(actual.player.id).isEqualTo(playerEntity.id)
+        assertThat(actual.battleRank).isEqualTo(expected.battle.rank)
+        assertThat(actual.trophyChange).isEqualTo(expected.battle.trophyChange)
     }
 
     private fun assertBattleTeams(
