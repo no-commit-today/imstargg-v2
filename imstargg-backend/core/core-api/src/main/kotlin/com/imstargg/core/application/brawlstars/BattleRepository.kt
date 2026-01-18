@@ -1,6 +1,7 @@
 package com.imstargg.core.application.brawlstars
 
 import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.battle.Battle
@@ -31,18 +32,21 @@ class BattleRepository(
     fun find(
         player: Player,
         offsetLimit: OffsetLimit,
-    ): List<Battle> {
+    ): Slice<Battle> {
         val playerEntity = playerJpaRepository.findByBrawlStarsTag(player.tag.value)!!
 
         val battleSlice =
-            battleJpaRepository.findSliceByPlayerIdAndDeletedFalseOrderByBattleAtDesc(
+            battleJpaRepository.findSliceByPlayerIdOrderByBattleAtDesc(
                 playerEntity.id!!,
                 offsetLimit.toPageable(),
             )
 
         val brawlers = brawlerRepositoryWithCache.findBrawlers()
 
-        return battleSlice.content.map { toBattle(it, brawlers) }
+        return Slice(
+            content = battleSlice.content.map { toBattle(it, brawlers) },
+            hasNext = battleSlice.hasNext(),
+        )
     }
 
     private fun toBattle(

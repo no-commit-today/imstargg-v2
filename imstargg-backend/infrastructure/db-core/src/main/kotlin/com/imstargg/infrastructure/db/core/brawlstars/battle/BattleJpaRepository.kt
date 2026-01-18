@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface BattleJpaRepository : JpaRepository<BattleEntity, Long> {
     fun findTopByPlayerIdOrderByBattleAtDesc(playerId: Long): BattleEntity?
 
-    fun findSliceByPlayerIdAndDeletedFalseOrderByBattleAtDesc(
+    fun findSliceByPlayerIdOrderByBattleAtDesc(
         playerId: Long,
         pageable: Pageable,
     ): Slice<BattleEntity>
