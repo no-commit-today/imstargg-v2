@@ -120,7 +120,6 @@ create table if not exists renewal
     requested_at   timestamp(6) not null,
     executed_at    timestamp(6) null,
     completed_at   timestamp(6) null,
-    version        int         not null default 0,
     created_at     timestamp(6) not null default current_timestamp(6),
     updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted        boolean     not null default false,
@@ -148,5 +147,5 @@ create table if not exists battle
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     deleted                    boolean       not null default false,
-    index ix_battle__playerid_battletime (player_id, battle_at desc)
+    index ix_battle__playerid_battleat (player_id, battle_at desc)
 );
