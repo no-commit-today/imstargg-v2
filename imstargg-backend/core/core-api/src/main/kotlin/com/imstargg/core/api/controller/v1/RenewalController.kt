@@ -22,7 +22,7 @@ class RenewalController(
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.getPlayerRenewal(BrawlStarsTag(tag))
         val now = OffsetDateTime.now(clock)
-        return ResponseEntity.ok(RenewalResponse.of(renewal, progressing = !renewal.canRenew(now)))
+        return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 
     @GetMapping("/v1/clubs/{tag}/renewal")
@@ -31,7 +31,7 @@ class RenewalController(
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.getClubRenewal(BrawlStarsTag(tag))
         val now = OffsetDateTime.now(clock)
-        return ResponseEntity.ok(RenewalResponse.of(renewal, progressing = !renewal.canRenew(now)))
+        return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 
     @PostMapping("/v1/players/{tag}/renewal")
@@ -39,7 +39,8 @@ class RenewalController(
         @PathVariable tag: String,
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.renewPlayer(BrawlStarsTag(tag))
-        return ResponseEntity.ok(RenewalResponse.of(renewal, progressing = true))
+        val now = OffsetDateTime.now(clock)
+        return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 
     @PostMapping("/v1/clubs/{tag}/renewal")
@@ -47,6 +48,7 @@ class RenewalController(
         @PathVariable tag: String,
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.renewClub(BrawlStarsTag(tag))
-        return ResponseEntity.ok(RenewalResponse.of(renewal, progressing = true))
+        val now = OffsetDateTime.now(clock)
+        return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 }

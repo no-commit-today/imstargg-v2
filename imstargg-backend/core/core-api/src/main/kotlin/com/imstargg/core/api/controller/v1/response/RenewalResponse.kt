@@ -13,14 +13,16 @@ data class RenewalResponse(
     val completedAt: OffsetDateTime?,
 ) {
     companion object {
-        fun of(renewal: Renewal, progressing: Boolean) =
-            RenewalResponse(
-                tag = renewal.tag.value,
-                status = renewal.status,
-                progressing = progressing,
-                requestedAt = renewal.requestedAt,
-                executedAt = renewal.executedAt,
-                completedAt = renewal.completedAt,
-            )
+        fun of(
+            renewal: Renewal,
+            now: OffsetDateTime,
+        ) = RenewalResponse(
+            tag = renewal.tag.value,
+            status = renewal.status,
+            progressing = !renewal.canRenew(now),
+            requestedAt = renewal.requestedAt,
+            executedAt = renewal.executedAt,
+            completedAt = renewal.completedAt,
+        )
     }
 }
