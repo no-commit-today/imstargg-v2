@@ -14,11 +14,56 @@ class RenewalEntityTest {
     private val fixedClock = Clock.fixed(Instant.parse("2025-01-17T10:00:00Z"), ZoneId.of("UTC"))
 
     @Nested
+    inner class ToPending {
+        @Test
+        fun `REQUESTED 상태에서 호출하면 PENDING으로 변경된다`() {
+            // given
+            val sut = aRenewalEntity().build()
+
+            // when
+            sut.toPending()
+
+            // then
+            assertThat(sut.status).isEqualTo(RenewalStatus.PENDING)
+        }
+
+        @Test
+        fun `PENDING 상태에서 호출하면 IllegalStateException이 발생한다`() {
+            // given
+            val sut = aRenewalEntity().build()
+            sut.toPending()
+
+            // when
+            val exception =
+                catchThrowableOfType(IllegalStateException::class.java) {
+                    sut.toPending()
+                }
+
+            // then
+            assertThat(exception.message).contains("Cannot transition to PENDING from PENDING")
+        }
+    }
+
+    @Nested
     inner class ToExecuting {
+        @Test
+        fun `REQUESTED 상태에서 호출하면 EXECUTING으로 변경되고 executedAt이 설정된다`() {
+            // given
+            val sut = aRenewalEntity().build()
+
+            // when
+            sut.toExecuting(fixedClock)
+
+            // then
+            assertThat(sut.status).isEqualTo(RenewalStatus.EXECUTING)
+            assertThat(sut.executedAt).isNotNull
+        }
+
         @Test
         fun `PENDING 상태에서 호출하면 EXECUTING으로 변경되고 executedAt이 설정된다`() {
             // given
             val sut = aRenewalEntity().build()
+            sut.toPending()
 
             // when
             sut.toExecuting(fixedClock)
@@ -114,7 +159,7 @@ class RenewalEntityTest {
         }
 
         @Test
-        fun `PENDING 상태에서 호출하면 IllegalStateException이 발생한다`() {
+        fun `REQUESTED 상태에서 호출하면 IllegalStateException이 발생한다`() {
             // given
             val sut = aRenewalEntity().build()
 
@@ -125,7 +170,7 @@ class RenewalEntityTest {
                 }
 
             // then
-            assertThat(exception.message).contains("Cannot transition to COMPLETED from PENDING")
+            assertThat(exception.message).contains("Cannot transition to COMPLETED from REQUESTED")
         }
     }
 
@@ -146,7 +191,7 @@ class RenewalEntityTest {
         }
 
         @Test
-        fun `PENDING 상태에서 호출하면 IllegalStateException이 발생한다`() {
+        fun `REQUESTED 상태에서 호출하면 IllegalStateException이 발생한다`() {
             // given
             val sut = aRenewalEntity().build()
 
@@ -157,7 +202,7 @@ class RenewalEntityTest {
                 }
 
             // then
-            assertThat(exception.message).contains("Cannot transition to NOT_FOUND from PENDING")
+            assertThat(exception.message).contains("Cannot transition to NOT_FOUND from REQUESTED")
         }
     }
 
@@ -178,7 +223,7 @@ class RenewalEntityTest {
         }
 
         @Test
-        fun `PENDING 상태에서 호출하면 IllegalStateException이 발생한다`() {
+        fun `REQUESTED 상태에서 호출하면 IllegalStateException이 발생한다`() {
             // given
             val sut = aRenewalEntity().build()
 
@@ -189,7 +234,7 @@ class RenewalEntityTest {
                 }
 
             // then
-            assertThat(exception.message).contains("Cannot transition to FAILED from PENDING")
+            assertThat(exception.message).contains("Cannot transition to FAILED from REQUESTED")
         }
     }
 }

@@ -2,6 +2,11 @@ spring:
   profiles:
     active: test-db
 
+  cloud:
+    gcp:
+      pubsub:
+        enabled: false
+
   task:
     execution:
       thread-name-prefix: "core-task-"
@@ -12,3 +17,16 @@ spring:
       shutdown:
         await-termination: true
         await-termination-period: 10000
+
+app:
+  pubsub:
+    player-renewal:
+      topic:
+        name: test-player-renewal-topic
+      subscription:
+        name: test-player-renewal-subscription
+    club-renewal:
+      topic:
+        name: test-club-renewal-topic
+      subscription:
+        name: test-club-renewal-subscription

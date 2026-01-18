@@ -1,13 +1,11 @@
 package com.imstargg.core.domain.renewal
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
-import com.imstargg.core.enums.RenewalStatus
+import com.imstargg.core.enums.RenewalType
 import java.time.OffsetDateTime
 
-data class ClubRenewal(
+data class RenewalCreate(
     val tag: BrawlStarsTag,
-    val status: RenewalStatus,
+    val type: RenewalType,
     val requestedAt: OffsetDateTime,
-    val executedAt: OffsetDateTime?,
-    val completedAt: OffsetDateTime?,
 )

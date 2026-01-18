@@ -38,7 +38,7 @@ class RenewalEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 25, nullable = false)
-    var status: RenewalStatus = RenewalStatus.PENDING
+    var status: RenewalStatus = RenewalStatus.REQUESTED
         protected set
 
     @Column(name = "executed_at", nullable = true)
@@ -49,8 +49,25 @@ class RenewalEntity(
     var completedAt: OffsetDateTime? = null
         protected set
 
+    fun update(
+        status: RenewalStatus,
+        executedAt: OffsetDateTime?,
+        completedAt: OffsetDateTime?,
+    ) {
+        this.status = status
+        this.executedAt = executedAt
+        this.completedAt = completedAt
+    }
+
+    fun toPending() {
+        check(status == RenewalStatus.REQUESTED) {
+            "Cannot transition to PENDING from $status"
+        }
+        status = RenewalStatus.PENDING
+    }
+
     fun toExecuting(clock: Clock) {
-        check(status == RenewalStatus.PENDING || status == RenewalStatus.EXECUTING) {
+        check(status == RenewalStatus.REQUESTED || status == RenewalStatus.PENDING || status == RenewalStatus.EXECUTING) {
             "Cannot transition to EXECUTING from $status"
         }
         if (executedAt == null) {
