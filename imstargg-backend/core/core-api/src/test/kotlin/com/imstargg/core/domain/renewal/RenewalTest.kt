@@ -82,12 +82,32 @@ class RenewalTest {
         }
 
         @Test
-        fun `NOT_FOUND 상태이면 갱신할 수 있다`() {
+        fun `NOT_FOUND 상태에서 1분 이하면 갱신할 수 없다`() {
             // given
-            val sut = aRenewal().withStatus(RenewalStatus.NOT_FOUND).build()
+            val sut =
+                aRenewal()
+                    .withStatus(RenewalStatus.NOT_FOUND)
+                    .withRequestedAt(baseTime)
+                    .build()
 
             // when
-            val result = sut.canRenew(baseTime)
+            val result = sut.canRenew(baseTime.plusSeconds(60))
+
+            // then
+            assertThat(result).isFalse()
+        }
+
+        @Test
+        fun `NOT_FOUND 상태에서 1분 초과하면 갱신할 수 있다`() {
+            // given
+            val sut =
+                aRenewal()
+                    .withStatus(RenewalStatus.NOT_FOUND)
+                    .withRequestedAt(baseTime)
+                    .build()
+
+            // when
+            val result = sut.canRenew(baseTime.plusSeconds(61))
 
             // then
             assertThat(result).isTrue()

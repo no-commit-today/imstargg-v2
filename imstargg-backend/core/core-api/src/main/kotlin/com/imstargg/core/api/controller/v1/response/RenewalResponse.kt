@@ -8,6 +8,7 @@ data class RenewalResponse(
     val tag: String,
     val status: RenewalStatus,
     val progressing: Boolean,
+    val canRenew: Boolean,
     val requestedAt: OffsetDateTime,
     val executedAt: OffsetDateTime?,
     val completedAt: OffsetDateTime?,
@@ -19,7 +20,8 @@ data class RenewalResponse(
         ) = RenewalResponse(
             tag = renewal.tag.value,
             status = renewal.status,
-            progressing = !renewal.canRenew(now),
+            progressing = renewal.status.isProgressing(),
+            canRenew = renewal.canRenew(now),
             requestedAt = renewal.requestedAt,
             executedAt = renewal.executedAt,
             completedAt = renewal.completedAt,

@@ -21,7 +21,7 @@ data class Renewal(
     fun canRenew(now: OffsetDateTime): Boolean =
         when (status) {
             RenewalStatus.PENDING, RenewalStatus.EXECUTING -> false
-            RenewalStatus.REQUESTED -> {
+            RenewalStatus.REQUESTED, RenewalStatus.NOT_FOUND -> {
                 val elapsed = Duration.between(requestedAt, now)
                 elapsed > STALE_REQUESTED_THRESHOLD
             }
