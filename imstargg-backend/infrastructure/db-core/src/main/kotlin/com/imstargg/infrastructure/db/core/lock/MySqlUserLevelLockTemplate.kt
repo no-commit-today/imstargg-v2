@@ -8,7 +8,6 @@ import javax.sql.DataSource
 class MySqlUserLevelLockTemplate(
     private val datasource: DataSource,
 ) : LockTemplate {
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
@@ -24,9 +23,9 @@ class MySqlUserLevelLockTemplate(
     ): T {
         datasource.connection.use {
             try {
-                log.info("start getLock=[{}], timeoutSeconds : [{}], connection=[{}]", lockName, timeoutSeconds, it)
+                log.debug("start getLock=[{}], timeoutSeconds : [{}], connection=[{}]", lockName, timeoutSeconds, it)
                 getLock(it, lockName, timeoutSeconds)
-                log.info(
+                log.debug(
                     "success getLock=[{}], timeoutSeconds : [{}], connection=[{}]",
                     lockName,
                     timeoutSeconds,
@@ -34,14 +33,18 @@ class MySqlUserLevelLockTemplate(
                 )
                 return supplier()
             } finally {
-                log.info("start releaseLock=[{}], connection=[{}]", lockName, it)
+                log.debug("start releaseLock=[{}], connection=[{}]", lockName, it)
                 releaseLock(it, lockName)
-                log.info("success releaseLock=[{}], connection=[{}]", lockName, it)
+                log.debug("success releaseLock=[{}], connection=[{}]", lockName, it)
             }
         }
     }
 
-    private fun getLock(connection: Connection, lockName: LockName, timeoutSeconds: Int) {
+    private fun getLock(
+        connection: Connection,
+        lockName: LockName,
+        timeoutSeconds: Int,
+    ) {
         connection.prepareStatement(GET_LOCK).use { preparedStatement ->
             preparedStatement.setString(1, lockName.value)
             preparedStatement.setInt(2, timeoutSeconds)
@@ -49,14 +52,21 @@ class MySqlUserLevelLockTemplate(
         }
     }
 
-    private fun releaseLock(connection: Connection, lockName: LockName) {
+    private fun releaseLock(
+        connection: Connection,
+        lockName: LockName,
+    ) {
         connection.prepareStatement(RELEASE_LOCK).use { preparedStatement ->
             preparedStatement.setString(1, lockName.value)
             checkResultSet(lockName, preparedStatement, "ReleaseLock_")
         }
     }
 
-    private fun checkResultSet(lockName: LockName, preparedStatement: PreparedStatement, type: String) {
+    private fun checkResultSet(
+        lockName: LockName,
+        preparedStatement: PreparedStatement,
+        type: String,
+    ) {
         preparedStatement.executeQuery().use { resultSet ->
             if (!resultSet.next()) {
                 log.error(

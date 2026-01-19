@@ -12,5 +12,5 @@ class CoreDataSourceConfig {
     @Primary
     @Bean
     @ConfigurationProperties(prefix = "storage.datasource.core")
-    fun coreDataSource(): HikariDataSource? = DataSourceBuilder.create().type(HikariDataSource::class.java).build()
+    fun coreDataSource(): HikariDataSource = DataSourceBuilder.create().type(HikariDataSource::class.java).build()!!
 }
