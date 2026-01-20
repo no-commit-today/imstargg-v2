@@ -12,15 +12,19 @@ import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerStarPo
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerStarPowerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class PlayerUpdateApplier(
+    private val playerRepository: PlayerJpaRepository,
     private val playerBrawlerRepository: PlayerBrawlerJpaRepository,
     private val playerBrawlerGearRepository: PlayerBrawlerGearJpaRepository,
     private val playerBrawlerStarPowerRepository: PlayerBrawlerStarPowerJpaRepository,
     private val playerBrawlerGadgetRepository: PlayerBrawlerGadgetJpaRepository,
 ) {
+    @Transactional
     fun apply(
         player: PlayerEntity,
         response: PlayerResponse,
@@ -49,6 +53,7 @@ class PlayerUpdateApplier(
             bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
             club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
         )
+        playerRepository.save(player)
     }
 
     private fun updateBrawlers(

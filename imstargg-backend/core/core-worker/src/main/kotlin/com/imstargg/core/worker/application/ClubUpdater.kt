@@ -1,76 +1,43 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.client.brawlstars.response.ClubMemberResponse
 import com.imstargg.client.brawlstars.response.ClubResponse
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberJpaRepository
+import com.imstargg.infrastructure.db.core.lock.LockName
+import com.imstargg.infrastructure.db.core.lock.LockTemplate
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 @Component
 class ClubUpdater(
+    private val lockTemplate: LockTemplate,
     private val clubRepository: ClubJpaRepository,
-    private val clubMemberRepository: ClubMemberJpaRepository,
+    private val clubUpdateApplier: ClubUpdateApplier,
 ) {
-    @Transactional
-    fun update(clubResponse: ClubResponse) {
-        val club =
-            clubRepository.findWithLockByBrawlStarsTag(clubResponse.tag)
-                ?: throw IllegalArgumentException("Club not found: ${clubResponse.tag}")
-
-        club.update(
-            badgeBrawlStarsId = clubResponse.badgeId,
-            name = clubResponse.name,
-            description = clubResponse.description,
-            type = clubResponse.type,
-            requiredTrophies = clubResponse.requiredTrophies,
-            trophies = clubResponse.trophies,
-        )
-
-        syncMembers(club, clubResponse.members)
+    companion object {
+        private const val LOCK_TIMEOUT_SECONDS = 3
     }
 
-    private fun syncMembers(
-        club: ClubEntity,
-        memberResponses: List<ClubMemberResponse>,
-    ) {
-        val existingMembers =
-            clubMemberRepository
-                .findAllByClub(club)
-                .associateBy { it.brawlStarsTag }
+    fun update(clubResponse: ClubResponse) {
+        lockTemplate.execute(
+            LockName.createClubLockName(clubResponse.tag),
+            LOCK_TIMEOUT_SECONDS,
+        ) {
+            val club =
+                clubRepository.findByBrawlStarsTag(clubResponse.tag)
+                    ?: createClub(clubResponse)
 
-        val responseTags = memberResponses.map { it.tag }.toSet()
-
-        val membersToDelete =
-            existingMembers.values
-                .filter { it.brawlStarsTag !in responseTags }
-        clubMemberRepository.deleteAll(membersToDelete)
-
-        for (response in memberResponses) {
-            val existing = existingMembers[response.tag]
-            if (existing != null) {
-                existing.update(
-                    name = response.name,
-                    nameColor = response.nameColor,
-                    role = response.role,
-                    trophies = response.trophies,
-                    iconBrawlStarsId = response.icon.id,
-                )
-            } else {
-                clubMemberRepository.save(
-                    ClubMemberEntity(
-                        club = club,
-                        brawlStarsTag = response.tag,
-                        name = response.name,
-                        nameColor = response.nameColor,
-                        role = response.role,
-                        trophies = response.trophies,
-                        iconBrawlStarsId = response.icon.id,
-                    ),
-                )
-            }
+            clubUpdateApplier.apply(club, clubResponse)
         }
     }
+
+    private fun createClub(response: ClubResponse): ClubEntity =
+        ClubEntity(
+            brawlStarsTag = response.tag,
+            badgeBrawlStarsId = response.badgeId,
+            name = response.name,
+            description = response.description,
+            type = response.type,
+            requiredTrophies = response.requiredTrophies,
+            trophies = response.trophies,
+        )
 }
