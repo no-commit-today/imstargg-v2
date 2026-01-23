@@ -3,6 +3,7 @@ package com.imstargg.infrastructure.db.core.statistics
 import com.imstargg.infrastructure.db.core.BaseEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -13,7 +14,6 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
 
 @Entity
 @Table(name = "stats_battle")
@@ -69,7 +69,7 @@ class StatsBattleEntity(
             }
 
             return StatsBattleEntity(
-                createdDate = OffsetDateTime.ofInstant(battle.createdAt!!, ZoneId.of("Asia/Seoul")).toLocalDate(),
+                createdDate = battle.createdAt!!.toKoreaLocalDate(),
                 battleKey = battle.battleKey,
                 battleAt = battle.battleAt,
                 eventBrawlStarsId = battle.event!!.brawlStarsId!!,

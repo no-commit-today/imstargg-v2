@@ -273,3 +273,25 @@ create table if not exists stats_battle
 --   );
 -- 오래된 파티션 삭제 예시:
 --   ALTER TABLE stats_battle DROP PARTITION p_20250101;
+
+-- aggregated_battle_key table (파티셔닝: battle_date 기준)
+create table if not exists aggregated_battle_key
+(
+    aggregated_battle_key_id bigint auto_increment,
+    battle_date              date          not null,
+    battle_key               varchar(255)  not null,
+    created_at               timestamp(6)  not null default current_timestamp(6),
+    updated_at               timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    deleted                  boolean       not null default false,
+    primary key (aggregated_battle_key_id, battle_date),
+    unique index uk_aggregated_battle_key__battle_date_battle_key (battle_date, battle_key)
+) partition by range (to_days(battle_date)) (
+    partition p_default values less than maxvalue
+);
+-- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
+-- 일별 파티션 추가 예시:
+--   ALTER TABLE aggregated_battle_key ADD PARTITION (
+--       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
+--   );
+-- 오래된 파티션 삭제 예시:
+--   ALTER TABLE aggregated_battle_key DROP PARTITION p_20250101;
