@@ -58,7 +58,7 @@ class BattleRepository(
         val battleType = entity.type?.let { EnumCodeType.findByCode<BattleType>(it) }
         return Battle(
             battleTime = entity.battleAt,
-            event = findEvent(entity.event.brawlStarsId),
+            event = findEvent(entity.event?.brawlStarsId),
             mode = entity.mode?.let { EnumCodeType.findByCode<BattleMode>(it) },
             type = battleType,
             result = entity.result?.let { EnumCodeType.findByCode<BattleResult>(it) },

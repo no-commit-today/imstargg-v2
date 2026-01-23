@@ -11,7 +11,7 @@ import java.time.OffsetDateTime
 class BattleEntityFixture {
     private var battleKey: String = "battle-key-12345"
     private var battleAt: OffsetDateTime = OffsetDateTime.now()
-    private var event: BattleEntityEvent = defaultBattleEntityEvent()
+    private var event: BattleEntityEvent? = defaultBattleEntityEvent()
     private var mode: String? = "gemGrab"
     private var type: String? = "ranked"
     private var result: String? = "victory"
@@ -141,7 +141,7 @@ class BattleEntityFixture {
 
     fun withBattleAt(value: OffsetDateTime) = apply { battleAt = value }
 
-    fun withEvent(value: BattleEntityEvent) = apply { event = value }
+    fun withEvent(value: BattleEntityEvent?) = apply { event = value }
 
     fun withMode(value: String?) = apply { mode = value }
 

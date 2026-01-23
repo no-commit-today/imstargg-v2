@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.brawlstars.statistics
+package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.infrastructure.db.core.BaseEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
@@ -11,7 +11,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -57,10 +56,12 @@ class StatsBattleEntity(
     val id: Long? = null
 
     companion object {
-        fun canCreate(battle: BattleEntity): Boolean =
-            battle.event.brawlStarsId != null &&
-                battle.event.mode != null &&
-                battle.event.map != null
+        fun canCreate(battle: BattleEntity): Boolean {
+            val event = battle.event ?: return false
+            return event.brawlStarsId != null &&
+                event.mode != null &&
+                event.map != null
+        }
 
         fun from(battle: BattleEntity): StatsBattleEntity {
             require(canCreate(battle)) {
@@ -71,9 +72,9 @@ class StatsBattleEntity(
                 createdDate = OffsetDateTime.ofInstant(battle.createdAt!!, ZoneId.of("Asia/Seoul")).toLocalDate(),
                 battleKey = battle.battleKey,
                 battleAt = battle.battleAt,
-                eventBrawlStarsId = battle.event.brawlStarsId!!,
-                eventMode = battle.event.mode!!,
-                eventMap = battle.event.map!!,
+                eventBrawlStarsId = battle.event!!.brawlStarsId!!,
+                eventMode = battle.event!!.mode!!,
+                eventMap = battle.event!!.map!!,
                 mode = battle.mode,
                 type = battle.type,
                 result = battle.result,
