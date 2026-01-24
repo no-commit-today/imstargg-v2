@@ -295,3 +295,65 @@ create table if not exists aggregated_battle_key
 --   );
 -- 오래된 파티션 삭제 예시:
 --   ALTER TABLE aggregated_battle_key DROP PARTITION p_20250101;
+
+-- stats_rank_battle table (파티셔닝: created_date 기준)
+create table if not exists stats_rank_battle
+(
+    stats_rank_battle_id       bigint auto_increment,
+    created_date               date          not null,
+    battle_key                 varchar(255)  not null,
+    battle_at                  timestamp(6)  not null,
+    event_brawlstars_id        bigint        not null,
+    event_mode                 varchar(65)   not null,
+    event_map                  varchar(65)   not null,
+    mode                       varchar(65)   not null,
+    type                       varchar(65)   not null,
+    star_player_brawlstars_tag varchar(45)   null,
+    player_brawlstars_tag      varchar(45)   not null,
+    battle_rank                int           not null,
+    teams                      json          not null,
+    created_at                 timestamp(6)  not null default current_timestamp(6),
+    updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    deleted                    boolean       not null default false,
+    primary key (stats_rank_battle_id, created_date)
+) partition by range (to_days(created_date)) (
+    partition p_default values less than maxvalue
+);
+-- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
+-- 일별 파티션 추가 예시:
+--   ALTER TABLE stats_rank_battle ADD PARTITION (
+--       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
+--   );
+-- 오래된 파티션 삭제 예시:
+--   ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
+
+-- stats_result_battle table (파티셔닝: created_date 기준)
+create table if not exists stats_result_battle
+(
+    stats_result_battle_id     bigint auto_increment,
+    created_date               date          not null,
+    battle_key                 varchar(255)  not null,
+    battle_at                  timestamp(6)  not null,
+    event_brawlstars_id        bigint        not null,
+    event_mode                 varchar(65)   not null,
+    event_map                  varchar(65)   not null,
+    mode                       varchar(65)   not null,
+    type                       varchar(65)   not null,
+    result                     varchar(25)   not null,
+    star_player_brawlstars_tag varchar(45)   null,
+    player_brawlstars_tag      varchar(45)   not null,
+    teams                      json          not null,
+    created_at                 timestamp(6)  not null default current_timestamp(6),
+    updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    deleted                    boolean       not null default false,
+    primary key (stats_result_battle_id, created_date)
+) partition by range (to_days(created_date)) (
+    partition p_default values less than maxvalue
+);
+-- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
+-- 일별 파티션 추가 예시:
+--   ALTER TABLE stats_result_battle ADD PARTITION (
+--       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
+--   );
+-- 오래된 파티션 삭제 예시:
+--   ALTER TABLE stats_result_battle DROP PARTITION p_20250101;

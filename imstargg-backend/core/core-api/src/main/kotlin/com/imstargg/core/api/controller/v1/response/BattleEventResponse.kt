@@ -1,11 +1,11 @@
 package com.imstargg.core.api.controller.v1.response
 
 import com.imstargg.core.domain.brawlstars.event.Event
-import com.imstargg.core.enums.BattleEventMode
+import com.imstargg.core.enums.EventMode
 
 data class BattleEventResponse(
     val id: Long,
-    val mode: BattleEventMode?,
+    val mode: EventMode?,
     val mapName: MessagesResponse,
 ) {
     companion object {

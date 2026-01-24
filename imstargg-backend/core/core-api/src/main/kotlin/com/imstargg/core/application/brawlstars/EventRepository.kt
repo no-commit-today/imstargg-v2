@@ -4,7 +4,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.event.Event
-import com.imstargg.core.enums.BattleEventMode
+import com.imstargg.core.enums.EventMode
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
@@ -28,7 +28,7 @@ class EventRepository(
 
         return Event(
             id = BrawlStarsId(eventEntity.brawlStarsId),
-            mode = EnumCodeType.findByCode<BattleEventMode>(eventEntity.mode),
+            mode = EnumCodeType.findByCode<EventMode>(eventEntity.mode),
             mapName = toMessages(mapNameMessages),
         )
     }

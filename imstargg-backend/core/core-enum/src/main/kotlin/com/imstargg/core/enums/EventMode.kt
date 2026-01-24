@@ -1,6 +1,6 @@
 package com.imstargg.core.enums
 
-enum class BattleEventMode(
+enum class EventMode(
     override val code: String,
 ) : EnumCodeType {
     SOLO_SHOWDOWN("soloShowdown"),
@@ -46,9 +46,9 @@ enum class BattleEventMode(
 
     companion object {
         init {
-            EnumCodeType.validateNoDuplicateCodes(BattleEventMode::class.java)
+            EnumCodeType.validateNoDuplicateCodes(EventMode::class.java)
         }
 
-        fun showdowns(): Set<BattleEventMode> = setOf(SOLO_SHOWDOWN, DUO_SHOWDOWN, TRIO_SHOWDOWN)
+        fun showdowns(): Set<EventMode> = setOf(SOLO_SHOWDOWN, DUO_SHOWDOWN, TRIO_SHOWDOWN)
     }
 }
