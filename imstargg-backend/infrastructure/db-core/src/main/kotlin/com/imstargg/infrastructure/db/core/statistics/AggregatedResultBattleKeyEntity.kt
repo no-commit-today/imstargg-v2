@@ -11,8 +11,8 @@ import jakarta.persistence.Table
 import java.time.LocalDate
 
 @Entity
-@Table(name = "aggregated_battle_key")
-class AggregatedBattleKeyEntity private constructor(
+@Table(name = "aggregated_result_battle_key")
+class AggregatedResultBattleKeyEntity private constructor(
     @Column(name = "battle_date", updatable = false, nullable = false)
     val battleDate: LocalDate,
     @Column(name = "battle_key", updatable = false, nullable = false)
@@ -20,14 +20,14 @@ class AggregatedBattleKeyEntity private constructor(
 ) : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "aggregated_battle_key_id", nullable = false)
+    @Column(name = "aggregated_result_battle_key_id", nullable = false)
     val id: Long? = null
 
     companion object {
-        fun from(statsBattle: StatsBattleEntity) =
-            AggregatedBattleKeyEntity(
-                battleDate = statsBattle.battleAt.toKoreaLocalDate(),
-                battleKey = statsBattle.battleKey,
+        fun from(statsResultBattle: StatsResultBattleEntity) =
+            AggregatedResultBattleKeyEntity(
+                battleDate = statsResultBattle.battleAt.toKoreaLocalDate(),
+                battleKey = statsResultBattle.battleKey,
             )
     }
 }

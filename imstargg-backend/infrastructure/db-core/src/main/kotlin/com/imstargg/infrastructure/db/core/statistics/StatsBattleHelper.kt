@@ -14,7 +14,10 @@ object StatsBattleHelper {
     private const val MIN_TROPHY = 500
     private val MIN_SOLO_RANK_TIER = SoloRankTier.DIAMOND_1
 
-    fun canAggregate(clock: Clock, battle: BattleEntity) : Boolean {
+    fun canAggregate(
+        clock: Clock,
+        battle: BattleEntity,
+    ): Boolean {
         val now = OffsetDateTime.now(clock)
         return battle.battleAt.isAfter(now.minusDays(BATTLE_MAX_AGE_DAYS))
     }
