@@ -30,9 +30,9 @@ class StatsBattleEntity(
     val eventMode: String,
     @Column(name = "event_map", length = 65, updatable = false, nullable = false)
     val eventMap: String,
-    @Column(name = "mode", length = 105, updatable = false)
+    @Column(name = "mode", length = 65, updatable = false)
     val mode: String?,
-    @Column(name = "type", length = 105, updatable = false)
+    @Column(name = "type", length = 65, updatable = false)
     val type: String?,
     @Column(name = "result", length = 25, updatable = false)
     val result: String?,
