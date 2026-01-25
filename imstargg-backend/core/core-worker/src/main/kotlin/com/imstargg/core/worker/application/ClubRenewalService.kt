@@ -15,19 +15,19 @@ class ClubRenewalService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun renew(brawlStarsTag: String) {
-        clubRenewalProcessor.process(brawlStarsTag)
+        val renewalId = clubRenewalProcessor.executing(brawlStarsTag)
 
         try {
             val clubResponse = brawlStarsClient.getClub(brawlStarsTag)
             clubUpdater.update(clubResponse)
-            clubRenewalProcessor.complete(brawlStarsTag)
+            clubRenewalProcessor.complete(renewalId)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            clubRenewalProcessor.notFound(brawlStarsTag)
+            clubRenewalProcessor.notFound(renewalId)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[클럽 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
-            clubRenewalProcessor.fail(brawlStarsTag)
+            clubRenewalProcessor.fail(renewalId)
         } catch (ex: Exception) {
-            clubRenewalProcessor.fail(brawlStarsTag)
+            clubRenewalProcessor.fail(renewalId)
             throw ex
         }
     }
