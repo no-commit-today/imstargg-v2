@@ -6,6 +6,7 @@ include(
     "core:core-batch",
     "core:core-worker",
     "infrastructure:db-core",
+    "infrastructure:redis-core",
     "infrastructure:gcp-pubsub",
     "client:brawlstars-client",
     "support:logging",
