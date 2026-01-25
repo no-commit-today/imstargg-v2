@@ -15,7 +15,7 @@ class PlayerRenewalService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun renew(brawlStarsTag: String) {
-        playerRenewalProcessor.process(brawlStarsTag)
+        val renewalId = playerRenewalProcessor.executing(brawlStarsTag)
 
         try {
             val playerResponse = brawlStarsClient.getPlayerInformation(brawlStarsTag)
@@ -23,14 +23,14 @@ class PlayerRenewalService(
 
             playerUpdater.update(playerResponse, battleResponses)
 
-            playerRenewalProcessor.complete(brawlStarsTag)
+            playerRenewalProcessor.complete(renewalId)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            playerRenewalProcessor.notFound(brawlStarsTag)
+            playerRenewalProcessor.notFound(renewalId)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[플레이어 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
-            playerRenewalProcessor.fail(brawlStarsTag)
+            playerRenewalProcessor.fail(renewalId)
         } catch (ex: Exception) {
-            playerRenewalProcessor.fail(brawlStarsTag)
+            playerRenewalProcessor.fail(renewalId)
             throw ex
         }
     }

@@ -10,29 +10,35 @@ class PlayerRenewalProcessor(
     private val renewalRepository: RenewalJpaRepository,
     private val clock: Clock,
 ) {
-    fun process(brawlStarsTag: String) {
-        val renewal = getEntity(brawlStarsTag)
+    fun executing(brawlStarsTag: String): Long {
+        val renewal = getEntityByTag(brawlStarsTag)
         renewal.toExecuting(clock)
+        return renewal.id!!
     }
 
-    fun complete(brawlStarsTag: String) {
-        val renewal = getEntity(brawlStarsTag)
+    fun complete(renewalId: Long) {
+        val renewal = getEntityById(renewalId)
         renewal.toCompleted(clock)
     }
 
-    fun notFound(brawlStarsTag: String) {
-        val renewal = getEntity(brawlStarsTag)
+    fun notFound(renewalId: Long) {
+        val renewal = getEntityById(renewalId)
         renewal.toNotFound(clock)
     }
 
-    fun fail(brawlStarsTag: String) {
-        val renewal = getEntity(brawlStarsTag)
+    fun fail(renewalId: Long) {
+        val renewal = getEntityById(renewalId)
         renewal.toFailed(clock)
     }
 
-    private fun getEntity(brawlStarsTag: String) =
+    private fun getEntityByTag(brawlStarsTag: String) =
         renewalRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
             brawlStarsTag,
             RenewalType.PLAYER,
-        ) ?: throw NoSuchElementException("Renewal not found for tag: $brawlStarsTag")
+        ) ?: throw IllegalArgumentException("Renewal not found for tag: $brawlStarsTag")
+
+    private fun getEntityById(renewalId: Long) =
+        renewalRepository
+            .findById(renewalId)
+            .orElseThrow { IllegalArgumentException("Renewal not found for id: $renewalId") }
 }
