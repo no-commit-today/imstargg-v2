@@ -1,6 +1,5 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.infrastructure.db.core.BaseEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
@@ -9,48 +8,51 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "stats_rank_battle")
 class StatsRankBattleEntity(
-    @Column(name = "created_date", updatable = false, nullable = false)
-    val createdDate: LocalDate,
-    @Column(name = "battle_key", updatable = false, nullable = false)
-    val battleKey: String,
-    @Column(name = "battle_at", updatable = false, nullable = false)
-    val battleAt: OffsetDateTime,
-    @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
-    val eventBrawlStarsId: Long,
-    @Column(name = "event_mode", length = 65, updatable = false, nullable = false)
-    val eventMode: String,
-    @Column(name = "event_map", length = 65, updatable = false, nullable = false)
-    val eventMap: String,
-    @Column(name = "mode", length = 65, updatable = false, nullable = false)
-    val mode: String,
-    @Column(name = "type", length = 65, updatable = false, nullable = false)
-    val type: String,
-    @Column(name = "star_player_brawlstars_tag", length = 45, updatable = false)
-    val starPlayerBrawlStarsTag: String?,
-    @Column(name = "player_brawlstars_tag", length = 45, updatable = false, nullable = false)
-    val playerBrawlStarsTag: String,
+    createdDate: LocalDate,
+    battleKey: String,
+    battleAt: OffsetDateTime,
+    eventBrawlStarsId: Long,
+    eventMode: String,
+    eventMap: String,
+    mode: String,
+    type: String,
+    starPlayerBrawlStarsTag: String?,
+    playerBrawlStarsTag: String,
+    teams: List<List<StatsBattleEntityTeamPlayer>>,
     @Column(name = "battle_rank", updatable = false, nullable = false)
     val battleRank: Int,
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
-    val teams: List<List<StatsBattleEntityTeamPlayer>>,
-) : BaseEntity() {
+) : BaseStatsBattleEntity(
+        createdDate = createdDate,
+        battleKey = battleKey,
+        battleAt = battleAt,
+        eventBrawlStarsId = eventBrawlStarsId,
+        eventMode = eventMode,
+        eventMap = eventMap,
+        mode = mode,
+        type = type,
+        starPlayerBrawlStarsTag = starPlayerBrawlStarsTag,
+        playerBrawlStarsTag = playerBrawlStarsTag,
+        teams = teams,
+    ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stats_rank_battle_id", nullable = false)
     val id: Long? = null
 
     companion object {
+        fun canCreate(battle: BattleEntity): Boolean {
+            if (!BaseStatsBattleEntity.canCreate(battle)) return false
+            return battle.battleRank != null
+        }
+
         fun from(battle: BattleEntity): StatsRankBattleEntity {
-            require(StatsBattleHelper.canCreateRankBattle(battle)) {
+            require(canCreate(battle)) {
                 "StatsRankBattleEntity 생성 불가: battleRank가 null이거나 공통 검증 실패. battleKey=${battle.battleKey}"
             }
 
@@ -66,7 +68,7 @@ class StatsRankBattleEntity(
                 starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
                 playerBrawlStarsTag = battle.player.brawlStarsTag,
                 battleRank = battle.battleRank!!,
-                teams = StatsBattleHelper.convertTeams(battle.teams),
+                teams = convertTeams(battle.teams),
             )
         }
     }
