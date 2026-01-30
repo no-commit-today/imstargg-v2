@@ -11,16 +11,11 @@ data class LockName(
 
     companion object {
         private const val MAX_LENGTH = 64
-        private const val SEPARATOR = ":"
 
-        fun createPlayerLockName(tag: String) =
-            LockName(
-                value = "player$SEPARATOR$tag",
-            )
+        fun createPlayerLockName(tag: String) = LockName(value = "player:$tag")
 
-        fun createClubLockName(tag: String) =
-            LockName(
-                value = "club$SEPARATOR$tag",
-            )
+        fun createClubLockName(tag: String) = LockName(value = "club:$tag")
+
+        fun createPlayerStatsBattleLockName(tag: String) = LockName(value = "player:$tag:stats:battle")
     }
 }
