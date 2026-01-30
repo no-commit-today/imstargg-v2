@@ -16,6 +16,7 @@ class PlayerUpdater(
     private val playerRepository: PlayerJpaRepository,
     private val playerUpdateApplier: PlayerUpdateApplier,
     private val battleUpdateApplier: BattleUpdateApplier,
+    private val statsBattleAggregator: StatsBattleAggregator,
 ) {
     companion object {
         private const val LOCK_TIMEOUT_SECONDS = 3
@@ -25,19 +26,22 @@ class PlayerUpdater(
         playerResponse: PlayerResponse,
         battleResponses: List<BattleResponse>,
     ) {
-        lockTemplate.execute(
-            LockName.createPlayerLockName(playerResponse.tag),
-            LOCK_TIMEOUT_SECONDS,
-        ) {
-            val player =
-                playerRepository.findByBrawlStarsTag(playerResponse.tag)
-                    ?: createPlayer(playerResponse)
+        val savedBattles =
+            lockTemplate.execute(
+                LockName.createPlayerLockName(playerResponse.tag),
+                LOCK_TIMEOUT_SECONDS,
+            ) {
+                val player =
+                    playerRepository.findByBrawlStarsTag(playerResponse.tag)
+                        ?: createPlayer(playerResponse)
 
-            playerUpdateApplier.apply(player, playerResponse)
+                playerUpdateApplier.apply(player, playerResponse)
 
-            val battleEntities = battleResponses.map { BattleEntityBuilder(player, it).build() }
-            battleUpdateApplier.apply(player, battleEntities)
-        }
+                val battleEntities = battleResponses.map { BattleEntityBuilder(player, it).build() }
+                battleUpdateApplier.apply(player, battleEntities)
+            }
+
+        statsBattleAggregator.asyncAggregate(savedBattles)
     }
 
     private fun createPlayer(response: PlayerResponse): PlayerEntity =
