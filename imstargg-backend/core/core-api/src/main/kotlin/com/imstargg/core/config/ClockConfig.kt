@@ -1,4 +1,4 @@
-package com.imstargg.core.application.config
+package com.imstargg.core.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

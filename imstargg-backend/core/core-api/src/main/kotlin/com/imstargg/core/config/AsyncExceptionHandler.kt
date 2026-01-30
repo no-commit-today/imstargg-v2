@@ -1,4 +1,4 @@
-package com.imstargg.core.application.config
+package com.imstargg.core.config
 
 import com.example.template.core.error.ErrorLogger
 import org.slf4j.LoggerFactory

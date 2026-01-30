@@ -1,4 +1,4 @@
-package com.imstargg.core.application.config
+package com.imstargg.core.config
 
 object CacheNames {
     const val BRAWLER = "brawler"

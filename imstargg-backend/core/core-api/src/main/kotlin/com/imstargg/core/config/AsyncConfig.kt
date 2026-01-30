@@ -1,4 +1,4 @@
-package com.imstargg.core.application.config
+package com.imstargg.core.config
 
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import org.springframework.context.annotation.Configuration

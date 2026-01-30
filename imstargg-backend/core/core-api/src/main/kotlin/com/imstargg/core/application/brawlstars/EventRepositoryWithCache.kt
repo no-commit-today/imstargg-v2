@@ -1,6 +1,6 @@
 package com.imstargg.core.application.brawlstars
 
-import com.imstargg.core.application.config.CacheNames
+import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.event.Event
 import org.springframework.cache.annotation.Cacheable
