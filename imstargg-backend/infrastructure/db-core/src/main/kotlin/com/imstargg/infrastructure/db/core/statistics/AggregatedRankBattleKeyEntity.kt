@@ -25,6 +25,10 @@ class AggregatedRankBattleKeyEntity private constructor(
     @Column(name = "aggregated_rank_battle_key_id", nullable = false)
     val id: Long? = null
 
+    fun matches(statsRankBattle: StatsRankBattleEntity): Boolean =
+        this.battleKey == statsRankBattle.battleKey &&
+            this.playerBrawlStarsTag == statsRankBattle.playerBrawlStarsTag
+
     companion object {
         fun from(statsRankBattle: StatsRankBattleEntity) =
             AggregatedRankBattleKeyEntity(

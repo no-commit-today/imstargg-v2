@@ -23,6 +23,8 @@ class AggregatedResultBattleKeyEntity private constructor(
     @Column(name = "aggregated_result_battle_key_id", nullable = false)
     val id: Long? = null
 
+    fun matches(statsResultBattle: StatsResultBattleEntity): Boolean = this.battleKey == statsResultBattle.battleKey
+
     companion object {
         fun from(statsResultBattle: StatsResultBattleEntity) =
             AggregatedResultBattleKeyEntity(

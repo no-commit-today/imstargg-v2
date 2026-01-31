@@ -275,8 +275,8 @@ create table if not exists aggregated_rank_battle_key
     updated_at                    timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     deleted                       boolean       not null default false,
     primary key (aggregated_rank_battle_key_id, battle_date),
-    unique index uk_aggregated_rank_battle_key__date_player_battlekey
-        (battle_date, player_brawlstars_tag, battle_key)
+    unique index uk_aggregated_rank_battle_key__date_battlekey_player
+        (battle_date, battle_key, player_brawlstars_tag)
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );
