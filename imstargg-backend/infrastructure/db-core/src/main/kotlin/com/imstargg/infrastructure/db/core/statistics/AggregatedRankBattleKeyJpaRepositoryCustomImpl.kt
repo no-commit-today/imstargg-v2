@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
+import com.imstargg.infrastructure.db.core.statistics.QAggregatedRankBattleKeyEntity.Companion.aggregatedRankBattleKeyEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -12,15 +13,14 @@ class AggregatedRankBattleKeyJpaRepositoryCustomImpl(
     override fun findAllByStatsRankBattles(statsRankBattles: Collection<StatsRankBattleEntity>): List<AggregatedRankBattleKeyEntity> {
         if (statsRankBattles.isEmpty()) return emptyList()
 
-        val entity = QAggregatedRankBattleKeyEntity.aggregatedRankBattleKeyEntity
         val battleKeys = statsRankBattles.map { it.battleKey }
         val battleDates = statsRankBattles.map { it.battleAt.toKoreaLocalDate() }.distinct()
 
         return queryFactory
-            .selectFrom(entity)
+            .selectFrom(aggregatedRankBattleKeyEntity)
             .where(
-                entity.battleDate.`in`(battleDates),
-                entity.battleKey.`in`(battleKeys),
+                aggregatedRankBattleKeyEntity.battleDate.`in`(battleDates),
+                aggregatedRankBattleKeyEntity.battleKey.`in`(battleKeys),
             ).fetch()
     }
 }

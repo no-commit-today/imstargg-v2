@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
+import com.imstargg.infrastructure.db.core.statistics.QAggregatedResultBattleKeyEntity.Companion.aggregatedResultBattleKeyEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -14,15 +15,14 @@ class AggregatedResultBattleKeyJpaRepositoryCustomImpl(
     ): List<AggregatedResultBattleKeyEntity> {
         if (statsResultBattles.isEmpty()) return emptyList()
 
-        val entity = QAggregatedResultBattleKeyEntity.aggregatedResultBattleKeyEntity
         val battleKeys = statsResultBattles.map { it.battleKey }
         val battleDates = statsResultBattles.map { it.battleAt.toKoreaLocalDate() }.distinct()
 
         return queryFactory
-            .selectFrom(entity)
+            .selectFrom(aggregatedResultBattleKeyEntity)
             .where(
-                entity.battleDate.`in`(battleDates),
-                entity.battleKey.`in`(battleKeys),
+                aggregatedResultBattleKeyEntity.battleDate.`in`(battleDates),
+                aggregatedResultBattleKeyEntity.battleKey.`in`(battleKeys),
             ).fetch()
     }
 }
