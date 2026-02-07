@@ -77,12 +77,14 @@ abstract class BaseStatsBattleEntity(
 
             val minTrophies = allPlayers.minOfOrNull { it.brawler.trophies } ?: return false
 
-            if (battleType == BattleType.SOLO_RANKED && minTrophies < MIN_SOLO_RANK_TIER.value) {
-                return false
-            }
-
-            if (minTrophies < MIN_TROPHY) {
-                return false
+            if (battleType == BattleType.SOLO_RANKED) {
+                if (minTrophies < MIN_SOLO_RANK_TIER.value) {
+                    return false
+                }
+            } else {
+                if (minTrophies < MIN_TROPHY) {
+                    return false
+                }
             }
 
             return true
@@ -91,7 +93,7 @@ abstract class BaseStatsBattleEntity(
         /**
          * teams 변환: BattleEntityTeamPlayer → StatsBattleEntityTeamPlayer
          */
-        fun convertTeams(teams: List<List<BattleEntityTeamPlayer>>): List<List<StatsBattleEntityTeamPlayer>> =
+        internal fun convertTeams(teams: List<List<BattleEntityTeamPlayer>>): List<List<StatsBattleEntityTeamPlayer>> =
             teams.map { team ->
                 team.map { player -> StatsBattleEntityTeamPlayer.from(player) }
             }
