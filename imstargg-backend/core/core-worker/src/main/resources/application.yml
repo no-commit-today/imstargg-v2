@@ -8,7 +8,7 @@ spring:
     include:
       - db
       - db-lock
-      - pubsub
+      - redis
 
   config:
     import:

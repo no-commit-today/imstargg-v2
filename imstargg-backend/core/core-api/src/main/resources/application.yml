@@ -4,6 +4,7 @@ spring:
     active: local
     include:
       - db
+      - redis
 
   config.import:
     - logging.yml

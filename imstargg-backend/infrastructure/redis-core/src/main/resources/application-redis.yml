@@ -14,6 +14,17 @@ spring:
           max-wait: 1000ms
           time-between-eviction-runs: 1000ms
 
+app:
+  redis:
+    stream:
+      player-renewal:
+        key: renewal:player
+      club-renewal:
+        key: renewal:club
+      consumer:
+        group: renewal-worker-group
+        name: ${HOSTNAME:worker-1}
+
 ---
 spring:
   config:

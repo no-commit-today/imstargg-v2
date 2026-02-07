@@ -20,8 +20,3 @@ services:
       - "6379:6379"
     volumes:
       - ./docker/redis/data:/data
-  pubsub-emulator:
-    image: gcr.io/google.com/cloudsdktool/cloud-sdk:emulators
-    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
-    ports:
-      - "8085:8085"

@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 @Service
 class RenewalService(
     private val renewalRepository: RenewalRepository,
-    private val renewalPublisher: RenewalPublisher,
+    private val renewalProducer: RenewalProducer,
     private val clock: Clock,
 ) {
     fun getPlayerRenewal(tag: BrawlStarsTag): Renewal =
@@ -26,12 +26,12 @@ class RenewalService(
 
     fun renewPlayer(tag: BrawlStarsTag): Renewal =
         doRenew(tag, RenewalType.PLAYER) {
-            renewalPublisher.publishPlayerRenewal(tag)
+            renewalProducer.producePlayerRenewal(tag)
         }
 
     fun renewClub(tag: BrawlStarsTag): Renewal =
         doRenew(tag, RenewalType.CLUB) {
-            renewalPublisher.publishClubRenewal(tag)
+            renewalProducer.produceClubRenewal(tag)
         }
 
     private fun doRenew(

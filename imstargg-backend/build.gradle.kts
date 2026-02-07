@@ -50,7 +50,6 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
-            mavenBom("com.google.cloud:spring-cloud-gcp-dependencies:${property("springCloudGcpVersion")}")
             mavenBom("io.sentry:sentry-bom:${property("sentryVersion")}")
         }
     }
