@@ -123,7 +123,7 @@ create table if not exists renewal
     created_at     timestamp(6) not null default current_timestamp(6),
     updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     deleted        boolean     not null default false,
-    index ix_renewal__brawlstarstag_type_requestedat (brawlstars_tag, type, requested_at desc)
+    index ix_renewal__brawlstarstag_requestedat (brawlstars_tag, requested_at desc)
 );
 
 -- battle table

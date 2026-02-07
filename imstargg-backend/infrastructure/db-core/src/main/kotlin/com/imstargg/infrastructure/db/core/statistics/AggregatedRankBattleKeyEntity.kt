@@ -7,11 +7,21 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.LocalDate
 
 @Entity
-@Table(name = "aggregated_rank_battle_key")
+@Table(
+    name = "aggregated_rank_battle_key",
+    indexes = [
+        Index(
+            name = "uk_aggregated_rank_battle_key__date_battlekey_player",
+            columnList = "battle_date, battle_key, player_brawlstars_tag",
+            unique = true,
+        ),
+    ],
+)
 class AggregatedRankBattleKeyEntity private constructor(
     @Column(name = "battle_date", updatable = false, nullable = false)
     val battleDate: LocalDate,

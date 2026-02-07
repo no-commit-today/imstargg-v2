@@ -19,7 +19,7 @@ import java.time.OffsetDateTime
 @Table(
     name = "renewal",
     indexes = [
-        Index(name = "ix_renewal__brawlstarstag_type_requestedat", columnList = "brawlstars_tag, type, requested_at desc"),
+        Index(name = "ix_renewal__brawlstarstag_requestedat", columnList = "brawlstars_tag, requested_at desc"),
     ],
 )
 class RenewalEntity(
