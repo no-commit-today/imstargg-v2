@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":support:monitoring"))
 
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // Test
     testImplementation(testFixtures(project(":infrastructure:db-core")))

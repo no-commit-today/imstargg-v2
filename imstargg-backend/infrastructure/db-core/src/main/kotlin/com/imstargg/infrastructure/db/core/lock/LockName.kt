@@ -15,7 +15,5 @@ data class LockName(
         fun createPlayerLockName(tag: String) = LockName(value = "player:$tag")
 
         fun createClubLockName(tag: String) = LockName(value = "club:$tag")
-
-        fun createPlayerStatsBattleLockName(tag: String) = LockName(value = "player:$tag:stats:battle")
     }
 }
