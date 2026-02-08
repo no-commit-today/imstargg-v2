@@ -22,6 +22,12 @@ dependencies {
     runtimeOnly("com.mysql:mysql-connector-j")
 
     // Test Fixtures
+    testFixturesImplementation(project(":core:core-enum"))
     testFixturesRuntimeOnly("com.h2database:h2")
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
+    testFixturesImplementation("org.springframework.boot:spring-boot-jpa-test")
+    testFixturesImplementation("org.springframework.boot:spring-boot-data-jpa-test")
+
+    // Test
+    testImplementation("org.springframework.boot:spring-boot-data-jpa-test")
 }

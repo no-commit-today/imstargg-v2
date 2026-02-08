@@ -2,10 +2,6 @@ tasks.getByName("bootJar") {
     enabled = true
 }
 
-tasks.getByName("jar") {
-    enabled = false
-}
-
 dependencies {
     implementation(project(":core:core-enum"))
     implementation(project(":infrastructure:db-core"))

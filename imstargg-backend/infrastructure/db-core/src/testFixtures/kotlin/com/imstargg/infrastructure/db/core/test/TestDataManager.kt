@@ -2,7 +2,7 @@ package com.imstargg.infrastructure.db.core.test
 
 import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.Table
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.transaction.annotation.Transactional
 

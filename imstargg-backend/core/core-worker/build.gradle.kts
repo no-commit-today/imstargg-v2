@@ -2,10 +2,6 @@ tasks.getByName("bootJar") {
     enabled = true
 }
 
-tasks.getByName("jar") {
-    enabled = false
-}
-
 dependencies {
     implementation(project(":core:core-enum"))
     implementation(project(":client:brawlstars-client"))
@@ -15,7 +11,7 @@ dependencies {
     implementation(project(":support:monitoring"))
 
     implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.springframework.boot:spring-boot-starter-aspectj")
     implementation("org.springframework.retry:spring-retry")
 
     // Test

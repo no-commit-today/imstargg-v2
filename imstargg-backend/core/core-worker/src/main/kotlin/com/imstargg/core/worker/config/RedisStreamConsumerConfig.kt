@@ -61,7 +61,7 @@ class RedisStreamConsumerConfig(
             clubRenewalConsumer,
         )
 
-    private fun <T> createContainer(
+    private fun <T : Any> createContainer(
         streamKey: String,
         targetType: Class<T>,
         listener: StreamListener<String, ObjectRecord<String, T>>,
