@@ -23,8 +23,10 @@ app:
     stream:
       player-renewal:
         key: test-renewal:player
+        maxlen: 10000
       club-renewal:
         key: test-renewal:club
+        maxlen: 10000
       consumer:
         group: test-renewal-group
         name: test-worker

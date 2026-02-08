@@ -10,6 +10,7 @@ data class RenewalStreamProperties(
 ) {
     data class Stream(
         val key: String,
+        val maxlen: Long,
     )
 
     data class Consumer(

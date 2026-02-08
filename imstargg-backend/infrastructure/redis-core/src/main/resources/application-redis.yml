@@ -19,8 +19,10 @@ app:
     stream:
       player-renewal:
         key: renewal:player
+        maxlen: 10000
       club-renewal:
         key: renewal:club
+        maxlen: 10000
       consumer:
         group: renewal-worker-group
         name: ${HOSTNAME:worker-1}
