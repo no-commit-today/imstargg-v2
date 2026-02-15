@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.battle
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import jakarta.persistence.Column
 import jakarta.persistence.ConstraintMode
@@ -53,7 +53,7 @@ class BattleEntity(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
     val teams: List<List<BattleEntityTeamPlayer>>,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battle_id", nullable = false)

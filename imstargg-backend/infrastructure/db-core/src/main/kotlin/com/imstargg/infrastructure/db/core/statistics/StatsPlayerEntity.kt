@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -13,7 +13,7 @@ import jakarta.persistence.Table
 class StatsPlayerEntity(
     @Column(name = "brawlstars_tag", updatable = false, nullable = false)
     val brawlStarsTag: String,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stats_player_id", nullable = false)

@@ -20,7 +20,6 @@ create table if not exists player
     club_name                             varchar(105) null,
     created_at                            timestamp(6)  not null default current_timestamp(6),
     updated_at                            timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                               boolean      not null default false,
     unique index uk_player__brawlstarstag (brawlstars_tag)
 );
 
@@ -36,7 +35,6 @@ create table if not exists player_brawler
     highest_trophies      int         not null,
     created_at            timestamp(6) not null default current_timestamp(6),
     updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted               boolean     not null default false,
     unique index uk_playerbrawler__playerid_brawlerbrawlstarsid (player_id, brawler_brawlstars_id)
 );
 
@@ -48,7 +46,6 @@ create table if not exists player_brawler_gear
     gear_brawlstars_id     bigint      not null,
     created_at             timestamp(6) not null default current_timestamp(6),
     updated_at             timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                boolean     not null default false,
     unique index uk_playerbrawlergear__playerbrawlerid_gearbrawlstarsid (player_brawler_id, gear_brawlstars_id)
 );
 
@@ -60,7 +57,6 @@ create table if not exists player_brawler_star_power
     star_power_brawlstars_id     bigint      not null,
     created_at                   timestamp(6) not null default current_timestamp(6),
     updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                      boolean     not null default false,
     unique index uk_playerbrawlerstarpower__playerbrawlerid_starpowerbrawlstarsid (player_brawler_id, star_power_brawlstars_id)
 );
 
@@ -72,7 +68,6 @@ create table if not exists player_brawler_gadget
     gadget_brawlstars_id     bigint      not null,
     created_at               timestamp(6) not null default current_timestamp(6),
     updated_at               timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                  boolean     not null default false,
     unique index uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid (player_brawler_id, gadget_brawlstars_id)
 );
 
@@ -89,7 +84,6 @@ create table if not exists club
     trophies             int          not null,
     created_at           timestamp(6)  not null default current_timestamp(6),
     updated_at           timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted              boolean      not null default false,
     unique index uk_club__brawlstarstag (brawlstars_tag)
 );
 
@@ -106,7 +100,6 @@ create table if not exists club_member
     icon_brawlstars_id  bigint      not null,
     created_at          timestamp(6) not null default current_timestamp(6),
     updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted             boolean     not null default false,
     unique index uk_clubmember__clubid_brawlstarstag (club_id, brawlstars_tag)
 );
 
@@ -122,7 +115,6 @@ create table if not exists renewal
     completed_at   timestamp(6) null,
     created_at     timestamp(6) not null default current_timestamp(6),
     updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted        boolean     not null default false,
     index ix_renewal__brawlstarstag_requestedat (brawlstars_tag, requested_at desc)
 );
 
@@ -146,7 +138,6 @@ create table if not exists battle
     teams                      json          not null,
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                    boolean       not null default false,
     index ix_battle__playerid_battleat (player_id, battle_at desc)
 );
 
@@ -158,7 +149,6 @@ create table if not exists player_ranking
     collected_at      timestamp(6) not null,
     created_at        timestamp(6) not null default current_timestamp(6),
     updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted           boolean      not null default false,
     unique index uk_player_ranking__country_collected_at (country, collected_at)
 );
 
@@ -176,7 +166,6 @@ create table if not exists player_ranking_item
     trophies                  int          not null,
     created_at                timestamp(6) not null default current_timestamp(6),
     updated_at                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                   boolean      not null default false,
     index ix_player_ranking_item__player_ranking_id (player_ranking_id)
 );
 
@@ -189,7 +178,6 @@ create table if not exists brawler_ranking
     collected_at          timestamp(6) not null,
     created_at            timestamp(6) not null default current_timestamp(6),
     updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted               boolean      not null default false,
     unique index uk_brawler_ranking__country_brawler_collected_at (country, brawler_brawlstars_id, collected_at)
 );
 
@@ -207,7 +195,6 @@ create table if not exists brawler_ranking_item
     trophies                  int          not null,
     created_at                timestamp(6) not null default current_timestamp(6),
     updated_at                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                   boolean      not null default false,
     index ix_brawler_ranking_item__brawler_ranking_id (brawler_ranking_id)
 );
 
@@ -219,7 +206,6 @@ create table if not exists club_ranking
     collected_at    timestamp(6) not null,
     created_at      timestamp(6) not null default current_timestamp(6),
     updated_at      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted         boolean      not null default false,
     unique index uk_club_ranking__country_collected_at (country, collected_at)
 );
 
@@ -236,7 +222,6 @@ create table if not exists club_ranking_item
     member_count         int          not null,
     created_at           timestamp(6) not null default current_timestamp(6),
     updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted              boolean      not null default false,
     index ix_club_ranking_item__club_ranking_id (club_ranking_id)
 );
 
@@ -249,7 +234,6 @@ create table if not exists aggregated_result_battle_key
     battle_key                      varchar(255)  not null,
     created_at                      timestamp(6)  not null default current_timestamp(6),
     updated_at                      timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                         boolean       not null default false,
     primary key (aggregated_result_battle_key_id, battle_date),
     unique index uk_aggregated_result_battle_key__battle_date_battle_key (battle_date, battle_key)
 ) partition by range (to_days(battle_date)) (
@@ -273,7 +257,6 @@ create table if not exists aggregated_rank_battle_key
     battle_key                    varchar(255)  not null,
     created_at                    timestamp(6)  not null default current_timestamp(6),
     updated_at                    timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                       boolean       not null default false,
     primary key (aggregated_rank_battle_key_id, battle_date),
     unique index uk_aggregated_rank_battle_key__date_battlekey_player
         (battle_date, battle_key, player_brawlstars_tag)
@@ -307,7 +290,6 @@ create table if not exists stats_rank_battle
     teams                      json          not null,
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                    boolean       not null default false,
     primary key (stats_rank_battle_id, created_date)
 ) partition by range (to_days(created_date)) (
     partition p_default values less than maxvalue
@@ -339,7 +321,6 @@ create table if not exists stats_result_battle
     teams                      json          not null,
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    deleted                    boolean       not null default false,
     primary key (stats_result_battle_id, created_date)
 ) partition by range (to_days(created_date)) (
     partition p_default values less than maxvalue
@@ -358,6 +339,5 @@ create table if not exists stats_player
     brawlstars_tag  varchar(45)  not null,
     created_at      timestamp(6) not null default current_timestamp(6),
     updated_at      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    deleted         boolean      not null default false,
     unique index uk_stats_player__brawlstars_tag (brawlstars_tag)
 );

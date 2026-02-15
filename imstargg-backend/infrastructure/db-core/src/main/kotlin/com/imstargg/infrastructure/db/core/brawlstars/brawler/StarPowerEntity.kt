@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
@@ -23,7 +23,7 @@ class StarPowerEntity(
     val brawlStarsId: Long,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "star_power_id")

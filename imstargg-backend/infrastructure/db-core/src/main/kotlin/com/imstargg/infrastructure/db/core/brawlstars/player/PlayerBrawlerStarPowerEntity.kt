@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.player
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.ConstraintMode
 import jakarta.persistence.Entity
@@ -31,7 +31,7 @@ class PlayerBrawlerStarPowerEntity(
     val playerBrawler: PlayerBrawlerEntity,
     @Column(name = "star_power_brawlstars_id", updatable = false, nullable = false)
     val starPowerBrawlStarsId: Long,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "player_brawler_star_power_id")

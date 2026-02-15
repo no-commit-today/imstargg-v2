@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -29,7 +29,7 @@ class AggregatedRankBattleKeyEntity private constructor(
     val playerBrawlStarsTag: String,
     @Column(name = "battle_key", updatable = false, nullable = false)
     val battleKey: String,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "aggregated_rank_battle_key_id", nullable = false)

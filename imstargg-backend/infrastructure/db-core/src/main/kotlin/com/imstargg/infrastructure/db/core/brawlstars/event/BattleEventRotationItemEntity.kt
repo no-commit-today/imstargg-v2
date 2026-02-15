@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.event
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.ConstraintMode
 import jakarta.persistence.Entity
@@ -37,7 +37,7 @@ class BattleEventRotationItemEntity(
     val startTime: OffsetDateTime,
     @Column(name = "end_time", updatable = false, nullable = false)
     val endTime: OffsetDateTime,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battle_event_rotation_item_id")

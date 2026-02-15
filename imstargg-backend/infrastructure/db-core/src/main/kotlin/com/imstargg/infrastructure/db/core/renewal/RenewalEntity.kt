@@ -2,7 +2,7 @@ package com.imstargg.infrastructure.db.core.renewal
 
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -30,7 +30,7 @@ class RenewalEntity(
     val type: RenewalType,
     @Column(name = "requested_at", nullable = false)
     val requestedAt: OffsetDateTime,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "renewal_id")

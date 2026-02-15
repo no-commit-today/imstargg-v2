@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
@@ -24,7 +24,7 @@ class BrawlStarsImageEntity(
     val code: BrawlStarsImageCode,
     @Column(name = "stored_name", updatable = false, nullable = false)
     val storedName: String,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawlstars_image_id")

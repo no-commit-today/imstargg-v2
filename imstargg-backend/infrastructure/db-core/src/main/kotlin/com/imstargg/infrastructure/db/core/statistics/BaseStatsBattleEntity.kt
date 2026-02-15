@@ -3,7 +3,7 @@ package com.imstargg.infrastructure.db.core.statistics
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.SoloRankTier
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
 import jakarta.persistence.Column
@@ -38,7 +38,7 @@ abstract class BaseStatsBattleEntity(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
     val teams: List<List<StatsBattleEntityTeamPlayer>>,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     companion object {
         private const val MIN_TROPHY = 500
         private val MIN_SOLO_RANK_TIER = SoloRankTier.DIAMOND_1

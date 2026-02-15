@@ -1,7 +1,7 @@
 package com.imstargg.infrastructure.db.core.brawlstars
 
 import com.imstargg.core.enums.Language
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
@@ -30,7 +30,7 @@ class MessageEntity(
     val lang: Language,
     @Column(name = "content", updatable = false, nullable = false)
     val content: String,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")

@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.event
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -24,7 +24,7 @@ class BattleEventEntity(
     val mode: String,
     @Column(name = "map_name", length = 105, updatable = false)
     val mapName: String?,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battle_event_id")

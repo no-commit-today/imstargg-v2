@@ -1,7 +1,7 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.core.enums.GearRarity
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
@@ -27,7 +27,7 @@ class GearEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "rarity", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val rarity: GearRarity,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "gear_id")

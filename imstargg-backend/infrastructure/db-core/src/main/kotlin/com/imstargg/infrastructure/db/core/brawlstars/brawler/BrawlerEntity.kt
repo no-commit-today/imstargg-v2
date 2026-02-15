@@ -2,7 +2,7 @@ package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.core.enums.BrawlerRarity
 import com.imstargg.core.enums.BrawlerRole
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
@@ -31,7 +31,7 @@ class BrawlerEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "role", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val role: BrawlerRole,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_id")

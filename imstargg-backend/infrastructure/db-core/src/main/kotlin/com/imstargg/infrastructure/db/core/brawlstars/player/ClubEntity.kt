@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.player
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -25,7 +25,7 @@ class ClubEntity(
     type: String,
     requiredTrophies: Int,
     trophies: Int,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "club_id")

@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.ranking
 
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
@@ -26,7 +26,7 @@ class PlayerRankingItemEntity(
     val player: RankingEntityPlayer,
     @Column(name = "trophies", nullable = false, updatable = false)
     val trophies: Int,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "player_ranking_item_id")

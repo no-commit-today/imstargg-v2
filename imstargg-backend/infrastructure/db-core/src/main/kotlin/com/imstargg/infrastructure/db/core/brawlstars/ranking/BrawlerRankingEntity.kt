@@ -1,7 +1,7 @@
 package com.imstargg.infrastructure.db.core.brawlstars.ranking
 
 import com.imstargg.core.enums.Country
-import com.imstargg.infrastructure.db.core.BaseEntity
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -32,7 +32,7 @@ class BrawlerRankingEntity(
     val brawlerBrawlStarsId: Long,
     @Column(name = "collected_at", nullable = false, updatable = false)
     val collectedAt: OffsetDateTime,
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_ranking_id")
