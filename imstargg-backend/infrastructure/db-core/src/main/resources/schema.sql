@@ -351,3 +351,13 @@ create table if not exists stats_result_battle
 --   );
 -- 오래된 파티션 삭제 예시:
 --   ALTER TABLE stats_result_battle DROP PARTITION p_20250101;
+
+create table if not exists stats_player
+(
+    stats_player_id bigint auto_increment primary key,
+    brawlstars_tag  varchar(45)  not null,
+    created_at      timestamp(6) not null default current_timestamp(6),
+    updated_at      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    deleted         boolean      not null default false,
+    unique index uk_stats_player__brawlstars_tag (brawlstars_tag)
+);
