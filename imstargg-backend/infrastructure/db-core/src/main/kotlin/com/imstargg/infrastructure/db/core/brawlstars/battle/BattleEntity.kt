@@ -15,8 +15,6 @@ import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 
 @Entity
@@ -50,9 +48,6 @@ class BattleEntity(
     val battleRank: Int?,
     @Column(name = "trophy_change", updatable = false)
     val trophyChange: Int?,
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
-    val teams: List<List<BattleEntityTeamPlayer>>,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

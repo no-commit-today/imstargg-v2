@@ -1,6 +1,6 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.core.worker.domain.BattleResult
 import com.imstargg.infrastructure.db.core.statistics.StatsBattleHelper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.retry.annotation.Backoff
@@ -20,8 +20,8 @@ class StatsBattleAggregator(
         maxAttempts = 3,
         backoff = Backoff(delay = 100),
     )
-    fun asyncAggregate(battles: List<BattleEntity>) {
-        doAggregate(battles)
+    fun asyncAggregate(battleResults: List<BattleResult>) {
+        doAggregate(battleResults)
     }
 
     @Retryable(
@@ -29,12 +29,12 @@ class StatsBattleAggregator(
         maxAttempts = 3,
         backoff = Backoff(delay = 100),
     )
-    fun aggregate(battles: List<BattleEntity>) {
-        doAggregate(battles)
+    fun aggregate(battleResults: List<BattleResult>) {
+        doAggregate(battleResults)
     }
 
-    private fun doAggregate(battles: List<BattleEntity>) {
-        val aggregatableBattles = battles.filter { StatsBattleHelper.canAggregate(clock, it) }
-        statsBattleAggregateApplier.apply(aggregatableBattles)
+    private fun doAggregate(battleResults: List<BattleResult>) {
+        val aggregatableBattleResults = battleResults.filter { StatsBattleHelper.canAggregate(clock, it.battle) }
+        statsBattleAggregateApplier.apply(aggregatableBattleResults)
     }
 }

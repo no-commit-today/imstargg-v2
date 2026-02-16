@@ -5,7 +5,7 @@ import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 import com.imstargg.client.brawlstars.response.BattleResultResponse
 import com.imstargg.client.brawlstars.response.EventResponse
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import io.mockk.every
 import io.mockk.mockk
@@ -175,8 +175,8 @@ class BattleEntityBuilderTest {
         val result = sut.build()
 
         // then
-        assertBattle(result, battleResponse, playerEntity)
-        assertBattleTeams(result.teams, battleResponse.battle.teams!!)
+        assertBattle(result.battle, battleResponse, playerEntity)
+        assertBattleTeams(result.teams(), battleResponse.battle.teams!!)
     }
 
     @Test
@@ -244,8 +244,8 @@ class BattleEntityBuilderTest {
         val result = sut.build()
 
         // then
-        assertBattle(result, battleResponse, playerEntity)
-        assertBattleTeams(result.teams, battleResponse.battle.teams!!)
+        assertBattle(result.battle, battleResponse, playerEntity)
+        assertBattleTeams(result.teams(), battleResponse.battle.teams!!)
     }
 
     @Test
@@ -337,9 +337,9 @@ class BattleEntityBuilderTest {
         val result = sut.build()
 
         // then
-        assertBattle(result, battleResponse, playerEntity)
-        assertThat(result.starPlayerBrawlStarsTag).isEqualTo("#player1")
-        assertBattleTeams(result.teams, battleResponse.battle.teams!!)
+        assertBattle(result.battle, battleResponse, playerEntity)
+        assertThat(result.battle.starPlayerBrawlStarsTag).isEqualTo("#player1")
+        assertBattleTeams(result.teams(), battleResponse.battle.teams!!)
     }
 
     @Test
@@ -421,8 +421,8 @@ class BattleEntityBuilderTest {
         val result = sut.build()
 
         // then
-        assertBattle(result, battleResponse, playerEntity)
-        assertBattlePlayers(result.teams, battleResponse.battle.players!!)
+        assertBattle(result.battle, battleResponse, playerEntity)
+        assertBattlePlayers(result.teams(), battleResponse.battle.players!!)
     }
 
     @Test
@@ -476,8 +476,8 @@ class BattleEntityBuilderTest {
         val result = sut.build()
 
         // then
-        assertBattle(result, battleResponse, playerEntity)
-        assertBattlePlayers(result.teams, battleResponse.battle.players!!)
+        assertBattle(result.battle, battleResponse, playerEntity)
+        assertBattlePlayers(result.teams(), battleResponse.battle.players!!)
     }
 
     @Test
@@ -543,8 +543,8 @@ class BattleEntityBuilderTest {
         val result = sut.build()
 
         // then
-        assertThat(result.mode).isNull()
-        assertBattle(result, battleResponse, playerEntity)
+        assertThat(result.battle.mode).isNull()
+        assertBattle(result.battle, battleResponse, playerEntity)
     }
 
     @Test
@@ -641,7 +641,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattleTeams(
-        actuals: List<List<BattleEntityTeamPlayer>>,
+        actuals: List<List<BattleTeamPlayerEntity>>,
         expecteds: List<List<BattleResultPlayerResponse>>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -672,7 +672,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattlePlayers(
-        actuals: List<List<BattleEntityTeamPlayer>>,
+        actuals: List<List<BattleTeamPlayerEntity>>,
         expecteds: List<BattleResultPlayerResponse>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -694,7 +694,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattlePlayerWithABrawler(
-        actual: BattleEntityTeamPlayer,
+        actual: BattleTeamPlayerEntity,
         expected: BattleResultPlayerResponse,
     ) {
         val expectedBrawler = expected.brawler!!
@@ -708,7 +708,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattlePlayerWithBrawlers(
-        actual: BattleEntityTeamPlayer,
+        actual: BattleTeamPlayerEntity,
         expected: BattleResultPlayerResponse,
         brawlerIdx: Int,
     ) {

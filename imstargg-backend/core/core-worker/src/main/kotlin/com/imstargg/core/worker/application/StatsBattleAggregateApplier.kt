@@ -1,6 +1,6 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.core.worker.domain.BattleResult
 import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyEntity
 import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.AggregatedResultBattleKeyEntity
@@ -20,16 +20,16 @@ class StatsBattleAggregateApplier(
     private val aggregatedResultBattleKeyRepository: AggregatedResultBattleKeyJpaRepository,
 ) {
     @Transactional
-    fun apply(playerBattles: List<BattleEntity>) {
+    fun apply(battleResults: List<BattleResult>) {
         val statsRankBattles =
-            playerBattles
-                .filter { StatsRankBattleEntity.canCreate(it) }
-                .map { StatsRankBattleEntity.from(it) }
+            battleResults
+                .filter { StatsRankBattleEntity.canCreate(it.battle, it.teamPlayers) }
+                .map { StatsRankBattleEntity.from(it.battle, it.teamPlayers) }
 
         val statsResultBattles =
-            playerBattles
-                .filter { StatsResultBattleEntity.canCreate(it) }
-                .map { StatsResultBattleEntity.from(it) }
+            battleResults
+                .filter { StatsResultBattleEntity.canCreate(it.battle, it.teamPlayers) }
+                .map { StatsResultBattleEntity.from(it.battle, it.teamPlayers) }
 
         val aggregatedRankKeys =
             aggregatedRankBattleKeyRepository

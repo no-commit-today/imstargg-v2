@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntityBrawler
 
 data class StatsBattleEntityTeamPlayerBrawler(
     val brawlStarsId: Long,
@@ -9,7 +9,7 @@ data class StatsBattleEntityTeamPlayerBrawler(
     val trophies: Int,
 ) {
     companion object {
-        fun from(brawler: BattleEntityTeamPlayerBrawler) =
+        fun from(brawler: BattleTeamPlayerEntityBrawler) =
             StatsBattleEntityTeamPlayerBrawler(
                 brawlStarsId = brawler.brawlStarsId,
                 name = brawler.name,

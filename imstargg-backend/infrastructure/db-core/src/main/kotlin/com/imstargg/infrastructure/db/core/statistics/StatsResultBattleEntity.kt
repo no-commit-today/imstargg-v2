@@ -1,6 +1,7 @@
 package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -46,13 +47,19 @@ class StatsResultBattleEntity(
     val id: Long? = null
 
     companion object {
-        fun canCreate(battle: BattleEntity): Boolean {
-            if (!BaseStatsBattleEntity.canCreate(battle)) return false
+        fun canCreate(
+            battle: BattleEntity,
+            teamPlayers: List<BattleTeamPlayerEntity>,
+        ): Boolean {
+            if (!BaseStatsBattleEntity.canCreate(battle, teamPlayers)) return false
             return battle.result != null
         }
 
-        fun from(battle: BattleEntity): StatsResultBattleEntity {
-            require(canCreate(battle)) {
+        fun from(
+            battle: BattleEntity,
+            teamPlayers: List<BattleTeamPlayerEntity>,
+        ): StatsResultBattleEntity {
+            require(canCreate(battle, teamPlayers)) {
                 "StatsResultBattleEntity 생성 불가: result가 null이거나 공통 검증 실패. battleKey=${battle.battleKey}"
             }
 
@@ -68,7 +75,7 @@ class StatsResultBattleEntity(
                 result = battle.result!!,
                 starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
                 playerBrawlStarsTag = battle.player.brawlStarsTag,
-                teams = convertTeams(battle.teams),
+                teams = convertTeams(teamPlayers),
             )
         }
     }

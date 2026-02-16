@@ -1,28 +1,35 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.core.worker.domain.BattleResult
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class BattleUpdateApplier(
     private val battleRepository: BattleJpaRepository,
+    private val battleTeamPlayerRepository: BattleTeamPlayerJpaRepository,
 ) {
+    @Transactional
     fun apply(
         player: PlayerEntity,
-        battles: List<BattleEntity>,
-    ): List<BattleEntity> {
+        buildResults: List<BattleResult>,
+    ): List<BattleResult> {
         val latestBattle = battleRepository.findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
         val latestBattleTime = latestBattle?.battleAt
 
-        val newBattles =
+        val newResults =
             if (latestBattleTime != null) {
-                battles.filter { it.battleAt.isAfter(latestBattleTime) }
+                buildResults.filter { it.battle.battleAt.isAfter(latestBattleTime) }
             } else {
-                battles
+                buildResults
             }
 
-        return battleRepository.saveAll(newBattles)
+        battleRepository.saveAll(newResults.map { it.battle })
+        battleTeamPlayerRepository.saveAll(newResults.flatMap { it.teamPlayers })
+
+        return newResults
     }
 }

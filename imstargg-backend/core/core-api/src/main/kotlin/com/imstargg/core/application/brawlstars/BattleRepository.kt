@@ -16,9 +16,11 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.SoloRankTier
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntityBrawler
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.toTeams
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 class BattleRepository(
     private val playerJpaRepository: PlayerJpaRepository,
     private val battleJpaRepository: BattleJpaRepository,
+    private val battleTeamPlayerRepository: BattleTeamPlayerJpaRepository,
     private val eventRepositoryWithCache: EventRepositoryWithCache,
     private val brawlerRepositoryWithCache: BrawlerRepositoryWithCache,
 ) {
@@ -43,16 +46,26 @@ class BattleRepository(
                 offsetLimit.toPageable(),
             )
 
+        val battleIds = battleSlice.content.mapNotNull { it.id }
+        val teamPlayersByBattleId =
+            battleTeamPlayerRepository
+                .findAllByBattleIdIn(battleIds)
+                .groupBy { it.battle.id!! }
+
         val brawlers = brawlerRepositoryWithCache.findBrawlers()
 
         return Slice(
-            content = battleSlice.content.map { toBattle(it, brawlers) },
+            content =
+                battleSlice.content.map { battle ->
+                    toBattle(battle, teamPlayersByBattleId[battle.id] ?: emptyList(), brawlers)
+                },
             hasNext = battleSlice.hasNext(),
         )
     }
 
     private fun toBattle(
         entity: BattleEntity,
+        teamPlayers: List<BattleTeamPlayerEntity>,
         brawlers: Brawlers,
     ): Battle {
         val battleType = entity.type?.let { EnumCodeType.findByCode<BattleType>(it) }
@@ -66,7 +79,7 @@ class BattleRepository(
             starPlayerTag = entity.starPlayerBrawlStarsTag?.let { BrawlStarsTag(it) },
             rank = entity.battleRank,
             trophyChange = entity.trophyChange,
-            teams = toTeams(battleType, entity.teams, brawlers),
+            teams = toTeams(battleType, teamPlayers, brawlers),
         )
     }
 
@@ -77,16 +90,16 @@ class BattleRepository(
 
     private fun toTeams(
         battleType: BattleType?,
-        teams: List<List<BattleEntityTeamPlayer>>,
+        teamPlayers: List<BattleTeamPlayerEntity>,
         brawlers: Brawlers,
     ): List<List<BattlePlayer>> =
-        teams.map { team ->
+        teamPlayers.toTeams().map { team ->
             team.map { player -> toBattlePlayer(battleType, player, brawlers) }
         }
 
     private fun toBattlePlayer(
         battleType: BattleType?,
-        player: BattleEntityTeamPlayer,
+        player: BattleTeamPlayerEntity,
         brawlers: Brawlers,
     ): BattlePlayer =
         BattlePlayer(
@@ -103,7 +116,7 @@ class BattleRepository(
 
     private fun toBattlePlayerBrawler(
         battleType: BattleType?,
-        brawler: BattleEntityTeamPlayerBrawler,
+        brawler: BattleTeamPlayerEntityBrawler,
         brawlers: Brawlers,
     ): BattlePlayerBrawler {
         val isSoloRanked = battleType == BattleType.SOLO_RANKED

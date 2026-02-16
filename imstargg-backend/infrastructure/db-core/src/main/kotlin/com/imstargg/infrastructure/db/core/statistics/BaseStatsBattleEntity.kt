@@ -5,7 +5,8 @@ import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.SoloRankTier
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.toTeams
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass
 import org.hibernate.annotations.JdbcTypeCode
@@ -52,7 +53,15 @@ abstract class BaseStatsBattleEntity(
          * - SOLO_RANKED인 경우 트로피(SoloRankTier 값) >= DIAMOND_1
          * - 브롤러 ID 중복 없음
          */
-        fun canCreate(battle: BattleEntity): Boolean {
+        fun canCreate(
+            battle: BattleEntity,
+            teamPlayers: List<BattleTeamPlayerEntity>,
+        ): Boolean {
+            require(teamPlayers.all { it.battle === battle }) {
+                "teamPlayers의 battle이 인자의 battle과 일치하지 않습니다." +
+                    " battleId=${battle.id}, teamPlayerIds=${teamPlayers.map { it.id }}"
+            }
+
             val event = battle.event ?: return false
 
             if (event.brawlStarsId == null || event.mode == null || event.map == null) {
@@ -67,15 +76,13 @@ abstract class BaseStatsBattleEntity(
                 return false
             }
 
-            val allPlayers = battle.teams.flatten()
-
             // 브롤러 ID 중복 검사
-            val brawlerIds = allPlayers.map { it.brawler.brawlStarsId }
+            val brawlerIds = teamPlayers.map { it.brawler.brawlStarsId }
             if (brawlerIds.size != brawlerIds.distinct().size) {
                 return false
             }
 
-            val minTrophies = allPlayers.minOfOrNull { it.brawler.trophies } ?: return false
+            val minTrophies = teamPlayers.minOfOrNull { it.brawler.trophies } ?: return false
 
             if (battleType == BattleType.SOLO_RANKED) {
                 if (minTrophies < MIN_SOLO_RANK_TIER.value) {
@@ -91,10 +98,10 @@ abstract class BaseStatsBattleEntity(
         }
 
         /**
-         * teams 변환: BattleEntityTeamPlayer → StatsBattleEntityTeamPlayer
+         * teams 변환: BattleTeamPlayerEntity → StatsBattleEntityTeamPlayer
          */
-        internal fun convertTeams(teams: List<List<BattleEntityTeamPlayer>>): List<List<StatsBattleEntityTeamPlayer>> =
-            teams.map { team ->
+        internal fun convertTeams(teamPlayers: List<BattleTeamPlayerEntity>): List<List<StatsBattleEntityTeamPlayer>> =
+            teamPlayers.toTeams().map { team ->
                 team.map { player -> StatsBattleEntityTeamPlayer.from(player) }
             }
     }

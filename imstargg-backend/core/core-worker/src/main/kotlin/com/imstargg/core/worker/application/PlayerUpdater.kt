@@ -37,8 +37,8 @@ class PlayerUpdater(
 
                 playerUpdateApplier.apply(player, playerResponse)
 
-                val battleEntities = battleResponses.map { BattleEntityBuilder(player, it).build() }
-                battleUpdateApplier.apply(player, battleEntities)
+                val buildResults = battleResponses.map { BattleEntityBuilder(player, it).build() }
+                battleUpdateApplier.apply(player, buildResults)
             }
 
         statsBattleAggregator.asyncAggregate(savedBattles)
