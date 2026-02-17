@@ -126,6 +126,7 @@ create table if not exists battle
     battle_at                timestamp(6)  not null,
     event_brawlstars_id        bigint        null,
     event_mode                 varchar(65)   null,
+    event_mode_id              int           null,
     event_map                  varchar(65)   null,
     mode                       varchar(65)  null,
     type                       varchar(65)  null,

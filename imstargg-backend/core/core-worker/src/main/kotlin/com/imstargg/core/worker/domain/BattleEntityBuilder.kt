@@ -45,6 +45,7 @@ class BattleEntityBuilder(
                 BattleEntityEvent(
                     brawlStarsId = event.id,
                     mode = event.mode,
+                    modeId = event.modeId,
                     map = event.map,
                 ),
             mode = battle.mode,

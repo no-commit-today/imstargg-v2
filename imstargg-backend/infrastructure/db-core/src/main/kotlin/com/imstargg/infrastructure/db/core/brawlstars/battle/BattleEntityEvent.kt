@@ -9,6 +9,8 @@ data class BattleEntityEvent(
     val brawlStarsId: Long?,
     @Column(name = "event_mode", length = 65, updatable = false)
     val mode: String?,
+    @Column(name = "event_mode_id", updatable = false)
+    val modeId: Int?,
     @Column(name = "event_map", length = 65, updatable = false)
     val map: String?,
 )
