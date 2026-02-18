@@ -8,7 +8,7 @@ import com.imstargg.core.domain.brawlstars.battle.Battle
 import com.imstargg.core.domain.brawlstars.battle.BattlePlayer
 import com.imstargg.core.domain.brawlstars.battle.BattlePlayerBrawler
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
-import com.imstargg.core.domain.brawlstars.event.Event
+import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.player.Player
 import com.imstargg.core.enums.BattleMode
 import com.imstargg.core.enums.BattleResult
@@ -83,7 +83,7 @@ class BattleRepository(
         )
     }
 
-    private fun findEvent(brawlStarsId: Long?): Event? {
+    private fun findEvent(brawlStarsId: Long?): BattleEvent? {
         if (brawlStarsId == null || brawlStarsId <= 0) return null
         return eventRepositoryWithCache.find(BrawlStarsId(brawlStarsId))
     }

@@ -299,7 +299,7 @@ create table if not exists stats_rank_battle
     battle_key                 varchar(255)  not null,
     battle_at                  timestamp(6)  not null,
     event_brawlstars_id        bigint        not null,
-    event_mode                 varchar(65)   not null,
+    event_mode_brawlstars_id   bigint        not null,
     event_map                  varchar(65)   not null,
     mode                       varchar(65)   not null,
     type                       varchar(65)   not null,
@@ -330,7 +330,7 @@ create table if not exists stats_result_battle
     battle_key                 varchar(255)  not null,
     battle_at                  timestamp(6)  not null,
     event_brawlstars_id        bigint        not null,
-    event_mode                 varchar(65)   not null,
+    event_mode_brawlstars_id   bigint        not null,
     event_map                  varchar(65)   not null,
     mode                       varchar(65)   not null,
     type                       varchar(65)   not null,
@@ -359,4 +359,26 @@ create table if not exists stats_player
     created_at      timestamp(6) not null default current_timestamp(6),
     updated_at      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_stats_player__brawlstars_tag (brawlstars_tag)
+);
+
+-- battle_event_mode table
+create table if not exists battle_event_mode
+(
+    battle_event_mode_id bigint auto_increment primary key,
+    brawlstars_id        bigint       not null,
+    created_at           timestamp(6) not null default current_timestamp(6),
+    updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_battle_event_mode__brawlstarsid (brawlstars_id)
+);
+
+-- battle_event table
+create table if not exists battle_event
+(
+    battle_event_id      bigint auto_increment primary key,
+    brawlstars_id        bigint       not null,
+    battle_event_mode_id bigint       null,
+    map_name             varchar(105) null,
+    created_at           timestamp(6) not null default current_timestamp(6),
+    updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_battle_event__brawlstarsid (brawlstars_id)
 );

@@ -3,9 +3,9 @@ package com.imstargg.core.application.brawlstars
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
-import com.imstargg.core.domain.brawlstars.event.Event
-import com.imstargg.core.enums.EnumCodeType
-import com.imstargg.core.enums.EventMode
+import com.imstargg.core.domain.brawlstars.event.BattleEvent
+import com.imstargg.core.domain.brawlstars.event.BattleEventMode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
@@ -17,8 +17,9 @@ import org.springframework.transaction.annotation.Transactional
 class EventRepository(
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
+    private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
 ) {
-    fun find(id: BrawlStarsId): Event? {
+    fun find(id: BrawlStarsId): BattleEvent? {
         val eventEntity = battleEventJpaRepository.findByBrawlStarsId(id.value) ?: return null
 
         val mapNameMessages =
@@ -26,9 +27,20 @@ class EventRepository(
                 messageJpaRepository.findAllByCode(code)
             } ?: emptyList()
 
-        return Event(
+        val mode =
+            eventEntity.mode?.let { modeEntity ->
+                val modeNameMessages = messageJpaRepository.findAllByCode(modeEntity.nameMessageCode())
+                val modeIconImage = brawlStarsImageJpaRepository.findByCode(modeEntity.iconImageCode())
+                BattleEventMode(
+                    id = BrawlStarsId(modeEntity.brawlStarsId),
+                    name = toMessages(modeNameMessages),
+                    iconImagePath = modeIconImage?.storedName,
+                )
+            }
+
+        return BattleEvent(
             id = BrawlStarsId(eventEntity.brawlStarsId),
-            mode = EnumCodeType.findByCode<EventMode>(eventEntity.mode),
+            mode = mode,
             mapName = toMessages(mapNameMessages),
         )
     }

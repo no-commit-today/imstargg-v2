@@ -1,10 +1,11 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
 
 class BattleEventEntityFixture {
     private var brawlStarsId: Long = 15000001L
-    private var mode: String = "gemGrab"
+    private var mode: BattleEventModeEntity? = null
     private var mapName: String? = "Hard Rock Mine"
 
     companion object {
@@ -13,7 +14,7 @@ class BattleEventEntityFixture {
 
     fun withBrawlStarsId(value: Long) = apply { brawlStarsId = value }
 
-    fun withMode(value: String) = apply { mode = value }
+    fun withMode(value: BattleEventModeEntity?) = apply { mode = value }
 
     fun withMapBrawlStarsName(value: String?) = apply { mapName = value }
 

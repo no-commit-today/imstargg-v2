@@ -1,18 +1,17 @@
 package com.imstargg.core.api.controller.v1.response
 
-import com.imstargg.core.domain.brawlstars.event.Event
-import com.imstargg.core.enums.EventMode
+import com.imstargg.core.domain.brawlstars.event.BattleEvent
 
 data class BattleEventResponse(
     val id: Long,
-    val mode: EventMode?,
+    val mode: BattleEventModeResponse?,
     val mapName: MessagesResponse,
 ) {
     companion object {
-        fun of(event: Event) =
+        fun of(event: BattleEvent) =
             BattleEventResponse(
                 id = event.id.value,
-                mode = event.mode,
+                mode = event.mode?.let { BattleEventModeResponse.of(it) },
                 mapName = MessagesResponse.of(event.mapName),
             )
     }

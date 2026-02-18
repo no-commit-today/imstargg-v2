@@ -25,8 +25,8 @@ class BattleEntityFixture {
         fun defaultBattleEntityEvent() =
             BattleEntityEvent(
                 brawlStarsId = 15000001L,
-                mode = "gemGrab",
-                modeId = 1,
+                modeBrawlStarsName = "gemGrab",
+                modeBrawlStarsId = 1,
                 map = "Hard Rock Mine",
             )
     }

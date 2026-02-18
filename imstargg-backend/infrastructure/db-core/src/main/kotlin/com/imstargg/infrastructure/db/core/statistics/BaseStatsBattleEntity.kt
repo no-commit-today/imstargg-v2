@@ -24,8 +24,8 @@ abstract class BaseStatsBattleEntity(
     val battleAt: OffsetDateTime,
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
-    @Column(name = "event_mode", length = 65, updatable = false, nullable = false)
-    val eventMode: String,
+    @Column(name = "event_mode_brawlstars_id", updatable = false, nullable = false)
+    val eventModeBrawlStarsId: Long,
     @Column(name = "event_map", length = 65, updatable = false, nullable = false)
     val eventMap: String,
     @Column(name = "mode", length = 65, updatable = false, nullable = false)
@@ -64,7 +64,7 @@ abstract class BaseStatsBattleEntity(
 
             val event = battle.event ?: return false
 
-            if (event.brawlStarsId == null || event.mode == null || event.map == null) {
+            if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) {
                 return false
             }
             if (battle.mode == null || battle.type == null) {
