@@ -382,3 +382,58 @@ create table if not exists battle_event
     updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event__brawlstarsid (brawlstars_id)
 );
+
+-- 주간 브롤러별 전투 결과 통계
+create table if not exists stats_weekly_brawler_battle_result
+(
+    stats_weekly_brawler_battle_result_id bigint auto_increment primary key,
+    event_brawlstars_id                  bigint       not null,
+    tier_range                           varchar(45)  not null,
+    start_date                           date         not null,
+    end_date                             date         not null,
+    brawler_brawlstars_id                bigint       not null,
+    victory_count                        bigint       not null,
+    defeat_count                         bigint       not null,
+    draw_count                           bigint       not null,
+    star_player_count                    bigint       not null,
+    created_at                           timestamp(6) not null default current_timestamp(6),
+    updated_at                           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_stats_weekly_brawler_battle_result (event_brawlstars_id, tier_range, start_date)
+);
+
+-- 주간 브롤러 vs 적 브롤러 전투 결과 통계
+create table if not exists stats_weekly_brawler_enemy_battle_result
+(
+    stats_weekly_brawler_enemy_battle_result_id bigint auto_increment primary key,
+    event_brawlstars_id                        bigint       not null,
+    tier_range                                 varchar(45)  not null,
+    start_date                                 date         not null,
+    end_date                                   date         not null,
+    brawler_brawlstars_id                      bigint       not null,
+    enemy_brawler_brawlstars_id                bigint       not null,
+    victory_count                              bigint       not null,
+    defeat_count                               bigint       not null,
+    draw_count                                 bigint       not null,
+    created_at                                 timestamp(6) not null default current_timestamp(6),
+    updated_at                                 timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_stats_weekly_brawler_enemy_battle_result (event_brawlstars_id, tier_range, start_date)
+);
+
+-- 주간 브롤러 팀(3인) 전투 결과 통계
+create table if not exists stats_weekly_brawler_team_battle_result
+(
+    stats_weekly_brawler_team_battle_result_id bigint auto_increment primary key,
+    event_brawlstars_id                       bigint       not null,
+    tier_range                                varchar(45)  not null,
+    start_date                                date         not null,
+    end_date                                  date         not null,
+    brawler_brawlstars_id_1                   bigint       not null,
+    brawler_brawlstars_id_2                   bigint       not null,
+    brawler_brawlstars_id_3                   bigint       not null,
+    victory_count                             bigint       not null,
+    defeat_count                              bigint       not null,
+    draw_count                                bigint       not null,
+    created_at                                timestamp(6) not null default current_timestamp(6),
+    updated_at                                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_stats_weekly_brawler_team_battle_result (event_brawlstars_id, tier_range, start_date)
+);
