@@ -501,3 +501,13 @@ create table if not exists stats_weekly_brawler_trio_battle_rank
     updated_at                              timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_stats_weekly_brawler_trio_battle_rank (event_brawlstars_id, tier_range, start_date)
 );
+
+create table if not exists battle_event_solo_rank_event
+(
+    battle_event_solo_rank_event_id bigint auto_increment primary key,
+    solo_rank_season_key            varchar(45)  not null,
+    event_brawlstars_id             bigint       not null,
+    created_at                      timestamp(6) not null default current_timestamp(6),
+    updated_at                      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_battle_event_solo_rank_event__1 (solo_rank_season_key, event_brawlstars_id)
+);

@@ -15,8 +15,7 @@ class SoloRankSeasonTest {
             val result = SoloRankSeason.createFirst()
 
             // then
-            assertThat(result.number).isEqualTo(1)
-            assertThat(result.month).isEqualTo(1)
+            assertThat(result.key).isEqualTo("1-1")
             assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-02-25T18:00:00+09:00"))
             assertThat(result.endAt).isEqualTo(OffsetDateTime.parse("2025-04-16T18:00:00+09:00"))
         }
@@ -35,18 +34,15 @@ class SoloRankSeasonTest {
             val season1m4 = season1m3.next()
 
             // then
-            assertThat(season1m2.number).isEqualTo(1)
-            assertThat(season1m2.month).isEqualTo(2)
+            assertThat(season1m2.key).isEqualTo("1-2")
             assertThat(season1m2.startAt).isEqualTo(OffsetDateTime.parse("2025-04-17T18:00:00+09:00"))
             assertThat(season1m2.endAt).isEqualTo(OffsetDateTime.parse("2025-05-14T18:00:00+09:00"))
 
-            assertThat(season1m3.number).isEqualTo(1)
-            assertThat(season1m3.month).isEqualTo(3)
+            assertThat(season1m3.key).isEqualTo("1-3")
             assertThat(season1m3.startAt).isEqualTo(OffsetDateTime.parse("2025-05-15T18:00:00+09:00"))
             assertThat(season1m3.endAt).isEqualTo(OffsetDateTime.parse("2025-06-18T18:00:00+09:00"))
 
-            assertThat(season1m4.number).isEqualTo(1)
-            assertThat(season1m4.month).isEqualTo(4)
+            assertThat(season1m4.key).isEqualTo("1-4")
             assertThat(season1m4.startAt).isEqualTo(OffsetDateTime.parse("2025-06-19T18:00:00+09:00"))
             assertThat(season1m4.endAt).isEqualTo(OffsetDateTime.parse("2025-07-16T18:00:00+09:00"))
         }
@@ -58,8 +54,7 @@ class SoloRankSeasonTest {
             repeat(4) { sut = sut.next() }
 
             // when & then
-            assertThat(sut.number).isEqualTo(2)
-            assertThat(sut.month).isEqualTo(1)
+            assertThat(sut.key).isEqualTo("2-1")
         }
     }
 
@@ -101,8 +96,7 @@ class SoloRankSeasonTest {
                 assertThat(next.startAt).isEqualTo(prev.endAt.plusDays(1))
                 prev = next
             }
-            assertThat(prev.number).isEqualTo(2)
-            assertThat(prev.month).isEqualTo(1)
+            assertThat(prev.key).isEqualTo("2-1")
         }
     }
 
@@ -159,8 +153,7 @@ class SoloRankSeasonTest {
             val result = SoloRankSeason.current(clock)
 
             // then
-            assertThat(result.number).isEqualTo(1)
-            assertThat(result.month).isEqualTo(1)
+            assertThat(result.key).isEqualTo("1-1")
             assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-02-25T18:00:00+09:00"))
             assertThat(result.endAt).isEqualTo(OffsetDateTime.parse("2025-04-16T18:00:00+09:00"))
         }
@@ -174,8 +167,7 @@ class SoloRankSeasonTest {
             val result = SoloRankSeason.current(clock)
 
             // then
-            assertThat(result.number).isEqualTo(1)
-            assertThat(result.month).isEqualTo(1)
+            assertThat(result.key).isEqualTo("1-1")
             assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-02-25T18:00:00+09:00"))
             assertThat(result.endAt).isEqualTo(OffsetDateTime.parse("2025-04-16T18:00:00+09:00"))
         }
@@ -189,8 +181,7 @@ class SoloRankSeasonTest {
             val result = SoloRankSeason.current(clock)
 
             // then
-            assertThat(result.number).isEqualTo(1)
-            assertThat(result.month).isEqualTo(2)
+            assertThat(result.key).isEqualTo("1-2")
             assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-04-17T18:00:00+09:00"))
             assertThat(result.endAt).isEqualTo(OffsetDateTime.parse("2025-05-14T18:00:00+09:00"))
         }
@@ -204,8 +195,7 @@ class SoloRankSeasonTest {
             val result = SoloRankSeason.current(clock)
 
             // then
-            assertThat(result.number).isEqualTo(2)
-            assertThat(result.month).isEqualTo(1)
+            assertThat(result.key).isEqualTo("2-1")
             assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-07-17T18:00:00+09:00"))
             assertThat(result.endAt).isEqualTo(OffsetDateTime.parse("2025-08-20T18:00:00+09:00"))
         }

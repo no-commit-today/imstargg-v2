@@ -5,12 +5,14 @@ import java.time.DayOfWeek
 import java.time.OffsetDateTime
 import java.time.temporal.TemporalAdjusters
 
-class SoloRankSeason(
-    val number: Int,
-    val month: Int,
+class SoloRankSeason private constructor(
+    private val number: Int,
+    private val month: Int,
     val startAt: OffsetDateTime,
     val endAt: OffsetDateTime,
 ) {
+    val key: String = "$number-$month"
+
     fun next(): SoloRankSeason {
         val nextMonth = if (month < SEASON_MAX_MONTH) month + 1 else 1
         val nextNumber = if (nextMonth == 1) number + 1 else number
