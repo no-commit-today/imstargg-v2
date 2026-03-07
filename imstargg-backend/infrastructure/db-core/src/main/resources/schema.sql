@@ -504,6 +504,23 @@ create table if not exists stats_weekly_brawler_trio_battle_rank
     index ix_stats_weekly_brawler_trio_battle_rank (event_brawlstars_id, tier_range, start_date)
 );
 
+create table if not exists battle_event_rotation_item
+(
+    battle_event_rotation_item_id bigint auto_increment primary key,
+    event_brawlstars_id          bigint       not null,
+    modifiers                    json         not null,
+    slot_id                      int          not null,
+    start_time                   timestamp(6) not null,
+    end_time                     timestamp(6) not null,
+    event_name                   varchar(255) null,
+    event_mode_name              varchar(255) null,
+    event_mode_brawlstars_id     bigint       null,
+    event_map_name               varchar(255) null,
+    created_at                   timestamp(6) not null default current_timestamp(6),
+    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_battle_event_rotation_item__end_time (end_time)
+);
+
 create table if not exists battle_event_solo_rank_event
 (
     battle_event_solo_rank_event_id bigint auto_increment primary key,
