@@ -49,6 +49,43 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
             }
     }
 
+    override fun aggregateByDate(
+        brawlerBrawlStarsId: Long,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerBattleResultDailyAggregateProjection> {
+        val entity = brawlerBattleResultStatsEntity
+        val victorySum = entity.victoryCount.longSum()
+        val defeatSum = entity.defeatCount.longSum()
+        val drawSum = entity.drawCount.longSum()
+        val starPlayerSum = entity.starPlayerCount.longSum()
+
+        return queryFactory
+            .select(
+                entity.date,
+                victorySum,
+                defeatSum,
+                drawSum,
+                starPlayerSum,
+            ).from(entity)
+            .where(
+                entity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
+                entity.tierRange.eq(tierRange),
+                entity.date.between(startDate, endDate),
+            ).groupBy(entity.date)
+            .fetch()
+            .map { tuple ->
+                BrawlerBattleResultDailyAggregateProjection(
+                    date = tuple.get(entity.date)!!,
+                    victoryCount = tuple.get(victorySum)!!,
+                    defeatCount = tuple.get(defeatSum)!!,
+                    drawCount = tuple.get(drawSum)!!,
+                    starPlayerCount = tuple.get(starPlayerSum)!!,
+                )
+            }
+    }
+
     private fun NumberPath<Long>.longSum(): NumberExpression<Long> =
         Expressions.numberOperation(Long::class.javaObjectType, com.querydsl.core.types.Ops.AggOps.SUM_AGG, this)
 }

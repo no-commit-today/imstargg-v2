@@ -9,4 +9,11 @@ interface BrawlerBattleResultStatsJpaRepositoryCustom {
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<BrawlerBattleResultAggregateProjection>
+
+    fun aggregateByDate(
+        brawlerBrawlStarsId: Long,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerBattleResultDailyAggregateProjection>
 }

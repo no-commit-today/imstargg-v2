@@ -3,6 +3,7 @@ package com.imstargg.core.api.controller.v1
 import com.imstargg.core.api.controller.ListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlersRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlersResultStatisticsResponse
@@ -185,6 +186,22 @@ class StatisticsController(
             )
         return ResponseEntity.ok(
             ListResponse(statistics.map { BrawlerResultStatisticsResponse.of(it) }),
+        )
+    }
+
+    @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/daily")
+    fun getBrawlerDailyResultStatistics(
+        @PathVariable brawlerId: Long,
+        @RequestParam tierRange: StatsTierRange,
+        @RequestParam startDate: LocalDate,
+        @RequestParam endDate: LocalDate,
+    ): ResponseEntity<ListResponse<BrawlerResultDailyStatisticsResponse>> {
+        val statistics =
+            brawlerStatisticsService.getBrawlerDailyResultStatistics(
+                BrawlersStatisticsParam(BrawlStarsId(brawlerId), tierRange, startDate, endDate),
+            )
+        return ResponseEntity.ok(
+            ListResponse(statistics.map { BrawlerResultDailyStatisticsResponse.of(it) }),
         )
     }
 

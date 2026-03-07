@@ -1,5 +1,6 @@
 package com.imstargg.core.application.statistics
 
+import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerStatisticsParam
 import com.imstargg.core.domain.statistics.BrawlersResultStatistics
@@ -14,6 +15,11 @@ class BrawlerStatisticsService(
         resultRepository
             .findBrawlerResultCounts(param.tierRange, param.startDate, param.endDate)
             .map { it.toStatistics() }
+
+    fun getBrawlerDailyResultStatistics(param: BrawlersStatisticsParam): List<BrawlerResultDailyStatistics> =
+        resultRepository
+            .findBrawlerDailyResultCounts(param.brawlerId, param.tierRange, param.startDate, param.endDate)
+            .map { it.toStatistics(param.brawlerId) }
 
     fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatistics> =
         resultRepository

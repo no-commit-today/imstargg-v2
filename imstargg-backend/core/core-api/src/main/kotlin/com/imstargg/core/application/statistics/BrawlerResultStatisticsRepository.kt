@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerResultCount
+import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.domain.statistics.BrawlersResultCount
 import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.domain.statistics.StarPlayerCount
@@ -32,6 +33,23 @@ class BrawlerResultStatisticsRepository(
                 starPlayerCount = StarPlayerCount(it.starPlayerCount),
             )
         }
+    }
+
+    fun findBrawlerDailyResultCounts(
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerResultDailyCount> {
+        val aggregates = battleResultJpaRepository.aggregateByDate(brawlerId.value, tierRange, startDate, endDate)
+
+        return aggregates.map {
+            BrawlerResultDailyCount(
+                date = it.date,
+                resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
+                starPlayerCount = StarPlayerCount(it.starPlayerCount),
+            )
+        }.sortedBy { it.date }
     }
 
     fun findBrawlerDuoResultCounts(
