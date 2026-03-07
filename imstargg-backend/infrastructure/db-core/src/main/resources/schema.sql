@@ -398,7 +398,8 @@ create table if not exists stats_weekly_brawler_battle_result
     star_player_count                    bigint       not null,
     created_at                           timestamp(6) not null default current_timestamp(6),
     updated_at                           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_stats_weekly_brawler_battle_result (event_brawlstars_id, tier_range, start_date)
+    index ix_stats_weekly_brawler_battle_result_1 (event_brawlstars_id, tier_range, start_date),
+    index ix_stats_weekly_brawler_battle_result_2 (tier_range, start_date, brawler_brawlstars_id)
 );
 
 -- 주간 브롤러 vs 적 브롤러 전투 결과 통계
@@ -435,7 +436,8 @@ create table if not exists stats_weekly_brawler_team_battle_result
     draw_count                                bigint       not null,
     created_at                                timestamp(6) not null default current_timestamp(6),
     updated_at                                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_stats_weekly_brawler_team_battle_result (event_brawlstars_id, tier_range, start_date)
+    index ix_stats_weekly_brawler_team_battle_result_1 (event_brawlstars_id, tier_range, start_date),
+    index ix_stats_weekly_brawler_team_battle_result_2 (tier_range, start_date)
 );
 
 -- 주간 브롤러 솔로(1인) 전투 랭크 통계

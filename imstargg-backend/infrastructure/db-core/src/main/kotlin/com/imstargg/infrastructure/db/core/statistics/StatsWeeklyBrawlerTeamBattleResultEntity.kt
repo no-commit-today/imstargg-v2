@@ -15,8 +15,12 @@ import java.time.LocalDate
     name = "stats_weekly_brawler_team_battle_result",
     indexes = [
         Index(
-            name = "ix_stats_weekly_brawler_team_battle_result",
+            name = "ix_stats_weekly_brawler_team_battle_result_1",
             columnList = "event_brawlstars_id, tier_range, start_date",
+        ),
+        Index(
+            name = "ix_stats_weekly_brawler_team_battle_result_2",
+            columnList = "tier_range, start_date",
         ),
     ],
 )
