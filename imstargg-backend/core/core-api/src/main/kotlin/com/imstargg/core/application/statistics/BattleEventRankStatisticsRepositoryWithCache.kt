@@ -15,33 +15,34 @@ class BattleEventRankStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerRank:' + #eventId + ':' + #tierRange + ':' + #date",
+        key = "'battleEventBrawlerRank:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
     )
     fun findBrawlerRankCounts(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
-    ): List<BrawlerRankCount> = battleEventRankStatisticsRepository.findBrawlerRankCounts(eventId, tierRange, date)
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerRankCount> = battleEventRankStatisticsRepository.findBrawlerRankCounts(eventId, tierRange, startDate, endDate)
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerDuoRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #date",
+        key = "'battleEventBrawlerDuoRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate",
     )
     fun findBrawlerDuoRankCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
-    ): List<BrawlersRankCount> = battleEventRankStatisticsRepository.findBrawlerDuoRankCounts(eventId, brawlerId, tierRange, date)
+        startDate: LocalDate,
+    ): List<BrawlersRankCount> = battleEventRankStatisticsRepository.findBrawlerDuoRankCounts(eventId, brawlerId, tierRange, startDate)
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerTrioRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #date",
+        key = "'battleEventBrawlerTrioRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate",
     )
     fun findBrawlerTrioRankCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
-    ): List<BrawlersRankCount> = battleEventRankStatisticsRepository.findBrawlerTrioRankCounts(eventId, brawlerId, tierRange, date)
+        startDate: LocalDate,
+    ): List<BrawlersRankCount> = battleEventRankStatisticsRepository.findBrawlerTrioRankCounts(eventId, brawlerId, tierRange, startDate)
 }

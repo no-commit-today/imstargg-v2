@@ -12,19 +12,18 @@ import java.time.LocalDate
 
 @Entity
 @Table(
-    name = "stats_weekly_brawler_solo_battle_rank",
+    name = "brawler_solo_battle_rank_stats",
     indexes = [
         Index(
-            name = "ix_stats_weekly_brawler_solo_battle_rank",
-            columnList = "event_brawlstars_id, tier_range, start_date",
+            name = "ix_brawler_solo_battle_rank_stats",
+            columnList = "event_brawlstars_id, tier_range, date",
         ),
     ],
 )
-class StatsWeeklyBrawlerSoloBattleRankEntity(
+class BrawlerSoloBattleRankStatsEntity(
     eventBrawlStarsId: Long,
     tierRange: StatsTierRange,
-    startDate: LocalDate,
-    endDate: LocalDate,
+    date: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     rankCount1: Long,
@@ -37,15 +36,14 @@ class StatsWeeklyBrawlerSoloBattleRankEntity(
     rankCount8: Long,
     rankCount9: Long,
     rankCount10: Long,
-) : BaseWeeklyBattleRankEntity(
+) : BaseBattleRankStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
-        startDate = startDate,
-        endDate = endDate,
+        date = date,
     ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stats_weekly_brawler_solo_battle_rank_id", nullable = false)
+    @Column(name = "brawler_solo_battle_rank_stats_id", nullable = false)
     val id: Long? = null
 
     @Column(name = "rank_1_count", nullable = false)

@@ -12,16 +12,16 @@ class BrawlerStatisticsService(
 ) {
     fun getBrawlerResultStatistics(param: BrawlerStatisticsParam): List<BrawlerResultStatistics> =
         resultRepository
-            .findBrawlerResultCounts(param.tierRange, param.date)
+            .findBrawlerResultCounts(param.tierRange, param.startDate, param.endDate)
             .map { it.toStatistics() }
 
     fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatistics> =
         resultRepository
-            .findBrawlerDuoResultCounts(param.brawlerId, param.tierRange, param.date)
+            .findBrawlerDuoResultCounts(param.brawlerId, param.tierRange, param.startDate)
             .map { it.toStatistics() }
 
     fun getBrawlerTrioResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatistics> =
         resultRepository
-            .findBrawlerTrioResultCounts(param.brawlerId, param.tierRange, param.date)
+            .findBrawlerTrioResultCounts(param.brawlerId, param.tierRange, param.startDate)
             .map { it.toStatistics() }
 }

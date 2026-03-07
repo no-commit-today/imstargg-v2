@@ -12,29 +12,26 @@ import java.time.LocalDate
 
 @Entity
 @Table(
-    name = "stats_weekly_brawler_battle_result",
+    name = "brawler_enemy_battle_result_weekly_stats",
     indexes = [
         Index(
-            name = "ix_stats_weekly_brawler_battle_result_1",
+            name = "ix_brawler_enemy_battle_result_weekly_stats",
             columnList = "event_brawlstars_id, tier_range, start_date",
-        ),
-        Index(
-            name = "ix_stats_weekly_brawler_battle_result_2",
-            columnList = "tier_range, start_date, brawler_brawlstars_id",
         ),
     ],
 )
-class StatsWeeklyBrawlerBattleResultEntity(
+class BrawlerEnemyBattleResultWeeklyStatsEntity(
     eventBrawlStarsId: Long,
     tierRange: StatsTierRange,
     startDate: LocalDate,
     endDate: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
+    @Column(name = "enemy_brawler_brawlstars_id", updatable = false, nullable = false)
+    val enemyBrawlerBrawlStarsId: Long,
     victoryCount: Long,
     defeatCount: Long,
     drawCount: Long,
-    starPlayerCount: Long,
 ) : BaseWeeklyBattleResultEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
@@ -46,10 +43,6 @@ class StatsWeeklyBrawlerBattleResultEntity(
     ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stats_weekly_brawler_battle_result_id", nullable = false)
+    @Column(name = "brawler_enemy_battle_result_weekly_stats_id", nullable = false)
     val id: Long? = null
-
-    @Column(name = "star_player_count", nullable = false)
-    var starPlayerCount: Long = starPlayerCount
-        protected set
 }

@@ -4,10 +4,11 @@ import com.imstargg.core.enums.StatsTierRange
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
-interface StatsWeeklyBrawlerSoloBattleRankJpaRepository : JpaRepository<StatsWeeklyBrawlerSoloBattleRankEntity, Long> {
-    fun findByEventBrawlStarsIdAndTierRangeAndStartDate(
+interface BrawlerSoloBattleRankStatsJpaRepository : JpaRepository<BrawlerSoloBattleRankStatsEntity, Long> {
+    fun findByEventBrawlStarsIdAndTierRangeAndDateBetween(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-    ): List<StatsWeeklyBrawlerSoloBattleRankEntity>
+        endDate: LocalDate,
+    ): List<BrawlerSoloBattleRankStatsEntity>
 }

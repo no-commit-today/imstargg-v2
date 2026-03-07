@@ -7,10 +7,10 @@ import com.imstargg.core.domain.statistics.BrawlersResultCount
 import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.domain.statistics.StarPlayerCount
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerBattleResultJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerEnemyBattleResultJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerTeamBattleResultEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerTeamBattleResultJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultWeeklyStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultWeeklyStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultWeeklyStatsJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -18,40 +18,48 @@ import java.time.LocalDate
 @Repository
 @Transactional(readOnly = true)
 class BattleEventResultStatisticsRepository(
-    private val battleResultJpaRepository: StatsWeeklyBrawlerBattleResultJpaRepository,
-    private val teamBattleResultJpaRepository: StatsWeeklyBrawlerTeamBattleResultJpaRepository,
-    private val enemyBattleResultJpaRepository: StatsWeeklyBrawlerEnemyBattleResultJpaRepository,
+    private val battleResultJpaRepository: BrawlerBattleResultStatsJpaRepository,
+    private val teamBattleResultJpaRepository: BrawlerTeamBattleResultWeeklyStatsJpaRepository,
+    private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultWeeklyStatsJpaRepository,
 ) {
     fun findBrawlerResultCounts(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerResultCount> {
         val entities =
             battleResultJpaRepository
-                .findByEventBrawlStarsIdAndTierRangeAndStartDate(eventId.value, tierRange, date)
+                .findByEventBrawlStarsIdAndTierRangeAndDateBetween(eventId.value, tierRange, startDate, endDate)
 
-        return entities.map {
-            BrawlerResultCount(
-                brawlerId = BrawlStarsId(it.brawlerBrawlStarsId),
-                resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
-                starPlayerCount = StarPlayerCount(it.starPlayerCount),
-            )
-        }
+        return entities
+            .groupBy { it.brawlerBrawlStarsId }
+            .map { (brawlerBrawlStarsId, grouped) ->
+                BrawlerResultCount(
+                    brawlerId = BrawlStarsId(brawlerBrawlStarsId),
+                    resultCount =
+                        ResultCount(
+                            grouped.sumOf { it.victoryCount },
+                            grouped.sumOf { it.defeatCount },
+                            grouped.sumOf { it.drawCount },
+                        ),
+                    starPlayerCount = StarPlayerCount(grouped.sumOf { it.starPlayerCount }),
+                )
+            }
     }
 
     fun findBrawlerDuoResultCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
                 .findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
-                    date,
+                    startDate,
                     brawlerId.value,
                 )
 
@@ -62,14 +70,14 @@ class BattleEventResultStatisticsRepository(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
                 .findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
-                    date,
+                    startDate,
                     brawlerId.value,
                 )
 
@@ -90,7 +98,7 @@ class BattleEventResultStatisticsRepository(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
     ): List<BrawlerEnemyResultCount> {
         val entities =
             enemyBattleResultJpaRepository
@@ -98,7 +106,7 @@ class BattleEventResultStatisticsRepository(
                     eventId.value,
                     brawlerId.value,
                     tierRange,
-                    date,
+                    startDate,
                 )
 
         return entities.map {
@@ -112,7 +120,7 @@ class BattleEventResultStatisticsRepository(
 
     companion object {
         fun extractDuoResultCounts(
-            entities: List<StatsWeeklyBrawlerTeamBattleResultEntity>,
+            entities: List<BrawlerTeamBattleResultWeeklyStatsEntity>,
             brawlerId: BrawlStarsId,
         ): List<BrawlersResultCount> {
             val otherBrawlerIdToResultCount = mutableMapOf<BrawlStarsId, ResultCount>()

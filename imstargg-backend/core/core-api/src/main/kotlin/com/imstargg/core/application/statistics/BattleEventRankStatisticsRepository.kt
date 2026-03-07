@@ -5,11 +5,11 @@ import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlersRankCount
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerDuoBattleRankEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerDuoBattleRankJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerSoloBattleRankJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerTrioBattleRankEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsWeeklyBrawlerTrioBattleRankJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerDuoBattleRankWeeklyStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerDuoBattleRankWeeklyStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerSoloBattleRankStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleRankWeeklyStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleRankWeeklyStatsJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -17,53 +17,56 @@ import java.time.LocalDate
 @Repository
 @Transactional(readOnly = true)
 class BattleEventRankStatisticsRepository(
-    private val soloBattleRankJpaRepository: StatsWeeklyBrawlerSoloBattleRankJpaRepository,
-    private val duoBattleRankJpaRepository: StatsWeeklyBrawlerDuoBattleRankJpaRepository,
-    private val trioBattleRankJpaRepository: StatsWeeklyBrawlerTrioBattleRankJpaRepository,
+    private val soloBattleRankJpaRepository: BrawlerSoloBattleRankStatsJpaRepository,
+    private val duoBattleRankJpaRepository: BrawlerDuoBattleRankWeeklyStatsJpaRepository,
+    private val trioBattleRankJpaRepository: BrawlerTrioBattleRankWeeklyStatsJpaRepository,
 ) {
     fun findBrawlerRankCounts(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerRankCount> {
         val entities =
             soloBattleRankJpaRepository
-                .findByEventBrawlStarsIdAndTierRangeAndStartDate(eventId.value, tierRange, date)
+                .findByEventBrawlStarsIdAndTierRangeAndDateBetween(eventId.value, tierRange, startDate, endDate)
 
-        return entities.map {
-            BrawlerRankCount(
-                brawlerId = BrawlStarsId(it.brawlerBrawlStarsId),
-                rankCount =
-                    RankCount(
-                        mapOf(
-                            1 to it.rankCount1,
-                            2 to it.rankCount2,
-                            3 to it.rankCount3,
-                            4 to it.rankCount4,
-                            5 to it.rankCount5,
-                            6 to it.rankCount6,
-                            7 to it.rankCount7,
-                            8 to it.rankCount8,
-                            9 to it.rankCount9,
-                            10 to it.rankCount10,
+        return entities
+            .groupBy { it.brawlerBrawlStarsId }
+            .map { (brawlerBrawlStarsId, grouped) ->
+                BrawlerRankCount(
+                    brawlerId = BrawlStarsId(brawlerBrawlStarsId),
+                    rankCount =
+                        RankCount(
+                            mapOf(
+                                1 to grouped.sumOf { it.rankCount1 },
+                                2 to grouped.sumOf { it.rankCount2 },
+                                3 to grouped.sumOf { it.rankCount3 },
+                                4 to grouped.sumOf { it.rankCount4 },
+                                5 to grouped.sumOf { it.rankCount5 },
+                                6 to grouped.sumOf { it.rankCount6 },
+                                7 to grouped.sumOf { it.rankCount7 },
+                                8 to grouped.sumOf { it.rankCount8 },
+                                9 to grouped.sumOf { it.rankCount9 },
+                                10 to grouped.sumOf { it.rankCount10 },
+                            ),
                         ),
-                    ),
-            )
-        }
+                )
+            }
     }
 
     fun findBrawlerDuoRankCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
     ): List<BrawlersRankCount> {
         val entities =
             duoBattleRankJpaRepository
                 .findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
-                    date,
+                    startDate,
                     brawlerId.value,
                 )
 
@@ -86,14 +89,14 @@ class BattleEventRankStatisticsRepository(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        startDate: LocalDate,
     ): List<BrawlersRankCount> {
         val entities =
             trioBattleRankJpaRepository
                 .findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
-                    date,
+                    startDate,
                     brawlerId.value,
                 )
 
@@ -110,7 +113,7 @@ class BattleEventRankStatisticsRepository(
         }
     }
 
-    private fun toDuoRankCount(entity: StatsWeeklyBrawlerDuoBattleRankEntity) =
+    private fun toDuoRankCount(entity: BrawlerDuoBattleRankWeeklyStatsEntity) =
         RankCount(
             mapOf(
                 1 to entity.rankCount1,
@@ -121,7 +124,7 @@ class BattleEventRankStatisticsRepository(
             ),
         )
 
-    private fun toTrioRankCount(entity: StatsWeeklyBrawlerTrioBattleRankEntity) =
+    private fun toTrioRankCount(entity: BrawlerTrioBattleRankWeeklyStatsEntity) =
         RankCount(
             mapOf(
                 1 to entity.rankCount1,

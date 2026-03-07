@@ -15,30 +15,31 @@ class BrawlerResultStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerResult:' + #tierRange + ':' + #date",
+        key = "'brawlerResult:' + #tierRange + ':' + #startDate + ':' + #endDate",
     )
     fun findBrawlerResultCounts(
         tierRange: StatsTierRange,
-        date: LocalDate,
-    ): List<BrawlerResultCount> = brawlerResultStatisticsRepository.findBrawlerResultCounts(tierRange, date)
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerResultCount> = brawlerResultStatisticsRepository.findBrawlerResultCounts(tierRange, startDate, endDate)
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerDuoResult:' + #brawlerId + ':' + #tierRange + ':' + #date",
+        key = "'brawlerDuoResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
     )
     fun findBrawlerDuoResultCounts(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
-    ): List<BrawlersResultCount> = brawlerResultStatisticsRepository.findBrawlerDuoResultCounts(brawlerId, tierRange, date)
+        startDate: LocalDate,
+    ): List<BrawlersResultCount> = brawlerResultStatisticsRepository.findBrawlerDuoResultCounts(brawlerId, tierRange, startDate)
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerTrioResult:' + #brawlerId + ':' + #tierRange + ':' + #date",
+        key = "'brawlerTrioResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
     )
     fun findBrawlerTrioResultCounts(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        date: LocalDate,
-    ): List<BrawlersResultCount> = brawlerResultStatisticsRepository.findBrawlerTrioResultCounts(brawlerId, tierRange, date)
+        startDate: LocalDate,
+    ): List<BrawlersResultCount> = brawlerResultStatisticsRepository.findBrawlerTrioResultCounts(brawlerId, tierRange, startDate)
 }

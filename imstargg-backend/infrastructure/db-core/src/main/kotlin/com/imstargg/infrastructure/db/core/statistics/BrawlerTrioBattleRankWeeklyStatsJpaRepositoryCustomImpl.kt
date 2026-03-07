@@ -1,14 +1,14 @@
 package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.QStatsWeeklyBrawlerTrioBattleRankEntity.Companion.statsWeeklyBrawlerTrioBattleRankEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerTrioBattleRankWeeklyStatsEntity.Companion.brawlerTrioBattleRankWeeklyStatsEntity
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import java.time.LocalDate
 
-internal class StatsWeeklyBrawlerTrioBattleRankJpaRepositoryCustomImpl(
+internal class BrawlerTrioBattleRankWeeklyStatsJpaRepositoryCustomImpl(
     entityManager: EntityManager,
-) : StatsWeeklyBrawlerTrioBattleRankJpaRepositoryCustom {
+) : BrawlerTrioBattleRankWeeklyStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
     override fun findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
@@ -16,8 +16,8 @@ internal class StatsWeeklyBrawlerTrioBattleRankJpaRepositoryCustomImpl(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         brawlerBrawlStarsId: Long,
-    ): List<StatsWeeklyBrawlerTrioBattleRankEntity> {
-        val entity = statsWeeklyBrawlerTrioBattleRankEntity
+    ): List<BrawlerTrioBattleRankWeeklyStatsEntity> {
+        val entity = brawlerTrioBattleRankWeeklyStatsEntity
 
         return queryFactory
             .selectFrom(entity)

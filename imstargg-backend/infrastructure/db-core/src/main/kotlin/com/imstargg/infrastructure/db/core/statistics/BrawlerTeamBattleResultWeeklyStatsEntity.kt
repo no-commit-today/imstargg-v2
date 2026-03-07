@@ -12,19 +12,19 @@ import java.time.LocalDate
 
 @Entity
 @Table(
-    name = "stats_weekly_brawler_team_battle_result",
+    name = "brawler_team_battle_result_weekly_stats",
     indexes = [
         Index(
-            name = "ix_stats_weekly_brawler_team_battle_result_1",
+            name = "ix_brawler_team_battle_result_weekly_stats_1",
             columnList = "event_brawlstars_id, tier_range, start_date",
         ),
         Index(
-            name = "ix_stats_weekly_brawler_team_battle_result_2",
+            name = "ix_brawler_team_battle_result_weekly_stats_2",
             columnList = "tier_range, start_date",
         ),
     ],
 )
-class StatsWeeklyBrawlerTeamBattleResultEntity(
+class BrawlerTeamBattleResultWeeklyStatsEntity(
     eventBrawlStarsId: Long,
     tierRange: StatsTierRange,
     startDate: LocalDate,
@@ -49,6 +49,6 @@ class StatsWeeklyBrawlerTeamBattleResultEntity(
     ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stats_weekly_brawler_team_battle_result_id", nullable = false)
+    @Column(name = "brawler_team_battle_result_weekly_stats_id", nullable = false)
     val id: Long? = null
 }
