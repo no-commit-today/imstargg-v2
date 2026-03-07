@@ -5,16 +5,16 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
 interface BrawlerEnemyBattleResultWeeklyStatsJpaRepository : JpaRepository<BrawlerEnemyBattleResultWeeklyStatsEntity, Long> {
-    fun findByEventBrawlStarsIdAndTierRangeAndStartDate(
+    fun findByEventBrawlStarsIdAndTierRangeAndDate(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
+        date: LocalDate,
     ): List<BrawlerEnemyBattleResultWeeklyStatsEntity>
 
-    fun findByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndTierRangeAndStartDate(
+    fun findByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndTierRangeAndDate(
         eventBrawlStarsId: Long,
         brawlerBrawlStarsId: Long,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
+        date: LocalDate,
     ): List<BrawlerEnemyBattleResultWeeklyStatsEntity>
 }

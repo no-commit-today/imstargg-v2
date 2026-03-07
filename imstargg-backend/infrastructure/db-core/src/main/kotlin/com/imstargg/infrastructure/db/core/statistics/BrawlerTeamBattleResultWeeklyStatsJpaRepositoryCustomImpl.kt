@@ -11,10 +11,10 @@ internal class BrawlerTeamBattleResultWeeklyStatsJpaRepositoryCustomImpl(
 ) : BrawlerTeamBattleResultWeeklyStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
+    override fun findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
+        date: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultWeeklyStatsEntity> {
         val entity = brawlerTeamBattleResultWeeklyStatsEntity
@@ -24,7 +24,7 @@ internal class BrawlerTeamBattleResultWeeklyStatsJpaRepositoryCustomImpl(
             .where(
                 entity.eventBrawlStarsId.eq(eventBrawlStarsId),
                 entity.tierRange.eq(tierRange),
-                entity.startDate.eq(startDate),
+                entity.date.eq(date),
                 entity.brawlerBrawlStarsId1
                     .eq(brawlerBrawlStarsId)
                     .or(entity.brawlerBrawlStarsId2.eq(brawlerBrawlStarsId))
@@ -32,9 +32,9 @@ internal class BrawlerTeamBattleResultWeeklyStatsJpaRepositoryCustomImpl(
             ).fetch()
     }
 
-    override fun findByTierRangeAndStartDateAndBrawlerBrawlStarsId(
+    override fun findByTierRangeAndDateAndBrawlerBrawlStarsId(
         tierRange: StatsTierRange,
-        startDate: LocalDate,
+        date: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultWeeklyStatsEntity> {
         val entity = brawlerTeamBattleResultWeeklyStatsEntity
@@ -43,7 +43,7 @@ internal class BrawlerTeamBattleResultWeeklyStatsJpaRepositoryCustomImpl(
             .selectFrom(entity)
             .where(
                 entity.tierRange.eq(tierRange),
-                entity.startDate.eq(startDate),
+                entity.date.eq(date),
                 entity.brawlerBrawlStarsId1
                     .eq(brawlerBrawlStarsId)
                     .or(entity.brawlerBrawlStarsId2.eq(brawlerBrawlStarsId))

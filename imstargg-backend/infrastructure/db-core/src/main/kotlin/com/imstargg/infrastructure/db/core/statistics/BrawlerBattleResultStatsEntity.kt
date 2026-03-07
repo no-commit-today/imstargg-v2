@@ -9,6 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 @Entity
 @Table(
@@ -28,6 +29,8 @@ class BrawlerBattleResultStatsEntity(
     eventBrawlStarsId: Long,
     tierRange: StatsTierRange,
     date: LocalDate,
+    startAt: OffsetDateTime,
+    endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     victoryCount: Long,
@@ -38,6 +41,8 @@ class BrawlerBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
         date = date,
+        startAt = startAt,
+        endAt = endAt,
         victoryCount = victoryCount,
         defeatCount = defeatCount,
         drawCount = drawCount,

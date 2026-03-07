@@ -11,10 +11,10 @@ internal class BrawlerDuoBattleRankWeeklyStatsJpaRepositoryCustomImpl(
 ) : BrawlerDuoBattleRankWeeklyStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
+    override fun findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
+        date: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerDuoBattleRankWeeklyStatsEntity> {
         val entity = brawlerDuoBattleRankWeeklyStatsEntity
@@ -24,7 +24,7 @@ internal class BrawlerDuoBattleRankWeeklyStatsJpaRepositoryCustomImpl(
             .where(
                 entity.eventBrawlStarsId.eq(eventBrawlStarsId),
                 entity.tierRange.eq(tierRange),
-                entity.startDate.eq(startDate),
+                entity.date.eq(date),
                 entity.brawlerBrawlStarsId1
                     .eq(brawlerBrawlStarsId)
                     .or(entity.brawlerBrawlStarsId2.eq(brawlerBrawlStarsId)),

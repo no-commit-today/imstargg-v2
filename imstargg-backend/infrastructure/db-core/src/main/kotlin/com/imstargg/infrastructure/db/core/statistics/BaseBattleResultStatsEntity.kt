@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.MappedSuperclass
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 @MappedSuperclass
 abstract class BaseBattleResultStatsEntity(
@@ -17,6 +18,10 @@ abstract class BaseBattleResultStatsEntity(
     val tierRange: StatsTierRange,
     @Column(name = "date", updatable = false, nullable = false)
     val date: LocalDate,
+    @Column(name = "start_at", updatable = false, nullable = false)
+    val startAt: OffsetDateTime,
+    @Column(name = "end_at", updatable = false, nullable = false)
+    val endAt: OffsetDateTime,
     victoryCount: Long,
     defeatCount: Long,
     drawCount: Long,

@@ -4,10 +4,10 @@ import com.imstargg.core.enums.StatsTierRange
 import java.time.LocalDate
 
 interface BrawlerTrioBattleRankWeeklyStatsJpaRepositoryCustom {
-    fun findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
+    fun findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
+        date: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTrioBattleRankWeeklyStatsEntity>
 }

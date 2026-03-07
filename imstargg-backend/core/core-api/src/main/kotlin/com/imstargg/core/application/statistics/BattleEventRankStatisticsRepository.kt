@@ -63,7 +63,7 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlersRankCount> {
         val entities =
             duoBattleRankJpaRepository
-                .findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
+                .findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
                     startDate,
@@ -93,7 +93,7 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlersRankCount> {
         val entities =
             trioBattleRankJpaRepository
-                .findByEventAndTierRangeAndStartDateAndBrawlerBrawlStarsId(
+                .findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
                     startDate,
