@@ -2,16 +2,11 @@ package com.imstargg.infrastructure.db.core.brawlstars.event
 
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
-import jakarta.persistence.ConstraintMode
 import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.ForeignKey
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -20,14 +15,19 @@ import java.time.OffsetDateTime
 @Entity
 @Table(
     name = "battle_event_rotation_item",
-    indexes = [Index(name = "ix_battle_event_rotation_item__1", columnList = "battle_event_rotation_id")],
+    indexes = [Index(name = "ix_battle_event_rotation_item__end_time", columnList = "end_time")],
 )
 class BattleEventRotationItemEntity(
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "battle_event_rotation_id", updatable = false, foreignKey = ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    val battleEventRotation: BattleEventRotationEntity,
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
+    @Column(name = "event_name", updatable = false)
+    val eventName: String? = null,
+    @Column(name = "event_mode_name", updatable = false)
+    val eventModeName: String? = null,
+    @Column(name = "event_mode_brawlstars_id", updatable = false)
+    val eventModeBrawlStarsId: Long? = null,
+    @Column(name = "event_map_name", updatable = false)
+    val eventMapName: String? = null,
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "modifiers", columnDefinition = "json", updatable = false, nullable = false)
     val modifiers: List<String>,

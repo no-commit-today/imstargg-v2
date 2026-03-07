@@ -71,6 +71,7 @@ imstargg-backend/
 - **테스트 베이스 클래스**: `CoreApiContextTest`, `BrawlStarsClientDevelopTest` 등 상속하여 사용
 - **JPA Entity**: allOpen 플러그인 적용 (`@Entity`, `@MappedSuperclass`, `@Embeddable`)
 - **QueryDSL**: KSP 코드 생성 (`infrastructure/db-core`)
+- **Application Layer Repository**: `core-api`의 Service는 JPA Repository를 직접 참조하지 않고, `application` 패키지의 Repository 클래스를 통해 접근. 캐시가 필요한 경우 `*WithCache` 래퍼 사용 (예: `EventRepository` → `EventRepositoryWithCache`)
 
 ### DB & Entity Conventions
 
@@ -89,6 +90,8 @@ class SomeEntity(
         protected set            // 외부에서 직접 변경 방지
 }
 ```
+
+- **JPA 쿼리 메서드 네이밍**: 리스트 반환 시 `findAll` 접두사 사용 (예: `findAllByEndTimeAfter`), 단건 반환 시 `find` 접두사 사용 (예: `findByBrawlStarsId`)
 
 ## Test Tags
 
