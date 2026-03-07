@@ -17,6 +17,7 @@ class CacheConfig {
             CaffeineCacheManager(
                 CacheNames.BRAWLER,
                 CacheNames.EVENT,
+                CacheNames.STATISTICS,
             )
         cacheManager.setCaffeine(caffeineBuilder())
         return cacheManager
