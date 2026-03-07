@@ -5,7 +5,7 @@ import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 
-class AggregatedResultBattleKeyJpaRepositoryCustomImpl(
+internal class AggregatedResultBattleKeyJpaRepositoryCustomImpl(
     entityManager: EntityManager,
 ) : AggregatedResultBattleKeyJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
