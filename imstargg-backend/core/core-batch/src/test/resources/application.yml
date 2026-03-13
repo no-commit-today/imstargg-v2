@@ -21,3 +21,7 @@ spring:
       shutdown:
         await-termination: true
         await-termination-period: 10000
+
+app:
+  alert:
+    type: NO_OPS

@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":infrastructure:db-core"))
 
     implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation("org.springframework:spring-web")
 
     // Test
     testImplementation("org.springframework.batch:spring-batch-test")

@@ -31,6 +31,10 @@ spring:
         await-termination: true
         await-termination-period: 10000
 
+app:
+  alert:
+    type: NO_OPS
+
 ---
 spring:
   config:
@@ -48,8 +52,20 @@ spring:
     activate:
       on-profile: dev
 
+app:
+  alert:
+    type: DISCORD
+    discord:
+      webhook-url: ${DISCORD_WEBHOOK_URL}
+
 ---
 spring:
   config:
     activate:
       on-profile: live
+
+app:
+  alert:
+    type: DISCORD
+    discord:
+      webhook-url: ${DISCORD_WEBHOOK_URL}
