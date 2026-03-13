@@ -53,15 +53,3 @@ spring:
   config:
     activate:
       on-profile: live
-
----
-spring:
-  config:
-    activate:
-      on-profile: test
-
-  batch:
-    job:
-      enabled: false
-    jdbc:
-      initialize-schema: embedded
