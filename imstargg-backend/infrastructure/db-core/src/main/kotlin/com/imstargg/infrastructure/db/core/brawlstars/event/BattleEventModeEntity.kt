@@ -21,6 +21,8 @@ import jakarta.persistence.Table
 class BattleEventModeEntity(
     @Column(name = "brawlstars_id", updatable = false, nullable = false)
     val brawlStarsId: Long,
+    @Column(name = "brawlstars_name", updatable = false, nullable = false)
+    val brawlStarsName: String,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

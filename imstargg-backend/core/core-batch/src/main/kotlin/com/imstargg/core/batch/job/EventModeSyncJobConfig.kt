@@ -1,0 +1,77 @@
+package com.imstargg.core.batch.job
+
+import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.batch.support.alert.AlertCommand
+import com.imstargg.core.batch.support.alert.AlertManager
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeJpaRepository
+import org.springframework.batch.core.job.Job
+import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.job.parameters.RunIdIncrementer
+import org.springframework.batch.core.repository.JobRepository
+import org.springframework.batch.core.step.Step
+import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.infrastructure.repeat.RepeatStatus
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.transaction.PlatformTransactionManager
+
+@Configuration
+class EventModeSyncJobConfig(
+    private val jobRepository: JobRepository,
+    private val txManager: PlatformTransactionManager,
+    private val brawlStarsClient: BrawlStarsClient,
+    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
+    private val alertManager: AlertManager,
+) {
+    companion object {
+        const val JOB_NAME = "eventModeSyncJob"
+        const val STEP_NAME = "eventModeSyncStep"
+    }
+
+    @Bean(JOB_NAME)
+    fun eventModeSyncJob(): Job =
+        JobBuilder(JOB_NAME, jobRepository)
+            .incrementer(RunIdIncrementer())
+            .start(eventModeSyncStep())
+            .build()
+
+    @Bean(STEP_NAME)
+    fun eventModeSyncStep(): Step =
+        StepBuilder(STEP_NAME, jobRepository)
+            .tasklet({ _, _ ->
+                val gameModes = brawlStarsClient.getGameModes().items
+                val existingIds =
+                    battleEventModeJpaRepository
+                        .findAll()
+                        .map { it.brawlStarsId }
+                        .toSet()
+
+                val newModes =
+                    gameModes
+                        .filter { it.id !in existingIds }
+                        .map {
+                            BattleEventModeEntity(
+                                brawlStarsId = it.id,
+                                brawlStarsName = it.name,
+                            )
+                        }
+
+                battleEventModeJpaRepository.saveAll(newModes)
+                alertNewModes(newModes)
+                RepeatStatus.FINISHED
+            }, txManager)
+            .build()
+
+    private fun alertNewModes(newModes: List<BattleEventModeEntity>) {
+        if (newModes.isEmpty()) return
+        val content = newModes.joinToString("\n") { "id: ${it.brawlStarsId}, name: ${it.brawlStarsName}" }
+        alertManager.alert(
+            AlertCommand
+                .builder()
+                .title("새로운 이벤트 모드 발견")
+                .content(content)
+                .build(),
+        )
+    }
+}

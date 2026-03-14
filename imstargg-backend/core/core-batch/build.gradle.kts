@@ -6,6 +6,7 @@ dependencies {
     implementation(project(":core:core-enum"))
     implementation(project(":support:logging"))
     implementation(project(":infrastructure:db-core"))
+    implementation(project(":client:brawlstars-client"))
 
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework:spring-web")

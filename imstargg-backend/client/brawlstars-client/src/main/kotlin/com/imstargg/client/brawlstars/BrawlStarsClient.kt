@@ -5,6 +5,7 @@ import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BrawlerResponse
 import com.imstargg.client.brawlstars.response.ClubRankingResponse
 import com.imstargg.client.brawlstars.response.ClubResponse
+import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.client.brawlstars.response.ListResponse
 import com.imstargg.client.brawlstars.response.PlayerRankingResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
@@ -24,6 +25,8 @@ class BrawlStarsClient internal constructor(
 
     fun getBrawlers(): ListResponse<BrawlerResponse> =
         execute("getBrawlers") { brawlStarsApi.getListOfAvailableBrawlers(PagingParam.DEFAULT) }
+
+    fun getGameModes(): ListResponse<EventTypeResponse> = execute("getGameModes") { brawlStarsApi.getGameModes(PagingParam.DEFAULT) }
 
     fun getEventRotation(): List<ScheduledEventResponse> = execute("getEventRotation") { brawlStarsApi.getEventRotation() }
 

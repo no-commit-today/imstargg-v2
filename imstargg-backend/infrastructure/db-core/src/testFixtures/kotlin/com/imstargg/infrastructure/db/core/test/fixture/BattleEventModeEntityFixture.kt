@@ -4,6 +4,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntit
 
 class BattleEventModeEntityFixture {
     private var brawlStarsId: Long = 1L
+    private var brawlStarsName: String = "gemGrab"
 
     companion object {
         fun aBattleEventModeEntity() = BattleEventModeEntityFixture()
@@ -11,8 +12,11 @@ class BattleEventModeEntityFixture {
 
     fun withBrawlStarsId(value: Long) = apply { brawlStarsId = value }
 
+    fun withBrawlStarsName(value: String) = apply { brawlStarsName = value }
+
     fun build() =
         BattleEventModeEntity(
             brawlStarsId = brawlStarsId,
+            brawlStarsName = brawlStarsName,
         )
 }

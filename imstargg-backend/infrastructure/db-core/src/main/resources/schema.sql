@@ -366,6 +366,7 @@ create table if not exists battle_event_mode
 (
     battle_event_mode_id bigint auto_increment primary key,
     brawlstars_id        bigint       not null,
+    brawlstars_name      varchar(255) not null,
     created_at           timestamp(6) not null default current_timestamp(6),
     updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event_mode__brawlstarsid (brawlstars_id)
@@ -518,7 +519,6 @@ create table if not exists battle_event_rotation_item
     slot_id                      int          not null,
     start_time                   timestamp(6) not null,
     end_time                     timestamp(6) not null,
-    event_name                   varchar(255) null,
     event_mode_name              varchar(255) null,
     event_mode_brawlstars_id     bigint       null,
     event_map_name               varchar(255) null,

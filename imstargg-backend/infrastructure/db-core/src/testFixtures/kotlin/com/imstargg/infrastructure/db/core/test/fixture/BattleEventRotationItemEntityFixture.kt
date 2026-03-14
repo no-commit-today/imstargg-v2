@@ -9,7 +9,6 @@ class BattleEventRotationItemEntityFixture {
     private var slotId: Int = 1
     private var startTime: OffsetDateTime = OffsetDateTime.now()
     private var endTime: OffsetDateTime = OffsetDateTime.now().plusHours(2)
-    private var eventName: String? = null
     private var eventModeName: String? = null
     private var eventModeBrawlStarsId: Long? = null
     private var eventMapName: String? = null
@@ -28,8 +27,6 @@ class BattleEventRotationItemEntityFixture {
 
     fun withEndTime(value: OffsetDateTime) = apply { endTime = value }
 
-    fun withEventName(value: String?) = apply { eventName = value }
-
     fun withEventModeName(value: String?) = apply { eventModeName = value }
 
     fun withEventModeBrawlStarsId(value: Long?) = apply { eventModeBrawlStarsId = value }
@@ -43,7 +40,6 @@ class BattleEventRotationItemEntityFixture {
             slotId = slotId,
             startTime = startTime,
             endTime = endTime,
-            eventName = eventName,
             eventModeName = eventModeName,
             eventModeBrawlStarsId = eventModeBrawlStarsId,
             eventMapName = eventMapName,

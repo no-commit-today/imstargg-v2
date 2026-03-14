@@ -20,8 +20,6 @@ import java.time.OffsetDateTime
 class BattleEventRotationItemEntity(
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
-    @Column(name = "event_name", updatable = false)
-    val eventName: String? = null,
     @Column(name = "event_mode_name", updatable = false)
     val eventModeName: String? = null,
     @Column(name = "event_mode_brawlstars_id", updatable = false)
