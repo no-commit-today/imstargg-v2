@@ -1,7 +1,5 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -41,37 +39,4 @@ class StatsRankBattleEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stats_rank_battle_id", nullable = false)
     val id: Long? = null
-
-    companion object {
-        fun canCreate(
-            battle: BattleEntity,
-            teamPlayers: List<BattleTeamPlayerEntity>,
-        ): Boolean {
-            if (!BaseStatsBattleEntity.canCreate(battle, teamPlayers)) return false
-            return battle.battleRank != null
-        }
-
-        fun from(
-            battle: BattleEntity,
-            teamPlayers: List<BattleTeamPlayerEntity>,
-        ): StatsRankBattleEntity {
-            require(canCreate(battle, teamPlayers)) {
-                "StatsRankBattleEntity 생성 불가: battleRank가 null이거나 공통 검증 실패. battleKey=${battle.battleKey}"
-            }
-
-            return StatsRankBattleEntity(
-                battleKey = battle.battleKey,
-                battleAt = battle.battleAt,
-                eventBrawlStarsId = battle.event!!.brawlStarsId!!,
-                eventModeBrawlStarsId = battle.event!!.modeBrawlStarsId!!.toLong(),
-                eventMap = battle.event!!.map!!,
-                mode = battle.mode!!,
-                type = battle.type!!,
-                starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
-                playerBrawlStarsTag = battle.player.brawlStarsTag,
-                battleRank = battle.battleRank!!,
-                teams = convertTeams(teamPlayers),
-            )
-        }
-    }
 }

@@ -1,10 +1,15 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.core.worker.domain.BattleResult
+import com.imstargg.core.enums.BattleType
+import com.imstargg.core.enums.EnumCodeType
+import com.imstargg.core.enums.SoloRankTier
+import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyEntity
 import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.AggregatedResultBattleKeyEntity
 import com.imstargg.infrastructure.db.core.statistics.AggregatedResultBattleKeyJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.StatsBattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.statistics.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.StatsRankBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.StatsResultBattleEntity
@@ -20,16 +25,16 @@ class StatsBattleAggregateApplier(
     private val aggregatedResultBattleKeyRepository: AggregatedResultBattleKeyJpaRepository,
 ) {
     @Transactional
-    fun apply(battleResults: List<BattleResult>) {
+    fun apply(battles: List<Battle>) {
         val statsRankBattles =
-            battleResults
-                .filter { StatsRankBattleEntity.canCreate(it.battle, it.teamPlayers) }
-                .map { StatsRankBattleEntity.from(it.battle, it.teamPlayers) }
+            battles
+                .filter { canCreateRankBattle(it) }
+                .map { toStatsRankBattle(it) }
 
         val statsResultBattles =
-            battleResults
-                .filter { StatsResultBattleEntity.canCreate(it.battle, it.teamPlayers) }
-                .map { StatsResultBattleEntity.from(it.battle, it.teamPlayers) }
+            battles
+                .filter { canCreateResultBattle(it) }
+                .map { toStatsResultBattle(it) }
 
         val aggregatedRankKeys =
             aggregatedRankBattleKeyRepository
@@ -56,5 +61,87 @@ class StatsBattleAggregateApplier(
         aggregatedResultBattleKeyRepository.saveAll(
             newResultBattles.map { AggregatedResultBattleKeyEntity.from(it) },
         )
+    }
+
+    private fun canCreateStatsBattle(battle: Battle): Boolean {
+        val event = battle.event ?: return false
+        if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return false
+        if (battle.mode == null || battle.type == null) return false
+
+        val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return false
+        if (battleType == BattleType.FRIENDLY) return false
+
+        val allPlayers = battle.teams.flatten()
+        val brawlerIds = allPlayers.map { it.brawler.brawlStarsId }
+        if (brawlerIds.size != brawlerIds.distinct().size) return false
+
+        val minTrophies = allPlayers.minOfOrNull { it.brawler.trophies } ?: return false
+        if (battleType == BattleType.SOLO_RANKED) {
+            if (minTrophies < SoloRankTier.DIAMOND_1.value) return false
+        } else {
+            if (minTrophies < MIN_TROPHY) return false
+        }
+        return true
+    }
+
+    private fun canCreateRankBattle(battle: Battle): Boolean {
+        if (battle.battleRank == null) return false
+        return canCreateStatsBattle(battle)
+    }
+
+    private fun canCreateResultBattle(battle: Battle): Boolean {
+        if (battle.result == null) return false
+        return canCreateStatsBattle(battle)
+    }
+
+    private fun toStatsRankBattle(battle: Battle) =
+        StatsRankBattleEntity(
+            battleKey = battle.battleKey,
+            battleAt = battle.battleAt,
+            eventBrawlStarsId = battle.event!!.brawlStarsId!!,
+            eventModeBrawlStarsId = battle.event.modeBrawlStarsId!!.toLong(),
+            eventMap = battle.event.map!!,
+            mode = battle.mode!!,
+            type = battle.type!!,
+            starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
+            playerBrawlStarsTag = battle.playerBrawlStarsTag,
+            battleRank = battle.battleRank!!,
+            teams = convertTeams(battle),
+        )
+
+    private fun toStatsResultBattle(battle: Battle) =
+        StatsResultBattleEntity(
+            battleKey = battle.battleKey,
+            battleAt = battle.battleAt,
+            eventBrawlStarsId = battle.event!!.brawlStarsId!!,
+            eventModeBrawlStarsId = battle.event.modeBrawlStarsId!!.toLong(),
+            eventMap = battle.event.map!!,
+            mode = battle.mode!!,
+            type = battle.type!!,
+            starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
+            playerBrawlStarsTag = battle.playerBrawlStarsTag,
+            result = battle.result!!,
+            teams = convertTeams(battle),
+        )
+
+    private fun convertTeams(battle: Battle): List<List<StatsBattleEntityTeamPlayer>> =
+        battle.teams.map { team ->
+            team.map { player ->
+                StatsBattleEntityTeamPlayer(
+                    brawlStarsTag = player.brawlStarsTag,
+                    name = player.name,
+                    brawler =
+                        StatsBattleEntityTeamPlayerBrawler(
+                            brawlStarsId = player.brawler.brawlStarsId,
+                            name = player.brawler.name,
+                            power = player.brawler.power,
+                            trophies = player.brawler.trophies,
+                        ),
+                )
+            }
+        }
+
+    companion object {
+        private const val MIN_TROPHY = 500
     }
 }

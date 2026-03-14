@@ -1,7 +1,8 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.CoreWorkerContextTest
-import com.imstargg.core.worker.domain.BattleResult
+import com.imstargg.core.worker.domain.Battle
+import com.imstargg.core.worker.domain.BattleEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.test.TestDataManager
@@ -29,14 +30,14 @@ class BattleUpdateApplierTest(
         val player = createPlayer("#PLAYER1")
         testDataManager.add(player)
 
-        val buildResults =
+        val battles =
             listOf(
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
-        val result = sut.apply(player, buildResults)
+        val result = sut.apply(player, battles)
 
         // then
         assertThat(result).hasSize(2)
@@ -53,20 +54,20 @@ class BattleUpdateApplierTest(
         val existingBattle = createBattleEntity(player, existingBattleTime)
         testDataManager.add(existingBattle)
 
-        val buildResults =
+        val battles =
             listOf(
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
-        val result = sut.apply(player, buildResults)
+        val result = sut.apply(player, battles)
 
         // then
         assertThat(result).hasSize(2)
-        assertThat(result.map { it.battle.battleAt.toEpochSecond() }).containsExactlyInAnyOrder(
+        assertThat(result.map { it.battleAt.toEpochSecond() }).containsExactlyInAnyOrder(
             OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC).toEpochSecond(),
             OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC).toEpochSecond(),
         )
@@ -83,14 +84,14 @@ class BattleUpdateApplierTest(
         val existingBattle = createBattleEntity(player, existingBattleTime)
         testDataManager.add(existingBattle)
 
-        val buildResults =
+        val battles =
             listOf(
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
-                createBattleEntityBuildResult(player, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
-        val result = sut.apply(player, buildResults)
+        val result = sut.apply(player, battles)
 
         // then
         assertThat(result).isEmpty()
@@ -113,11 +114,27 @@ class BattleUpdateApplierTest(
         .withTrophyChange(8)
         .build()
 
-    private fun createBattleEntityBuildResult(
-        player: PlayerEntity,
+    private fun createBattle(
+        playerBrawlStarsTag: String,
         battleTime: OffsetDateTime,
-    ) = BattleResult(
-        battle = createBattleEntity(player, battleTime),
-        teamPlayers = emptyList(),
+    ) = Battle(
+        battleKey = "battle_key_${battleTime.toEpochSecond()}",
+        battleAt = battleTime,
+        event =
+            BattleEvent(
+                brawlStarsId = 1L,
+                modeBrawlStarsName = "knockout",
+                modeBrawlStarsId = 1,
+                map = "Test Map",
+            ),
+        mode = "knockout",
+        type = "ranked",
+        result = "victory",
+        duration = 117,
+        starPlayerBrawlStarsTag = null,
+        playerBrawlStarsTag = playerBrawlStarsTag,
+        battleRank = null,
+        trophyChange = 8,
+        teams = emptyList(),
     )
 }

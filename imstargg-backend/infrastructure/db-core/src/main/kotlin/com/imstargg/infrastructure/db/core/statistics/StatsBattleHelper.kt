@@ -1,6 +1,5 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -9,9 +8,9 @@ object StatsBattleHelper {
 
     fun canAggregate(
         clock: Clock,
-        battle: BattleEntity,
+        battleAt: OffsetDateTime,
     ): Boolean {
         val now = OffsetDateTime.now(clock)
-        return battle.battleAt.isAfter(now.minusDays(BATTLE_MAX_AGE_DAYS))
+        return battleAt.isAfter(now.minusDays(BATTLE_MAX_AGE_DAYS))
     }
 }

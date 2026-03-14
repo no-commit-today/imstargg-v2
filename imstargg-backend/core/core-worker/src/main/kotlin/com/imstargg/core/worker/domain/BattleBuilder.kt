@@ -3,25 +3,15 @@ package com.imstargg.core.worker.domain
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntityBrawler
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 
-class BattleEntityBuilder(
-    private val playerEntity: PlayerEntity,
+class BattleBuilder(
+    private val brawlStarsTag: String,
     private val battleResponse: BattleResponse,
 ) {
-    fun build(): BattleResult {
+    fun build(): Battle {
         val teams = getBattleTeamList()
         val battleKey = createBattleKey(teams)
-        val battle = buildBattleEntity(battleKey)
-        val teamPlayers = buildTeamPlayers(battle, teams)
-        return BattleResult(
-            battle = battle,
-            teamPlayers = teamPlayers,
-        )
+        return buildBattle(battleKey, teams)
     }
 
     private fun getBattleTeamList(): List<List<BattleResultPlayerResponse>> =
@@ -35,14 +25,17 @@ class BattleEntityBuilder(
         return builder.build()
     }
 
-    private fun buildBattleEntity(battleKey: String): BattleEntity {
+    private fun buildBattle(
+        battleKey: String,
+        teams: List<List<BattleResultPlayerResponse>>,
+    ): Battle {
         val battle = battleResponse.battle
         val event = battleResponse.event
-        return BattleEntity(
+        return Battle(
             battleKey = battleKey,
             battleAt = battleResponse.battleTime,
             event =
-                BattleEntityEvent(
+                BattleEvent(
                     brawlStarsId = event.id,
                     modeBrawlStarsName = event.mode,
                     modeBrawlStarsId = event.modeId,
@@ -53,29 +46,22 @@ class BattleEntityBuilder(
             result = battle.result,
             duration = battle.duration,
             starPlayerBrawlStarsTag = battle.starPlayer?.tag,
-            player = playerEntity,
+            playerBrawlStarsTag = brawlStarsTag,
             battleRank = battle.rank,
             trophyChange = battle.trophyChange,
+            teams = buildTeams(teams),
         )
     }
 
-    private fun buildTeamPlayers(
-        battle: BattleEntity,
-        teams: List<List<BattleResultPlayerResponse>>,
-    ): List<BattleTeamPlayerEntity> =
-        teams.flatMapIndexed { teamIdx, team ->
-            team
-                .flatMap { player ->
-                    getPlayerBrawlers(player).map { brawler -> player to brawler }
-                }.mapIndexed { playerIdx, (player, brawler) ->
-                    BattleTeamPlayerEntity(
-                        battle = battle,
-                        teamIdx = teamIdx,
-                        playerIdx = playerIdx,
+    private fun buildTeams(teams: List<List<BattleResultPlayerResponse>>): List<List<BattleTeamPlayer>> =
+        teams.map { team ->
+            team.flatMap { player ->
+                getPlayerBrawlers(player).map { brawler ->
+                    BattleTeamPlayer(
                         brawlStarsTag = player.tag,
                         name = player.name,
                         brawler =
-                            BattleTeamPlayerEntityBrawler(
+                            BattleTeamPlayerBrawler(
                                 brawlStarsId = brawler.id,
                                 name = brawler.name,
                                 power = brawler.power,
@@ -84,6 +70,7 @@ class BattleEntityBuilder(
                             ),
                     )
                 }
+            }
         }
 
     private fun getPlayerBrawlers(player: BattleResultPlayerResponse): List<BattleResultBrawlerResponse> =

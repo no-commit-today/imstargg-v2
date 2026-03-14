@@ -2,7 +2,7 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
-import com.imstargg.core.worker.domain.BattleEntityBuilder
+import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
@@ -37,8 +37,8 @@ class PlayerUpdater(
 
                 playerUpdateApplier.apply(player, playerResponse)
 
-                val buildResults = battleResponses.map { BattleEntityBuilder(player, it).build() }
-                battleUpdateApplier.apply(player, buildResults)
+                val battles = battleResponses.map { BattleBuilder(player.brawlStarsTag, it).build() }
+                battleUpdateApplier.apply(player, battles)
             }
 
         statsBattleAggregator.asyncAggregate(savedBattles)

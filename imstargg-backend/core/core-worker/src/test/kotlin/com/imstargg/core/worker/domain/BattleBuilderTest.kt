@@ -5,10 +5,6 @@ import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 import com.imstargg.client.brawlstars.response.BattleResultResponse
 import com.imstargg.client.brawlstars.response.EventResponse
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
-import io.mockk.every
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.Test
@@ -17,7 +13,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class BattleEntityBuilderTest {
+class BattleBuilderTest {
     private data class BattleEvent(
         val brawlStarsId: Long,
         val mode: String,
@@ -73,11 +69,7 @@ class BattleEntityBuilderTest {
                 ZoneId.systemDefault(),
             ).toOffsetDateTime()
 
-    private fun createMockPlayerEntity(id: Long = 123L): PlayerEntity {
-        val playerEntity = mockk<PlayerEntity>()
-        every { playerEntity.id } returns id
-        return playerEntity
-    }
+    private val playerBrawlStarsTag = "#TESTPLAYER"
 
     private fun createBrawlerResponse(
         brawler: Brawler,
@@ -113,9 +105,8 @@ class BattleEntityBuilderTest {
         )
 
     @Test
-    fun `팀_전투에서_BattleEntity를_생성한다`() {
+    fun `팀_전투에서_Battle을_생성한다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -171,18 +162,17 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
-        assertBattle(result.battle, battleResponse, playerEntity)
-        assertBattleTeams(result.teams(), battleResponse.battle.teams!!)
+        assertBattle(result, battleResponse)
+        assertBattleTeams(result.teams, battleResponse.battle.teams!!)
     }
 
     @Test
-    fun `듀오_쇼다운에서_BattleEntity를_생성한다`() {
+    fun `듀오_쇼다운에서_Battle을_생성한다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -240,18 +230,17 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
-        assertBattle(result.battle, battleResponse, playerEntity)
-        assertBattleTeams(result.teams(), battleResponse.battle.teams!!)
+        assertBattle(result, battleResponse)
+        assertBattleTeams(result.teams, battleResponse.battle.teams!!)
     }
 
     @Test
-    fun `녹아웃_5대5에서_BattleEntity를_생성한다`() {
+    fun `녹아웃_5대5에서_Battle을_생성한다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val starPlayerResponse =
             createPlayerResponse(
                 "#player1",
@@ -333,19 +322,18 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
-        assertBattle(result.battle, battleResponse, playerEntity)
-        assertThat(result.battle.starPlayerBrawlStarsTag).isEqualTo("#player1")
-        assertBattleTeams(result.teams(), battleResponse.battle.teams!!)
+        assertBattle(result, battleResponse)
+        assertThat(result.starPlayerBrawlStarsTag).isEqualTo("#player1")
+        assertBattleTeams(result.teams, battleResponse.battle.teams!!)
     }
 
     @Test
-    fun `솔로_쇼다운에서_BattleEntity를_생성한다`() {
+    fun `솔로_쇼다운에서_Battle을_생성한다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -417,18 +405,17 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
-        assertBattle(result.battle, battleResponse, playerEntity)
-        assertBattlePlayers(result.teams(), battleResponse.battle.players!!)
+        assertBattle(result, battleResponse)
+        assertBattlePlayers(result.teams, battleResponse.battle.players!!)
     }
 
     @Test
-    fun `듀얼에서_복수_브롤러로_BattleEntity를_생성한다`() {
+    fun `듀얼에서_복수_브롤러로_Battle을_생성한다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -472,18 +459,17 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
-        assertBattle(result.battle, battleResponse, playerEntity)
-        assertBattlePlayers(result.teams(), battleResponse.battle.players!!)
+        assertBattle(result, battleResponse)
+        assertBattlePlayers(result.teams, battleResponse.battle.players!!)
     }
 
     @Test
-    fun `mode가_null인_경우_BattleEntity를_생성한다`() {
+    fun `mode가_null인_경우_Battle을_생성한다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -539,18 +525,17 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
-        assertThat(result.battle.mode).isNull()
-        assertBattle(result.battle, battleResponse, playerEntity)
+        assertThat(result.mode).isNull()
+        assertBattle(result, battleResponse)
     }
 
     @Test
     fun `플레이어_정보가_없으면_예외를_발생시킨다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -570,7 +555,7 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
 
         // then
@@ -581,7 +566,6 @@ class BattleEntityBuilderTest {
     @Test
     fun `브롤러_정보가_없으면_예외를_발생시킨다`() {
         // given
-        val playerEntity = createMockPlayerEntity()
         val battleResponse =
             BattleResponse(
                 battleTime = battleTime,
@@ -611,7 +595,7 @@ class BattleEntityBuilderTest {
             )
 
         // when
-        val sut = BattleEntityBuilder(playerEntity, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
 
         // then
@@ -620,11 +604,9 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattle(
-        actual: com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity,
+        actual: Battle,
         expected: BattleResponse,
-        playerEntity: PlayerEntity,
     ) {
-        assertThat(actual.id).isNull()
         assertThat(actual.battleAt).isEqualTo(expected.battleTime)
         assertThat(actual.event).isNotNull
         assertThat(actual.event!!.brawlStarsId).isEqualTo(expected.event.id)
@@ -636,13 +618,13 @@ class BattleEntityBuilderTest {
         assertThat(actual.result).isEqualTo(expected.battle.result)
         assertThat(actual.duration).isEqualTo(expected.battle.duration)
         assertThat(actual.starPlayerBrawlStarsTag).isEqualTo(expected.battle.starPlayer?.tag)
-        assertThat(actual.player.id).isEqualTo(playerEntity.id)
+        assertThat(actual.playerBrawlStarsTag).isEqualTo(playerBrawlStarsTag)
         assertThat(actual.battleRank).isEqualTo(expected.battle.rank)
         assertThat(actual.trophyChange).isEqualTo(expected.battle.trophyChange)
     }
 
     private fun assertBattleTeams(
-        actuals: List<List<BattleTeamPlayerEntity>>,
+        actuals: List<List<BattleTeamPlayer>>,
         expecteds: List<List<BattleResultPlayerResponse>>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -673,7 +655,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattlePlayers(
-        actuals: List<List<BattleTeamPlayerEntity>>,
+        actuals: List<List<BattleTeamPlayer>>,
         expecteds: List<BattleResultPlayerResponse>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -695,7 +677,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattlePlayerWithABrawler(
-        actual: BattleTeamPlayerEntity,
+        actual: BattleTeamPlayer,
         expected: BattleResultPlayerResponse,
     ) {
         val expectedBrawler = expected.brawler!!
@@ -709,7 +691,7 @@ class BattleEntityBuilderTest {
     }
 
     private fun assertBattlePlayerWithBrawlers(
-        actual: BattleTeamPlayerEntity,
+        actual: BattleTeamPlayer,
         expected: BattleResultPlayerResponse,
         brawlerIdx: Int,
     ) {

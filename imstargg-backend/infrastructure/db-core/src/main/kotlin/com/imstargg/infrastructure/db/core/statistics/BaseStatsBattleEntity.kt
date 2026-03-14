@@ -1,12 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.core.enums.BattleType
-import com.imstargg.core.enums.EnumCodeType
-import com.imstargg.core.enums.SoloRankTier
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.toTeams
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass
 import org.hibernate.annotations.CreationTimestamp
@@ -42,70 +36,4 @@ abstract class BaseStatsBattleEntity(
     @CreationTimestamp
     @Column(name = "created_date", updatable = false, nullable = false)
     val createdDate: LocalDate? = null
-
-    companion object {
-        private const val MIN_TROPHY = 500
-        private val MIN_SOLO_RANK_TIER = SoloRankTier.DIAMOND_1
-
-        /**
-         * 공통 검증: 모든 Stats Battle 엔티티에 적용
-         * - event 필드 (brawlStarsId, mode, map) not null
-         * - mode, type not null
-         * - type != FRIENDLY
-         * - 모든 팀 플레이어 브롤러 트로피 >= 500
-         * - SOLO_RANKED인 경우 트로피(SoloRankTier 값) >= DIAMOND_1
-         * - 브롤러 ID 중복 없음
-         */
-        fun canCreate(
-            battle: BattleEntity,
-            teamPlayers: List<BattleTeamPlayerEntity>,
-        ): Boolean {
-            require(teamPlayers.all { it.battle === battle }) {
-                "teamPlayers의 battle이 인자의 battle과 일치하지 않습니다." +
-                    " battleId=${battle.id}, teamPlayerIds=${teamPlayers.map { it.id }}"
-            }
-
-            val event = battle.event ?: return false
-
-            if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) {
-                return false
-            }
-            if (battle.mode == null || battle.type == null) {
-                return false
-            }
-
-            val battleType = EnumCodeType.findByCode<BattleType>(battle.type!!) ?: return false
-            if (battleType == BattleType.FRIENDLY) {
-                return false
-            }
-
-            // 브롤러 ID 중복 검사
-            val brawlerIds = teamPlayers.map { it.brawler.brawlStarsId }
-            if (brawlerIds.size != brawlerIds.distinct().size) {
-                return false
-            }
-
-            val minTrophies = teamPlayers.minOfOrNull { it.brawler.trophies } ?: return false
-
-            if (battleType == BattleType.SOLO_RANKED) {
-                if (minTrophies < MIN_SOLO_RANK_TIER.value) {
-                    return false
-                }
-            } else {
-                if (minTrophies < MIN_TROPHY) {
-                    return false
-                }
-            }
-
-            return true
-        }
-
-        /**
-         * teams 변환: BattleTeamPlayerEntity → StatsBattleEntityTeamPlayer
-         */
-        internal fun convertTeams(teamPlayers: List<BattleTeamPlayerEntity>): List<List<StatsBattleEntityTeamPlayer>> =
-            teamPlayers.toTeams().map { team ->
-                team.map { player -> StatsBattleEntityTeamPlayer.from(player) }
-            }
-    }
 }

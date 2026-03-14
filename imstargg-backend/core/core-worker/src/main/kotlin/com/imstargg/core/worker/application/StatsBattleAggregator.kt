@@ -1,6 +1,6 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.core.worker.domain.BattleResult
+import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.statistics.StatsBattleHelper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.retry.annotation.Backoff
@@ -20,8 +20,8 @@ class StatsBattleAggregator(
         maxAttempts = 3,
         backoff = Backoff(delay = 100),
     )
-    fun asyncAggregate(battleResults: List<BattleResult>) {
-        doAggregate(battleResults)
+    fun asyncAggregate(battles: List<Battle>) {
+        doAggregate(battles)
     }
 
     @Retryable(
@@ -29,12 +29,12 @@ class StatsBattleAggregator(
         maxAttempts = 3,
         backoff = Backoff(delay = 100),
     )
-    fun aggregate(battleResults: List<BattleResult>) {
-        doAggregate(battleResults)
+    fun aggregate(battles: List<Battle>) {
+        doAggregate(battles)
     }
 
-    private fun doAggregate(battleResults: List<BattleResult>) {
-        val aggregatableBattleResults = battleResults.filter { StatsBattleHelper.canAggregate(clock, it.battle) }
-        statsBattleAggregateApplier.apply(aggregatableBattleResults)
+    private fun doAggregate(battles: List<Battle>) {
+        val aggregatableBattles = battles.filter { StatsBattleHelper.canAggregate(clock, it.battleAt) }
+        statsBattleAggregateApplier.apply(aggregatableBattles)
     }
 }
