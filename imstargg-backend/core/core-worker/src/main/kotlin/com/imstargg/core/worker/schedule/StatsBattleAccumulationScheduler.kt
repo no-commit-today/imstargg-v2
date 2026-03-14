@@ -3,9 +3,10 @@ package com.imstargg.core.worker.schedule
 import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.worker.application.PlayerDeactivator
 import com.imstargg.core.worker.application.StatsBattleAggregator
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
-import com.imstargg.core.worker.domain.BattleBuilder
+import com.imstargg.core.worker.domain.BattleResultBuilder
 import com.imstargg.infrastructure.db.core.statistics.StatsPlayerEntity
 import com.imstargg.infrastructure.db.core.statistics.StatsPlayerJpaRepository
 import org.slf4j.LoggerFactory
@@ -24,6 +25,7 @@ class StatsBattleAccumulationScheduler(
     private val statsPlayerRepository: StatsPlayerJpaRepository,
     private val brawlStarsClient: BrawlStarsClient,
     private val statsBattleAggregator: StatsBattleAggregator,
+    private val playerDeactivator: PlayerDeactivator,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -35,8 +37,11 @@ class StatsBattleAccumulationScheduler(
         statsPlayers.forEach { statsPlayer ->
             try {
                 val battleResponses = brawlStarsClient.getPlayerRecentBattles(statsPlayer.brawlStarsTag).items
-                val battles = battleResponses.map { BattleBuilder(statsPlayer.brawlStarsTag, it).build() }
+                val battles = battleResponses.map { BattleResultBuilder(statsPlayer.brawlStarsTag, it).build() }
                 statsBattleAggregator.aggregate(battles)
+            } catch (ex: BrawlStarsApiClientException.NotFound) {
+                log.warn("[배틀 통계 축적] 플레이어 삭제됨 tag={}", statsPlayer.brawlStarsTag)
+                playerDeactivator.deactivate(statsPlayer.brawlStarsTag)
             } catch (ex: BrawlStarsApiClientException) {
                 log.warn("[배틀 통계 축적] API 클라이언트 오류 tag={}", statsPlayer.brawlStarsTag, ex)
             } catch (ex: BrawlStarsApiServerException) {

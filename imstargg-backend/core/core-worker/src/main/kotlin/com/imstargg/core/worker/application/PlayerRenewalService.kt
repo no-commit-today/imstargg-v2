@@ -11,6 +11,7 @@ class PlayerRenewalService(
     private val brawlStarsClient: BrawlStarsClient,
     private val playerRenewalProcessor: PlayerRenewalProcessor,
     private val playerUpdater: PlayerUpdater,
+    private val playerDeactivator: PlayerDeactivator,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -25,6 +26,7 @@ class PlayerRenewalService(
 
             playerRenewalProcessor.complete(renewalId)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
+            playerDeactivator.deactivate(brawlStarsTag)
             playerRenewalProcessor.notFound(renewalId)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[플레이어 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)

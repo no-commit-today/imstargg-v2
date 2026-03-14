@@ -2,7 +2,7 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
-import com.imstargg.core.worker.domain.BattleBuilder
+import com.imstargg.core.worker.domain.BattleResultBuilder
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
@@ -37,7 +37,7 @@ class PlayerUpdater(
 
                 playerUpdateApplier.apply(player, playerResponse)
 
-                val battles = battleResponses.map { BattleBuilder(player.brawlStarsTag, it).build() }
+                val battles = battleResponses.map { BattleResultBuilder(player.brawlStarsTag, it).build() }
                 battleUpdateApplier.apply(player, battles)
             }
 

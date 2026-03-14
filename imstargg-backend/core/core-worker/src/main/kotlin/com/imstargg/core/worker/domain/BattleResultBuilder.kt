@@ -4,7 +4,7 @@ import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 
-class BattleBuilder(
+class BattleResultBuilder(
     private val brawlStarsTag: String,
     private val battleResponse: BattleResponse,
 ) {

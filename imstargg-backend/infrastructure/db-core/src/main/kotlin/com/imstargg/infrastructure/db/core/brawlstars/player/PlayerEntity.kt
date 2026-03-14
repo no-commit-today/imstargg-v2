@@ -1,9 +1,12 @@
 package com.imstargg.infrastructure.db.core.brawlstars.player
 
+import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -95,6 +98,15 @@ class PlayerEntity(
     @Embedded
     var club: PlayerEntityClub? = club
         protected set
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 25, nullable = false)
+    var status: PlayerStatus = PlayerStatus.ACTIVE
+        protected set
+
+    fun toDeleted() {
+        status = PlayerStatus.DELETED
+    }
 
     fun update(
         name: String,

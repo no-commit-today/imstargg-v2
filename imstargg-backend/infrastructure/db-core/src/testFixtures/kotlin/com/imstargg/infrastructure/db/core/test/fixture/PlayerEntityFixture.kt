@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
+import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
 
@@ -19,6 +20,7 @@ class PlayerEntityFixture {
     private var bestRoboRumbleTime: Int = 0
     private var bestTimeAsBigBrawler: Int = 0
     private var club: PlayerEntityClub? = defaultPlayerEntityClub()
+    private var status: PlayerStatus = PlayerStatus.ACTIVE
 
     companion object {
         fun aPlayerEntity() = PlayerEntityFixture()
@@ -60,22 +62,30 @@ class PlayerEntityFixture {
 
     fun withClub(value: PlayerEntityClub?) = apply { club = value }
 
-    fun build() =
-        PlayerEntity(
-            brawlStarsTag = brawlStarsTag,
-            name = name,
-            nameColor = nameColor,
-            iconBrawlStarsId = iconBrawlStarsId,
-            trophies = trophies,
-            highestTrophies = highestTrophies,
-            expLevel = expLevel,
-            expPoints = expPoints,
-            qualifiedFromChampionshipChallenge = qualifiedFromChampionshipChallenge,
-            victories3vs3 = victories3vs3,
-            victoriesSolo = victoriesSolo,
-            victoriesDuo = victoriesDuo,
-            bestRoboRumbleTime = bestRoboRumbleTime,
-            bestTimeAsBigBrawler = bestTimeAsBigBrawler,
-            club = club,
-        )
+    fun withStatus(value: PlayerStatus) = apply { status = value }
+
+    fun build(): PlayerEntity {
+        val entity =
+            PlayerEntity(
+                brawlStarsTag = brawlStarsTag,
+                name = name,
+                nameColor = nameColor,
+                iconBrawlStarsId = iconBrawlStarsId,
+                trophies = trophies,
+                highestTrophies = highestTrophies,
+                expLevel = expLevel,
+                expPoints = expPoints,
+                qualifiedFromChampionshipChallenge = qualifiedFromChampionshipChallenge,
+                victories3vs3 = victories3vs3,
+                victoriesSolo = victoriesSolo,
+                victoriesDuo = victoriesDuo,
+                bestRoboRumbleTime = bestRoboRumbleTime,
+                bestTimeAsBigBrawler = bestTimeAsBigBrawler,
+                club = club,
+            )
+        if (status == PlayerStatus.DELETED) {
+            entity.toDeleted()
+        }
+        return entity
+    }
 }

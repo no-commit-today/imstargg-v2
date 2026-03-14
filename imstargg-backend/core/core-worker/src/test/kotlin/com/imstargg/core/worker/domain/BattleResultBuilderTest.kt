@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class BattleBuilderTest {
+class BattleResultBuilderTest {
     private data class BattleEvent(
         val brawlStarsId: Long,
         val mode: String,
@@ -162,7 +162,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -230,7 +230,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -322,7 +322,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -405,7 +405,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -459,7 +459,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -525,7 +525,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -555,7 +555,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
 
         // then
@@ -595,7 +595,7 @@ class BattleBuilderTest {
             )
 
         // when
-        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
         val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
 
         // then

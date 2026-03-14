@@ -16,6 +16,7 @@ create table if not exists player
     victories_duo                         int          not null,
     best_robo_rumble_time                 int          not null,
     best_time_as_big_brawler              int          not null,
+    status                                varchar(25)  not null default 'ACTIVE',
     club_brawlstars_tag                   varchar(45)  null,
     club_name                             varchar(105) null,
     created_at                            timestamp(6)  not null default current_timestamp(6),
