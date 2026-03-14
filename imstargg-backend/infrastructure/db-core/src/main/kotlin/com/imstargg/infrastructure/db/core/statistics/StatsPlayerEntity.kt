@@ -6,10 +6,16 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "stats_player")
+@Table(
+    name = "stats_player",
+    indexes = [
+        Index(name = "uk_stats_player__brawlstars_tag", columnList = "brawlstars_tag", unique = true),
+    ],
+)
 class StatsPlayerEntity(
     @Column(name = "brawlstars_tag", updatable = false, nullable = false)
     val brawlStarsTag: String,
