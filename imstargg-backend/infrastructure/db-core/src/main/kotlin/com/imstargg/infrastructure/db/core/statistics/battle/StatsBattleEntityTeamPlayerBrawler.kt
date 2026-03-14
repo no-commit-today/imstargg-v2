@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.statistics
+package com.imstargg.infrastructure.db.core.statistics.battle
 
 data class StatsBattleEntityTeamPlayerBrawler(
     val brawlStarsId: Long,

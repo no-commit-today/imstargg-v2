@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
-import com.imstargg.infrastructure.db.core.statistics.StatsPlayerEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
 
 class StatsPlayerEntityFixture {
     private var brawlStarsTag: String = "#TEST12345"

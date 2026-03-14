@@ -2,14 +2,14 @@ package com.imstargg.core.batch.job
 
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
-import com.imstargg.infrastructure.db.core.statistics.BaseStatsBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.QStatsRankBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.QStatsResultBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsBattleEntityTeamPlayer
-import com.imstargg.infrastructure.db.core.statistics.StatsPlayerEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsPlayerJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsRankBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsResultBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope

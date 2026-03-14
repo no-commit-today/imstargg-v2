@@ -4,16 +4,16 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.worker.domain.BattleResult
-import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyEntity
-import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.AggregatedResultBattleKeyEntity
-import com.imstargg.infrastructure.db.core.statistics.AggregatedResultBattleKeyJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsBattleEntityTeamPlayer
-import com.imstargg.infrastructure.db.core.statistics.StatsBattleEntityTeamPlayerBrawler
-import com.imstargg.infrastructure.db.core.statistics.StatsRankBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsRankBattleJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsResultBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.StatsResultBattleJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedRankBattleKeyEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedRankBattleKeyJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedResultBattleKeyEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedResultBattleKeyJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleJpaRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 

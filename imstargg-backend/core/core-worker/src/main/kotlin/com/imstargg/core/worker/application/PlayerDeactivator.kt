@@ -1,7 +1,7 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.StatsPlayerJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerJpaRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional

@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.statistics
+package com.imstargg.infrastructure.db.core.statistics.battle
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -9,8 +9,8 @@ import jakarta.persistence.Table
 import java.time.OffsetDateTime
 
 @Entity
-@Table(name = "stats_result_battle")
-class StatsResultBattleEntity(
+@Table(name = "stats_rank_battle")
+class StatsRankBattleEntity(
     battleKey: String,
     battleAt: OffsetDateTime,
     eventBrawlStarsId: Long,
@@ -21,8 +21,8 @@ class StatsResultBattleEntity(
     starPlayerBrawlStarsTag: String?,
     playerBrawlStarsTag: String,
     teams: List<List<StatsBattleEntityTeamPlayer>>,
-    @Column(name = "result", length = 25, updatable = false, nullable = false)
-    val result: String,
+    @Column(name = "battle_rank", updatable = false, nullable = false)
+    val battleRank: Int,
 ) : BaseStatsBattleEntity(
         battleKey = battleKey,
         battleAt = battleAt,
@@ -37,6 +37,6 @@ class StatsResultBattleEntity(
     ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stats_result_battle_id", nullable = false)
+    @Column(name = "stats_rank_battle_id", nullable = false)
     val id: Long? = null
 }

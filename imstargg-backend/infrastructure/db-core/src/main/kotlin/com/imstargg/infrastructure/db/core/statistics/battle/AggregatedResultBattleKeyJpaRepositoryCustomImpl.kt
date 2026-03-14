@@ -1,6 +1,6 @@
-package com.imstargg.infrastructure.db.core.statistics
+package com.imstargg.infrastructure.db.core.statistics.battle
 
-import com.imstargg.infrastructure.db.core.statistics.QAggregatedResultBattleKeyEntity.Companion.aggregatedResultBattleKeyEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.QAggregatedResultBattleKeyEntity.Companion.aggregatedResultBattleKeyEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
