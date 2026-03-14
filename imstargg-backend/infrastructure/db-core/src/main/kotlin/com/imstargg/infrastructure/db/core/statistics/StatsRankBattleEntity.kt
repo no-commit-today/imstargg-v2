@@ -2,20 +2,17 @@ package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
-import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "stats_rank_battle")
 class StatsRankBattleEntity(
-    createdDate: LocalDate,
     battleKey: String,
     battleAt: OffsetDateTime,
     eventBrawlStarsId: Long,
@@ -29,7 +26,6 @@ class StatsRankBattleEntity(
     @Column(name = "battle_rank", updatable = false, nullable = false)
     val battleRank: Int,
 ) : BaseStatsBattleEntity(
-        createdDate = createdDate,
         battleKey = battleKey,
         battleAt = battleAt,
         eventBrawlStarsId = eventBrawlStarsId,
@@ -64,7 +60,6 @@ class StatsRankBattleEntity(
             }
 
             return StatsRankBattleEntity(
-                createdDate = battle.createdAt!!.toKoreaLocalDate(),
                 battleKey = battle.battleKey,
                 battleAt = battle.battleAt,
                 eventBrawlStarsId = battle.event!!.brawlStarsId!!,

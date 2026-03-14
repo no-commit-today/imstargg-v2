@@ -9,6 +9,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEnt
 import com.imstargg.infrastructure.db.core.brawlstars.battle.toTeams
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass
+import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.LocalDate
@@ -16,8 +17,6 @@ import java.time.OffsetDateTime
 
 @MappedSuperclass
 abstract class BaseStatsBattleEntity(
-    @Column(name = "created_date", updatable = false, nullable = false)
-    val createdDate: LocalDate,
     @Column(name = "battle_key", updatable = false, nullable = false)
     val battleKey: String,
     @Column(name = "battle_at", updatable = false, nullable = false)
@@ -40,6 +39,10 @@ abstract class BaseStatsBattleEntity(
     @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
     val teams: List<List<StatsBattleEntityTeamPlayer>>,
 ) : BaseTimeEntity() {
+    @CreationTimestamp
+    @Column(name = "created_date", updatable = false, nullable = false)
+    val createdDate: LocalDate? = null
+
     companion object {
         private const val MIN_TROPHY = 500
         private val MIN_SOLO_RANK_TIER = SoloRankTier.DIAMOND_1
