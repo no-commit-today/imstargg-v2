@@ -5,6 +5,7 @@ import com.imstargg.infrastructure.redis.core.event.ClubRenewalEvent
 import com.imstargg.infrastructure.redis.core.event.PlayerRenewalEvent
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory
@@ -18,6 +19,7 @@ import org.springframework.data.redis.stream.StreamMessageListenerContainer
 import java.time.Duration
 
 @Configuration
+@EnableConfigurationProperties(RenewalStreamProperties::class)
 class RedisStreamConsumerConfig(
     private val renewalStreamProperties: RenewalStreamProperties,
     private val redisConnectionFactory: RedisConnectionFactory,

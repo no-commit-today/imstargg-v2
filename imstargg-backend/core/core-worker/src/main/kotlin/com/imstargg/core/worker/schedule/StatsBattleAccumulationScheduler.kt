@@ -8,12 +8,14 @@ import com.imstargg.core.worker.config.StatsBattleScheduleProperties
 import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.statistics.StatsPlayerJpaRepository
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.data.domain.PageRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import kotlin.random.Random
 
 @Component
+@ConditionalOnProperty(prefix = "app.schedule.stats-battle", name = ["enabled"], havingValue = "true")
 class StatsBattleAccumulationScheduler(
     private val properties: StatsBattleScheduleProperties,
     private val statsPlayerRepository: StatsPlayerJpaRepository,

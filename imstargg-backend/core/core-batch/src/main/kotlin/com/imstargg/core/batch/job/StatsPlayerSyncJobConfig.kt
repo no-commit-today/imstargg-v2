@@ -110,7 +110,7 @@ class StatsPlayerSyncJobConfig(
     @StepScope
     fun statsPlayerSyncJobItemWriter() = StatsPlayerSyncJobItemWriter(statsPlayerJpaRepository)
 
-    class StatsPlayerSyncJobItemWriter(
+    open class StatsPlayerSyncJobItemWriter(
         private val statsPlayerJpaRepository: StatsPlayerJpaRepository,
     ) : ItemWriter<List<StatsBattleEntityTeamPlayer>> {
         override fun write(chunk: Chunk<out List<StatsBattleEntityTeamPlayer>>) {

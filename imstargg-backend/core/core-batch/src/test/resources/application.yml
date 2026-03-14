@@ -25,3 +25,8 @@ spring:
 app:
   alert:
     type: NO_OPS
+  client:
+    brawlstars:
+      url: http://localhost
+      api-keys:
+        - test-api-key

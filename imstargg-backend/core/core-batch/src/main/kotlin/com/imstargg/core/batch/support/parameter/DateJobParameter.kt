@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDate
 
-class DateJobParameter {
+open class DateJobParameter {
     private val log = LoggerFactory.getLogger(javaClass)
 
     var date: LocalDate? = null
