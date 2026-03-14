@@ -8,10 +8,10 @@ class BattleBuilder(
     private val brawlStarsTag: String,
     private val battleResponse: BattleResponse,
 ) {
-    fun build(): Battle {
+    fun build(): BattleResult {
         val teams = getBattleTeamList()
         val battleKey = createBattleKey(teams)
-        return buildBattle(battleKey, teams)
+        return buildBattleResult(battleKey, teams)
     }
 
     private fun getBattleTeamList(): List<List<BattleResultPlayerResponse>> =
@@ -25,17 +25,17 @@ class BattleBuilder(
         return builder.build()
     }
 
-    private fun buildBattle(
+    private fun buildBattleResult(
         battleKey: String,
         teams: List<List<BattleResultPlayerResponse>>,
-    ): Battle {
+    ): BattleResult {
         val battle = battleResponse.battle
         val event = battleResponse.event
-        return Battle(
+        return BattleResult(
             battleKey = battleKey,
             battleAt = battleResponse.battleTime,
             event =
-                BattleEvent(
+                BattleResultEvent(
                     brawlStarsId = event.id,
                     modeBrawlStarsName = event.mode,
                     modeBrawlStarsId = event.modeId,
@@ -53,15 +53,15 @@ class BattleBuilder(
         )
     }
 
-    private fun buildTeams(teams: List<List<BattleResultPlayerResponse>>): List<List<BattleTeamPlayer>> =
+    private fun buildTeams(teams: List<List<BattleResultPlayerResponse>>): List<List<BattleResultTeamPlayer>> =
         teams.map { team ->
             team.flatMap { player ->
                 getPlayerBrawlers(player).map { brawler ->
-                    BattleTeamPlayer(
+                    BattleResultTeamPlayer(
                         brawlStarsTag = player.tag,
                         name = player.name,
                         brawler =
-                            BattleTeamPlayerBrawler(
+                            BattleResultTeamPlayerBrawler(
                                 brawlStarsId = brawler.id,
                                 name = brawler.name,
                                 power = brawler.power,

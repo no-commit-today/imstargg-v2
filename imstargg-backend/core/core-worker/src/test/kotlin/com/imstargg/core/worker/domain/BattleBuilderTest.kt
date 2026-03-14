@@ -604,7 +604,7 @@ class BattleBuilderTest {
     }
 
     private fun assertBattle(
-        actual: Battle,
+        actual: BattleResult,
         expected: BattleResponse,
     ) {
         assertThat(actual.battleAt).isEqualTo(expected.battleTime)
@@ -624,7 +624,7 @@ class BattleBuilderTest {
     }
 
     private fun assertBattleTeams(
-        actuals: List<List<BattleTeamPlayer>>,
+        actuals: List<List<BattleResultTeamPlayer>>,
         expecteds: List<List<BattleResultPlayerResponse>>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -655,7 +655,7 @@ class BattleBuilderTest {
     }
 
     private fun assertBattlePlayers(
-        actuals: List<List<BattleTeamPlayer>>,
+        actuals: List<List<BattleResultTeamPlayer>>,
         expecteds: List<BattleResultPlayerResponse>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -677,7 +677,7 @@ class BattleBuilderTest {
     }
 
     private fun assertBattlePlayerWithABrawler(
-        actual: BattleTeamPlayer,
+        actual: BattleResultTeamPlayer,
         expected: BattleResultPlayerResponse,
     ) {
         val expectedBrawler = expected.brawler!!
@@ -691,7 +691,7 @@ class BattleBuilderTest {
     }
 
     private fun assertBattlePlayerWithBrawlers(
-        actual: BattleTeamPlayer,
+        actual: BattleResultTeamPlayer,
         expected: BattleResultPlayerResponse,
         brawlerIdx: Int,
     ) {

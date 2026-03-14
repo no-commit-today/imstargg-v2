@@ -2,8 +2,8 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
-import com.imstargg.core.enums.SoloRankTier
-import com.imstargg.core.worker.domain.Battle
+import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.core.worker.domain.BattleResult
 import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyEntity
 import com.imstargg.infrastructure.db.core.statistics.AggregatedRankBattleKeyJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.AggregatedResultBattleKeyEntity
@@ -25,7 +25,7 @@ class StatsBattleAggregateApplier(
     private val aggregatedResultBattleKeyRepository: AggregatedResultBattleKeyJpaRepository,
 ) {
     @Transactional
-    fun apply(battles: List<Battle>) {
+    fun apply(battles: List<BattleResult>) {
         val statsRankBattles =
             battles
                 .filter { canCreateRankBattle(it) }
@@ -63,7 +63,7 @@ class StatsBattleAggregateApplier(
         )
     }
 
-    private fun canCreateStatsBattle(battle: Battle): Boolean {
+    private fun canCreateStatsBattle(battle: BattleResult): Boolean {
         val event = battle.event ?: return false
         if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return false
         if (battle.mode == null || battle.type == null) return false
@@ -77,24 +77,24 @@ class StatsBattleAggregateApplier(
 
         val minTrophies = allPlayers.minOfOrNull { it.brawler.trophies } ?: return false
         if (battleType == BattleType.SOLO_RANKED) {
-            if (minTrophies < SoloRankTier.DIAMOND_1.value) return false
+            if (minTrophies < StatsTierRange.MIN_SOLO_RANK_TIER.value) return false
         } else {
-            if (minTrophies < MIN_TROPHY) return false
+            if (minTrophies < StatsTierRange.MIN_TROPHY) return false
         }
         return true
     }
 
-    private fun canCreateRankBattle(battle: Battle): Boolean {
+    private fun canCreateRankBattle(battle: BattleResult): Boolean {
         if (battle.battleRank == null) return false
         return canCreateStatsBattle(battle)
     }
 
-    private fun canCreateResultBattle(battle: Battle): Boolean {
+    private fun canCreateResultBattle(battle: BattleResult): Boolean {
         if (battle.result == null) return false
         return canCreateStatsBattle(battle)
     }
 
-    private fun toStatsRankBattle(battle: Battle) =
+    private fun toStatsRankBattle(battle: BattleResult) =
         StatsRankBattleEntity(
             battleKey = battle.battleKey,
             battleAt = battle.battleAt,
@@ -109,7 +109,7 @@ class StatsBattleAggregateApplier(
             teams = convertTeams(battle),
         )
 
-    private fun toStatsResultBattle(battle: Battle) =
+    private fun toStatsResultBattle(battle: BattleResult) =
         StatsResultBattleEntity(
             battleKey = battle.battleKey,
             battleAt = battle.battleAt,
@@ -124,7 +124,7 @@ class StatsBattleAggregateApplier(
             teams = convertTeams(battle),
         )
 
-    private fun convertTeams(battle: Battle): List<List<StatsBattleEntityTeamPlayer>> =
+    private fun convertTeams(battle: BattleResult): List<List<StatsBattleEntityTeamPlayer>> =
         battle.teams.map { team ->
             team.map { player ->
                 StatsBattleEntityTeamPlayer(
@@ -140,8 +140,4 @@ class StatsBattleAggregateApplier(
                 )
             }
         }
-
-    companion object {
-        private const val MIN_TROPHY = 500
-    }
 }
