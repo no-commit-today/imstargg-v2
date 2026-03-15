@@ -6,4 +6,6 @@ interface MessageJpaRepository : JpaRepository<MessageEntity, Long> {
     fun findAllByCode(code: MessageCode): List<MessageEntity>
 
     fun findAllByCodeIn(codes: Collection<MessageCode>): List<MessageEntity>
+
+    fun deleteAllByCode(code: MessageCode)
 }

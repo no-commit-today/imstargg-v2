@@ -14,9 +14,11 @@ services:
       - ./docker/mysql/var/lib/mysql:/var/lib/mysql # data
       - ./docker/mysql/etc/mysql/conf.d:/etc/mysql/conf.d # config
       - ./docker/mysql/init:/docker-entrypoint-initdb.d # init
-  redis:
-    image: redis:8.4.0
+  valkey:
+    image: valkey/valkey:9.0.3
     ports:
       - "6379:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
     volumes:
-      - ./docker/redis/data:/data
+      - ./docker/valkey/data:/data

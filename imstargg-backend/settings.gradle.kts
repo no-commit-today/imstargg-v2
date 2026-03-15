@@ -3,6 +3,7 @@ rootProject.name = "imstargg-backend"
 include(
     "core:core-enum",
     "core:core-api",
+    "core:core-admin",
     "core:core-batch",
     "core:core-worker",
     "infrastructure:db-core",
@@ -18,6 +19,7 @@ pluginManagement {
     val springDependencyManagementVersion: String by settings
     val ktlintVersion: String by settings
     val kspVersion: String by settings
+    val vaadinVersion: String by settings
 
     plugins {
         kotlin("jvm") version kotlinVersion
@@ -27,5 +29,6 @@ pluginManagement {
         id("io.spring.dependency-management") version springDependencyManagementVersion
         id("org.jlleitschuh.gradle.ktlint") version ktlintVersion
         id("com.google.devtools.ksp") version kspVersion
+        id("com.vaadin") version vaadinVersion
     }
 }

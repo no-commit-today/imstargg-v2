@@ -537,3 +537,82 @@ create table if not exists battle_event_solo_rank_event
     updated_at                      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event_solo_rank_event__1 (solo_rank_season_key, event_brawlstars_id)
 );
+
+-- brawler table
+create table if not exists brawler
+(
+    brawler_id        bigint auto_increment primary key,
+    brawlstars_id     bigint       not null,
+    rarity            varchar(45)  not null,
+    role              varchar(45)  not null,
+    created_at        timestamp(6) not null default current_timestamp(6),
+    updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawler__brawlstarsid (brawlstars_id)
+);
+
+-- brawler_gear table
+create table if not exists brawler_gear
+(
+    brawler_gear_id       bigint auto_increment primary key,
+    brawler_brawlstars_id bigint       not null,
+    gear_brawlstars_id    bigint       not null,
+    created_at            timestamp(6) not null default current_timestamp(6),
+    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawlergear__brawlerbrawlstarsid_gearbrawlstarsid (brawler_brawlstars_id, gear_brawlstars_id)
+);
+
+-- gadget table
+create table if not exists gadget
+(
+    gadget_id             bigint auto_increment primary key,
+    brawlstars_id         bigint       not null,
+    brawler_brawlstars_id bigint       not null,
+    created_at            timestamp(6) not null default current_timestamp(6),
+    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_gadget__brawlstarsid (brawlstars_id)
+);
+
+-- gear table
+create table if not exists gear
+(
+    gear_id           bigint auto_increment primary key,
+    brawlstars_id     bigint       not null,
+    rarity            varchar(45)  not null,
+    created_at        timestamp(6) not null default current_timestamp(6),
+    updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_gear__brawlstarsid (brawlstars_id)
+);
+
+-- star_power table
+create table if not exists star_power
+(
+    star_power_id         bigint auto_increment primary key,
+    brawlstars_id         bigint       not null,
+    brawler_brawlstars_id bigint       not null,
+    created_at            timestamp(6) not null default current_timestamp(6),
+    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_starpower__brawlstarsid (brawlstars_id)
+);
+
+-- brawlstars_image table
+create table if not exists brawlstars_image
+(
+    brawlstars_image_id bigint auto_increment primary key,
+    code                varchar(65)  not null,
+    stored_name         varchar(255) not null,
+    created_at          timestamp(6) not null default current_timestamp(6),
+    updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawlstars_image__code (code)
+);
+
+-- message table
+create table if not exists message
+(
+    message_id bigint auto_increment primary key,
+    code       varchar(65)  not null,
+    lang       varchar(25)  not null,
+    content    text         not null,
+    created_at timestamp(6) not null default current_timestamp(6),
+    updated_at timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_message__code_lang (code, lang)
+);

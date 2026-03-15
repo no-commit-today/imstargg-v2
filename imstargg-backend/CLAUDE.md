@@ -65,6 +65,10 @@ imstargg-backend/
 - `db-core` → `core-enum`
 - `brawlstars-client`: 독립적 (OpenFeign 기반 HTTP 클라이언트)
 
+### Code Organization
+
+- **파일당 1개 클래스 원칙**: 한 파일에 하나의 클래스(또는 data class)만 선언. 사용자가 명시적으로 지시하거나, 제안 후 승인된 경우에만 예외 허용.
+
 ### Key Patterns
 
 - **패키지**: `com.imstargg.*`
