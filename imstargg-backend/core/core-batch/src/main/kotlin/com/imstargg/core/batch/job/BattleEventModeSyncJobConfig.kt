@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class EventModeSyncJobConfig(
+class BattleEventModeSyncJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val brawlStarsClient: BrawlStarsClient,
@@ -25,19 +25,19 @@ class EventModeSyncJobConfig(
     private val alertManager: AlertManager,
 ) {
     companion object {
-        const val JOB_NAME = "eventModeSyncJob"
-        const val STEP_NAME = "eventModeSyncStep"
+        const val JOB_NAME = "battleEventModeSyncJob"
+        const val STEP_NAME = "battleEventModeSyncStep"
     }
 
     @Bean(JOB_NAME)
-    fun eventModeSyncJob(): Job =
+    fun battleEventModeSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .incrementer(RunIdIncrementer())
-            .start(eventModeSyncStep())
+            .start(battleEventModeSyncStep())
             .build()
 
     @Bean(STEP_NAME)
-    fun eventModeSyncStep(): Step =
+    fun battleEventModeSyncStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
                 val gameModes = brawlStarsClient.getGameModes().items

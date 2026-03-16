@@ -18,7 +18,7 @@ import java.io.InputStream
 
 @Service
 @Transactional(readOnly = true)
-class EventAdminService(
+class BattleEventAdminService(
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,

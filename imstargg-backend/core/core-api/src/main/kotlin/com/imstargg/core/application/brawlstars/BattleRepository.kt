@@ -31,7 +31,7 @@ class BattleRepository(
     private val playerJpaRepository: PlayerJpaRepository,
     private val battleJpaRepository: BattleJpaRepository,
     private val battleTeamPlayerRepository: BattleTeamPlayerJpaRepository,
-    private val eventRepositoryWithCache: EventRepositoryWithCache,
+    private val battleEventRepositoryWithCache: BattleEventRepositoryWithCache,
     private val brawlerRepositoryWithCache: BrawlerRepositoryWithCache,
 ) {
     fun find(
@@ -85,7 +85,7 @@ class BattleRepository(
 
     private fun findEvent(brawlStarsId: Long?): BattleEvent? {
         if (brawlStarsId == null || brawlStarsId <= 0) return null
-        return eventRepositoryWithCache.find(BrawlStarsId(brawlStarsId))
+        return battleEventRepositoryWithCache.find(BrawlStarsId(brawlStarsId))
     }
 
     private fun toTeams(

@@ -11,19 +11,18 @@ import java.time.OffsetDateTime
 @Service
 @Transactional(readOnly = true)
 class BattleEventService(
-    private val battleEventRepository: BattleEventRepository,
-    private val eventRepositoryWithCache: EventRepositoryWithCache,
+    private val battleEventRepositoryWithCache: BattleEventRepositoryWithCache,
     private val clock: Clock,
 ) {
     fun getCurrentRotationEvents(): List<RotationBattleEvent> {
         val now = OffsetDateTime.now(clock)
-        return battleEventRepository.findAllCurrentRotationEvents(now)
+        return battleEventRepositoryWithCache.findAllCurrentRotationEvents(now)
     }
 
     fun getSoloRankEvents(): List<BattleEvent> {
         val season = SoloRankSeason.current(clock)
-        return battleEventRepository
+        return battleEventRepositoryWithCache
             .findAllSoloRankEventBrawlStarsIds(season.key)
-            .mapNotNull { eventRepositoryWithCache.find(it) }
+            .mapNotNull { battleEventRepositoryWithCache.find(it) }
     }
 }

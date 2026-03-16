@@ -1,36 +1,54 @@
 package com.imstargg.core.application.brawlstars
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.brawlstars.event.RotationBattleEvent
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankEventJpaRepository
+import com.imstargg.core.domain.brawlstars.Message
+import com.imstargg.core.domain.brawlstars.Messages
+import com.imstargg.core.domain.brawlstars.event.BattleEvent
+import com.imstargg.core.domain.brawlstars.event.BattleEventMode
+import com.imstargg.core.enums.BrawlStarsEntityStatus
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
-import java.time.OffsetDateTime
 
 @Repository
 @Transactional(readOnly = true)
 class BattleEventRepository(
-    private val battleEventRotationItemJpaRepository: BattleEventRotationItemJpaRepository,
-    private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
-    private val eventRepositoryWithCache: EventRepositoryWithCache,
+    private val battleEventJpaRepository: BattleEventJpaRepository,
+    private val messageJpaRepository: MessageJpaRepository,
+    private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
 ) {
-    fun findAllCurrentRotationEvents(now: OffsetDateTime): List<RotationBattleEvent> =
-        battleEventRotationItemJpaRepository
-            .findAllByEndTimeAfter(now)
-            .distinctBy { it.eventBrawlStarsId }
-            .mapNotNull { item ->
-                eventRepositoryWithCache.find(BrawlStarsId(item.eventBrawlStarsId))?.let { event ->
-                    RotationBattleEvent(
-                        event = event,
-                        startTime = item.startTime,
-                        endTime = item.endTime,
-                    )
-                }
+    fun find(id: BrawlStarsId): BattleEvent? {
+        val eventEntity = battleEventJpaRepository.findByBrawlStarsId(id.value) ?: return null
+        if (eventEntity.status !in BrawlStarsEntityStatus.initializedStatuses()) return null
+
+        val mapNameMessages =
+            eventEntity.mapNameMessageCode()?.let { code ->
+                messageJpaRepository.findAllByCode(code)
+            } ?: emptyList()
+
+        val mode =
+            eventEntity.mode?.let { modeEntity ->
+                val modeNameMessages = messageJpaRepository.findAllByCode(modeEntity.nameMessageCode())
+                val modeIconImage = brawlStarsImageJpaRepository.findByCode(modeEntity.iconImageCode())
+                BattleEventMode(
+                    id = BrawlStarsId(modeEntity.brawlStarsId),
+                    name = toMessages(modeNameMessages),
+                    iconImagePath = modeIconImage?.storedName,
+                )
             }
 
-    fun findAllSoloRankEventBrawlStarsIds(soloRankSeasonKey: String): List<BrawlStarsId> =
-        battleEventSoloRankEventJpaRepository
-            .findBySoloRankSeasonKey(soloRankSeasonKey)
-            .map { BrawlStarsId(it.eventBrawlStarsId) }
+        return BattleEvent(
+            id = BrawlStarsId(eventEntity.brawlStarsId),
+            mode = mode,
+            mapName = toMessages(mapNameMessages),
+        )
+    }
+
+    private fun toMessages(entities: List<MessageEntity>): Messages {
+        if (entities.isEmpty()) return Messages(emptyMap())
+        return Messages.create(entities.map { Message(it.lang, it.content) })
+    }
 }

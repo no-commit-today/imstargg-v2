@@ -17,7 +17,7 @@ import java.time.Clock
 import java.time.OffsetDateTime
 
 @Configuration
-class EventRotationSyncJobConfig(
+class BattleEventRotationSyncJobConfig(
     private val clock: Clock,
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
@@ -25,19 +25,19 @@ class EventRotationSyncJobConfig(
     private val battleEventRotationItemJpaRepository: BattleEventRotationItemJpaRepository,
 ) {
     companion object {
-        const val JOB_NAME = "eventRotationSyncJob"
-        const val STEP_NAME = "eventRotationSyncStep"
+        const val JOB_NAME = "battleEventRotationSyncJob"
+        const val STEP_NAME = "battleEventRotationSyncStep"
     }
 
     @Bean(JOB_NAME)
-    fun eventRotationSyncJob(): Job =
+    fun battleEventRotationSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .incrementer(RunIdIncrementer())
-            .start(eventRotationSyncStep())
+            .start(battleEventRotationSyncStep())
             .build()
 
     @Bean(STEP_NAME)
-    fun eventRotationSyncStep(): Step =
+    fun battleEventRotationSyncStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
                 val now = OffsetDateTime.now(clock)

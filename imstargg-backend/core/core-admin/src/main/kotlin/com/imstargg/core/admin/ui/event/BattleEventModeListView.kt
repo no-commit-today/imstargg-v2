@@ -1,6 +1,6 @@
 package com.imstargg.core.admin.ui.event
 
-import com.imstargg.core.admin.application.EventAdminService
+import com.imstargg.core.admin.application.BattleEventAdminService
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
@@ -22,7 +22,7 @@ import com.vaadin.flow.server.streams.UploadHandler
 @Route(value = "event-mode", layout = MainLayout::class)
 @PageTitle("이벤트 모드 관리")
 class BattleEventModeListView(
-    private val eventAdminService: EventAdminService,
+    private val battleEventAdminService: BattleEventAdminService,
 ) : VerticalLayout() {
     private val grid = Grid(BattleEventModeResponse::class.java, false)
 
@@ -58,7 +58,7 @@ class BattleEventModeListView(
         val saveNameButton =
             Button("이름 저장") {
                 val code = MessageCode.of("event", "mode", mode.mode.brawlStarsId, "name")
-                eventAdminService.updateMessages(
+                battleEventAdminService.updateMessages(
                     code,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
@@ -70,7 +70,7 @@ class BattleEventModeListView(
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 val code = BrawlStarsImageCode.of("event", "mode", mode.mode.brawlStarsId, "icon")
-                eventAdminService.updateImage(code, data.inputStream(), metadata.contentType())
+                battleEventAdminService.updateImage(code, data.inputStream(), metadata.contentType())
                 ui.ifPresent {
                     it.access {
                         Notification.show("아이콘이 업로드되었습니다.")
@@ -90,6 +90,6 @@ class BattleEventModeListView(
     }
 
     private fun refreshGrid() {
-        grid.setItems(eventAdminService.findAllModes())
+        grid.setItems(battleEventAdminService.findAllModes())
     }
 }

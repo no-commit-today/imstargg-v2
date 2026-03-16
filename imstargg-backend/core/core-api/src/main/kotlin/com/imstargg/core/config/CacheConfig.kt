@@ -16,7 +16,7 @@ class CacheConfig {
         val cacheManager =
             CaffeineCacheManager(
                 CacheNames.BRAWLER,
-                CacheNames.EVENT,
+                CacheNames.BATTLE_EVENT,
                 CacheNames.STATISTICS,
             )
         cacheManager.setCaffeine(caffeineBuilder())

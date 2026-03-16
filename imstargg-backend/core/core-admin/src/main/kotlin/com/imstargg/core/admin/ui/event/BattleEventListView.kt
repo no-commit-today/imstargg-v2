@@ -1,6 +1,6 @@
 package com.imstargg.core.admin.ui.event
 
-import com.imstargg.core.admin.application.EventAdminService
+import com.imstargg.core.admin.application.BattleEventAdminService
 import com.imstargg.core.admin.response.BattleEventResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
@@ -18,7 +18,7 @@ import com.vaadin.flow.router.Route
 @Route(value = "event", layout = MainLayout::class)
 @PageTitle("이벤트 관리")
 class BattleEventListView(
-    private val eventAdminService: EventAdminService,
+    private val battleEventAdminService: BattleEventAdminService,
 ) : VerticalLayout() {
     private val grid = Grid(BattleEventResponse::class.java, false)
 
@@ -59,7 +59,7 @@ class BattleEventListView(
 
         val saveButton =
             Button("저장") {
-                eventAdminService.updateMessages(
+                battleEventAdminService.updateMessages(
                     code,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
@@ -75,6 +75,6 @@ class BattleEventListView(
     }
 
     private fun refreshGrid() {
-        grid.setItems(eventAdminService.findAllEvents())
+        grid.setItems(battleEventAdminService.findAllEvents())
     }
 }
