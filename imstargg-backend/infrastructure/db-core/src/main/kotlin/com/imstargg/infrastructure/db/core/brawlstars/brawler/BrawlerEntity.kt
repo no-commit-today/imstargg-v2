@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
+import com.imstargg.core.enums.BrawlStarsEntityStatus
 import com.imstargg.core.enums.BrawlerRarity
 import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
@@ -31,11 +32,17 @@ class BrawlerEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "role", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val role: BrawlerRole,
+    status: BrawlStarsEntityStatus = BrawlStarsEntityStatus.CREATED,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_id")
     val id: Long? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "varchar(25)", nullable = false)
+    var status: BrawlStarsEntityStatus = status
+        protected set
 
     fun nameMessageCode(): MessageCode = MessageCode.of("brawler", brawlStarsId, "name")
 

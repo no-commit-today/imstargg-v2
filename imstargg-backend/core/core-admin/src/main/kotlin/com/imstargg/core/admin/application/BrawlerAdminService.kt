@@ -5,8 +5,6 @@ import com.imstargg.core.admin.response.GadgetResponse
 import com.imstargg.core.admin.response.GearResponse
 import com.imstargg.core.admin.response.StarPowerResponse
 import com.imstargg.core.admin.response.toNameMap
-import com.imstargg.core.enums.BrawlerRarity
-import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
@@ -14,7 +12,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaReposito
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerJpaRepository
@@ -92,15 +89,6 @@ class BrawlerAdminService(
             linkedGearIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
             allGears = allGears.map { GearResponse(gear = it, names = emptyMap(), image = null) },
         )
-    }
-
-    @Transactional
-    fun create(
-        brawlStarsId: Long,
-        rarity: BrawlerRarity,
-        role: BrawlerRole,
-    ) {
-        brawlerJpaRepository.save(BrawlerEntity(brawlStarsId, rarity, role))
     }
 
     @Transactional

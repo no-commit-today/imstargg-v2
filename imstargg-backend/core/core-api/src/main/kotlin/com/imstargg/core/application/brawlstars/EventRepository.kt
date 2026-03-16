@@ -5,6 +5,7 @@ import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.event.BattleEventMode
+import com.imstargg.core.enums.BrawlStarsEntityStatus
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
@@ -21,6 +22,7 @@ class EventRepository(
 ) {
     fun find(id: BrawlStarsId): BattleEvent? {
         val eventEntity = battleEventJpaRepository.findByBrawlStarsId(id.value) ?: return null
+        if (eventEntity.status !in BrawlStarsEntityStatus.initializedStatuses()) return null
 
         val mapNameMessages =
             eventEntity.mapNameMessageCode()?.let { code ->

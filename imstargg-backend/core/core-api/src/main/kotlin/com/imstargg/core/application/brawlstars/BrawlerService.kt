@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service
 class BrawlerService(
     private val brawlerRepositoryWithCache: BrawlerRepositoryWithCache,
 ) {
-    fun getAll(): List<Brawler> = brawlerRepositoryWithCache.findBrawlers().getAll()
+    fun getAll(): List<Brawler> = brawlerRepositoryWithCache.findActiveBrawlers()
 }
