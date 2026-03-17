@@ -1,14 +1,17 @@
 package com.imstargg.core.admin.ui.event
 
 import com.imstargg.core.admin.application.BattleEventAdminService
+import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.button.ButtonVariant
+import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.grid.Grid
 import com.vaadin.flow.component.notification.Notification
+import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextField
@@ -25,7 +28,9 @@ class BattleEventListView(
     init {
         setSizeFull()
         configureGrid()
-        add(grid)
+
+        val addButton = Button("이벤트 등록") { openAddEventDialog() }
+        add(addButton, grid)
         refreshGrid()
     }
 
@@ -47,6 +52,40 @@ class BattleEventListView(
             }.setHeader("편집")
 
         grid.setSizeFull()
+    }
+
+    private fun openAddEventDialog() {
+        val dialog = Dialog()
+        dialog.headerTitle = "이벤트 등록"
+
+        val idField = TextField("BrawlStars ID")
+        val modeCombo =
+            ComboBox<BattleEventModeResponse>("Mode").apply {
+                setItems(battleEventAdminService.findAllModes())
+                setItemLabelGenerator { "${it.mode.brawlStarsId} - ${it.mode.brawlStarsName}" }
+                isClearButtonVisible = true
+            }
+        val mapNameField = TextField("Map Name")
+
+        val saveButton =
+            Button("저장") {
+                val id = idField.value?.toLongOrNull()
+                if (id == null) {
+                    Notification.show("ID를 입력하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                val modeId = modeCombo.value?.mode?.brawlStarsId
+                val mapName = mapNameField.value?.takeIf { it.isNotBlank() }
+                battleEventAdminService.createEvent(id, modeId, mapName)
+                Notification.show("이벤트가 등록되었습니다.")
+                dialog.close()
+                refreshGrid()
+            }
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
+
+        dialog.add(VerticalLayout(idField, modeCombo, mapNameField))
+        dialog.footer.add(Button("취소") { dialog.close() }, saveButton)
+        dialog.open()
     }
 
     private fun openMapNameEditDialog(event: BattleEventResponse) {

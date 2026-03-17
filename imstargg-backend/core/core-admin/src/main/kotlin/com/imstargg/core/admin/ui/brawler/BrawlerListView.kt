@@ -3,10 +3,18 @@ package com.imstargg.core.admin.ui.brawler
 import com.imstargg.core.admin.application.BrawlerAdminService
 import com.imstargg.core.admin.response.BrawlerResponse
 import com.imstargg.core.admin.ui.MainLayout
+import com.imstargg.core.enums.BrawlerRarity
+import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.core.enums.Language
 import com.vaadin.flow.component.button.Button
+import com.vaadin.flow.component.button.ButtonVariant
+import com.vaadin.flow.component.combobox.ComboBox
+import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.grid.Grid
+import com.vaadin.flow.component.notification.Notification
+import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.router.PageTitle
 import com.vaadin.flow.router.Route
 
@@ -21,7 +29,8 @@ class BrawlerListView(
         setSizeFull()
         configureGrid()
 
-        add(grid)
+        val addButton = Button("브롤러 등록") { openAddBrawlerDialog() }
+        add(addButton, grid)
         refreshGrid()
     }
 
@@ -41,6 +50,43 @@ class BrawlerListView(
             }.setHeader("상세")
 
         grid.setSizeFull()
+    }
+
+    private fun openAddBrawlerDialog() {
+        val dialog = Dialog()
+        dialog.headerTitle = "브롤러 등록"
+
+        val idField = TextField("BrawlStars ID")
+        val rarityCombo = ComboBox<BrawlerRarity>("Rarity").apply { setItems(BrawlerRarity.entries) }
+        val roleCombo = ComboBox<BrawlerRole>("Role").apply { setItems(BrawlerRole.entries) }
+
+        val saveButton =
+            Button("저장") {
+                val id = idField.value?.toLongOrNull()
+                if (id == null) {
+                    Notification.show("ID를 입력하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                val rarity = rarityCombo.value
+                if (rarity == null) {
+                    Notification.show("Rarity를 선택하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                val role = roleCombo.value
+                if (role == null) {
+                    Notification.show("Role을 선택하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                brawlerAdminService.createBrawler(id, rarity, role)
+                Notification.show("브롤러가 등록되었습니다.")
+                dialog.close()
+                refreshGrid()
+            }
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
+
+        dialog.add(VerticalLayout(idField, rarityCombo, roleCombo))
+        dialog.footer.add(Button("취소") { dialog.close() }, saveButton)
+        dialog.open()
     }
 
     private fun refreshGrid() {

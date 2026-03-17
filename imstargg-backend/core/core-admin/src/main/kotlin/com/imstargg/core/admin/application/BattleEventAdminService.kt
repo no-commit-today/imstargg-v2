@@ -10,7 +10,9 @@ import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaReposito
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -54,6 +56,24 @@ class BattleEventAdminService(
                 icon = imagesByCode[mode.iconImageCode()],
             )
         }
+    }
+
+    @Transactional
+    fun createMode(
+        brawlStarsId: Long,
+        brawlStarsName: String,
+    ) {
+        battleEventModeJpaRepository.save(BattleEventModeEntity(brawlStarsId, brawlStarsName))
+    }
+
+    @Transactional
+    fun createEvent(
+        brawlStarsId: Long,
+        modeId: Long?,
+        mapName: String?,
+    ) {
+        val mode = modeId?.let { battleEventModeJpaRepository.findByBrawlStarsId(it) }
+        battleEventJpaRepository.save(BattleEventEntity(brawlStarsId, mode, mapName))
     }
 
     @Transactional

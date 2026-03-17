@@ -11,6 +11,7 @@ import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.grid.Grid
 import com.vaadin.flow.component.notification.Notification
+import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextField
@@ -29,7 +30,9 @@ class BattleEventModeListView(
     init {
         setSizeFull()
         configureGrid()
-        add(grid)
+
+        val addButton = Button("이벤트 모드 등록") { openAddModeDialog() }
+        add(addButton, grid)
         refreshGrid()
     }
 
@@ -46,6 +49,37 @@ class BattleEventModeListView(
             }.setHeader("편집")
 
         grid.setSizeFull()
+    }
+
+    private fun openAddModeDialog() {
+        val dialog = Dialog()
+        dialog.headerTitle = "이벤트 모드 등록"
+
+        val idField = TextField("BrawlStars ID")
+        val nameField = TextField("BrawlStars Name")
+
+        val saveButton =
+            Button("저장") {
+                val id = idField.value?.toLongOrNull()
+                if (id == null) {
+                    Notification.show("ID를 입력하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                val name = nameField.value
+                if (name.isNullOrBlank()) {
+                    Notification.show("Name을 입력하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                battleEventAdminService.createMode(id, name)
+                Notification.show("이벤트 모드가 등록되었습니다.")
+                dialog.close()
+                refreshGrid()
+            }
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
+
+        dialog.add(VerticalLayout(idField, nameField))
+        dialog.footer.add(Button("취소") { dialog.close() }, saveButton)
+        dialog.open()
     }
 
     private fun openEditDialog(mode: BattleEventModeResponse) {

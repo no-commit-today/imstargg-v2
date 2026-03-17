@@ -3,7 +3,6 @@ package com.imstargg.core.application.brawlstars
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
-import com.imstargg.core.enums.BrawlStarsEntityStatus
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
 
@@ -11,15 +10,15 @@ import org.springframework.stereotype.Repository
 class BrawlerRepositoryWithCache(
     private val brawlerRepository: BrawlerRepository,
 ) {
-    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'all:initialized'")
+    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'brawlers'")
     fun findBrawlers(): Brawlers =
         Brawlers(
-            brawlerRepository.findAllByInStatus(BrawlStarsEntityStatus.initializedStatuses()),
+            brawlerRepository.findAll(),
         )
 
-    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'all:active'")
-    fun findActiveBrawlers(): List<Brawler> =
+    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'all'")
+    fun findAllBrawlers(): List<Brawler> =
         brawlerRepository
-            .findAllByInStatus(listOf(BrawlStarsEntityStatus.ACTIVE))
+            .findAll()
             .sortedBy { it.id.value }
 }

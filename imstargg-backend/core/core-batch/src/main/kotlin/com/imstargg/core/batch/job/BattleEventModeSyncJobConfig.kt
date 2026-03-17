@@ -1,9 +1,9 @@
 package com.imstargg.core.batch.job
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -47,25 +47,15 @@ class BattleEventModeSyncJobConfig(
                         .map { it.brawlStarsId }
                         .toSet()
 
-                val newModes =
-                    gameModes
-                        .filter { it.id !in existingIds }
-                        .map {
-                            BattleEventModeEntity(
-                                brawlStarsId = it.id,
-                                brawlStarsName = it.name,
-                            )
-                        }
-
-                battleEventModeJpaRepository.saveAll(newModes)
+                val newModes = gameModes.filter { it.id !in existingIds }
                 alertNewModes(newModes)
                 RepeatStatus.FINISHED
             }, txManager)
             .build()
 
-    private fun alertNewModes(newModes: List<BattleEventModeEntity>) {
+    private fun alertNewModes(newModes: List<EventTypeResponse>) {
         if (newModes.isEmpty()) return
-        val content = newModes.joinToString("\n") { "id: ${it.brawlStarsId}, name: ${it.brawlStarsName}" }
+        val content = newModes.joinToString("\n") { it.toString() }
         alertManager.alert(
             AlertCommand
                 .builder()

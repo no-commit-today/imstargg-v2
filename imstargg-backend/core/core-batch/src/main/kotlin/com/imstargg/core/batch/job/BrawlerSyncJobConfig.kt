@@ -57,7 +57,7 @@ class BrawlerSyncJobConfig(
 
     private fun alertNewBrawlers(newBrawlers: List<BrawlerResponse>) {
         if (newBrawlers.isEmpty()) return
-        val content = newBrawlers.joinToString("\n") { "id: ${it.id}, name: ${it.name}" }
+        val content = newBrawlers.joinToString("\n") { it.toString() }
         alertManager.alert(
             AlertCommand
                 .builder()

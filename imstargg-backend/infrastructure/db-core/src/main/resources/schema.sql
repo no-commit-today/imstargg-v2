@@ -368,7 +368,6 @@ create table if not exists battle_event_mode
     battle_event_mode_id bigint auto_increment primary key,
     brawlstars_id        bigint       not null,
     brawlstars_name      varchar(255) not null,
-    status               varchar(25)  not null default 'CREATED',
     created_at           timestamp(6) not null default current_timestamp(6),
     updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event_mode__brawlstarsid (brawlstars_id)
@@ -381,7 +380,6 @@ create table if not exists battle_event
     brawlstars_id        bigint       not null,
     battle_event_mode_id bigint       null,
     map_name             varchar(105) null,
-    status               varchar(25)  not null default 'CREATED',
     created_at           timestamp(6) not null default current_timestamp(6),
     updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event__brawlstarsid (brawlstars_id)
@@ -547,7 +545,6 @@ create table if not exists brawler
     brawlstars_id     bigint       not null,
     rarity            varchar(45)  not null,
     role              varchar(45)  not null,
-    status            varchar(25)  not null default 'CREATED',
     created_at        timestamp(6) not null default current_timestamp(6),
     updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawler__brawlstarsid (brawlstars_id)

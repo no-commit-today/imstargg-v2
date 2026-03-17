@@ -7,7 +7,6 @@ import com.imstargg.core.domain.brawlstars.brawler.Brawler
 import com.imstargg.core.domain.brawlstars.brawler.Gadget
 import com.imstargg.core.domain.brawlstars.brawler.Gear
 import com.imstargg.core.domain.brawlstars.brawler.StarPower
-import com.imstargg.core.enums.BrawlStarsEntityStatus
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
@@ -36,14 +35,8 @@ class BrawlerRepository(
     private val messageJpaRepository: MessageJpaRepository,
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
 ) {
-    fun findAll(): List<Brawler> = findAllByInStatus(BrawlStarsEntityStatus.entries)
-
-    fun findAllByInStatus(statuses: Collection<BrawlStarsEntityStatus>): List<Brawler> {
-        val brawlerEntities =
-            brawlerJpaRepository
-                .findAll()
-                .toList()
-                .filter { it.status in statuses }
+    fun findAll(): List<Brawler> {
+        val brawlerEntities = brawlerJpaRepository.findAll().toList()
         val gadgetEntities = gadgetJpaRepository.findAll().toList()
         val starPowerEntities = starPowerJpaRepository.findAll().toList()
         val gearEntities = gearJpaRepository.findAll().toList()
