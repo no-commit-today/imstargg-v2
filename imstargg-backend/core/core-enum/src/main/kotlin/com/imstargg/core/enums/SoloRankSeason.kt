@@ -42,13 +42,18 @@ class SoloRankSeason private constructor(
                 endAt = OffsetDateTime.parse("2025-04-16T18:00:00+09:00"),
             )
 
-        fun current(clock: Clock): SoloRankSeason {
-            val now = OffsetDateTime.now(clock)
-            var season = createFirst()
-            while (now.isAfter(season.endAt)) {
+        fun of(time: OffsetDateTime): SoloRankSeason {
+            val first = createFirst()
+            require(!time.isBefore(first.startAt)) {
+                "time must not be before the first season start: ${first.startAt}"
+            }
+            var season = first
+            while (time.isAfter(season.endAt)) {
                 season = season.next()
             }
             return season
         }
+
+        fun current(clock: Clock): SoloRankSeason = of(OffsetDateTime.now(clock))
     }
 }
