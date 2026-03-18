@@ -96,6 +96,7 @@ class SomeEntity(
 ```
 
 - **JPA 쿼리 메서드 네이밍**: 리스트 반환 시 `findAll` 접두사 사용 (예: `findAllByEndTimeAfter`), 단건 반환 시 `find` 접두사 사용 (예: `findByBrawlStarsId`)
+- **JPQL 지양**: JPQL을 직접 사용하는 것은 최대한 지양. JpaRepository 쿼리 메서드(+EntityGraph)를 최대한 활용하고, 복잡한 쿼리의 경우 QueryDSL 사용
 
 ## Test Tags
 
