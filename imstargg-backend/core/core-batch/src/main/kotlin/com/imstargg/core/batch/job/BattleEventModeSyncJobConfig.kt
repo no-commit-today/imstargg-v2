@@ -59,7 +59,7 @@ class BattleEventModeSyncJobConfig(
         alertManager.alert(
             AlertCommand
                 .builder()
-                .title("새로운 이벤트 모드 발견")
+                .title("[$JOB_NAME] 새로운 이벤트 모드 발견")
                 .content(content)
                 .build(),
         )
