@@ -56,7 +56,7 @@ class BattleEventResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventBrawlStarsIdAndTierRangeAndDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
                     startDate,
@@ -74,7 +74,7 @@ class BattleEventResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventBrawlStarsIdAndTierRangeAndDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
                     startDate,
@@ -83,12 +83,7 @@ class BattleEventResultStatisticsRepository(
 
         return entities.map {
             BrawlersResultCount(
-                brawlerIds =
-                    listOf(
-                        BrawlStarsId(it.brawlerBrawlStarsId1),
-                        BrawlStarsId(it.brawlerBrawlStarsId2),
-                        BrawlStarsId(it.brawlerBrawlStarsId3),
-                    ),
+                brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
                 resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
             )
         }
@@ -128,15 +123,8 @@ class BattleEventResultStatisticsRepository(
             for (entity in entities) {
                 val resultCount = ResultCount(entity.victoryCount, entity.defeatCount, entity.drawCount)
 
-                val otherIds =
-                    listOf(
-                        entity.brawlerBrawlStarsId1,
-                        entity.brawlerBrawlStarsId2,
-                        entity.brawlerBrawlStarsId3,
-                    ).filter { it != brawlerId.value }
-
-                for (otherId in otherIds) {
-                    val otherBrawlerId = BrawlStarsId(otherId)
+                for (teammateId in entity.teammateBrawlStarsIds) {
+                    val otherBrawlerId = BrawlStarsId(teammateId)
                     otherBrawlerIdToResultCount.merge(otherBrawlerId, resultCount) { existing, new ->
                         existing.merge(new)
                     }

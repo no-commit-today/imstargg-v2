@@ -60,7 +60,7 @@ class BrawlerResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findByTierRangeAndDateAndBrawlerBrawlStarsId(tierRange, startDate, brawlerId.value)
+                .findAllByTierRangeAndDateAndBrawlerBrawlStarsId(tierRange, startDate, brawlerId.value)
 
         return BattleEventResultStatisticsRepository.extractDuoResultCounts(entities, brawlerId)
     }
@@ -72,16 +72,11 @@ class BrawlerResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findByTierRangeAndDateAndBrawlerBrawlStarsId(tierRange, startDate, brawlerId.value)
+                .findAllByTierRangeAndDateAndBrawlerBrawlStarsId(tierRange, startDate, brawlerId.value)
 
         return entities.map {
             BrawlersResultCount(
-                brawlerIds =
-                    listOf(
-                        BrawlStarsId(it.brawlerBrawlStarsId1),
-                        BrawlStarsId(it.brawlerBrawlStarsId2),
-                        BrawlStarsId(it.brawlerBrawlStarsId3),
-                    ),
+                brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
                 resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
             )
         }
