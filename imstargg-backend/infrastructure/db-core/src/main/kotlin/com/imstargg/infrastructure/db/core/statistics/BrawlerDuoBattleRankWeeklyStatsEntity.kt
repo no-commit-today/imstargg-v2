@@ -47,6 +47,12 @@ class BrawlerDuoBattleRankWeeklyStatsEntity(
         startAt = startAt,
         endAt = endAt,
     ) {
+    init {
+        require(brawlerBrawlStarsId != teammateBrawlStarsId) {
+            "brawlerBrawlStarsId($brawlerBrawlStarsId)와 teammateBrawlStarsId($teammateBrawlStarsId)는 달라야 합니다."
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_duo_battle_rank_weekly_stats_id", nullable = false)

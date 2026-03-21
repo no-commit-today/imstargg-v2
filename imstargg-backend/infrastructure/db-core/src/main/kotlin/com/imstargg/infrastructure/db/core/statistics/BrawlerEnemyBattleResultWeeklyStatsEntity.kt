@@ -48,6 +48,12 @@ class BrawlerEnemyBattleResultWeeklyStatsEntity(
         defeatCount = defeatCount,
         drawCount = drawCount,
     ) {
+    init {
+        require(brawlerBrawlStarsId != enemyBrawlerBrawlStarsId) {
+            "brawlerBrawlStarsId($brawlerBrawlStarsId)와 enemyBrawlerBrawlStarsId($enemyBrawlerBrawlStarsId)는 달라야 합니다."
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_enemy_battle_result_weekly_stats_id", nullable = false)

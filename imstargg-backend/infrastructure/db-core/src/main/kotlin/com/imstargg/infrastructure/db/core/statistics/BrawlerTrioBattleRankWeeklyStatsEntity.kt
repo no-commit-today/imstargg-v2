@@ -52,6 +52,11 @@ class BrawlerTrioBattleRankWeeklyStatsEntity(
         require(teammateBrawlStarsId1 < teammateBrawlStarsId2) {
             "teammateBrawlStarsId1($teammateBrawlStarsId1)은 teammateBrawlStarsId2($teammateBrawlStarsId2)보다 작아야 합니다."
         }
+        require(
+            brawlerBrawlStarsId != teammateBrawlStarsId1 && brawlerBrawlStarsId != teammateBrawlStarsId2,
+        ) {
+            "brawlerBrawlStarsId($brawlerBrawlStarsId)는 teammateBrawlStarsId1($teammateBrawlStarsId1), teammateBrawlStarsId2($teammateBrawlStarsId2)와 달라야 합니다."
+        }
     }
 
     @Id
