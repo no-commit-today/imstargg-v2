@@ -63,7 +63,7 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlersRankCount> {
         val entities =
             duoBattleRankJpaRepository
-                .findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventBrawlStarsIdAndTierRangeAndDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
                     startDate,
@@ -71,15 +71,8 @@ class BattleEventRankStatisticsRepository(
                 )
 
         return entities.map { entity ->
-            val otherBrawlerId =
-                if (entity.brawlerBrawlStarsId1 == brawlerId.value) {
-                    BrawlStarsId(entity.brawlerBrawlStarsId2)
-                } else {
-                    BrawlStarsId(entity.brawlerBrawlStarsId1)
-                }
-
             BrawlersRankCount(
-                brawlerIds = listOf(brawlerId, otherBrawlerId),
+                brawlerIds = listOf(brawlerId, BrawlStarsId(entity.teammateBrawlStarsId)),
                 rankCount = toDuoRankCount(entity),
             )
         }
@@ -93,7 +86,7 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlersRankCount> {
         val entities =
             trioBattleRankJpaRepository
-                .findByEventAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventBrawlStarsIdAndTierRangeAndDateAndBrawlerBrawlStarsId(
                     eventId.value,
                     tierRange,
                     startDate,
@@ -102,12 +95,7 @@ class BattleEventRankStatisticsRepository(
 
         return entities.map {
             BrawlersRankCount(
-                brawlerIds =
-                    listOf(
-                        BrawlStarsId(it.brawlerBrawlStarsId1),
-                        BrawlStarsId(it.brawlerBrawlStarsId2),
-                        BrawlStarsId(it.brawlerBrawlStarsId3),
-                    ),
+                brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
                 rankCount = toTrioRankCount(it),
             )
         }

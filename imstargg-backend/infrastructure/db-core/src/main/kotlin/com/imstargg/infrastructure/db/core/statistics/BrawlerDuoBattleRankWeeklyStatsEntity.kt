@@ -16,8 +16,12 @@ import java.time.OffsetDateTime
     name = "brawler_duo_battle_rank_weekly_stats",
     indexes = [
         Index(
-            name = "ix_brawler_duo_battle_rank_weekly_stats",
+            name = "ix_brawler_duo_battle_rank_weekly_stats_1",
             columnList = "event_brawlstars_id, tier_range, date",
+        ),
+        Index(
+            name = "ix_brawler_duo_battle_rank_weekly_stats_2",
+            columnList = "event_brawlstars_id, tier_range, date, brawler_brawlstars_id",
         ),
     ],
 )
@@ -27,10 +31,10 @@ class BrawlerDuoBattleRankWeeklyStatsEntity(
     date: LocalDate,
     startAt: OffsetDateTime,
     endAt: OffsetDateTime,
-    @Column(name = "brawler_brawlstars_id_1", updatable = false, nullable = false)
-    val brawlerBrawlStarsId1: Long,
-    @Column(name = "brawler_brawlstars_id_2", updatable = false, nullable = false)
-    val brawlerBrawlStarsId2: Long,
+    @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
+    val brawlerBrawlStarsId: Long,
+    @Column(name = "teammate_brawlstars_id", updatable = false, nullable = false)
+    val teammateBrawlStarsId: Long,
     rankCount1: Long,
     rankCount2: Long,
     rankCount3: Long,
@@ -67,4 +71,7 @@ class BrawlerDuoBattleRankWeeklyStatsEntity(
     @Column(name = "rank_5_count", nullable = false)
     var rankCount5: Long = rankCount5
         protected set
+
+    val duoBrawlerBrawlStarsIds: List<Long>
+        get() = listOf(brawlerBrawlStarsId, teammateBrawlStarsId).sorted()
 }
