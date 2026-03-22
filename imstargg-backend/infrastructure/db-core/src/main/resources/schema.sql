@@ -259,14 +259,6 @@ create table if not exists aggregated_result_battle_key
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );
--- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
--- 일별 파티션 추가 예시:
---   ALTER TABLE aggregated_result_battle_key ADD PARTITION (
---       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
---   );
--- 오래된 파티션 삭제 예시:
---   ALTER TABLE aggregated_result_battle_key DROP PARTITION p_20250101;
-
 -- aggregated_rank_battle_key table (파티셔닝: battle_date 기준, 보관 기간 30일)
 -- 역할: StatsRankBattleEntity 중복 수집 방지 (playerTag + battleKey 조합)
 create table if not exists aggregated_rank_battle_key
@@ -283,14 +275,6 @@ create table if not exists aggregated_rank_battle_key
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );
--- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
--- 일별 파티션 추가 예시:
---   ALTER TABLE aggregated_rank_battle_key ADD PARTITION (
---       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
---   );
--- 오래된 파티션 삭제 예시 (30일 초과):
---   ALTER TABLE aggregated_rank_battle_key DROP PARTITION p_20250101;
-
 -- stats_rank_battle table (파티셔닝: created_date 기준, 보관 기간 7일)
 -- 역할: 배틀 랭크 통계 데이터 (플레이어별)
 create table if not exists stats_rank_battle
@@ -314,14 +298,6 @@ create table if not exists stats_rank_battle
 ) partition by range (to_days(created_date)) (
     partition p_default values less than maxvalue
 );
--- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
--- 일별 파티션 추가 예시:
---   ALTER TABLE stats_rank_battle ADD PARTITION (
---       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
---   );
--- 오래된 파티션 삭제 예시:
---   ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
-
 -- stats_result_battle table (파티셔닝: created_date 기준, 보관 기간 7일)
 -- 역할: 배틀 결과 통계 데이터 (배틀 단위)
 create table if not exists stats_result_battle
@@ -345,13 +321,7 @@ create table if not exists stats_result_battle
 ) partition by range (to_days(created_date)) (
     partition p_default values less than maxvalue
 );
--- 파티션 관리 스크립트 (운영 시 스케줄러 또는 배치에서 실행 필요)
--- 일별 파티션 추가 예시:
---   ALTER TABLE stats_result_battle ADD PARTITION (
---       PARTITION p_20250124 VALUES LESS THAN (to_days('2025-01-25'))
---   );
--- 오래된 파티션 삭제 예시:
---   ALTER TABLE stats_result_battle DROP PARTITION p_20250101;
+-- 파티션 관리: partition-manage.sql 참조
 
 create table if not exists stats_player
 (
@@ -415,16 +385,7 @@ create table if not exists brawler_solo_battle_rank_stats
     start_at                   timestamp(6) not null,
     end_at                     timestamp(6) not null,
     brawler_brawlstars_id            bigint       not null,
-    rank_1_count                     bigint       not null,
-    rank_2_count                     bigint       not null,
-    rank_3_count                     bigint       not null,
-    rank_4_count                     bigint       not null,
-    rank_5_count                     bigint       not null,
-    rank_6_count                     bigint       not null,
-    rank_7_count                     bigint       not null,
-    rank_8_count                     bigint       not null,
-    rank_9_count                     bigint       not null,
-    rank_10_count                    bigint       not null,
+    rank_counts                      json         not null,
     created_at                       timestamp(6) not null default current_timestamp(6),
     updated_at                       timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_solo_battle_rank_stats (event_brawlstars_id, tier_range, date)
@@ -472,33 +433,10 @@ create table if not exists brawler_team_battle_result_stats
     index ix_brawler_team_battle_result_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
 );
 
--- 브롤러 듀오(2인) 전투 랭크 통계
-create table if not exists brawler_duo_battle_rank_stats
+-- 브롤러 팀(듀오/트리오) 전투 랭크 통계
+create table if not exists brawler_team_battle_rank_stats
 (
-    brawler_duo_battle_rank_stats_id bigint auto_increment primary key,
-    event_brawlstars_id              bigint       not null,
-    period_type                      varchar(25)  not null,
-    tier_range                       varchar(45)  not null,
-    date                             date         not null,
-    start_at                         timestamp(6) not null,
-    end_at                           timestamp(6) not null,
-    brawler_brawlstars_id            bigint       not null,
-    teammate_brawlstars_id           bigint       not null,
-    rank_1_count                     bigint       not null,
-    rank_2_count                     bigint       not null,
-    rank_3_count                     bigint       not null,
-    rank_4_count                     bigint       not null,
-    rank_5_count                     bigint       not null,
-    created_at                       timestamp(6) not null default current_timestamp(6),
-    updated_at                       timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_duo_battle_rank_stats_1 (event_brawlstars_id, period_type, tier_range, date),
-    index ix_brawler_duo_battle_rank_stats_2 (event_brawlstars_id, period_type, tier_range, date, brawler_brawlstars_id)
-);
-
--- 브롤러 트리오(3인) 전투 랭크 통계
-create table if not exists brawler_trio_battle_rank_stats
-(
-    brawler_trio_battle_rank_stats_id bigint auto_increment primary key,
+    brawler_team_battle_rank_stats_id bigint auto_increment primary key,
     event_brawlstars_id               bigint       not null,
     period_type                       varchar(25)  not null,
     tier_range                        varchar(45)  not null,
@@ -507,14 +445,11 @@ create table if not exists brawler_trio_battle_rank_stats
     end_at                            timestamp(6) not null,
     brawler_brawlstars_id             bigint       not null,
     teammate_brawlstars_ids           json         not null,
-    rank_1_count                      bigint       not null,
-    rank_2_count                      bigint       not null,
-    rank_3_count                      bigint       not null,
-    rank_4_count                      bigint       not null,
+    rank_counts                       json         not null,
     created_at                        timestamp(6) not null default current_timestamp(6),
     updated_at                        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_trio_battle_rank_stats_1 (event_brawlstars_id, period_type, tier_range, date),
-    index ix_brawler_trio_battle_rank_stats_2 (event_brawlstars_id, period_type, tier_range, date, brawler_brawlstars_id)
+    index ix_brawler_team_battle_rank_stats_1 (event_brawlstars_id, period_type, tier_range, date),
+    index ix_brawler_team_battle_rank_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
 );
 
 create table if not exists battle_event_rotation_item

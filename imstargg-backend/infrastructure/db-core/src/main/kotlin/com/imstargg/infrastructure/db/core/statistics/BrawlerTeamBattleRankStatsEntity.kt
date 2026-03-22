@@ -3,6 +3,7 @@ package com.imstargg.infrastructure.db.core.statistics
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -17,19 +18,19 @@ import java.time.OffsetDateTime
 
 @Entity
 @Table(
-    name = "brawler_trio_battle_rank_stats",
+    name = "brawler_team_battle_rank_stats",
     indexes = [
         Index(
-            name = "ix_brawler_trio_battle_rank_stats_1",
+            name = "ix_brawler_team_battle_rank_stats_1",
             columnList = "event_brawlstars_id, period_type, tier_range, date",
         ),
         Index(
-            name = "ix_brawler_trio_battle_rank_stats_2",
-            columnList = "event_brawlstars_id, period_type, tier_range, date, brawler_brawlstars_id",
+            name = "ix_brawler_team_battle_rank_stats_2",
+            columnList = "period_type, tier_range, date, brawler_brawlstars_id",
         ),
     ],
 )
-class BrawlerTrioBattleRankStatsEntity internal constructor(
+class BrawlerTeamBattleRankStatsEntity internal constructor(
     eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
@@ -43,10 +44,7 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "teammate_brawlstars_ids", columnDefinition = "json", updatable = false, nullable = false)
     val teammateBrawlStarsIds: List<Long>,
-    rankCount1: Long,
-    rankCount2: Long,
-    rankCount3: Long,
-    rankCount4: Long,
+    rankCounts: RankCountsEmbedded,
 ) : BaseBattleRankStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
@@ -71,23 +69,11 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "brawler_trio_battle_rank_stats_id", nullable = false)
+    @Column(name = "brawler_team_battle_rank_stats_id", nullable = false)
     val id: Long? = null
 
-    @Column(name = "rank_1_count", nullable = false)
-    var rankCount1: Long = rankCount1
-        protected set
-
-    @Column(name = "rank_2_count", nullable = false)
-    var rankCount2: Long = rankCount2
-        protected set
-
-    @Column(name = "rank_3_count", nullable = false)
-    var rankCount3: Long = rankCount3
-        protected set
-
-    @Column(name = "rank_4_count", nullable = false)
-    var rankCount4: Long = rankCount4
+    @Embedded
+    var rankCounts: RankCountsEmbedded = rankCounts
         protected set
 
     val teamBrawlerBrawlStarsIds: List<Long>
@@ -101,12 +87,9 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
             startAt: OffsetDateTime,
             brawlerBrawlStarsId: Long,
             teammateBrawlStarsIds: List<Long>,
-            rankCount1: Long,
-            rankCount2: Long,
-            rankCount3: Long,
-            rankCount4: Long,
-        ): BrawlerTrioBattleRankStatsEntity =
-            BrawlerTrioBattleRankStatsEntity(
+            rankCounts: RankCountsEmbedded,
+        ): BrawlerTeamBattleRankStatsEntity =
+            BrawlerTeamBattleRankStatsEntity(
                 eventBrawlStarsId = eventBrawlStarsId,
                 periodType = periodType,
                 tierRange = tierRange,
@@ -115,10 +98,7 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
                 endAt = periodType.endAt(startAt),
                 brawlerBrawlStarsId = brawlerBrawlStarsId,
                 teammateBrawlStarsIds = teammateBrawlStarsIds.sorted(),
-                rankCount1 = rankCount1,
-                rankCount2 = rankCount2,
-                rankCount3 = rankCount3,
-                rankCount4 = rankCount4,
+                rankCounts = rankCounts,
             )
     }
 }
