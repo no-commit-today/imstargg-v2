@@ -5,7 +5,7 @@ import com.imstargg.core.domain.renewal.Renewal
 import com.imstargg.core.domain.renewal.RenewalCreate
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
-import com.imstargg.infrastructure.db.core.renewal.RenewalJpaRepository
+import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

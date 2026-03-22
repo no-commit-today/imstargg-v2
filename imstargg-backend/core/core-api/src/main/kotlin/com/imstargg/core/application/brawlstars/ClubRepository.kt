@@ -8,9 +8,9 @@ import com.imstargg.core.enums.ClubMemberRole
 import com.imstargg.core.enums.ClubType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.ClubJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubMemberJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

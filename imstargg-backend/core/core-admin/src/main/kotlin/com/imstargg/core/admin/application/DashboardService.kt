@@ -1,12 +1,12 @@
 package com.imstargg.core.admin.application
 
 import com.imstargg.core.admin.response.DashboardSummaryResponse
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

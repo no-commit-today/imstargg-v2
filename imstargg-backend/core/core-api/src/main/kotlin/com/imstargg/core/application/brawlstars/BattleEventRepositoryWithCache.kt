@@ -4,8 +4,8 @@ import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.event.RotationBattleEvent
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventRotationItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventSoloRankEventJpaRepository
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime

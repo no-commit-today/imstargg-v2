@@ -4,7 +4,7 @@ import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.client.brawlstars.response.BrawlerResponse
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer

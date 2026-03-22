@@ -1,7 +1,7 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.core.worker.domain.BattleResult
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleHelper
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsBattleHelper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable

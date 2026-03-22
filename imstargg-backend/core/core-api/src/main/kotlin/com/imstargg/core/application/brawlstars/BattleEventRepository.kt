@@ -5,10 +5,10 @@ import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.event.BattleEventMode
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

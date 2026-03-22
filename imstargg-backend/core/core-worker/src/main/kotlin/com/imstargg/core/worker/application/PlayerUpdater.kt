@@ -5,7 +5,7 @@ import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.worker.domain.BattleResultBuilder
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import com.imstargg.infrastructure.db.core.lock.LockName
 import com.imstargg.infrastructure.db.core.lock.LockTemplate
 import org.springframework.stereotype.Component

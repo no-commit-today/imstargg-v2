@@ -7,9 +7,9 @@ import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEnt
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope

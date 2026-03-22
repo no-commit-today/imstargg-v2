@@ -9,18 +9,18 @@ import com.imstargg.core.domain.brawlstars.brawler.Gear
 import com.imstargg.core.domain.brawlstars.brawler.StarPower
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearEntity
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.StarPowerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

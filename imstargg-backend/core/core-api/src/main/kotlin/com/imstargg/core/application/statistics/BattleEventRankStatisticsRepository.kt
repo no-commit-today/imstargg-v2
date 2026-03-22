@@ -6,8 +6,8 @@ import com.imstargg.core.domain.statistics.BrawlersRankCount
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerSoloBattleRankStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerSoloBattleRankStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTeamBattleRankStatsJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate

@@ -16,12 +16,12 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.SoloRankTier
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntityBrawler
-import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.battle.toTeams
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

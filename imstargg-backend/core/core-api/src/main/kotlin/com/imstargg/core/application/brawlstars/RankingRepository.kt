@@ -9,17 +9,17 @@ import com.imstargg.core.domain.brawlstars.ranking.RankingPlayer
 import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItemEntity
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingItemEntity
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingItemEntity
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

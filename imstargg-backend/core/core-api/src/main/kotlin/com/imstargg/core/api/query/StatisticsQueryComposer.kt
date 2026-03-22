@@ -24,36 +24,31 @@ class StatisticsQueryComposer(
     private val battleEventStatisticsService: BattleEventStatisticsService,
     private val brawlerStatisticsService: BrawlerStatisticsService,
 ) {
-
-    fun getBattleEventBrawlerResultStatistics(
-        param: BattleEventBrawlerStatisticsParam,
-    ): List<BrawlerResultStatisticsResponse> {
+    fun getBattleEventBrawlerResultStatistics(param: BattleEventBrawlerStatisticsParam): List<BrawlerResultStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerResultStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerResultStatistics(param)
             .map { BrawlerResultStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
-    fun getBattleEventBrawlerDuoResultStatistics(
-        param: BattleEventBrawlersStatisticsParam,
-    ): List<BrawlersResultStatisticsResponse> {
+    fun getBattleEventBrawlerDuoResultStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersResultStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerDuoResultStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerDuoResultStatistics(param)
             .map { BrawlersResultStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
-    fun getBattleEventBrawlerTrioResultStatistics(
-        param: BattleEventBrawlersStatisticsParam,
-    ): List<BrawlersResultStatisticsResponse> {
+    fun getBattleEventBrawlerTrioResultStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersResultStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerTrioResultStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerTrioResultStatistics(param)
             .map { BrawlersResultStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
-    fun getBattleEventBrawlerEnemyResultStatistics(
-        param: BattleEventBrawlersStatisticsParam,
-    ): List<BrawlerEnemyResultStatisticsResponse> {
+    fun getBattleEventBrawlerEnemyResultStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlerEnemyResultStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerEnemyResultStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerEnemyResultStatistics(param)
             .map {
                 BrawlerEnemyResultStatisticsResponse.of(
                     it,
@@ -63,64 +58,56 @@ class StatisticsQueryComposer(
             }
     }
 
-    fun getBattleEventBrawlerRankStatistics(
-        param: BattleEventBrawlerStatisticsParam,
-    ): List<BrawlerRankStatisticsResponse> {
+    fun getBattleEventBrawlerRankStatistics(param: BattleEventBrawlerStatisticsParam): List<BrawlerRankStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerRankStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerRankStatistics(param)
             .map { BrawlerRankStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
-    fun getBattleEventBrawlerDuoRankStatistics(
-        param: BattleEventBrawlersStatisticsParam,
-    ): List<BrawlersRankStatisticsResponse> {
+    fun getBattleEventBrawlerDuoRankStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersRankStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerDuoRankStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerDuoRankStatistics(param)
             .map { BrawlersRankStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
-    fun getBattleEventBrawlerTrioRankStatistics(
-        param: BattleEventBrawlersStatisticsParam,
-    ): List<BrawlersRankStatisticsResponse> {
+    fun getBattleEventBrawlerTrioRankStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersRankStatisticsResponse> {
         val brawlers = brawlers()
-        return battleEventStatisticsService.getBattleEventBrawlerTrioRankStatistics(param)
+        return battleEventStatisticsService
+            .getBattleEventBrawlerTrioRankStatistics(param)
             .map { BrawlersRankStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
-    fun getBrawlerResultStatistics(
-        param: BrawlerStatisticsParam,
-    ): List<BrawlerResultStatisticsResponse> {
+    fun getBrawlerResultStatistics(param: BrawlerStatisticsParam): List<BrawlerResultStatisticsResponse> {
         val brawlers = brawlers()
-        return brawlerStatisticsService.getBrawlerResultStatistics(param)
+        return brawlerStatisticsService
+            .getBrawlerResultStatistics(param)
             .map { BrawlerResultStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
-    fun getBrawlerDailyResultStatistics(
-        param: BrawlersStatisticsParam,
-    ): List<BrawlerResultDailyStatisticsResponse> {
+    fun getBrawlerDailyResultStatistics(param: BrawlersStatisticsParam): List<BrawlerResultDailyStatisticsResponse> {
         val brawlers = brawlers()
-        return brawlerStatisticsService.getBrawlerDailyResultStatistics(param)
+        return brawlerStatisticsService
+            .getBrawlerDailyResultStatistics(param)
             .map { BrawlerResultDailyStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
-    fun getBrawlerDuoResultStatistics(
-        param: BrawlersStatisticsParam,
-    ): List<BrawlersResultStatisticsResponse> {
+    fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatisticsResponse> {
         val brawlers = brawlers()
-        return brawlerStatisticsService.getBrawlerDuoResultStatistics(param)
+        return brawlerStatisticsService
+            .getBrawlerDuoResultStatistics(param)
             .map { BrawlersResultStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
-    fun getBrawlerTrioResultStatistics(
-        param: BrawlersStatisticsParam,
-    ): List<BrawlersResultStatisticsResponse> {
+    fun getBrawlerTrioResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatisticsResponse> {
         val brawlers = brawlers()
-        return brawlerStatisticsService.getBrawlerTrioResultStatistics(param)
+        return brawlerStatisticsService
+            .getBrawlerTrioResultStatistics(param)
             .map { BrawlersResultStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())
 
-    private fun Brawlers.toBrawlerResponse(id: BrawlStarsId): BrawlerResponse? =
-        find(id)?.let { BrawlerResponse.of(it) }
+    private fun Brawlers.toBrawlerResponse(id: BrawlStarsId): BrawlerResponse? = find(id)?.let { BrawlerResponse.of(it) }
 }

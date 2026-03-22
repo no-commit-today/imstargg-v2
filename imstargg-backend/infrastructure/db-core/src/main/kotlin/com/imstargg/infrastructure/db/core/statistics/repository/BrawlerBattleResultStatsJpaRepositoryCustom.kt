@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.statistics
+package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.StatsTierRange
 import java.time.LocalDate

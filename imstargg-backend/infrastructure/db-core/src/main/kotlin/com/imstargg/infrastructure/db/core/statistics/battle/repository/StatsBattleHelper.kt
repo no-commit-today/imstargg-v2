@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.statistics.battle
+package com.imstargg.infrastructure.db.core.statistics.battle.repository
 
 import java.time.Clock
 import java.time.OffsetDateTime

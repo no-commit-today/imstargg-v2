@@ -7,9 +7,9 @@ import com.imstargg.core.domain.brawlstars.player.Player
 import com.imstargg.core.domain.brawlstars.player.PlayerBrawler
 import com.imstargg.core.domain.brawlstars.player.PlayerClub
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

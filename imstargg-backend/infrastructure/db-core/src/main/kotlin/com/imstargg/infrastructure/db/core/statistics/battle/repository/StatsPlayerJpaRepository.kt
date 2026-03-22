@@ -1,5 +1,6 @@
-package com.imstargg.infrastructure.db.core.statistics.battle
+package com.imstargg.infrastructure.db.core.statistics.battle.repository
 
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 

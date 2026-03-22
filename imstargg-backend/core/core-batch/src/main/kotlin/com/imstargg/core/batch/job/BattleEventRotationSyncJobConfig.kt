@@ -2,7 +2,7 @@ package com.imstargg.core.batch.job
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemEntity
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventRotationItemJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer

@@ -2,7 +2,7 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.ClubResponse
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.ClubJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
 import com.imstargg.infrastructure.db.core.lock.LockName
 import com.imstargg.infrastructure.db.core.lock.LockTemplate
 import org.springframework.stereotype.Component

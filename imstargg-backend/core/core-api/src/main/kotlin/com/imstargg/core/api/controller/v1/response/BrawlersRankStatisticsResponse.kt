@@ -8,11 +8,13 @@ data class BrawlersRankStatisticsResponse(
     val averageRank: Double,
 ) {
     companion object {
-        fun of(statistics: BrawlersRankStatistics, brawlers: List<BrawlerResponse?>) =
-            BrawlersRankStatisticsResponse(
-                brawlers = brawlers,
-                totalBattleCount = statistics.totalBattleCount,
-                averageRank = statistics.averageRank,
-            )
+        fun of(
+            statistics: BrawlersRankStatistics,
+            brawlers: List<BrawlerResponse?>,
+        ) = BrawlersRankStatisticsResponse(
+            brawlers = brawlers,
+            totalBattleCount = statistics.totalBattleCount,
+            averageRank = statistics.averageRank,
+        )
     }
 }

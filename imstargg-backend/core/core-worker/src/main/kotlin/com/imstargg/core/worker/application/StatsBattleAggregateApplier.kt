@@ -5,15 +5,15 @@ import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.worker.domain.BattleResult
 import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedRankBattleKeyEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedRankBattleKeyJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedResultBattleKeyEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedResultBattleKeyJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.AggregatedRankBattleKeyJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.AggregatedResultBattleKeyJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRankBattleJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 

@@ -8,7 +8,7 @@ import com.imstargg.core.worker.application.StatsBattleAggregator
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
 import com.imstargg.core.worker.domain.BattleResultBuilder
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties

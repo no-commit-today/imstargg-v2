@@ -6,12 +6,12 @@ import com.imstargg.core.enums.GearRarity
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.MessageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearEntity
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.InputStream

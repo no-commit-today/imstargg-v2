@@ -9,12 +9,14 @@ data class BrawlerResultStatisticsResponse(
     val starPlayerRate: Double,
 ) {
     companion object {
-        fun of(statistics: BrawlerResultStatistics, brawler: BrawlerResponse?) =
-            BrawlerResultStatisticsResponse(
-                brawler = brawler,
-                totalBattleCount = statistics.totalBattleCount,
-                winRate = statistics.winRate,
-                starPlayerRate = statistics.starPlayerRate,
-            )
+        fun of(
+            statistics: BrawlerResultStatistics,
+            brawler: BrawlerResponse?,
+        ) = BrawlerResultStatisticsResponse(
+            brawler = brawler,
+            totalBattleCount = statistics.totalBattleCount,
+            winRate = statistics.winRate,
+            starPlayerRate = statistics.starPlayerRate,
+        )
     }
 }

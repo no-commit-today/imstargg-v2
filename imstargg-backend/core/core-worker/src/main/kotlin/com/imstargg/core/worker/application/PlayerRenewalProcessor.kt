@@ -1,7 +1,7 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.core.enums.RenewalType
-import com.imstargg.infrastructure.db.core.renewal.RenewalJpaRepository
+import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import org.springframework.stereotype.Component
 import java.time.Clock
 
