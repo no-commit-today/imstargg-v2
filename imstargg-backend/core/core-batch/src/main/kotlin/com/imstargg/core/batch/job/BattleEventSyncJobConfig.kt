@@ -24,7 +24,7 @@ import org.springframework.batch.core.job.parameters.DefaultJobParametersValidat
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
-import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
 import org.springframework.batch.infrastructure.item.Chunk
 import org.springframework.batch.infrastructure.item.ItemWriter
 import org.springframework.context.annotation.Bean
@@ -65,8 +65,7 @@ class BattleEventSyncJobConfig(
     @Bean(STEP_1_NAME)
     @JobScope
     fun battleEventSyncFromRankBattleStep(): Step =
-        StepBuilder(STEP_1_NAME, jobRepository)
-            .chunk<StatsRankBattleEntity, StatsRankBattleEntity>(CHUNK_SIZE)
+        ChunkOrientedStepBuilder<StatsRankBattleEntity, StatsRankBattleEntity>(STEP_1_NAME, jobRepository, CHUNK_SIZE)
             .transactionManager(txManager)
             .reader(battleEventSyncRankBattleReader())
             .writer(battleEventSyncFromRankBattleWriter())
@@ -75,8 +74,7 @@ class BattleEventSyncJobConfig(
     @Bean(STEP_2_NAME)
     @JobScope
     fun battleEventSyncFromResultBattleStep(): Step =
-        StepBuilder(STEP_2_NAME, jobRepository)
-            .chunk<StatsResultBattleEntity, StatsResultBattleEntity>(CHUNK_SIZE)
+        ChunkOrientedStepBuilder<StatsResultBattleEntity, StatsResultBattleEntity>(STEP_2_NAME, jobRepository, CHUNK_SIZE)
             .transactionManager(txManager)
             .reader(battleEventSyncResultBattleReader())
             .writer(battleEventSyncFromResultBattleWriter())
