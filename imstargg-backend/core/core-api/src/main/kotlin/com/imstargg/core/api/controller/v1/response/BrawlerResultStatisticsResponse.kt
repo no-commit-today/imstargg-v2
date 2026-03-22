@@ -3,15 +3,15 @@ package com.imstargg.core.api.controller.v1.response
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 
 data class BrawlerResultStatisticsResponse(
-    val brawlerId: Long,
+    val brawler: BrawlerResponse?,
     val totalBattleCount: Long,
     val winRate: Double,
     val starPlayerRate: Double,
 ) {
     companion object {
-        fun of(statistics: BrawlerResultStatistics) =
+        fun of(statistics: BrawlerResultStatistics, brawler: BrawlerResponse?) =
             BrawlerResultStatisticsResponse(
-                brawlerId = statistics.brawlerId.value,
+                brawler = brawler,
                 totalBattleCount = statistics.totalBattleCount,
                 winRate = statistics.winRate,
                 starPlayerRate = statistics.starPlayerRate,

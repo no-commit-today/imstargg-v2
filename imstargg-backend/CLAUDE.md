@@ -79,6 +79,8 @@ imstargg-backend/
 - **JPA Entity**: allOpen 플러그인 적용 (`@Entity`, `@MappedSuperclass`, `@Embeddable`)
 - **QueryDSL**: KSP 코드 생성 (`infrastructure/db-core`)
 - **Application Layer Repository**: `core-api`의 Service는 JPA Repository를 직접 참조하지 않고, `application` 패키지의 Repository 클래스를 통해 접근. 캐시가 필요한 경우 `*WithCache` 래퍼 사용 (예: `EventRepository` → `EventRepositoryWithCache`)
+- **Domain ID Reference**: 도메인 클래스에서 다른 도메인의 객체는 직접 참조하지 않고 ID로 참조
+- **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 여러 서비스 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출
 
 ### DB & Entity Conventions
 

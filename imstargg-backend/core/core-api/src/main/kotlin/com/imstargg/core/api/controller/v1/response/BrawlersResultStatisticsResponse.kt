@@ -3,14 +3,14 @@ package com.imstargg.core.api.controller.v1.response
 import com.imstargg.core.domain.statistics.BrawlersResultStatistics
 
 data class BrawlersResultStatisticsResponse(
-    val brawlerIds: List<Long>,
+    val brawlers: List<BrawlerResponse?>,
     val totalBattleCount: Long,
     val winRate: Double,
 ) {
     companion object {
-        fun of(statistics: BrawlersResultStatistics) =
+        fun of(statistics: BrawlersResultStatistics, brawlers: List<BrawlerResponse?>) =
             BrawlersResultStatisticsResponse(
-                brawlerIds = statistics.brawlerIds.map { it.value },
+                brawlers = brawlers,
                 totalBattleCount = statistics.totalBattleCount,
                 winRate = statistics.winRate,
             )

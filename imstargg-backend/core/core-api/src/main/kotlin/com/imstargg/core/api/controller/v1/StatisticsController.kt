@@ -7,8 +7,7 @@ import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatistics
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlersRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlersResultStatisticsResponse
-import com.imstargg.core.application.statistics.BattleEventStatisticsService
-import com.imstargg.core.application.statistics.BrawlerStatisticsService
+import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BattleEventBrawlerStatisticsParam
 import com.imstargg.core.domain.statistics.BattleEventBrawlersStatisticsParam
@@ -24,8 +23,7 @@ import java.time.LocalDate
 
 @RestController
 class StatisticsController(
-    private val battleEventStatisticsService: BattleEventStatisticsService,
-    private val brawlerStatisticsService: BrawlerStatisticsService,
+    private val statisticsQueryComposer: StatisticsQueryComposer,
 ) {
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result")
     fun getBattleEventBrawlerResultStatistics(
@@ -34,13 +32,11 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlerResultStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerResultStatistics(
                 BattleEventBrawlerStatisticsParam(BrawlStarsId(eventId), tierRange, startDate, endDate),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlerResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result/duo")
@@ -51,8 +47,8 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlersResultStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerDuoResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerDuoResultStatistics(
                 BattleEventBrawlersStatisticsParam(
                     BrawlStarsId(eventId),
                     BrawlStarsId(brawlerId),
@@ -61,9 +57,7 @@ class StatisticsController(
                     endDate,
                 ),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlersResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result/trio")
@@ -74,8 +68,8 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlersResultStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerTrioResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerTrioResultStatistics(
                 BattleEventBrawlersStatisticsParam(
                     BrawlStarsId(eventId),
                     BrawlStarsId(brawlerId),
@@ -84,9 +78,7 @@ class StatisticsController(
                     endDate,
                 ),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlersResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result/enemy")
@@ -97,8 +89,8 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlerEnemyResultStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerEnemyResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerEnemyResultStatistics(
                 BattleEventBrawlersStatisticsParam(
                     BrawlStarsId(eventId),
                     BrawlStarsId(brawlerId),
@@ -107,9 +99,7 @@ class StatisticsController(
                     endDate,
                 ),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlerEnemyResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/rank")
@@ -119,13 +109,11 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlerRankStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerRankStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerRankStatistics(
                 BattleEventBrawlerStatisticsParam(BrawlStarsId(eventId), tierRange, startDate, endDate),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlerRankStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/rank/duo")
@@ -136,8 +124,8 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlersRankStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerDuoRankStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerDuoRankStatistics(
                 BattleEventBrawlersStatisticsParam(
                     BrawlStarsId(eventId),
                     BrawlStarsId(brawlerId),
@@ -146,9 +134,7 @@ class StatisticsController(
                     endDate,
                 ),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlersRankStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/events/{eventId}/brawler/rank/trio")
@@ -159,8 +145,8 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlersRankStatisticsResponse>> {
-        val statistics =
-            battleEventStatisticsService.getBattleEventBrawlerTrioRankStatistics(
+        val responses =
+            statisticsQueryComposer.getBattleEventBrawlerTrioRankStatistics(
                 BattleEventBrawlersStatisticsParam(
                     BrawlStarsId(eventId),
                     BrawlStarsId(brawlerId),
@@ -169,9 +155,7 @@ class StatisticsController(
                     endDate,
                 ),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlersRankStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/brawler/result")
@@ -180,13 +164,11 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlerResultStatisticsResponse>> {
-        val statistics =
-            brawlerStatisticsService.getBrawlerResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBrawlerResultStatistics(
                 BrawlerStatisticsParam(tierRange, startDate, endDate),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlerResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/daily")
@@ -196,13 +178,11 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlerResultDailyStatisticsResponse>> {
-        val statistics =
-            brawlerStatisticsService.getBrawlerDailyResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBrawlerDailyResultStatistics(
                 BrawlersStatisticsParam(BrawlStarsId(brawlerId), tierRange, startDate, endDate),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlerResultDailyStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/duo")
@@ -212,13 +192,11 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlersResultStatisticsResponse>> {
-        val statistics =
-            brawlerStatisticsService.getBrawlerDuoResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBrawlerDuoResultStatistics(
                 BrawlersStatisticsParam(BrawlStarsId(brawlerId), tierRange, startDate, endDate),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlersResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 
     @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/trio")
@@ -228,12 +206,10 @@ class StatisticsController(
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
     ): ResponseEntity<ListResponse<BrawlersResultStatisticsResponse>> {
-        val statistics =
-            brawlerStatisticsService.getBrawlerTrioResultStatistics(
+        val responses =
+            statisticsQueryComposer.getBrawlerTrioResultStatistics(
                 BrawlersStatisticsParam(BrawlStarsId(brawlerId), tierRange, startDate, endDate),
             )
-        return ResponseEntity.ok(
-            ListResponse(statistics.map { BrawlersResultStatisticsResponse.of(it) }),
-        )
+        return ResponseEntity.ok(ListResponse(responses))
     }
 }

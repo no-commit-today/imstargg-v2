@@ -5,16 +5,16 @@ import java.time.LocalDate
 
 data class BrawlerResultDailyStatisticsResponse(
     val date: LocalDate,
-    val brawlerId: Long,
+    val brawler: BrawlerResponse?,
     val totalBattleCount: Long,
     val winRate: Double,
     val starPlayerRate: Double,
 ) {
     companion object {
-        fun of(statistics: BrawlerResultDailyStatistics) =
+        fun of(statistics: BrawlerResultDailyStatistics, brawler: BrawlerResponse?) =
             BrawlerResultDailyStatisticsResponse(
                 date = statistics.date,
-                brawlerId = statistics.brawlerId.value,
+                brawler = brawler,
                 totalBattleCount = statistics.totalBattleCount,
                 winRate = statistics.winRate,
                 starPlayerRate = statistics.starPlayerRate,
