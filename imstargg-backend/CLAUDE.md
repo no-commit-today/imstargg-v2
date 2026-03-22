@@ -22,8 +22,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 단일 테스트 실행
 ./gradlew :core:core-api:test --tests "com.imstargg.SomeTest"
 
-# 실행 (실행 가능 모듈: core-api, core-worker, core-batch)
+# 실행 (실행 가능 모듈: core-api, core-admin, core-worker, core-batch)
 ./gradlew :core:core-api:bootRun
+./gradlew :core:core-admin:bootRun
 ./gradlew :core:core-worker:bootRun
 ./gradlew :core:core-batch:bootRun
 ```
@@ -47,11 +48,13 @@ docker-compose up -d
 imstargg-backend/
 ├── core/                      # 핵심 도메인 모듈
 │   ├── core-api/             # REST API 서버 (bootJar 실행 가능)
+│   ├── core-admin/           # Vaadin 기반 관리자 UI (bootJar 실행 가능)
 │   ├── core-worker/          # 백그라운드 워커 (bootJar 실행 가능)
 │   ├── core-batch/           # 배치 작업 (bootJar 실행 가능)
 │   └── core-enum/            # 공유 Enum (외부 모듈에서 참조)
 ├── infrastructure/
-│   └── db-core/              # JPA + QueryDSL (MySQL)
+│   ├── db-core/              # JPA + QueryDSL (MySQL)
+│   └── redis-core/           # Redis 캐시/세션
 ├── client/
 │   └── brawlstars-client/    # BrawlStars API 클라이언트 (OpenFeign)
 └── support/
