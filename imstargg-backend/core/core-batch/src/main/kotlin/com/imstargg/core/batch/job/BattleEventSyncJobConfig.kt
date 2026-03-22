@@ -7,9 +7,9 @@ import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.SoloRankSeason
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankEventEntity
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventSoloRankEventJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity
@@ -128,7 +128,7 @@ class BattleEventSyncJobConfig(
                 ?: SoloRankSeason.of(battleAt).also { seasons.add(it) }
     }
 
-    class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
+    open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
         private val alertManager: AlertManager,
         private val battleEventJpaRepository: BattleEventJpaRepository,
         private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
