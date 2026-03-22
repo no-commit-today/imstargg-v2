@@ -11,6 +11,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 
 @Entity
@@ -38,10 +40,9 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
     endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
-    @Column(name = "teammate_brawlstars_id_1", updatable = false, nullable = false)
-    val teammateBrawlStarsId1: Long,
-    @Column(name = "teammate_brawlstars_id_2", updatable = false, nullable = false)
-    val teammateBrawlStarsId2: Long,
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "teammate_brawlstars_ids", columnDefinition = "json", updatable = false, nullable = false)
+    val teammateBrawlStarsIds: List<Long>,
     rankCount1: Long,
     rankCount2: Long,
     rankCount3: Long,
@@ -54,13 +55,17 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
         endAt = endAt,
     ) {
     init {
-        require(teammateBrawlStarsId1 < teammateBrawlStarsId2) {
-            "teammateBrawlStarsId1($teammateBrawlStarsId1)은 teammateBrawlStarsId2($teammateBrawlStarsId2)보다 작아야 합니다."
+        require(teammateBrawlStarsIds.isNotEmpty()) {
+            "teammateBrawlStarsIds는 비어 있을 수 없습니다."
         }
-        require(
-            brawlerBrawlStarsId != teammateBrawlStarsId1 && brawlerBrawlStarsId != teammateBrawlStarsId2,
-        ) {
-            "brawlerBrawlStarsId($brawlerBrawlStarsId)는 teammateBrawlStarsId1($teammateBrawlStarsId1), teammateBrawlStarsId2($teammateBrawlStarsId2)와 달라야 합니다."
+        require(teammateBrawlStarsIds == teammateBrawlStarsIds.sorted()) {
+            "teammateBrawlStarsIds($teammateBrawlStarsIds)는 정렬되어야 합니다."
+        }
+        require(teammateBrawlStarsIds.distinct().size == teammateBrawlStarsIds.size) {
+            "teammateBrawlStarsIds($teammateBrawlStarsIds)에 중복이 있습니다."
+        }
+        require(brawlerBrawlStarsId !in teammateBrawlStarsIds) {
+            "brawlerBrawlStarsId($brawlerBrawlStarsId)는 teammateBrawlStarsIds($teammateBrawlStarsIds)에 포함될 수 없습니다."
         }
     }
 
@@ -86,10 +91,7 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
         protected set
 
     val teamBrawlerBrawlStarsIds: List<Long>
-        get() = listOf(brawlerBrawlStarsId, teammateBrawlStarsId1, teammateBrawlStarsId2).sorted()
-
-    val teammateBrawlStarsIds: List<Long>
-        get() = listOf(teammateBrawlStarsId1, teammateBrawlStarsId2)
+        get() = (teammateBrawlStarsIds + brawlerBrawlStarsId).sorted()
 
     companion object {
         fun create(
@@ -103,12 +105,8 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
             rankCount2: Long,
             rankCount3: Long,
             rankCount4: Long,
-        ): BrawlerTrioBattleRankStatsEntity {
-            require(teammateBrawlStarsIds.size == 2) {
-                "teammateBrawlStarsIds 크기는 2여야 합니다. actual=${teammateBrawlStarsIds.size}"
-            }
-            val sorted = teammateBrawlStarsIds.sorted()
-            return BrawlerTrioBattleRankStatsEntity(
+        ): BrawlerTrioBattleRankStatsEntity =
+            BrawlerTrioBattleRankStatsEntity(
                 eventBrawlStarsId = eventBrawlStarsId,
                 periodType = periodType,
                 tierRange = tierRange,
@@ -116,13 +114,11 @@ class BrawlerTrioBattleRankStatsEntity internal constructor(
                 startAt = startAt,
                 endAt = periodType.endAt(startAt),
                 brawlerBrawlStarsId = brawlerBrawlStarsId,
-                teammateBrawlStarsId1 = sorted[0],
-                teammateBrawlStarsId2 = sorted[1],
+                teammateBrawlStarsIds = teammateBrawlStarsIds.sorted(),
                 rankCount1 = rankCount1,
                 rankCount2 = rankCount2,
                 rankCount3 = rankCount3,
                 rankCount4 = rankCount4,
             )
-        }
     }
 }

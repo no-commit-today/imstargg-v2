@@ -107,8 +107,7 @@ class MonthlyStatsAggregationJobConfig(
                                     entity.eventBrawlStarsId,
                                     entity.tierRange,
                                     entity.brawlerBrawlStarsId,
-                                    entity.teammateBrawlStarsId1,
-                                    entity.teammateBrawlStarsId2,
+                                    entity.teammateBrawlStarsIds,
                                     victorySum,
                                     defeatSum,
                                     drawSum,
@@ -121,8 +120,7 @@ class MonthlyStatsAggregationJobConfig(
                                     entity.eventBrawlStarsId,
                                     entity.tierRange,
                                     entity.brawlerBrawlStarsId,
-                                    entity.teammateBrawlStarsId1,
-                                    entity.teammateBrawlStarsId2,
+                                    entity.teammateBrawlStarsIds,
                                 ).fetch()
 
                         val monthlyEntities =
@@ -133,11 +131,7 @@ class MonthlyStatsAggregationJobConfig(
                                     tierRange = tuple.get(entity.tierRange)!!,
                                     startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
-                                    teammateBrawlStarsIds =
-                                        listOf(
-                                            tuple.get(entity.teammateBrawlStarsId1)!!,
-                                            tuple.get(entity.teammateBrawlStarsId2)!!,
-                                        ),
+                                    teammateBrawlStarsIds = tuple.get(entity.teammateBrawlStarsIds)!!,
                                     victoryCount = tuple.get(victorySum)!!,
                                     defeatCount = tuple.get(defeatSum)!!,
                                     drawCount = tuple.get(drawSum)!!,
@@ -459,8 +453,7 @@ class MonthlyStatsAggregationJobConfig(
                                     entity.eventBrawlStarsId,
                                     entity.tierRange,
                                     entity.brawlerBrawlStarsId,
-                                    entity.teammateBrawlStarsId1,
-                                    entity.teammateBrawlStarsId2,
+                                    entity.teammateBrawlStarsIds,
                                     rank1Sum,
                                     rank2Sum,
                                     rank3Sum,
@@ -474,8 +467,7 @@ class MonthlyStatsAggregationJobConfig(
                                     entity.eventBrawlStarsId,
                                     entity.tierRange,
                                     entity.brawlerBrawlStarsId,
-                                    entity.teammateBrawlStarsId1,
-                                    entity.teammateBrawlStarsId2,
+                                    entity.teammateBrawlStarsIds,
                                 ).fetch()
 
                         val monthlyEntities =
@@ -486,11 +478,7 @@ class MonthlyStatsAggregationJobConfig(
                                     tierRange = tuple.get(entity.tierRange)!!,
                                     startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
-                                    teammateBrawlStarsIds =
-                                        listOf(
-                                            tuple.get(entity.teammateBrawlStarsId1)!!,
-                                            tuple.get(entity.teammateBrawlStarsId2)!!,
-                                        ),
+                                    teammateBrawlStarsIds = tuple.get(entity.teammateBrawlStarsIds)!!,
                                     rankCount1 = tuple.get(rank1Sum)!!,
                                     rankCount2 = tuple.get(rank2Sum)!!,
                                     rankCount3 = tuple.get(rank3Sum)!!,
