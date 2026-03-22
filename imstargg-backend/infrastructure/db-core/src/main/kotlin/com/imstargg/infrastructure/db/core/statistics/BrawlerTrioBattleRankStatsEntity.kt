@@ -1,8 +1,11 @@
 package com.imstargg.infrastructure.db.core.statistics
 
+import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -13,20 +16,23 @@ import java.time.OffsetDateTime
 
 @Entity
 @Table(
-    name = "brawler_team_battle_result_weekly_stats",
+    name = "brawler_trio_battle_rank_stats",
     indexes = [
         Index(
-            name = "ix_brawler_team_battle_result_weekly_stats_1",
-            columnList = "event_brawlstars_id, tier_range, date",
+            name = "ix_brawler_trio_battle_rank_stats_1",
+            columnList = "event_brawlstars_id, period_type, tier_range, date",
         ),
         Index(
-            name = "ix_brawler_team_battle_result_weekly_stats_2",
-            columnList = "tier_range, date, brawler_brawlstars_id",
+            name = "ix_brawler_trio_battle_rank_stats_2",
+            columnList = "event_brawlstars_id, period_type, tier_range, date, brawler_brawlstars_id",
         ),
     ],
 )
-class BrawlerTeamBattleResultWeeklyStatsEntity(
+class BrawlerTrioBattleRankStatsEntity(
     eventBrawlStarsId: Long,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
+    val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
     date: LocalDate,
     startAt: OffsetDateTime,
@@ -37,18 +43,16 @@ class BrawlerTeamBattleResultWeeklyStatsEntity(
     val teammateBrawlStarsId1: Long,
     @Column(name = "teammate_brawlstars_id_2", updatable = false, nullable = false)
     val teammateBrawlStarsId2: Long,
-    victoryCount: Long,
-    defeatCount: Long,
-    drawCount: Long,
-) : BaseBattleResultStatsEntity(
+    rankCount1: Long,
+    rankCount2: Long,
+    rankCount3: Long,
+    rankCount4: Long,
+) : BaseBattleRankStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
         date = date,
         startAt = startAt,
         endAt = endAt,
-        victoryCount = victoryCount,
-        defeatCount = defeatCount,
-        drawCount = drawCount,
     ) {
     init {
         require(teammateBrawlStarsId1 < teammateBrawlStarsId2) {
@@ -63,45 +67,28 @@ class BrawlerTeamBattleResultWeeklyStatsEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "brawler_team_battle_result_weekly_stats_id", nullable = false)
+    @Column(name = "brawler_trio_battle_rank_stats_id", nullable = false)
     val id: Long? = null
+
+    @Column(name = "rank_1_count", nullable = false)
+    var rankCount1: Long = rankCount1
+        protected set
+
+    @Column(name = "rank_2_count", nullable = false)
+    var rankCount2: Long = rankCount2
+        protected set
+
+    @Column(name = "rank_3_count", nullable = false)
+    var rankCount3: Long = rankCount3
+        protected set
+
+    @Column(name = "rank_4_count", nullable = false)
+    var rankCount4: Long = rankCount4
+        protected set
 
     val teamBrawlerBrawlStarsIds: List<Long>
         get() = listOf(brawlerBrawlStarsId, teammateBrawlStarsId1, teammateBrawlStarsId2).sorted()
 
     val teammateBrawlStarsIds: List<Long>
         get() = listOf(teammateBrawlStarsId1, teammateBrawlStarsId2)
-
-    companion object {
-        fun create(
-            eventBrawlStarsId: Long,
-            tierRange: StatsTierRange,
-            date: LocalDate,
-            startAt: OffsetDateTime,
-            endAt: OffsetDateTime,
-            brawlerBrawlStarsId: Long,
-            teammateBrawlStarsIds: List<Long>,
-            victoryCount: Long,
-            defeatCount: Long,
-            drawCount: Long,
-        ): BrawlerTeamBattleResultWeeklyStatsEntity {
-            require(teammateBrawlStarsIds.size == 2) {
-                "teammateBrawlStarsIds 크기는 2여야 합니다. actual=${teammateBrawlStarsIds.size}"
-            }
-            val sorted = teammateBrawlStarsIds.sorted()
-            return BrawlerTeamBattleResultWeeklyStatsEntity(
-                eventBrawlStarsId = eventBrawlStarsId,
-                tierRange = tierRange,
-                date = date,
-                startAt = startAt,
-                endAt = endAt,
-                brawlerBrawlStarsId = brawlerBrawlStarsId,
-                teammateBrawlStarsId1 = sorted[0],
-                teammateBrawlStarsId2 = sorted[1],
-                victoryCount = victoryCount,
-                defeatCount = defeatCount,
-                drawCount = drawCount,
-            )
-        }
-    }
 }

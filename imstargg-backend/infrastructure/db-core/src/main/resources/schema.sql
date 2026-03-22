@@ -430,89 +430,93 @@ create table if not exists brawler_solo_battle_rank_stats
     index ix_brawler_solo_battle_rank_stats (event_brawlstars_id, tier_range, date)
 );
 
--- 주간 브롤러 vs 적 브롤러 전투 결과 통계
-create table if not exists brawler_enemy_battle_result_weekly_stats
+-- 브롤러 vs 적 브롤러 전투 결과 통계
+create table if not exists brawler_enemy_battle_result_stats
 (
-    brawler_enemy_battle_result_weekly_stats_id bigint auto_increment primary key,
-    event_brawlstars_id                        bigint       not null,
-    tier_range                                 varchar(45)  not null,
-    date                                       date         not null,
+    brawler_enemy_battle_result_stats_id bigint auto_increment primary key,
+    event_brawlstars_id                  bigint       not null,
+    period_type                          varchar(25)  not null,
+    tier_range                           varchar(45)  not null,
+    date                                 date         not null,
     start_at                             timestamp(6) not null,
     end_at                               timestamp(6) not null,
-    brawler_brawlstars_id                      bigint       not null,
-    enemy_brawler_brawlstars_id                bigint       not null,
-    victory_count                              bigint       not null,
-    defeat_count                               bigint       not null,
-    draw_count                                 bigint       not null,
-    created_at                                 timestamp(6) not null default current_timestamp(6),
-    updated_at                                 timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_enemy_battle_result_weekly_stats_1 (event_brawlstars_id, tier_range, date),
-    index ix_brawler_enemy_battle_result_weekly_stats_2 (tier_range, date, brawler_brawlstars_id)
+    brawler_brawlstars_id                bigint       not null,
+    enemy_brawler_brawlstars_id          bigint       not null,
+    victory_count                        bigint       not null,
+    defeat_count                         bigint       not null,
+    draw_count                           bigint       not null,
+    created_at                           timestamp(6) not null default current_timestamp(6),
+    updated_at                           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_brawler_enemy_battle_result_stats_1 (event_brawlstars_id, period_type, tier_range, date),
+    index ix_brawler_enemy_battle_result_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
 );
 
--- 주간 브롤러 팀(3인) 전투 결과 통계
-create table if not exists brawler_team_battle_result_weekly_stats
+-- 브롤러 팀(3인) 전투 결과 통계
+create table if not exists brawler_team_battle_result_stats
 (
-    brawler_team_battle_result_weekly_stats_id bigint auto_increment primary key,
-    event_brawlstars_id                       bigint       not null,
-    tier_range                                varchar(45)  not null,
-    date                                      date         not null,
+    brawler_team_battle_result_stats_id bigint auto_increment primary key,
+    event_brawlstars_id                 bigint       not null,
+    period_type                         varchar(25)  not null,
+    tier_range                          varchar(45)  not null,
+    date                                date         not null,
     start_at                            timestamp(6) not null,
     end_at                              timestamp(6) not null,
-    brawler_brawlstars_id                     bigint       not null,
-    teammate_brawlstars_id_1                  bigint       not null,
-    teammate_brawlstars_id_2                  bigint       not null,
-    victory_count                             bigint       not null,
-    defeat_count                              bigint       not null,
-    draw_count                                bigint       not null,
-    created_at                                timestamp(6) not null default current_timestamp(6),
-    updated_at                                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_team_battle_result_weekly_stats_1 (event_brawlstars_id, tier_range, date),
-    index ix_brawler_team_battle_result_weekly_stats_2 (tier_range, date, brawler_brawlstars_id)
+    brawler_brawlstars_id               bigint       not null,
+    teammate_brawlstars_id_1            bigint       not null,
+    teammate_brawlstars_id_2            bigint       not null,
+    victory_count                       bigint       not null,
+    defeat_count                        bigint       not null,
+    draw_count                          bigint       not null,
+    created_at                          timestamp(6) not null default current_timestamp(6),
+    updated_at                          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_brawler_team_battle_result_stats_1 (event_brawlstars_id, period_type, tier_range, date),
+    index ix_brawler_team_battle_result_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
 );
 
--- 주간 브롤러 듀오(2인) 전투 랭크 통계
-create table if not exists brawler_duo_battle_rank_weekly_stats
+-- 브롤러 듀오(2인) 전투 랭크 통계
+create table if not exists brawler_duo_battle_rank_stats
 (
-    brawler_duo_battle_rank_weekly_stats_id bigint auto_increment primary key,
-    event_brawlstars_id                    bigint       not null,
-    tier_range                             varchar(45)  not null,
-    date                                   date         not null,
+    brawler_duo_battle_rank_stats_id bigint auto_increment primary key,
+    event_brawlstars_id              bigint       not null,
+    period_type                      varchar(25)  not null,
+    tier_range                       varchar(45)  not null,
+    date                             date         not null,
     start_at                         timestamp(6) not null,
     end_at                           timestamp(6) not null,
-    brawler_brawlstars_id                  bigint       not null,
-    teammate_brawlstars_id                 bigint       not null,
-    rank_1_count                           bigint       not null,
-    rank_2_count                           bigint       not null,
-    rank_3_count                           bigint       not null,
-    rank_4_count                           bigint       not null,
-    rank_5_count                           bigint       not null,
-    created_at                             timestamp(6) not null default current_timestamp(6),
-    updated_at                             timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_duo_battle_rank_weekly_stats_1 (event_brawlstars_id, tier_range, date),
-    index ix_brawler_duo_battle_rank_weekly_stats_2 (event_brawlstars_id, tier_range, date, brawler_brawlstars_id)
+    brawler_brawlstars_id            bigint       not null,
+    teammate_brawlstars_id           bigint       not null,
+    rank_1_count                     bigint       not null,
+    rank_2_count                     bigint       not null,
+    rank_3_count                     bigint       not null,
+    rank_4_count                     bigint       not null,
+    rank_5_count                     bigint       not null,
+    created_at                       timestamp(6) not null default current_timestamp(6),
+    updated_at                       timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_brawler_duo_battle_rank_stats_1 (event_brawlstars_id, period_type, tier_range, date),
+    index ix_brawler_duo_battle_rank_stats_2 (event_brawlstars_id, period_type, tier_range, date, brawler_brawlstars_id)
 );
 
--- 주간 브롤러 트리오(3인) 전투 랭크 통계
-create table if not exists brawler_trio_battle_rank_weekly_stats
+-- 브롤러 트리오(3인) 전투 랭크 통계
+create table if not exists brawler_trio_battle_rank_stats
 (
-    brawler_trio_battle_rank_weekly_stats_id bigint auto_increment primary key,
-    event_brawlstars_id                     bigint       not null,
-    tier_range                              varchar(45)  not null,
-    date                                    date         not null,
+    brawler_trio_battle_rank_stats_id bigint auto_increment primary key,
+    event_brawlstars_id               bigint       not null,
+    period_type                       varchar(25)  not null,
+    tier_range                        varchar(45)  not null,
+    date                              date         not null,
     start_at                          timestamp(6) not null,
     end_at                            timestamp(6) not null,
-    brawler_brawlstars_id                   bigint       not null,
-    teammate_brawlstars_id_1                bigint       not null,
-    teammate_brawlstars_id_2                bigint       not null,
-    rank_1_count                            bigint       not null,
-    rank_2_count                            bigint       not null,
-    rank_3_count                            bigint       not null,
-    rank_4_count                            bigint       not null,
-    created_at                              timestamp(6) not null default current_timestamp(6),
-    updated_at                              timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_trio_battle_rank_weekly_stats_1 (event_brawlstars_id, tier_range, date),
-    index ix_brawler_trio_battle_rank_weekly_stats_2 (event_brawlstars_id, tier_range, date, brawler_brawlstars_id)
+    brawler_brawlstars_id             bigint       not null,
+    teammate_brawlstars_id_1          bigint       not null,
+    teammate_brawlstars_id_2          bigint       not null,
+    rank_1_count                      bigint       not null,
+    rank_2_count                      bigint       not null,
+    rank_3_count                      bigint       not null,
+    rank_4_count                      bigint       not null,
+    created_at                        timestamp(6) not null default current_timestamp(6),
+    updated_at                        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_brawler_trio_battle_rank_stats_1 (event_brawlstars_id, period_type, tier_range, date),
+    index ix_brawler_trio_battle_rank_stats_2 (event_brawlstars_id, period_type, tier_range, date, brawler_brawlstars_id)
 );
 
 create table if not exists battle_event_rotation_item

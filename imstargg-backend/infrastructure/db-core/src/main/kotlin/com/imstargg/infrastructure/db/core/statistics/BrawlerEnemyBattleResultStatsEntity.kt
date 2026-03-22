@@ -1,8 +1,11 @@
 package com.imstargg.infrastructure.db.core.statistics
 
+import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -13,20 +16,23 @@ import java.time.OffsetDateTime
 
 @Entity
 @Table(
-    name = "brawler_enemy_battle_result_weekly_stats",
+    name = "brawler_enemy_battle_result_stats",
     indexes = [
         Index(
-            name = "ix_brawler_enemy_battle_result_weekly_stats_1",
-            columnList = "event_brawlstars_id, tier_range, date",
+            name = "ix_brawler_enemy_battle_result_stats_1",
+            columnList = "event_brawlstars_id, period_type, tier_range, date",
         ),
         Index(
-            name = "ix_brawler_enemy_battle_result_weekly_stats_2",
-            columnList = "tier_range, date, brawler_brawlstars_id",
+            name = "ix_brawler_enemy_battle_result_stats_2",
+            columnList = "period_type, tier_range, date, brawler_brawlstars_id",
         ),
     ],
 )
-class BrawlerEnemyBattleResultWeeklyStatsEntity(
+class BrawlerEnemyBattleResultStatsEntity(
     eventBrawlStarsId: Long,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
+    val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
     date: LocalDate,
     startAt: OffsetDateTime,
@@ -56,6 +62,6 @@ class BrawlerEnemyBattleResultWeeklyStatsEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "brawler_enemy_battle_result_weekly_stats_id", nullable = false)
+    @Column(name = "brawler_enemy_battle_result_stats_id", nullable = false)
     val id: Long? = null
 }
