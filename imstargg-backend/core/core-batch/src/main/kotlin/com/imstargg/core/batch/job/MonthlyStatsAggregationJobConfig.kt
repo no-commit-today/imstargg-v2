@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.YearMonth
+import java.time.ZoneOffset
 
 @Configuration
 class MonthlyStatsAggregationJobConfig(
@@ -75,6 +76,7 @@ class MonthlyStatsAggregationJobConfig(
                 val yearMonth = YearMonth.from(date)
                 val startDate = yearMonth.atDay(1)
                 val endDate = yearMonth.atEndOfMonth()
+                val monthlyStartAt = startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
                 val entity = brawlerTeamBattleResultStatsEntity
                 val entityManager = entityManagerFactory.createEntityManager()
 
@@ -98,8 +100,6 @@ class MonthlyStatsAggregationJobConfig(
                         val victorySum = entity.victoryCount.longSum()
                         val defeatSum = entity.defeatCount.longSum()
                         val drawSum = entity.drawCount.longSum()
-                        val minStartAt = entity.startAt.min()
-                        val maxEndAt = entity.endAt.max()
 
                         val aggregated =
                             queryFactory
@@ -112,8 +112,6 @@ class MonthlyStatsAggregationJobConfig(
                                     victorySum,
                                     defeatSum,
                                     drawSum,
-                                    minStartAt,
-                                    maxEndAt,
                                 ).from(entity)
                                 .where(
                                     entity.periodType.eq(StatsPeriodType.WEEKLY),
@@ -129,16 +127,17 @@ class MonthlyStatsAggregationJobConfig(
 
                         val monthlyEntities =
                             aggregated.map { tuple ->
-                                BrawlerTeamBattleResultStatsEntity(
+                                BrawlerTeamBattleResultStatsEntity.create(
                                     eventBrawlStarsId = tuple.get(entity.eventBrawlStarsId)!!,
                                     periodType = StatsPeriodType.MONTHLY,
                                     tierRange = tuple.get(entity.tierRange)!!,
-                                    date = startDate,
-                                    startAt = tuple.get(minStartAt)!!,
-                                    endAt = tuple.get(maxEndAt)!!,
+                                    startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
-                                    teammateBrawlStarsId1 = tuple.get(entity.teammateBrawlStarsId1)!!,
-                                    teammateBrawlStarsId2 = tuple.get(entity.teammateBrawlStarsId2)!!,
+                                    teammateBrawlStarsIds =
+                                        listOf(
+                                            tuple.get(entity.teammateBrawlStarsId1)!!,
+                                            tuple.get(entity.teammateBrawlStarsId2)!!,
+                                        ),
                                     victoryCount = tuple.get(victorySum)!!,
                                     defeatCount = tuple.get(defeatSum)!!,
                                     drawCount = tuple.get(drawSum)!!,
@@ -196,6 +195,7 @@ class MonthlyStatsAggregationJobConfig(
                 val yearMonth = YearMonth.from(date)
                 val startDate = yearMonth.atDay(1)
                 val endDate = yearMonth.atEndOfMonth()
+                val monthlyStartAt = startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
                 val entity = brawlerEnemyBattleResultStatsEntity
                 val entityManager = entityManagerFactory.createEntityManager()
 
@@ -219,8 +219,6 @@ class MonthlyStatsAggregationJobConfig(
                         val victorySum = entity.victoryCount.longSum()
                         val defeatSum = entity.defeatCount.longSum()
                         val drawSum = entity.drawCount.longSum()
-                        val minStartAt = entity.startAt.min()
-                        val maxEndAt = entity.endAt.max()
 
                         val aggregated =
                             queryFactory
@@ -232,8 +230,6 @@ class MonthlyStatsAggregationJobConfig(
                                     victorySum,
                                     defeatSum,
                                     drawSum,
-                                    minStartAt,
-                                    maxEndAt,
                                 ).from(entity)
                                 .where(
                                     entity.periodType.eq(StatsPeriodType.WEEKLY),
@@ -248,13 +244,11 @@ class MonthlyStatsAggregationJobConfig(
 
                         val monthlyEntities =
                             aggregated.map { tuple ->
-                                BrawlerEnemyBattleResultStatsEntity(
+                                BrawlerEnemyBattleResultStatsEntity.create(
                                     eventBrawlStarsId = tuple.get(entity.eventBrawlStarsId)!!,
                                     periodType = StatsPeriodType.MONTHLY,
                                     tierRange = tuple.get(entity.tierRange)!!,
-                                    date = startDate,
-                                    startAt = tuple.get(minStartAt)!!,
-                                    endAt = tuple.get(maxEndAt)!!,
+                                    startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
                                     enemyBrawlerBrawlStarsId = tuple.get(entity.enemyBrawlerBrawlStarsId)!!,
                                     victoryCount = tuple.get(victorySum)!!,
@@ -314,6 +308,7 @@ class MonthlyStatsAggregationJobConfig(
                 val yearMonth = YearMonth.from(date)
                 val startDate = yearMonth.atDay(1)
                 val endDate = yearMonth.atEndOfMonth()
+                val monthlyStartAt = startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
                 val entity = brawlerDuoBattleRankStatsEntity
                 val entityManager = entityManagerFactory.createEntityManager()
 
@@ -339,8 +334,6 @@ class MonthlyStatsAggregationJobConfig(
                         val rank3Sum = entity.rankCount3.longSum()
                         val rank4Sum = entity.rankCount4.longSum()
                         val rank5Sum = entity.rankCount5.longSum()
-                        val minStartAt = entity.startAt.min()
-                        val maxEndAt = entity.endAt.max()
 
                         val aggregated =
                             queryFactory
@@ -354,8 +347,6 @@ class MonthlyStatsAggregationJobConfig(
                                     rank3Sum,
                                     rank4Sum,
                                     rank5Sum,
-                                    minStartAt,
-                                    maxEndAt,
                                 ).from(entity)
                                 .where(
                                     entity.periodType.eq(StatsPeriodType.WEEKLY),
@@ -370,13 +361,11 @@ class MonthlyStatsAggregationJobConfig(
 
                         val monthlyEntities =
                             aggregated.map { tuple ->
-                                BrawlerDuoBattleRankStatsEntity(
+                                BrawlerDuoBattleRankStatsEntity.create(
                                     eventBrawlStarsId = tuple.get(entity.eventBrawlStarsId)!!,
                                     periodType = StatsPeriodType.MONTHLY,
                                     tierRange = tuple.get(entity.tierRange)!!,
-                                    date = startDate,
-                                    startAt = tuple.get(minStartAt)!!,
-                                    endAt = tuple.get(maxEndAt)!!,
+                                    startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
                                     teammateBrawlStarsId = tuple.get(entity.teammateBrawlStarsId)!!,
                                     rankCount1 = tuple.get(rank1Sum)!!,
@@ -438,6 +427,7 @@ class MonthlyStatsAggregationJobConfig(
                 val yearMonth = YearMonth.from(date)
                 val startDate = yearMonth.atDay(1)
                 val endDate = yearMonth.atEndOfMonth()
+                val monthlyStartAt = startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
                 val entity = brawlerTrioBattleRankStatsEntity
                 val entityManager = entityManagerFactory.createEntityManager()
 
@@ -462,8 +452,6 @@ class MonthlyStatsAggregationJobConfig(
                         val rank2Sum = entity.rankCount2.longSum()
                         val rank3Sum = entity.rankCount3.longSum()
                         val rank4Sum = entity.rankCount4.longSum()
-                        val minStartAt = entity.startAt.min()
-                        val maxEndAt = entity.endAt.max()
 
                         val aggregated =
                             queryFactory
@@ -477,8 +465,6 @@ class MonthlyStatsAggregationJobConfig(
                                     rank2Sum,
                                     rank3Sum,
                                     rank4Sum,
-                                    minStartAt,
-                                    maxEndAt,
                                 ).from(entity)
                                 .where(
                                     entity.periodType.eq(StatsPeriodType.WEEKLY),
@@ -494,16 +480,17 @@ class MonthlyStatsAggregationJobConfig(
 
                         val monthlyEntities =
                             aggregated.map { tuple ->
-                                BrawlerTrioBattleRankStatsEntity(
+                                BrawlerTrioBattleRankStatsEntity.create(
                                     eventBrawlStarsId = tuple.get(entity.eventBrawlStarsId)!!,
                                     periodType = StatsPeriodType.MONTHLY,
                                     tierRange = tuple.get(entity.tierRange)!!,
-                                    date = startDate,
-                                    startAt = tuple.get(minStartAt)!!,
-                                    endAt = tuple.get(maxEndAt)!!,
+                                    startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
-                                    teammateBrawlStarsId1 = tuple.get(entity.teammateBrawlStarsId1)!!,
-                                    teammateBrawlStarsId2 = tuple.get(entity.teammateBrawlStarsId2)!!,
+                                    teammateBrawlStarsIds =
+                                        listOf(
+                                            tuple.get(entity.teammateBrawlStarsId1)!!,
+                                            tuple.get(entity.teammateBrawlStarsId2)!!,
+                                        ),
                                     rankCount1 = tuple.get(rank1Sum)!!,
                                     rankCount2 = tuple.get(rank2Sum)!!,
                                     rankCount3 = tuple.get(rank3Sum)!!,

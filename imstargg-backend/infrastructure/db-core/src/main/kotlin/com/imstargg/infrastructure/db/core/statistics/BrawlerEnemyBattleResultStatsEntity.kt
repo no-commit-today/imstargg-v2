@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Entity
@@ -28,13 +27,13 @@ import java.time.OffsetDateTime
         ),
     ],
 )
-class BrawlerEnemyBattleResultStatsEntity(
+class BrawlerEnemyBattleResultStatsEntity internal constructor(
     eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
-    date: LocalDate,
+    date: java.time.LocalDate,
     startAt: OffsetDateTime,
     endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
@@ -64,4 +63,30 @@ class BrawlerEnemyBattleResultStatsEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_enemy_battle_result_stats_id", nullable = false)
     val id: Long? = null
+
+    companion object {
+        fun create(
+            eventBrawlStarsId: Long,
+            periodType: StatsPeriodType,
+            tierRange: StatsTierRange,
+            startAt: OffsetDateTime,
+            brawlerBrawlStarsId: Long,
+            enemyBrawlerBrawlStarsId: Long,
+            victoryCount: Long,
+            defeatCount: Long,
+            drawCount: Long,
+        ) = BrawlerEnemyBattleResultStatsEntity(
+            eventBrawlStarsId = eventBrawlStarsId,
+            periodType = periodType,
+            tierRange = tierRange,
+            date = periodType.dateOf(startAt),
+            startAt = startAt,
+            endAt = periodType.endAt(startAt),
+            brawlerBrawlStarsId = brawlerBrawlStarsId,
+            enemyBrawlerBrawlStarsId = enemyBrawlerBrawlStarsId,
+            victoryCount = victoryCount,
+            defeatCount = defeatCount,
+            drawCount = drawCount,
+        )
+    }
 }

@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Entity
@@ -28,13 +27,13 @@ import java.time.OffsetDateTime
         ),
     ],
 )
-class BrawlerTrioBattleRankStatsEntity(
+class BrawlerTrioBattleRankStatsEntity internal constructor(
     eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
-    date: LocalDate,
+    date: java.time.LocalDate,
     startAt: OffsetDateTime,
     endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
@@ -91,4 +90,39 @@ class BrawlerTrioBattleRankStatsEntity(
 
     val teammateBrawlStarsIds: List<Long>
         get() = listOf(teammateBrawlStarsId1, teammateBrawlStarsId2)
+
+    companion object {
+        fun create(
+            eventBrawlStarsId: Long,
+            periodType: StatsPeriodType,
+            tierRange: StatsTierRange,
+            startAt: OffsetDateTime,
+            brawlerBrawlStarsId: Long,
+            teammateBrawlStarsIds: List<Long>,
+            rankCount1: Long,
+            rankCount2: Long,
+            rankCount3: Long,
+            rankCount4: Long,
+        ): BrawlerTrioBattleRankStatsEntity {
+            require(teammateBrawlStarsIds.size == 2) {
+                "teammateBrawlStarsIds 크기는 2여야 합니다. actual=${teammateBrawlStarsIds.size}"
+            }
+            val sorted = teammateBrawlStarsIds.sorted()
+            return BrawlerTrioBattleRankStatsEntity(
+                eventBrawlStarsId = eventBrawlStarsId,
+                periodType = periodType,
+                tierRange = tierRange,
+                date = periodType.dateOf(startAt),
+                startAt = startAt,
+                endAt = periodType.endAt(startAt),
+                brawlerBrawlStarsId = brawlerBrawlStarsId,
+                teammateBrawlStarsId1 = sorted[0],
+                teammateBrawlStarsId2 = sorted[1],
+                rankCount1 = rankCount1,
+                rankCount2 = rankCount2,
+                rankCount3 = rankCount3,
+                rankCount4 = rankCount4,
+            )
+        }
+    }
 }

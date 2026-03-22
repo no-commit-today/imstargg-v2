@@ -26,6 +26,12 @@ abstract class BaseBattleResultStatsEntity(
     defeatCount: Long,
     drawCount: Long,
 ) : BaseTimeEntity() {
+    init {
+        require(startAt.isBefore(endAt)) {
+            "startAt($startAt)은 endAt($endAt)보다 이전이어야 합니다."
+        }
+    }
+
     @Column(name = "victory_count", nullable = false)
     var victoryCount: Long = victoryCount
         protected set

@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Entity
@@ -28,13 +27,13 @@ import java.time.OffsetDateTime
         ),
     ],
 )
-class BrawlerDuoBattleRankStatsEntity(
+class BrawlerDuoBattleRankStatsEntity internal constructor(
     eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
-    date: LocalDate,
+    date: java.time.LocalDate,
     startAt: OffsetDateTime,
     endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
@@ -86,4 +85,34 @@ class BrawlerDuoBattleRankStatsEntity(
 
     val duoBrawlerBrawlStarsIds: List<Long>
         get() = listOf(brawlerBrawlStarsId, teammateBrawlStarsId).sorted()
+
+    companion object {
+        fun create(
+            eventBrawlStarsId: Long,
+            periodType: StatsPeriodType,
+            tierRange: StatsTierRange,
+            startAt: OffsetDateTime,
+            brawlerBrawlStarsId: Long,
+            teammateBrawlStarsId: Long,
+            rankCount1: Long,
+            rankCount2: Long,
+            rankCount3: Long,
+            rankCount4: Long,
+            rankCount5: Long,
+        ) = BrawlerDuoBattleRankStatsEntity(
+            eventBrawlStarsId = eventBrawlStarsId,
+            periodType = periodType,
+            tierRange = tierRange,
+            date = periodType.dateOf(startAt),
+            startAt = startAt,
+            endAt = periodType.endAt(startAt),
+            brawlerBrawlStarsId = brawlerBrawlStarsId,
+            teammateBrawlStarsId = teammateBrawlStarsId,
+            rankCount1 = rankCount1,
+            rankCount2 = rankCount2,
+            rankCount3 = rankCount3,
+            rankCount4 = rankCount4,
+            rankCount5 = rankCount5,
+        )
+    }
 }

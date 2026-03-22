@@ -22,4 +22,10 @@ abstract class BaseBattleRankStatsEntity(
     val startAt: OffsetDateTime,
     @Column(name = "end_at", updatable = false, nullable = false)
     val endAt: OffsetDateTime,
-) : BaseTimeEntity()
+) : BaseTimeEntity() {
+    init {
+        require(startAt.isBefore(endAt)) {
+            "startAt($startAt)은 endAt($endAt)보다 이전이어야 합니다."
+        }
+    }
+}

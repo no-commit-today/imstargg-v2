@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Entity
@@ -28,13 +27,13 @@ import java.time.OffsetDateTime
         ),
     ],
 )
-class BrawlerTeamBattleResultStatsEntity(
+class BrawlerTeamBattleResultStatsEntity internal constructor(
     eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
-    date: LocalDate,
+    date: java.time.LocalDate,
     startAt: OffsetDateTime,
     endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
@@ -83,9 +82,7 @@ class BrawlerTeamBattleResultStatsEntity(
             eventBrawlStarsId: Long,
             periodType: StatsPeriodType,
             tierRange: StatsTierRange,
-            date: LocalDate,
             startAt: OffsetDateTime,
-            endAt: OffsetDateTime,
             brawlerBrawlStarsId: Long,
             teammateBrawlStarsIds: List<Long>,
             victoryCount: Long,
@@ -100,9 +97,9 @@ class BrawlerTeamBattleResultStatsEntity(
                 eventBrawlStarsId = eventBrawlStarsId,
                 periodType = periodType,
                 tierRange = tierRange,
-                date = date,
+                date = periodType.dateOf(startAt),
                 startAt = startAt,
-                endAt = endAt,
+                endAt = periodType.endAt(startAt),
                 brawlerBrawlStarsId = brawlerBrawlStarsId,
                 teammateBrawlStarsId1 = sorted[0],
                 teammateBrawlStarsId2 = sorted[1],
