@@ -23,7 +23,7 @@ abstract class BaseBattleResultStatsEntity(
     val startAt: OffsetDateTime,
     @Column(name = "end_at", updatable = false, nullable = false)
     val endAt: OffsetDateTime,
-    resultCount: ResultCountEmbedded,
+    @Embedded val resultCount: ResultCountEmbedded,
 ) : BaseTimeEntity() {
     init {
         require(startAt.isBefore(endAt)) {
@@ -31,6 +31,4 @@ abstract class BaseBattleResultStatsEntity(
         }
     }
 
-    @Embedded
-    val resultCount: ResultCountEmbedded = resultCount
 }

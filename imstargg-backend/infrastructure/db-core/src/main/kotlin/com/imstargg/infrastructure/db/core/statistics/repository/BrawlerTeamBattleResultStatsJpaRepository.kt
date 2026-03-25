@@ -21,10 +21,4 @@ interface BrawlerTeamBattleResultStatsJpaRepository : JpaRepository<BrawlerTeamB
         date: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultStatsEntity>
-
-    fun findAllByPeriodTypeAndDateBetween(
-        periodType: StatsPeriodType,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): List<BrawlerTeamBattleResultStatsEntity>
 }

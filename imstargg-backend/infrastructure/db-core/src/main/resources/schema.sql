@@ -408,8 +408,8 @@ create table if not exists brawler_enemy_battle_result_stats
     draw_count                           bigint       not null,
     created_at                           timestamp(6) not null default current_timestamp(6),
     updated_at                           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_enemy_battle_result_stats_1 (event_brawlstars_id, period_type, tier_range, date),
-    index ix_brawler_enemy_battle_result_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
+    index ix_brawler_enemy_battle_result_stats_1 (event_brawlstars_id, tier_range, period_type, date),
+    index ix_brawler_enemy_battle_result_stats_2 (brawler_brawlstars_id, tier_range, period_type, date)
 );
 
 -- 브롤러 팀(3인) 전투 결과 통계
@@ -429,8 +429,8 @@ create table if not exists brawler_team_battle_result_stats
     draw_count                          bigint       not null,
     created_at                          timestamp(6) not null default current_timestamp(6),
     updated_at                          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_team_battle_result_stats_1 (event_brawlstars_id, period_type, tier_range, date),
-    index ix_brawler_team_battle_result_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
+    index ix_brawler_team_battle_result_stats_1 (event_brawlstars_id, tier_range, period_type, date),
+    index ix_brawler_team_battle_result_stats_2 (brawler_brawlstars_id, tier_range, period_type, date)
 );
 
 -- 브롤러 팀(듀오/트리오) 전투 랭크 통계
@@ -448,8 +448,8 @@ create table if not exists brawler_team_battle_rank_stats
     rank_counts                       json         not null,
     created_at                        timestamp(6) not null default current_timestamp(6),
     updated_at                        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_team_battle_rank_stats_1 (event_brawlstars_id, period_type, tier_range, date),
-    index ix_brawler_team_battle_rank_stats_2 (period_type, tier_range, date, brawler_brawlstars_id)
+    index ix_brawler_team_battle_rank_stats_1 (event_brawlstars_id, tier_range, period_type, date),
+    index ix_brawler_team_battle_rank_stats_2 (brawler_brawlstars_id, tier_range, period_type, date)
 );
 
 create table if not exists battle_event_rotation_item

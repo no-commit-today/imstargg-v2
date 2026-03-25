@@ -22,11 +22,11 @@ import java.time.OffsetDateTime
     indexes = [
         Index(
             name = "ix_brawler_team_battle_rank_stats_1",
-            columnList = "event_brawlstars_id, period_type, tier_range, date",
+            columnList = "event_brawlstars_id, tier_range, period_type, date",
         ),
         Index(
             name = "ix_brawler_team_battle_rank_stats_2",
-            columnList = "period_type, tier_range, date, brawler_brawlstars_id",
+            columnList = "brawler_brawlstars_id, tier_range, period_type, date",
         ),
     ],
 )
