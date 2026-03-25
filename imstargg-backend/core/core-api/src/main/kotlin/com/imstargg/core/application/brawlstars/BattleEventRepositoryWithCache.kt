@@ -35,6 +35,6 @@ class BattleEventRepositoryWithCache(
 
     fun findAllSoloRankEventBrawlStarsIds(soloRankSeasonKey: String): List<BrawlStarsId> =
         battleEventSoloRankEventJpaRepository
-            .findBySoloRankSeasonKey(soloRankSeasonKey)
+            .findAllBySoloRankSeasonKey(soloRankSeasonKey)
             .map { BrawlStarsId(it.eventBrawlStarsId) }
 }

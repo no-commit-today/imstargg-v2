@@ -228,7 +228,7 @@ class BattleEventSyncJobConfig(
                 val existingIds =
                     existingSoloRankEventIds.getOrPut(seasonKey) {
                         battleEventSoloRankEventJpaRepository
-                            .findBySoloRankSeasonKey(seasonKey)
+                            .findAllBySoloRankSeasonKey(seasonKey)
                             .map { it.eventBrawlStarsId }
                             .toMutableSet()
                     }

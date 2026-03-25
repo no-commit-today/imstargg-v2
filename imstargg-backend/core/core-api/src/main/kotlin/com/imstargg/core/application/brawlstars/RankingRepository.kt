@@ -41,7 +41,7 @@ class RankingRepository(
 
         val latestItems =
             playerRankingItemJpaRepository
-                .findByPlayerRankingId(latestRanking.id!!)
+                .findAllByPlayerRankingId(latestRanking.id!!)
 
         val previousRanking =
             playerRankingJpaRepository
@@ -53,7 +53,7 @@ class RankingRepository(
         val previousRankMap =
             previousRanking?.id?.let { previousId ->
                 playerRankingItemJpaRepository
-                    .findByPlayerRankingId(previousId)
+                    .findAllByPlayerRankingId(previousId)
                     .associate { it.player.brawlStarsTag to it.rank }
             } ?: emptyMap()
 
@@ -75,7 +75,7 @@ class RankingRepository(
 
         val latestItems =
             brawlerRankingItemJpaRepository
-                .findByBrawlerRankingId(latestRanking.id!!)
+                .findAllByBrawlerRankingId(latestRanking.id!!)
 
         val previousRanking =
             brawlerRankingJpaRepository
@@ -88,7 +88,7 @@ class RankingRepository(
         val previousRankMap =
             previousRanking?.id?.let { previousId ->
                 brawlerRankingItemJpaRepository
-                    .findByBrawlerRankingId(previousId)
+                    .findAllByBrawlerRankingId(previousId)
                     .associate { it.player.brawlStarsTag to it.rank }
             } ?: emptyMap()
 
@@ -105,7 +105,7 @@ class RankingRepository(
 
         val latestItems =
             clubRankingItemJpaRepository
-                .findByClubRankingId(latestRanking.id!!)
+                .findAllByClubRankingId(latestRanking.id!!)
 
         val previousRanking =
             clubRankingJpaRepository
@@ -117,7 +117,7 @@ class RankingRepository(
         val previousRankMap =
             previousRanking?.id?.let { previousId ->
                 clubRankingItemJpaRepository
-                    .findByClubRankingId(previousId)
+                    .findAllByClubRankingId(previousId)
                     .associate { it.brawlStarsTag to it.rank }
             } ?: emptyMap()
 

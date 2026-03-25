@@ -4,5 +4,5 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingItemEnt
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface ClubRankingItemJpaRepository : JpaRepository<ClubRankingItemEntity, Long> {
-    fun findByClubRankingId(clubRankingId: Long): List<ClubRankingItemEntity>
+    fun findAllByClubRankingId(clubRankingId: Long): List<ClubRankingItemEntity>
 }

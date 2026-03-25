@@ -4,5 +4,5 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankE
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface BattleEventSoloRankEventJpaRepository : JpaRepository<BattleEventSoloRankEventEntity, Long> {
-    fun findBySoloRankSeasonKey(soloRankSeasonKey: String): List<BattleEventSoloRankEventEntity>
+    fun findAllBySoloRankSeasonKey(soloRankSeasonKey: String): List<BattleEventSoloRankEventEntity>
 }

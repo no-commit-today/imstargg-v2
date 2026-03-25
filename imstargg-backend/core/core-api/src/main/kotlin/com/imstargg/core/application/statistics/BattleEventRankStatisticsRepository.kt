@@ -26,7 +26,7 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlerRankCount> {
         val entities =
             soloBattleRankJpaRepository
-                .findByEventBrawlStarsIdAndTierRangeAndDateBetween(eventId.value, tierRange, startDate, endDate)
+                .findAllByEventBrawlStarsIdAndTierRangeAndDateBetween(eventId.value, tierRange, startDate, endDate)
 
         return entities
             .groupBy { it.brawlerBrawlStarsId }
