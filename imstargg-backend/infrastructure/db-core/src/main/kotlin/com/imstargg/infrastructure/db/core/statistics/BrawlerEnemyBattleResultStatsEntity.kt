@@ -40,18 +40,14 @@ class BrawlerEnemyBattleResultStatsEntity internal constructor(
     val brawlerBrawlStarsId: Long,
     @Column(name = "enemy_brawler_brawlstars_id", updatable = false, nullable = false)
     val enemyBrawlerBrawlStarsId: Long,
-    victoryCount: Long,
-    defeatCount: Long,
-    drawCount: Long,
+    resultCount: ResultCountEmbedded,
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
         date = date,
         startAt = startAt,
         endAt = endAt,
-        victoryCount = victoryCount,
-        defeatCount = defeatCount,
-        drawCount = drawCount,
+        resultCount = resultCount,
     ) {
     init {
         require(brawlerBrawlStarsId != enemyBrawlerBrawlStarsId) {
@@ -72,9 +68,7 @@ class BrawlerEnemyBattleResultStatsEntity internal constructor(
             startAt: OffsetDateTime,
             brawlerBrawlStarsId: Long,
             enemyBrawlerBrawlStarsId: Long,
-            victoryCount: Long,
-            defeatCount: Long,
-            drawCount: Long,
+            resultCount: ResultCountEmbedded,
         ) = BrawlerEnemyBattleResultStatsEntity(
             eventBrawlStarsId = eventBrawlStarsId,
             periodType = periodType,
@@ -84,9 +78,7 @@ class BrawlerEnemyBattleResultStatsEntity internal constructor(
             endAt = periodType.endAt(startAt),
             brawlerBrawlStarsId = brawlerBrawlStarsId,
             enemyBrawlerBrawlStarsId = enemyBrawlerBrawlStarsId,
-            victoryCount = victoryCount,
-            defeatCount = defeatCount,
-            drawCount = drawCount,
+            resultCount = resultCount,
         )
     }
 }

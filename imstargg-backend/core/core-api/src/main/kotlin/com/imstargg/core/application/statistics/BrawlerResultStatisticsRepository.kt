@@ -88,7 +88,7 @@ class BrawlerResultStatisticsRepository(
         return entities.map {
             BrawlersResultCount(
                 brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
-                resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
+                resultCount = ResultCount(it.resultCount.victoryCount, it.resultCount.defeatCount, it.resultCount.drawCount),
             )
         }
     }

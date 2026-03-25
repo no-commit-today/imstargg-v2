@@ -3,6 +3,7 @@ package com.imstargg.infrastructure.db.core.statistics
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.MappedSuperclass
@@ -22,9 +23,7 @@ abstract class BaseBattleResultStatsEntity(
     val startAt: OffsetDateTime,
     @Column(name = "end_at", updatable = false, nullable = false)
     val endAt: OffsetDateTime,
-    victoryCount: Long,
-    defeatCount: Long,
-    drawCount: Long,
+    resultCount: ResultCountEmbedded,
 ) : BaseTimeEntity() {
     init {
         require(startAt.isBefore(endAt)) {
@@ -32,15 +31,6 @@ abstract class BaseBattleResultStatsEntity(
         }
     }
 
-    @Column(name = "victory_count", nullable = false)
-    var victoryCount: Long = victoryCount
-        protected set
-
-    @Column(name = "defeat_count", nullable = false)
-    var defeatCount: Long = defeatCount
-        protected set
-
-    @Column(name = "draw_count", nullable = false)
-    var drawCount: Long = drawCount
-        protected set
+    @Embedded
+    val resultCount: ResultCountEmbedded = resultCount
 }

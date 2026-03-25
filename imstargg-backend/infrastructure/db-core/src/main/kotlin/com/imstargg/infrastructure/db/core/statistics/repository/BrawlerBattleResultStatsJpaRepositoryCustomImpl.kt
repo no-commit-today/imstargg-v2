@@ -20,9 +20,9 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
         endDate: LocalDate,
     ): List<BrawlerBattleResultAggregateProjection> {
         val entity = brawlerBattleResultStatsEntity
-        val victorySum = entity.victoryCount.longSum()
-        val defeatSum = entity.defeatCount.longSum()
-        val drawSum = entity.drawCount.longSum()
+        val victorySum = entity.resultCount.victoryCount.longSum()
+        val defeatSum = entity.resultCount.defeatCount.longSum()
+        val drawSum = entity.resultCount.drawCount.longSum()
         val starPlayerSum = entity.starPlayerCount.longSum()
 
         return queryFactory
@@ -56,9 +56,9 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
         endDate: LocalDate,
     ): List<BrawlerBattleResultDailyAggregateProjection> {
         val entity = brawlerBattleResultStatsEntity
-        val victorySum = entity.victoryCount.longSum()
-        val defeatSum = entity.defeatCount.longSum()
-        val drawSum = entity.drawCount.longSum()
+        val victorySum = entity.resultCount.victoryCount.longSum()
+        val defeatSum = entity.resultCount.defeatCount.longSum()
+        val drawSum = entity.resultCount.drawCount.longSum()
         val starPlayerSum = entity.starPlayerCount.longSum()
 
         return queryFactory

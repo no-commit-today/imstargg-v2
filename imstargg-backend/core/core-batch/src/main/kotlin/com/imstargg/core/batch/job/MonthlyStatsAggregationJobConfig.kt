@@ -10,6 +10,7 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultSta
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsEntity.Companion.brawlerTeamBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.dsl.NumberExpression
 import com.querydsl.core.types.dsl.NumberPath
@@ -93,9 +94,9 @@ class MonthlyStatsAggregationJobConfig(
                     var totalDeleted = 0L
 
                     for (eventId in eventIds) {
-                        val victorySum = entity.victoryCount.longSum()
-                        val defeatSum = entity.defeatCount.longSum()
-                        val drawSum = entity.drawCount.longSum()
+                        val victorySum = entity.resultCount.victoryCount.longSum()
+                        val defeatSum = entity.resultCount.defeatCount.longSum()
+                        val drawSum = entity.resultCount.drawCount.longSum()
 
                         val aggregated =
                             queryFactory
@@ -128,9 +129,12 @@ class MonthlyStatsAggregationJobConfig(
                                     startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
                                     teammateBrawlStarsIds = tuple.get(entity.teammateBrawlStarsIds)!!,
-                                    victoryCount = tuple.get(victorySum)!!,
-                                    defeatCount = tuple.get(defeatSum)!!,
-                                    drawCount = tuple.get(drawSum)!!,
+                                    resultCount =
+                                        ResultCountEmbedded(
+                                            victoryCount = tuple.get(victorySum)!!,
+                                            defeatCount = tuple.get(defeatSum)!!,
+                                            drawCount = tuple.get(drawSum)!!,
+                                        ),
                                 )
                             }
 
@@ -206,9 +210,9 @@ class MonthlyStatsAggregationJobConfig(
                     var totalDeleted = 0L
 
                     for (eventId in eventIds) {
-                        val victorySum = entity.victoryCount.longSum()
-                        val defeatSum = entity.defeatCount.longSum()
-                        val drawSum = entity.drawCount.longSum()
+                        val victorySum = entity.resultCount.victoryCount.longSum()
+                        val defeatSum = entity.resultCount.defeatCount.longSum()
+                        val drawSum = entity.resultCount.drawCount.longSum()
 
                         val aggregated =
                             queryFactory
@@ -241,9 +245,12 @@ class MonthlyStatsAggregationJobConfig(
                                     startAt = monthlyStartAt,
                                     brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
                                     enemyBrawlerBrawlStarsId = tuple.get(entity.enemyBrawlerBrawlStarsId)!!,
-                                    victoryCount = tuple.get(victorySum)!!,
-                                    defeatCount = tuple.get(defeatSum)!!,
-                                    drawCount = tuple.get(drawSum)!!,
+                                    resultCount =
+                                        ResultCountEmbedded(
+                                            victoryCount = tuple.get(victorySum)!!,
+                                            defeatCount = tuple.get(defeatSum)!!,
+                                            drawCount = tuple.get(drawSum)!!,
+                                        ),
                                 )
                             }
 

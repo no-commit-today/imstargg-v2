@@ -43,18 +43,14 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "teammate_brawlstars_ids", columnDefinition = "json", updatable = false, nullable = false)
     val teammateBrawlStarsIds: List<Long>,
-    victoryCount: Long,
-    defeatCount: Long,
-    drawCount: Long,
+    resultCount: ResultCountEmbedded,
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
         date = date,
         startAt = startAt,
         endAt = endAt,
-        victoryCount = victoryCount,
-        defeatCount = defeatCount,
-        drawCount = drawCount,
+        resultCount = resultCount,
     ) {
     init {
         require(teammateBrawlStarsIds.isNotEmpty()) {
@@ -87,9 +83,7 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
             startAt: OffsetDateTime,
             brawlerBrawlStarsId: Long,
             teammateBrawlStarsIds: List<Long>,
-            victoryCount: Long,
-            defeatCount: Long,
-            drawCount: Long,
+            resultCount: ResultCountEmbedded,
         ): BrawlerTeamBattleResultStatsEntity =
             BrawlerTeamBattleResultStatsEntity(
                 eventBrawlStarsId = eventBrawlStarsId,
@@ -100,9 +94,7 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
                 endAt = periodType.endAt(startAt),
                 brawlerBrawlStarsId = brawlerBrawlStarsId,
                 teammateBrawlStarsIds = teammateBrawlStarsIds.sorted(),
-                victoryCount = victoryCount,
-                defeatCount = defeatCount,
-                drawCount = drawCount,
+                resultCount = resultCount,
             )
     }
 }

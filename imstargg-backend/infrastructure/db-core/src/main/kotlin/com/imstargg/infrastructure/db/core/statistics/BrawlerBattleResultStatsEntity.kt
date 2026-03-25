@@ -33,9 +33,7 @@ class BrawlerBattleResultStatsEntity(
     endAt: OffsetDateTime,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
-    victoryCount: Long,
-    defeatCount: Long,
-    drawCount: Long,
+    resultCount: ResultCountEmbedded,
     starPlayerCount: Long,
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
@@ -43,9 +41,7 @@ class BrawlerBattleResultStatsEntity(
         date = date,
         startAt = startAt,
         endAt = endAt,
-        victoryCount = victoryCount,
-        defeatCount = defeatCount,
-        drawCount = drawCount,
+        resultCount = resultCount,
     ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

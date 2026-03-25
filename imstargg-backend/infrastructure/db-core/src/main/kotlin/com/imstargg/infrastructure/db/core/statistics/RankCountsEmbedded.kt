@@ -6,7 +6,7 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 
 @Embeddable
-class RankCountsEmbedded(
+data class RankCountsEmbedded(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "rank_counts", columnDefinition = "json", nullable = false)
     val counts: List<Long>,

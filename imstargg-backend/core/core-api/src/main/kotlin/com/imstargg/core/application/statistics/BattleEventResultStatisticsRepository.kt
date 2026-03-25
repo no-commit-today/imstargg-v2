@@ -40,9 +40,9 @@ class BattleEventResultStatisticsRepository(
                     brawlerId = BrawlStarsId(brawlerBrawlStarsId),
                     resultCount =
                         ResultCount(
-                            grouped.sumOf { it.victoryCount },
-                            grouped.sumOf { it.defeatCount },
-                            grouped.sumOf { it.drawCount },
+                            grouped.sumOf { it.resultCount.victoryCount },
+                            grouped.sumOf { it.resultCount.defeatCount },
+                            grouped.sumOf { it.resultCount.drawCount },
                         ),
                     starPlayerCount = StarPlayerCount(grouped.sumOf { it.starPlayerCount }),
                 )
@@ -87,7 +87,7 @@ class BattleEventResultStatisticsRepository(
         return entities.map {
             BrawlersResultCount(
                 brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
-                resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
+                resultCount = ResultCount(it.resultCount.victoryCount, it.resultCount.defeatCount, it.resultCount.drawCount),
             )
         }
     }
@@ -112,7 +112,7 @@ class BattleEventResultStatisticsRepository(
             BrawlerEnemyResultCount(
                 brawlerId = BrawlStarsId(it.brawlerBrawlStarsId),
                 enemyBrawlerId = BrawlStarsId(it.enemyBrawlerBrawlStarsId),
-                resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
+                resultCount = ResultCount(it.resultCount.victoryCount, it.resultCount.defeatCount, it.resultCount.drawCount),
             )
         }
     }
@@ -125,7 +125,7 @@ class BattleEventResultStatisticsRepository(
             val otherBrawlerIdToResultCount = mutableMapOf<BrawlStarsId, ResultCount>()
 
             for (entity in entities) {
-                val resultCount = ResultCount(entity.victoryCount, entity.defeatCount, entity.drawCount)
+                val resultCount = ResultCount(entity.resultCount.victoryCount, entity.resultCount.defeatCount, entity.resultCount.drawCount)
 
                 for (teammateId in entity.teammateBrawlStarsIds) {
                     val otherBrawlerId = BrawlStarsId(teammateId)
