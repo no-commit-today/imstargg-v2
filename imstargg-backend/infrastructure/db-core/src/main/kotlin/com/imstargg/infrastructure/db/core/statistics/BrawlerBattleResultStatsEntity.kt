@@ -9,7 +9,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 @Entity
 @Table(
@@ -17,20 +16,18 @@ import java.time.OffsetDateTime
     indexes = [
         Index(
             name = "ix_brawler_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, date",
+            columnList = "event_brawlstars_id, tier_range, battle_date",
         ),
         Index(
             name = "ix_brawler_battle_result_stats_2",
-            columnList = "tier_range, date, brawler_brawlstars_id",
+            columnList = "tier_range, battle_date, brawler_brawlstars_id",
         ),
     ],
 )
 class BrawlerBattleResultStatsEntity(
     eventBrawlStarsId: Long,
     tierRange: StatsTierRange,
-    date: LocalDate,
-    startAt: OffsetDateTime,
-    endAt: OffsetDateTime,
+    battleDate: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     resultCount: ResultCountEmbedded,
@@ -39,9 +36,7 @@ class BrawlerBattleResultStatsEntity(
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
-        date = date,
-        startAt = startAt,
-        endAt = endAt,
+        battleDate = battleDate,
         resultCount = resultCount,
     ) {
     @Id

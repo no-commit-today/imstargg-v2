@@ -8,7 +8,7 @@ import java.time.LocalDate
 interface BrawlerBattleResultStatsJpaRepository :
     JpaRepository<BrawlerBattleResultStatsEntity, Long>,
     BrawlerBattleResultStatsJpaRepositoryCustom {
-    fun findAllByEventBrawlStarsIdAndTierRangeAndDateBetween(
+    fun findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
         startDate: LocalDate,

@@ -8,7 +8,6 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.MappedSuperclass
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 @MappedSuperclass
 abstract class BaseBattleResultStatsEntity(
@@ -17,17 +16,7 @@ abstract class BaseBattleResultStatsEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
-    @Column(name = "date", updatable = false, nullable = false)
-    val date: LocalDate,
-    @Column(name = "start_at", updatable = false, nullable = false)
-    val startAt: OffsetDateTime,
-    @Column(name = "end_at", updatable = false, nullable = false)
-    val endAt: OffsetDateTime,
+    @Column(name = "battle_date", updatable = false, nullable = false)
+    val battleDate: LocalDate,
     @Embedded val resultCount: ResultCountEmbedded,
-) : BaseTimeEntity() {
-    init {
-        require(startAt.isBefore(endAt)) {
-            "startAt($startAt)은 endAt($endAt)보다 이전이어야 합니다."
-        }
-    }
-}
+) : BaseTimeEntity()

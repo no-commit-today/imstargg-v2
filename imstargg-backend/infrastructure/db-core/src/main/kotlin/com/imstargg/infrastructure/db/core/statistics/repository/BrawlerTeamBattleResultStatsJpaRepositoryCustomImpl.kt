@@ -19,7 +19,7 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         eventBrawlStarsId: Long,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        battleDate: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultStatsEntity> {
         val stats = brawlerTeamBattleResultStatsEntity
@@ -41,14 +41,14 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
                 stats.eventBrawlStarsId.eq(eventBrawlStarsId),
                 stats.periodType.eq(periodType),
                 stats.tierRange.eq(tierRange),
-                stats.date.eq(date),
+                stats.battleDate.eq(battleDate),
             ).fetch()
     }
 
     override fun findAllByConditionsAndBrawler(
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        battleDate: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultStatsEntity> {
         val stats = brawlerTeamBattleResultStatsEntity
@@ -69,7 +69,7 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
                 stats.id.`in`(statsIdsWithBrawler),
                 stats.periodType.eq(periodType),
                 stats.tierRange.eq(tierRange),
-                stats.date.eq(date),
+                stats.battleDate.eq(battleDate),
             ).fetch()
     }
 }

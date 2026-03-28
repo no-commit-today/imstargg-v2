@@ -87,7 +87,7 @@ class BattleEventSyncJobConfig(
         return QuerydslPagingItemReader(entityManagerFactory, CHUNK_SIZE) { queryFactory ->
             queryFactory
                 .selectFrom(rankBattle)
-                .where(rankBattle.createdDate.eq(dateJobParameter().date))
+                .where(rankBattle.battleDate.eq(dateJobParameter().date))
         }
     }
 
@@ -98,7 +98,7 @@ class BattleEventSyncJobConfig(
         return QuerydslPagingItemReader(entityManagerFactory, CHUNK_SIZE) { queryFactory ->
             queryFactory
                 .selectFrom(resultBattle)
-                .where(resultBattle.createdDate.eq(dateJobParameter().date))
+                .where(resultBattle.battleDate.eq(dateJobParameter().date))
         }
     }
 

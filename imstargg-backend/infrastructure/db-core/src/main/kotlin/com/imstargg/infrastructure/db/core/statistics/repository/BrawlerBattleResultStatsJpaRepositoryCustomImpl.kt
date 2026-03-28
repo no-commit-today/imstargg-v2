@@ -35,7 +35,7 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
             ).from(entity)
             .where(
                 entity.tierRange.eq(tierRange),
-                entity.date.between(startDate, endDate),
+                entity.battleDate.between(startDate, endDate),
             ).groupBy(entity.brawlerBrawlStarsId)
             .fetch()
             .map { tuple ->
@@ -63,7 +63,7 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
 
         return queryFactory
             .select(
-                entity.date,
+                entity.battleDate,
                 victorySum,
                 defeatSum,
                 drawSum,
@@ -72,12 +72,12 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
             .where(
                 entity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
                 entity.tierRange.eq(tierRange),
-                entity.date.between(startDate, endDate),
-            ).groupBy(entity.date)
+                entity.battleDate.between(startDate, endDate),
+            ).groupBy(entity.battleDate)
             .fetch()
             .map { tuple ->
                 BrawlerBattleResultDailyAggregateProjection(
-                    date = tuple.get(entity.date)!!,
+                    battleDate = tuple.get(entity.battleDate)!!,
                     victoryCount = tuple.get(victorySum)!!,
                     defeatCount = tuple.get(defeatSum)!!,
                     drawCount = tuple.get(drawSum)!!,

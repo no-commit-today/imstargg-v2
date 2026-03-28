@@ -83,7 +83,7 @@ END //
 
 -- -------------------------------------------------------------
 -- 오래된 파티션 삭제 프로시저
--- 테이블별 보관 기간:
+-- 테이블별 보관 기간 (모든 테이블 battle_date 기준 파티셔닝):
 --   aggregated_result_battle_key: 30일
 --   aggregated_rank_battle_key:   30일
 --   stats_rank_battle:            7일

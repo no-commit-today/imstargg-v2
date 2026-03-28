@@ -47,7 +47,7 @@ class BrawlerResultStatisticsRepository(
         return aggregates
             .map {
                 BrawlerResultDailyCount(
-                    date = it.date,
+                    date = it.battleDate,
                     resultCount = ResultCount(it.victoryCount, it.defeatCount, it.drawCount),
                     starPlayerCount = StarPlayerCount(it.starPlayerCount),
                 )

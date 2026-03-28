@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
 interface BrawlerSoloBattleRankStatsJpaRepository : JpaRepository<BrawlerSoloBattleRankStatsEntity, Long> {
-    fun findAllByEventBrawlStarsIdAndTierRangeAndDateBetween(
+    fun findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
         startDate: LocalDate,

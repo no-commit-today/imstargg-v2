@@ -13,7 +13,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import java.time.OffsetDateTime
+import java.time.LocalDate
 
 @Entity
 @Table(
@@ -21,7 +21,7 @@ import java.time.OffsetDateTime
     indexes = [
         Index(
             name = "ix_brawler_team_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, period_type, date",
+            columnList = "event_brawlstars_id, tier_range, period_type, battle_date",
         ),
     ],
 )
@@ -31,18 +31,14 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
     tierRange: StatsTierRange,
-    date: java.time.LocalDate,
-    startAt: OffsetDateTime,
-    endAt: OffsetDateTime,
+    battleDate: LocalDate,
     @Column(name = "team_size", updatable = false, nullable = false)
     val teamSize: Int,
     resultCount: ResultCountEmbedded,
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
-        date = date,
-        startAt = startAt,
-        endAt = endAt,
+        battleDate = battleDate,
         resultCount = resultCount,
     ) {
     init {
@@ -67,7 +63,7 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
             eventBrawlStarsId: Long,
             periodType: StatsPeriodType,
             tierRange: StatsTierRange,
-            startAt: OffsetDateTime,
+            battleDate: LocalDate,
             brawlerBrawlStarsIds: List<Long>,
             resultCount: ResultCountEmbedded,
         ): BrawlerTeamBattleResultStatsEntity {
@@ -76,9 +72,7 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
                     eventBrawlStarsId = eventBrawlStarsId,
                     periodType = periodType,
                     tierRange = tierRange,
-                    date = periodType.dateOf(startAt),
-                    startAt = startAt,
-                    endAt = periodType.endAt(startAt),
+                    battleDate = battleDate,
                     teamSize = brawlerBrawlStarsIds.size,
                     resultCount = resultCount,
                 )

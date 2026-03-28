@@ -10,7 +10,7 @@ interface BrawlerTeamBattleRankStatsJpaRepositoryCustom {
         eventBrawlStarsId: Long,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        battleDate: LocalDate,
         brawlerBrawlStarsId: Long,
         teamSize: Int,
     ): List<BrawlerTeamBattleRankStatsEntity>

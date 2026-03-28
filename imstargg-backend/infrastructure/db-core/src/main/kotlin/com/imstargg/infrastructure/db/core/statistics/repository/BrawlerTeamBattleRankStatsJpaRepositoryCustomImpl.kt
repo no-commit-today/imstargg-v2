@@ -19,7 +19,7 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
         eventBrawlStarsId: Long,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        date: LocalDate,
+        battleDate: LocalDate,
         brawlerBrawlStarsId: Long,
         teamSize: Int,
     ): List<BrawlerTeamBattleRankStatsEntity> {
@@ -42,7 +42,7 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
                 stats.eventBrawlStarsId.eq(eventBrawlStarsId),
                 stats.periodType.eq(periodType),
                 stats.tierRange.eq(tierRange),
-                stats.date.eq(date),
+                stats.battleDate.eq(battleDate),
                 stats.teamSize.eq(teamSize),
             ).fetch()
     }

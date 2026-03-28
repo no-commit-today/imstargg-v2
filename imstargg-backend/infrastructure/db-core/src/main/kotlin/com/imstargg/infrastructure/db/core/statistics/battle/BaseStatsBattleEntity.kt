@@ -1,9 +1,9 @@
 package com.imstargg.infrastructure.db.core.statistics.battle
 
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
+import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass
-import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.LocalDate
@@ -33,7 +33,6 @@ abstract class BaseStatsBattleEntity(
     @Column(name = "teams", columnDefinition = "json", updatable = false, nullable = false)
     val teams: List<List<StatsBattleEntityTeamPlayer>>,
 ) : BaseTimeEntity() {
-    @CreationTimestamp
-    @Column(name = "created_date", updatable = false, nullable = false)
-    val createdDate: LocalDate? = null
+    @Column(name = "battle_date", updatable = false, nullable = false)
+    val battleDate: LocalDate = battleAt.toKoreaLocalDate()
 }
