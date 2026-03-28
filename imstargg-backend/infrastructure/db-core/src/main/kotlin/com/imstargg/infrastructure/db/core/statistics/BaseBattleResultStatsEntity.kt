@@ -30,5 +30,4 @@ abstract class BaseBattleResultStatsEntity(
             "startAt($startAt)은 endAt($endAt)보다 이전이어야 합니다."
         }
     }
-
 }

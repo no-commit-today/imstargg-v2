@@ -34,7 +34,8 @@ class BrawlerBattleResultStatsEntity(
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     resultCount: ResultCountEmbedded,
-    starPlayerCount: Long,
+    @Column(name = "star_player_count", updatable = false, nullable = false)
+    val starPlayerCount: Long,
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
         tierRange = tierRange,
@@ -47,8 +48,4 @@ class BrawlerBattleResultStatsEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_battle_result_stats_id", nullable = false)
     val id: Long? = null
-
-    @Column(name = "star_player_count", nullable = false)
-    var starPlayerCount: Long = starPlayerCount
-        protected set
 }

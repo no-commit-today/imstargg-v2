@@ -11,4 +11,11 @@ data class ResultCountEmbedded(
     val defeatCount: Long,
     @Column(name = "draw_count", nullable = false)
     val drawCount: Long,
-)
+) {
+    operator fun plus(other: ResultCountEmbedded): ResultCountEmbedded =
+        ResultCountEmbedded(
+            victoryCount = victoryCount + other.victoryCount,
+            defeatCount = defeatCount + other.defeatCount,
+            drawCount = drawCount + other.drawCount,
+        )
+}
