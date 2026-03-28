@@ -46,17 +46,18 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlersRankCount> {
         val entities =
             teamBattleRankJpaRepository
-                .findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventAndConditionsAndBrawlerAndTeamSize(
                     eventId.value,
                     StatsPeriodType.WEEKLY,
                     tierRange,
                     startDate,
                     brawlerId.value,
-                ).filter { it.teammateBrawlStarsIds.size == 1 }
+                    teamSize = 2,
+                )
 
         return entities.map { entity ->
             BrawlersRankCount(
-                brawlerIds = entity.teamBrawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                brawlerIds = entity.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
                 rankCount = RankCount(entity.rankCounts.toMap()),
             )
         }
@@ -70,17 +71,18 @@ class BattleEventRankStatisticsRepository(
     ): List<BrawlersRankCount> {
         val entities =
             teamBattleRankJpaRepository
-                .findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventAndConditionsAndBrawlerAndTeamSize(
                     eventId.value,
                     StatsPeriodType.WEEKLY,
                     tierRange,
                     startDate,
                     brawlerId.value,
-                ).filter { it.teammateBrawlStarsIds.size == 2 }
+                    teamSize = 3,
+                )
 
         return entities.map { entity ->
             BrawlersRankCount(
-                brawlerIds = entity.teamBrawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                brawlerIds = entity.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
                 rankCount = RankCount(entity.rankCounts.toMap()),
             )
         }

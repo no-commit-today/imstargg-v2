@@ -57,7 +57,7 @@ class BattleEventResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventAndConditionsAndBrawler(
                     eventId.value,
                     StatsPeriodType.WEEKLY,
                     tierRange,
@@ -76,7 +76,7 @@ class BattleEventResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByEventAndConditionsAndBrawler(
                     eventId.value,
                     StatsPeriodType.WEEKLY,
                     tierRange,
@@ -86,7 +86,7 @@ class BattleEventResultStatisticsRepository(
 
         return entities.map {
             BrawlersResultCount(
-                brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
+                brawlerIds = it.brawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
                 resultCount = ResultCount(it.resultCount.victoryCount, it.resultCount.defeatCount, it.resultCount.drawCount),
             )
         }
@@ -127,8 +127,8 @@ class BattleEventResultStatisticsRepository(
             for (entity in entities) {
                 val resultCount = ResultCount(entity.resultCount.victoryCount, entity.resultCount.defeatCount, entity.resultCount.drawCount)
 
-                for (teammateId in entity.teammateBrawlStarsIds) {
-                    val otherBrawlerId = BrawlStarsId(teammateId)
+                for (otherId in entity.brawlerBrawlStarsIds.filter { it != brawlerId.value }) {
+                    val otherBrawlerId = BrawlStarsId(otherId)
                     otherBrawlerIdToResultCount.merge(otherBrawlerId, resultCount) { existing, new ->
                         existing.merge(new)
                     }

@@ -8,12 +8,15 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultSt
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsBrawlerEntity.Companion.brawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsBrawlerEntity.Companion.brawlerTeamBattleResultStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsEntity.Companion.brawlerTeamBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.dsl.NumberExpression
 import com.querydsl.core.types.dsl.NumberPath
+import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
@@ -94,47 +97,33 @@ class MonthlyStatsAggregationJobConfig(
                     var totalDeleted = 0L
 
                     for (eventId in eventIds) {
-                        val victorySum = entity.resultCount.victoryCount.longSum()
-                        val defeatSum = entity.resultCount.defeatCount.longSum()
-                        val drawSum = entity.resultCount.drawCount.longSum()
-
-                        val aggregated =
+                        val weeklyEntities =
                             queryFactory
-                                .select(
-                                    entity.eventBrawlStarsId,
-                                    entity.tierRange,
-                                    entity.brawlerBrawlStarsId,
-                                    entity.teammateBrawlStarsIds,
-                                    victorySum,
-                                    defeatSum,
-                                    drawSum,
-                                ).from(entity)
+                                .selectFrom(entity)
+                                .distinct()
+                                .leftJoin(entity.brawlers, brawlerTeamBattleResultStatsBrawlerEntity)
+                                .fetchJoin()
                                 .where(
                                     entity.periodType.eq(StatsPeriodType.WEEKLY),
                                     entity.date.between(startDate, endDate),
                                     entity.eventBrawlStarsId.eq(eventId),
-                                ).groupBy(
-                                    entity.eventBrawlStarsId,
-                                    entity.tierRange,
-                                    entity.brawlerBrawlStarsId,
-                                    entity.teammateBrawlStarsIds,
                                 ).fetch()
 
+                        val aggregated =
+                            weeklyEntities.groupBy {
+                                Pair(it.tierRange, it.brawlerBrawlStarsIds)
+                            }
+
                         val monthlyEntities =
-                            aggregated.map { tuple ->
+                            aggregated.map { (key, group) ->
+                                val totalResult = group.map { it.resultCount }.reduce { acc, r -> acc + r }
                                 BrawlerTeamBattleResultStatsEntity.create(
-                                    eventBrawlStarsId = tuple.get(entity.eventBrawlStarsId)!!,
+                                    eventBrawlStarsId = eventId,
                                     periodType = StatsPeriodType.MONTHLY,
-                                    tierRange = tuple.get(entity.tierRange)!!,
+                                    tierRange = key.first,
                                     startAt = monthlyStartAt,
-                                    brawlerBrawlStarsId = tuple.get(entity.brawlerBrawlStarsId)!!,
-                                    teammateBrawlStarsIds = tuple.get(entity.teammateBrawlStarsIds)!!,
-                                    resultCount =
-                                        ResultCountEmbedded(
-                                            victoryCount = tuple.get(victorySum)!!,
-                                            defeatCount = tuple.get(defeatSum)!!,
-                                            drawCount = tuple.get(drawSum)!!,
-                                        ),
+                                    brawlerBrawlStarsIds = key.second,
+                                    resultCount = totalResult,
                                 )
                             }
 
@@ -146,6 +135,21 @@ class MonthlyStatsAggregationJobConfig(
                         totalAggregated += monthlyEntities.size
 
                         entityManager.transaction.begin()
+                        val brawlerQ = brawlerTeamBattleResultStatsBrawlerEntity
+                        queryFactory
+                            .delete(brawlerQ)
+                            .where(
+                                brawlerQ.stats.id.`in`(
+                                    JPAExpressions
+                                        .select(entity.id)
+                                        .from(entity)
+                                        .where(
+                                            entity.periodType.eq(StatsPeriodType.WEEKLY),
+                                            entity.date.between(startDate, endDate),
+                                            entity.eventBrawlStarsId.eq(eventId),
+                                        ),
+                                ),
+                            ).execute()
                         val deleted =
                             queryFactory
                                 .delete(entity)
@@ -329,6 +333,9 @@ class MonthlyStatsAggregationJobConfig(
                         val weeklyEntities =
                             queryFactory
                                 .selectFrom(entity)
+                                .distinct()
+                                .leftJoin(entity.brawlers, brawlerTeamBattleRankStatsBrawlerEntity)
+                                .fetchJoin()
                                 .where(
                                     entity.periodType.eq(StatsPeriodType.WEEKLY),
                                     entity.date.between(startDate, endDate),
@@ -337,7 +344,7 @@ class MonthlyStatsAggregationJobConfig(
 
                         val aggregated =
                             weeklyEntities.groupBy {
-                                Triple(it.tierRange, it.brawlerBrawlStarsId, it.teammateBrawlStarsIds)
+                                Pair(it.tierRange, it.brawlerBrawlStarsIds)
                             }
 
                         val monthlyEntities =
@@ -348,8 +355,7 @@ class MonthlyStatsAggregationJobConfig(
                                     periodType = StatsPeriodType.MONTHLY,
                                     tierRange = key.first,
                                     startAt = monthlyStartAt,
-                                    brawlerBrawlStarsId = key.second,
-                                    teammateBrawlStarsIds = key.third,
+                                    brawlerBrawlStarsIds = key.second,
                                     rankCounts = combinedRanks,
                                 )
                             }
@@ -362,6 +368,21 @@ class MonthlyStatsAggregationJobConfig(
                         totalAggregated += monthlyEntities.size
 
                         entityManager.transaction.begin()
+                        val brawlerQ = brawlerTeamBattleRankStatsBrawlerEntity
+                        queryFactory
+                            .delete(brawlerQ)
+                            .where(
+                                brawlerQ.stats.id.`in`(
+                                    JPAExpressions
+                                        .select(entity.id)
+                                        .from(entity)
+                                        .where(
+                                            entity.periodType.eq(StatsPeriodType.WEEKLY),
+                                            entity.date.between(startDate, endDate),
+                                            entity.eventBrawlStarsId.eq(eventId),
+                                        ),
+                                ),
+                            ).execute()
                         val deleted =
                             queryFactory
                                 .delete(entity)

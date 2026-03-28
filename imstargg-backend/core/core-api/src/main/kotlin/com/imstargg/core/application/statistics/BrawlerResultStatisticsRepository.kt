@@ -61,7 +61,7 @@ class BrawlerResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findAllByPeriodTypeAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByConditionsAndBrawler(
                     StatsPeriodType.WEEKLY,
                     tierRange,
                     startDate,
@@ -78,7 +78,7 @@ class BrawlerResultStatisticsRepository(
     ): List<BrawlersResultCount> {
         val entities =
             teamBattleResultJpaRepository
-                .findAllByPeriodTypeAndTierRangeAndDateAndBrawlerBrawlStarsId(
+                .findAllByConditionsAndBrawler(
                     StatsPeriodType.WEEKLY,
                     tierRange,
                     startDate,
@@ -87,7 +87,7 @@ class BrawlerResultStatisticsRepository(
 
         return entities.map {
             BrawlersResultCount(
-                brawlerIds = it.teamBrawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
+                brawlerIds = it.brawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
                 resultCount = ResultCount(it.resultCount.victoryCount, it.resultCount.defeatCount, it.resultCount.drawCount),
             )
         }

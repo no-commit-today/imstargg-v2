@@ -2,6 +2,7 @@ package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -10,9 +11,8 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
 import java.time.OffsetDateTime
 
 @Entity
@@ -22,10 +22,6 @@ import java.time.OffsetDateTime
         Index(
             name = "ix_brawler_team_battle_result_stats_1",
             columnList = "event_brawlstars_id, tier_range, period_type, date",
-        ),
-        Index(
-            name = "ix_brawler_team_battle_result_stats_2",
-            columnList = "brawler_brawlstars_id, tier_range, period_type, date",
         ),
     ],
 )
@@ -38,11 +34,8 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
     date: java.time.LocalDate,
     startAt: OffsetDateTime,
     endAt: OffsetDateTime,
-    @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
-    val brawlerBrawlStarsId: Long,
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "teammate_brawlstars_ids", columnDefinition = "json", updatable = false, nullable = false)
-    val teammateBrawlStarsIds: List<Long>,
+    @Column(name = "team_size", updatable = false, nullable = false)
+    val teamSize: Int,
     resultCount: ResultCountEmbedded,
 ) : BaseBattleResultStatsEntity(
         eventBrawlStarsId = eventBrawlStarsId,
@@ -53,17 +46,8 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
         resultCount = resultCount,
     ) {
     init {
-        require(teammateBrawlStarsIds.isNotEmpty()) {
-            "teammateBrawlStarsIds는 비어 있을 수 없습니다."
-        }
-        require(teammateBrawlStarsIds == teammateBrawlStarsIds.sorted()) {
-            "teammateBrawlStarsIds($teammateBrawlStarsIds)는 정렬되어야 합니다."
-        }
-        require(teammateBrawlStarsIds.distinct().size == teammateBrawlStarsIds.size) {
-            "teammateBrawlStarsIds($teammateBrawlStarsIds)에 중복이 있습니다."
-        }
-        require(brawlerBrawlStarsId !in teammateBrawlStarsIds) {
-            "brawlerBrawlStarsId($brawlerBrawlStarsId)는 teammateBrawlStarsIds($teammateBrawlStarsIds)에 포함될 수 없습니다."
+        require(teamSize in 2..5) {
+            "teamSize($teamSize)는 2~5 사이여야 합니다."
         }
     }
 
@@ -72,8 +56,11 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
     @Column(name = "brawler_team_battle_result_stats_id", nullable = false)
     val id: Long? = null
 
-    val teamBrawlerBrawlStarsIds: List<Long>
-        get() = (teammateBrawlStarsIds + brawlerBrawlStarsId).sorted()
+    @OneToMany(mappedBy = "stats", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val brawlers: MutableList<BrawlerTeamBattleResultStatsBrawlerEntity> = mutableListOf()
+
+    val brawlerBrawlStarsIds: List<Long>
+        get() = brawlers.map { it.brawlerBrawlStarsId }.sorted()
 
     companion object {
         fun create(
@@ -81,20 +68,29 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
             periodType: StatsPeriodType,
             tierRange: StatsTierRange,
             startAt: OffsetDateTime,
-            brawlerBrawlStarsId: Long,
-            teammateBrawlStarsIds: List<Long>,
+            brawlerBrawlStarsIds: List<Long>,
             resultCount: ResultCountEmbedded,
-        ): BrawlerTeamBattleResultStatsEntity =
-            BrawlerTeamBattleResultStatsEntity(
-                eventBrawlStarsId = eventBrawlStarsId,
-                periodType = periodType,
-                tierRange = tierRange,
-                date = periodType.dateOf(startAt),
-                startAt = startAt,
-                endAt = periodType.endAt(startAt),
-                brawlerBrawlStarsId = brawlerBrawlStarsId,
-                teammateBrawlStarsIds = teammateBrawlStarsIds.sorted(),
-                resultCount = resultCount,
-            )
+        ): BrawlerTeamBattleResultStatsEntity {
+            val entity =
+                BrawlerTeamBattleResultStatsEntity(
+                    eventBrawlStarsId = eventBrawlStarsId,
+                    periodType = periodType,
+                    tierRange = tierRange,
+                    date = periodType.dateOf(startAt),
+                    startAt = startAt,
+                    endAt = periodType.endAt(startAt),
+                    teamSize = brawlerBrawlStarsIds.size,
+                    resultCount = resultCount,
+                )
+            brawlerBrawlStarsIds.forEach { brawlerId ->
+                entity.brawlers.add(
+                    BrawlerTeamBattleResultStatsBrawlerEntity(
+                        stats = entity,
+                        brawlerBrawlStarsId = brawlerId,
+                    ),
+                )
+            }
+            return entity
+        }
     }
 }
