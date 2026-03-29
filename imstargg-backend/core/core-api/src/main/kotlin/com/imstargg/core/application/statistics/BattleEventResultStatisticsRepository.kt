@@ -5,7 +5,6 @@ import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlersResultCount
 import com.imstargg.core.domain.statistics.ResultCount
-import com.imstargg.core.domain.statistics.StarPlayerCount
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
@@ -44,7 +43,7 @@ class BattleEventResultStatisticsRepository(
                             grouped.sumOf { it.resultCount.defeatCount },
                             grouped.sumOf { it.resultCount.drawCount },
                         ),
-                    starPlayerCount = StarPlayerCount(grouped.sumOf { it.starPlayerCount }),
+                    starPlayerCount = grouped.sumOf { it.starPlayerCount },
                 )
             }
     }

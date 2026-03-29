@@ -9,4 +9,21 @@ data class BrawlerResultDailyStatistics(
     val totalBattleCount: Long,
     val winRate: Double,
     val starPlayerRate: Double,
-)
+) {
+    companion object {
+        fun create(dailyCount: BrawlerResultDailyCount): BrawlerResultDailyStatistics {
+            val resultCount = dailyCount.brawlerResultCount.resultCount
+            return BrawlerResultDailyStatistics(
+                date = dailyCount.date,
+                brawlerId = dailyCount.brawlerResultCount.brawlerId,
+                totalBattleCount = resultCount.totalCount,
+                winRate = resultCount.winRate,
+                starPlayerRate =
+                    StatsRate.starPlayerRate(
+                        dailyCount.brawlerResultCount.starPlayerCount,
+                        resultCount.totalCount,
+                    ),
+            )
+        }
+    }
+}

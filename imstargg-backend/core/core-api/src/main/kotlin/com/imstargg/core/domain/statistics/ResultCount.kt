@@ -7,11 +7,7 @@ data class ResultCount(
 ) {
     val totalCount: Long get() = victoryCount + defeatCount + drawCount
 
-    val winRate: Double
-        get() {
-            val victoryDefeatCount = victoryCount + defeatCount
-            return if (victoryDefeatCount > 0) victoryCount.toDouble() / victoryDefeatCount else 0.0
-        }
+    val winRate: Double get() = StatsRate.winRate(victoryCount, defeatCount)
 
     fun merge(other: ResultCount) =
         ResultCount(

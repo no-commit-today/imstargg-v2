@@ -5,7 +5,6 @@ import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.domain.statistics.BrawlersResultCount
 import com.imstargg.core.domain.statistics.ResultCount
-import com.imstargg.core.domain.statistics.StarPlayerCount
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
@@ -32,12 +31,13 @@ class BrawlerResultStatisticsRepository(
             .map { (brawlerBrawlStarsId, grouped) ->
                 BrawlerResultCount(
                     brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                    resultCount = ResultCount(
-                        grouped.sumOf { it.resultCount.victoryCount },
-                        grouped.sumOf { it.resultCount.defeatCount },
-                        grouped.sumOf { it.resultCount.drawCount },
-                    ),
-                    starPlayerCount = StarPlayerCount(grouped.sumOf { it.starPlayerCount }),
+                    resultCount =
+                        ResultCount(
+                            grouped.sumOf { it.resultCount.victoryCount },
+                            grouped.sumOf { it.resultCount.defeatCount },
+                            grouped.sumOf { it.resultCount.drawCount },
+                        ),
+                    starPlayerCount = grouped.sumOf { it.starPlayerCount },
                 )
             }
     }
@@ -48,25 +48,31 @@ class BrawlerResultStatisticsRepository(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<BrawlerResultDailyCount> {
-        val entities = battleResultJpaRepository
-            .findAllByBrawlerBrawlStarsIdAndTierRangeAndBattleDateBetween(
-                brawlerId.value, tierRange, startDate, endDate,
-            )
+        val entities =
+            battleResultJpaRepository
+                .findAllByBrawlerBrawlStarsIdAndTierRangeAndBattleDateBetween(
+                    brawlerId.value,
+                    tierRange,
+                    startDate,
+                    endDate,
+                )
 
         return entities
             .groupBy { it.battleDate }
             .map { (battleDate, grouped) ->
                 BrawlerResultDailyCount(
                     date = battleDate,
-                    brawlerResultCount = BrawlerResultCount(
-                        brawlerId = brawlerId,
-                        resultCount = ResultCount(
-                            grouped.sumOf { it.resultCount.victoryCount },
-                            grouped.sumOf { it.resultCount.defeatCount },
-                            grouped.sumOf { it.resultCount.drawCount },
+                    brawlerResultCount =
+                        BrawlerResultCount(
+                            brawlerId = brawlerId,
+                            resultCount =
+                                ResultCount(
+                                    grouped.sumOf { it.resultCount.victoryCount },
+                                    grouped.sumOf { it.resultCount.defeatCount },
+                                    grouped.sumOf { it.resultCount.drawCount },
+                                ),
+                            starPlayerCount = grouped.sumOf { it.starPlayerCount },
                         ),
-                        starPlayerCount = StarPlayerCount(grouped.sumOf { it.starPlayerCount }),
-                    ),
                 )
             }.sortedBy { it.date }
     }

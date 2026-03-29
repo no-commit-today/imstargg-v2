@@ -11,23 +11,23 @@ import org.springframework.stereotype.Service
 class BrawlerStatisticsService(
     private val resultRepository: BrawlerResultStatisticsRepositoryWithCache,
 ) {
-    fun getBrawlerResultStatistics(param: BrawlerStatisticsParam): List<BrawlerResultStatistics> =
-        resultRepository
-            .findBrawlerResultCounts(param.tierRange, param.startDate, param.endDate)
-            .map { it.toStatistics() }
+    fun getBrawlerResultStatistics(param: BrawlerStatisticsParam): BrawlerResultStatistics =
+        BrawlerResultStatistics.create(
+            resultRepository.findBrawlerResultCounts(param.tierRange, param.startDate, param.endDate),
+        )
 
     fun getBrawlerDailyResultStatistics(param: BrawlersStatisticsParam): List<BrawlerResultDailyStatistics> =
         resultRepository
             .findBrawlerDailyResultCounts(param.brawlerId, param.tierRange, param.startDate, param.endDate)
-            .map { it.toStatistics() }
+            .map { BrawlerResultDailyStatistics.create(it) }
 
-    fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatistics> =
-        resultRepository
-            .findBrawlerDuoResultCounts(param.brawlerId, param.tierRange, param.startDate)
-            .map { it.toStatistics() }
+    fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): BrawlersResultStatistics =
+        BrawlersResultStatistics.create(
+            resultRepository.findBrawlerDuoResultCounts(param.brawlerId, param.tierRange, param.startDate),
+        )
 
-    fun getBrawlerTrioResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatistics> =
-        resultRepository
-            .findBrawlerTrioResultCounts(param.brawlerId, param.tierRange, param.startDate)
-            .map { it.toStatistics() }
+    fun getBrawlerTrioResultStatistics(param: BrawlersStatisticsParam): BrawlersResultStatistics =
+        BrawlersResultStatistics.create(
+            resultRepository.findBrawlerTrioResultCounts(param.brawlerId, param.tierRange, param.startDate),
+        )
 }

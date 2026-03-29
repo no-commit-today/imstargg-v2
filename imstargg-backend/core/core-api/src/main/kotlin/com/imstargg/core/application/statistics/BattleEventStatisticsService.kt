@@ -14,25 +14,25 @@ class BattleEventStatisticsService(
     private val resultRepository: BattleEventResultStatisticsRepositoryWithCache,
     private val rankRepository: BattleEventRankStatisticsRepositoryWithCache,
 ) {
-    fun getBattleEventBrawlerResultStatistics(param: BattleEventBrawlerStatisticsParam): List<BrawlerResultStatistics> =
-        resultRepository
-            .findBrawlerResultCounts(param.eventId, param.tierRange, param.startDate, param.endDate)
-            .map { it.toStatistics() }
+    fun getBattleEventBrawlerResultStatistics(param: BattleEventBrawlerStatisticsParam): BrawlerResultStatistics =
+        BrawlerResultStatistics.create(
+            resultRepository.findBrawlerResultCounts(param.eventId, param.tierRange, param.startDate, param.endDate),
+        )
 
-    fun getBattleEventBrawlerDuoResultStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersResultStatistics> =
-        resultRepository
-            .findBrawlerDuoResultCounts(param.eventId, param.brawlerId, param.tierRange, param.startDate)
-            .map { it.toStatistics() }
+    fun getBattleEventBrawlerDuoResultStatistics(param: BattleEventBrawlersStatisticsParam): BrawlersResultStatistics =
+        BrawlersResultStatistics.create(
+            resultRepository.findBrawlerDuoResultCounts(param.eventId, param.brawlerId, param.tierRange, param.startDate),
+        )
 
-    fun getBattleEventBrawlerTrioResultStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersResultStatistics> =
-        resultRepository
-            .findBrawlerTrioResultCounts(param.eventId, param.brawlerId, param.tierRange, param.startDate)
-            .map { it.toStatistics() }
+    fun getBattleEventBrawlerTrioResultStatistics(param: BattleEventBrawlersStatisticsParam): BrawlersResultStatistics =
+        BrawlersResultStatistics.create(
+            resultRepository.findBrawlerTrioResultCounts(param.eventId, param.brawlerId, param.tierRange, param.startDate),
+        )
 
-    fun getBattleEventBrawlerEnemyResultStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlerEnemyResultStatistics> =
-        resultRepository
-            .findBrawlerEnemyResultCounts(param.eventId, param.brawlerId, param.tierRange, param.startDate)
-            .map { it.toStatistics() }
+    fun getBattleEventBrawlerEnemyResultStatistics(param: BattleEventBrawlersStatisticsParam): BrawlerEnemyResultStatistics =
+        BrawlerEnemyResultStatistics.create(
+            resultRepository.findBrawlerEnemyResultCounts(param.eventId, param.brawlerId, param.tierRange, param.startDate),
+        )
 
     fun getBattleEventBrawlerRankStatistics(param: BattleEventBrawlerStatisticsParam): List<BrawlerRankStatistics> =
         rankRepository
