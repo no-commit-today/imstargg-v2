@@ -29,30 +29,6 @@ BEGIN
         SET part_name = CONCAT('p_', DATE_FORMAT(target_date, '%Y%m%d'));
         SET bound_date = DATE_FORMAT(target_date + INTERVAL 1 DAY, '%Y-%m-%d');
 
-        -- aggregated_result_battle_key
-        SELECT COUNT(*) INTO cnt FROM INFORMATION_SCHEMA.PARTITIONS
-        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'aggregated_result_battle_key' AND PARTITION_NAME = part_name;
-        IF cnt = 0 THEN
-            SET @sql = CONCAT(
-                'ALTER TABLE aggregated_result_battle_key REORGANIZE PARTITION p_default INTO (',
-                'PARTITION ', part_name, ' VALUES LESS THAN (TO_DAYS(''', bound_date, ''')), ',
-                'PARTITION p_default VALUES LESS THAN MAXVALUE)'
-            );
-            PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-        END IF;
-
-        -- aggregated_rank_battle_key
-        SELECT COUNT(*) INTO cnt FROM INFORMATION_SCHEMA.PARTITIONS
-        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'aggregated_rank_battle_key' AND PARTITION_NAME = part_name;
-        IF cnt = 0 THEN
-            SET @sql = CONCAT(
-                'ALTER TABLE aggregated_rank_battle_key REORGANIZE PARTITION p_default INTO (',
-                'PARTITION ', part_name, ' VALUES LESS THAN (TO_DAYS(''', bound_date, ''')), ',
-                'PARTITION p_default VALUES LESS THAN MAXVALUE)'
-            );
-            PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-        END IF;
-
         -- stats_rank_battle
         SELECT COUNT(*) INTO cnt FROM INFORMATION_SCHEMA.PARTITIONS
         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'stats_rank_battle' AND PARTITION_NAME = part_name;
@@ -84,8 +60,6 @@ END //
 -- -------------------------------------------------------------
 -- 오래된 파티션 삭제 프로시저
 -- 테이블별 보관 기간 (모든 테이블 battle_date 기준 파티셔닝):
---   aggregated_result_battle_key: 30일
---   aggregated_rank_battle_key:   30일
 --   stats_rank_battle:            7일
 --   stats_result_battle:          7일
 -- -------------------------------------------------------------
@@ -101,13 +75,8 @@ BEGIN
         FROM INFORMATION_SCHEMA.PARTITIONS p
         WHERE p.TABLE_SCHEMA = DATABASE()
           AND p.PARTITION_NAME != 'p_default'
-          AND (
-              (p.TABLE_NAME IN ('aggregated_result_battle_key', 'aggregated_rank_battle_key')
-               AND CAST(p.PARTITION_DESCRIPTION AS UNSIGNED) < TO_DAYS(base_date - INTERVAL 30 DAY))
-              OR
-              (p.TABLE_NAME IN ('stats_rank_battle', 'stats_result_battle')
-               AND CAST(p.PARTITION_DESCRIPTION AS UNSIGNED) < TO_DAYS(base_date - INTERVAL 7 DAY))
-          );
+          AND p.TABLE_NAME IN ('stats_rank_battle', 'stats_result_battle')
+          AND CAST(p.PARTITION_DESCRIPTION AS UNSIGNED) < TO_DAYS(base_date - INTERVAL 7 DAY);
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
     OPEN cur;

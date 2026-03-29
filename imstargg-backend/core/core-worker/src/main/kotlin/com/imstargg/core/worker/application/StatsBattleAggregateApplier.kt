@@ -4,14 +4,10 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.worker.domain.BattleResult
-import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedRankBattleKeyEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.AggregatedResultBattleKeyEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.repository.AggregatedRankBattleKeyJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.battle.repository.AggregatedResultBattleKeyJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRankBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import org.springframework.stereotype.Component
@@ -21,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional
 class StatsBattleAggregateApplier(
     private val statsRankBattleRepository: StatsRankBattleJpaRepository,
     private val statsResultBattleRepository: StatsResultBattleJpaRepository,
-    private val aggregatedRankBattleKeyRepository: AggregatedRankBattleKeyJpaRepository,
-    private val aggregatedResultBattleKeyRepository: AggregatedResultBattleKeyJpaRepository,
 ) {
     @Transactional
     fun apply(battles: List<BattleResult>) {
@@ -36,31 +30,22 @@ class StatsBattleAggregateApplier(
                 .filter { canCreateResultBattle(it) }
                 .map { toStatsResultBattle(it) }
 
-        val aggregatedRankKeys =
-            aggregatedRankBattleKeyRepository
-                .findAllByStatsRankBattles(statsRankBattles)
-        val aggregatedResultKeys =
-            aggregatedResultBattleKeyRepository
-                .findAllByStatsResultBattles(statsResultBattles)
+        val existingResultBattleKeys =
+            statsResultBattleRepository.findAllBattleKeysByStatsResultBattles(statsResultBattles)
+        val existingRankBattleKeys =
+            statsRankBattleRepository.findAllBattleKeyAndPlayerTagByStatsRankBattles(statsRankBattles)
 
         val newRankBattles =
             statsRankBattles.filter { battle ->
-                aggregatedRankKeys.none { it.matches(battle) }
+                Pair(battle.battleKey, battle.playerBrawlStarsTag) !in existingRankBattleKeys
             }
         val newResultBattles =
             statsResultBattles.filter { battle ->
-                aggregatedResultKeys.none { it.matches(battle) }
+                battle.battleKey !in existingResultBattleKeys
             }
 
         statsRankBattleRepository.saveAll(newRankBattles)
         statsResultBattleRepository.saveAll(newResultBattles)
-
-        aggregatedRankBattleKeyRepository.saveAll(
-            newRankBattles.map { AggregatedRankBattleKeyEntity.from(it) },
-        )
-        aggregatedResultBattleKeyRepository.saveAll(
-            newResultBattles.map { AggregatedResultBattleKeyEntity.from(it) },
-        )
     }
 
     private fun canCreateStatsBattle(battle: BattleResult): Boolean {

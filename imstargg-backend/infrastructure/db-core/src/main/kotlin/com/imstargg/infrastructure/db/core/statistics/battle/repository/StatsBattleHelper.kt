@@ -4,7 +4,7 @@ import java.time.Clock
 import java.time.OffsetDateTime
 
 object StatsBattleHelper {
-    const val BATTLE_MAX_AGE_DAYS = 30L
+    const val BATTLE_MAX_AGE_DAYS = 7L
 
     fun canAggregate(
         clock: Clock,

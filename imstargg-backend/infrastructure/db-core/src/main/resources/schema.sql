@@ -245,36 +245,6 @@ create table if not exists club_ranking_item
     index ix_club_ranking_item__club_ranking_id (club_ranking_id)
 );
 
--- aggregated_result_battle_key table (파티셔닝: battle_date 기준, 보관 기간 30일)
--- 역할: StatsResultBattleEntity 중복 수집 방지 (battleKey)
-create table if not exists aggregated_result_battle_key
-(
-    aggregated_result_battle_key_id bigint auto_increment,
-    battle_date                     date          not null,
-    battle_key                      varchar(255)  not null,
-    created_at                      timestamp(6)  not null default current_timestamp(6),
-    updated_at                      timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    primary key (aggregated_result_battle_key_id, battle_date),
-    unique index uk_aggregated_result_battle_key__battle_date_battle_key (battle_date, battle_key)
-) partition by range (to_days(battle_date)) (
-    partition p_default values less than maxvalue
-);
--- aggregated_rank_battle_key table (파티셔닝: battle_date 기준, 보관 기간 30일)
--- 역할: StatsRankBattleEntity 중복 수집 방지 (playerTag + battleKey 조합)
-create table if not exists aggregated_rank_battle_key
-(
-    aggregated_rank_battle_key_id bigint auto_increment,
-    battle_date                   date          not null,
-    player_brawlstars_tag         varchar(45)   not null,
-    battle_key                    varchar(255)  not null,
-    created_at                    timestamp(6)  not null default current_timestamp(6),
-    updated_at                    timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    primary key (aggregated_rank_battle_key_id, battle_date),
-    unique index uk_aggregated_rank_battle_key__date_battlekey_player
-        (battle_date, battle_key, player_brawlstars_tag)
-) partition by range (to_days(battle_date)) (
-    partition p_default values less than maxvalue
-);
 -- stats_rank_battle table (파티셔닝: battle_date 기준, 보관 기간 7일)
 -- 역할: 배틀 랭크 통계 데이터 (플레이어별)
 create table if not exists stats_rank_battle
@@ -294,7 +264,9 @@ create table if not exists stats_rank_battle
     teams                      json          not null,
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    primary key (stats_rank_battle_id, battle_date)
+    primary key (stats_rank_battle_id, battle_date),
+    unique index uk_stats_rank_battle__battle_date_battle_key_player
+        (battle_date, battle_key, player_brawlstars_tag)
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );
@@ -317,7 +289,8 @@ create table if not exists stats_result_battle
     teams                      json          not null,
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
-    primary key (stats_result_battle_id, battle_date)
+    primary key (stats_result_battle_id, battle_date),
+    unique index uk_stats_result_battle__battle_date_battle_key (battle_date, battle_key)
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );

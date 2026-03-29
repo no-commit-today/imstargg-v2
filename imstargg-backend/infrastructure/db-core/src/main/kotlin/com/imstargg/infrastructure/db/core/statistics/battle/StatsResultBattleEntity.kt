@@ -5,11 +5,21 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
 
 @Entity
-@Table(name = "stats_result_battle")
+@Table(
+    name = "stats_result_battle",
+    indexes = [
+        Index(
+            name = "uk_stats_result_battle__battle_date_battle_key",
+            columnList = "battle_date, battle_key",
+            unique = true,
+        ),
+    ],
+)
 class StatsResultBattleEntity(
     battleKey: String,
     battleAt: OffsetDateTime,

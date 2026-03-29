@@ -23,72 +23,48 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 |--------|------|----------|----------|
 | `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 7일 |
 | `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 7일 |
-| `aggregated_result_battle_key` | ResultBattle 중복 수집 방지 | `battle_date` | 30일 |
-| `aggregated_rank_battle_key` | RankBattle 중복 수집 방지 | `battle_date` | 30일 |
 
 ### 2.2 Stats Battle 테이블
 
 #### `stats_result_battle`
 - **목적**: 승/패/무 결과가 있는 배틀 데이터 저장
 - **파티션 키**: `battle_date` (battleAt의 한국시간 날짜)
-- **중복 기준**: `battleKey` 단독 (같은 배틀은 한 번만 저장)
+- **중복 방지**: Unique Index `(battle_date, battle_key)` (같은 배틀은 한 번만 저장)
 - **사용처**: 브롤러별 승률, 맵별 승률 등 결과 기반 통계
 
 #### `stats_rank_battle`
 - **목적**: 랭크(순위) 결과가 있는 배틀 데이터 저장
 - **파티션 키**: `battle_date` (battleAt의 한국시간 날짜)
-- **중복 기준**: `playerTag + battleKey` (같은 배틀의 같은 플레이어는 한 번만)
+- **중복 방지**: Unique Index `(battle_date, battle_key, player_brawlstars_tag)` (같은 배틀의 같은 플레이어는 한 번만)
 - **사용처**: 솔로 쇼다운 등 순위 기반 통계
-
-### 2.3 Aggregated Key 테이블
-
-#### `aggregated_result_battle_key`
-- **목적**: `stats_result_battle` 중복 수집 방지
-- **Unique 키**: `(battle_date, battle_key)`
-- **사용 이유**: 같은 배틀이 여러 플레이어 갱신 시 중복 수집되지 않도록 함
-
-#### `aggregated_rank_battle_key`
-- **목적**: `stats_rank_battle` 중복 수집 방지
-- **Unique 키**: `(battle_date, player_brawlstars_tag, battle_key)`
-- **사용 이유**: 랭크 통계는 플레이어별로 저장되므로 플레이어+배틀 키로 중복 체크
 
 ## 3. 데이터 흐름
 
 ```
 BattleEntity (원본 배틀 데이터)
     │
-    ├── 조건 1: 최근 30일 이내 전투만 (StatsBattleHelper.BATTLE_MAX_AGE_DAYS)
-    ├── 조건 2: Aggregated 테이블에 없는 키만 (중복 방지)
+    ├── 조건 1: 최근 7일 이내 전투만 (StatsBattleHelper.BATTLE_MAX_AGE_DAYS)
+    ├── 조건 2: Unique Index 기반 중복 방지
     │
     ├─────────────────────────────────────────────────┐
     │                                                 │
     ▼                                                 ▼
 StatsResultBattleEntity                    StatsRankBattleEntity
 (배틀 단위 통계)                             (플레이어별 랭크 통계)
-    │                                                 │
-    ▼                                                 ▼
-AggregatedResultBattleKeyEntity            AggregatedRankBattleKeyEntity
-(battleKey 중복 방지)                        (playerTag + battleKey 중복 방지)
 ```
 
 ### 수집 프로세스
 
-1. **배틀 데이터 조회**: `BattleEntity`에서 최근 30일 이내 배틀 조회
-2. **중복 체크**: Aggregated Key 테이블에서 이미 처리된 키인지 확인
+1. **배틀 데이터 조회**: `BattleEntity`에서 최근 7일 이내 배틀 조회
+2. **중복 체크**: Stats 테이블에서 이미 처리된 키인지 확인
 3. **Stats Battle 저장**: 중복이 아닌 경우 Stats 테이블에 저장 (`battleDate`는 `battleAt`에서 자동 계산)
-4. **Aggregated Key 저장**: 처리 완료된 키를 Aggregated 테이블에 저장
-5. **통계 반영**: 배치에서 Stats 데이터를 집계하여 통계 반영
+4. **통계 반영**: 배치에서 Stats 데이터를 집계하여 통계 반영
 
 ## 4. 파티셔닝 전략
 
 ### 4.1 파티션 키
 
 모든 테이블이 `battle_date` (전투일, 한국 시간 기준)를 파티션 키로 사용합니다.
-
-| 테이블 | 파티션 키 | 이유 |
-|--------|----------|------|
-| `stats_*_battle` | `battle_date` | 배틀 일자 기준으로 파티션 관리 (통계 집계 시 battleDate 기준 조회) |
-| `aggregated_*_battle_key` | `battle_date` | 배틀 일자 기준으로 중복 체크 (30일 이내 배틀만 수집) |
 
 ### 4.2 Stats Battle 테이블 파티셔닝
 
@@ -102,19 +78,6 @@ partition by range (to_days(battle_date)) (
 - **파티션 키**: `battle_date` (배틀 일자, 한국 시간 기준)
 - **보관 기간**: 7일
 - **삭제 시점**: 통계 반영 완료 후 7일 경과 시 파티션 삭제
-
-### 4.3 Aggregated Key 테이블 파티셔닝
-
-```sql
--- 파티션 구조: battle_date 기준
-partition by range (to_days(battle_date)) (
-    partition p_default values less than maxvalue
-)
-```
-
-- **파티션 키**: `battle_date` (배틀 일자)
-- **보관 기간**: 30일
-- **삭제 시점**: 30일 초과 파티션 삭제 (더 이상 중복 체크 불필요)
 
 ## 5. 통계 집계 배치 전략
 
@@ -146,40 +109,19 @@ partition by range (to_days(battle_date)) (
 
 ## 6. 데이터 보관 정책
 
-### 6.1 보관 기간 요약
-
 | 테이블 유형 | 보관 기간 | 삭제 조건 |
 |-------------|----------|----------|
 | Stats Battle | 7일 | 통계 반영 완료 + 7일 경과 |
-| Aggregated Key | 30일 | 배틀 일자 기준 30일 초과 |
 
-### 6.2 보관 기간 설정 근거
-
-#### Stats Battle (7일)
 - 수집된 데이터는 최근 3일 롤링 배치로 통계 반영
 - 통계 반영 후에는 원본 데이터 불필요
 - 여유 기간 포함하여 7일 보관
-
-#### Aggregated Key (30일)
-- `StatsBattleHelper.BATTLE_MAX_AGE_DAYS = 30`과 일치
-- 30일 이내 배틀만 수집하므로 중복 체크도 30일 필요
-- 30일 초과 배틀은 수집 대상이 아니므로 키 삭제 가능
 
 ## 7. 파티션 관리 가이드
 
 ### 7.1 파티션 추가 (일별)
 
 ```sql
--- aggregated_result_battle_key
-ALTER TABLE aggregated_result_battle_key ADD PARTITION (
-    PARTITION p_20250201 VALUES LESS THAN (to_days('2025-02-02'))
-);
-
--- aggregated_rank_battle_key
-ALTER TABLE aggregated_rank_battle_key ADD PARTITION (
-    PARTITION p_20250201 VALUES LESS THAN (to_days('2025-02-02'))
-);
-
 -- stats_result_battle
 ALTER TABLE stats_result_battle ADD PARTITION (
     PARTITION p_20250201 VALUES LESS THAN (to_days('2025-02-02'))
@@ -197,10 +139,6 @@ ALTER TABLE stats_rank_battle ADD PARTITION (
 -- Stats Battle: 7일 초과 파티션 삭제
 ALTER TABLE stats_result_battle DROP PARTITION p_20250101;
 ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
-
--- Aggregated Key: 30일 초과 파티션 삭제
-ALTER TABLE aggregated_result_battle_key DROP PARTITION p_20250101;
-ALTER TABLE aggregated_rank_battle_key DROP PARTITION p_20250101;
 ```
 
 ### 7.3 운영 권장 사항
@@ -216,14 +154,7 @@ ALTER TABLE aggregated_rank_battle_key DROP PARTITION p_20250101;
 
 - `StatsResultBattleEntity`: 결과 기반 통계 배틀 엔티티
 - `StatsRankBattleEntity`: 랭크 기반 통계 배틀 엔티티
-- `AggregatedResultBattleKeyEntity`: Result 중복 방지 키 엔티티
-- `AggregatedRankBattleKeyEntity`: Rank 중복 방지 키 엔티티
-
-### Repository
-
-- `AggregatedResultBattleKeyJpaRepository`
-- `AggregatedRankBattleKeyJpaRepository`
 
 ### 설정
 
-- `StatsBattleHelper.BATTLE_MAX_AGE_DAYS = 30`: 수집 대상 배틀의 최대 경과 일수
+- `StatsBattleHelper.BATTLE_MAX_AGE_DAYS = 7`: 수집 대상 배틀의 최대 경과 일수
