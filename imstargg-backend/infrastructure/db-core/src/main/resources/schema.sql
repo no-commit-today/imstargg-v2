@@ -366,6 +366,7 @@ create table if not exists brawler_battle_result_stats
     victory_count                 bigint       not null,
     defeat_count                  bigint       not null,
     draw_count                    bigint       not null,
+    total_count                   bigint       not null,
     star_player_count             bigint       not null,
     created_at                    timestamp(6) not null default current_timestamp(6),
     updated_at                    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
@@ -382,6 +383,7 @@ create table if not exists brawler_battle_rank_stats
     battle_date                  date         not null,
     brawler_brawlstars_id        bigint       not null,
     rank_counts                  json         not null,
+    total_count                  bigint       not null,
     created_at                   timestamp(6) not null default current_timestamp(6),
     updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date)
@@ -401,6 +403,7 @@ create table if not exists brawler_enemy_battle_result_stats
     victory_count                        bigint       not null,
     defeat_count                         bigint       not null,
     draw_count                           bigint       not null,
+    total_count                          bigint       not null,
     created_at                           timestamp(6) not null default current_timestamp(6),
     updated_at                           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_enemy_battle_result_stats_1 (event_brawlstars_id, tier_range, period_type, start_battle_date),
@@ -420,6 +423,7 @@ create table if not exists brawler_team_battle_result_stats
     victory_count                       bigint       not null,
     defeat_count                        bigint       not null,
     draw_count                          bigint       not null,
+    total_count                         bigint       not null,
     created_at                          timestamp(6) not null default current_timestamp(6),
     updated_at                          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_result_stats_1 (event_brawlstars_id, tier_range, period_type, start_battle_date)
@@ -446,6 +450,7 @@ create table if not exists brawler_team_battle_rank_stats
     end_battle_date                   date         not null,
     team_size                         int          not null,
     rank_counts                       json         not null,
+    total_count                       bigint       not null,
     created_at                        timestamp(6) not null default current_timestamp(6),
     updated_at                        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_rank_stats_1 (event_brawlstars_id, tier_range, period_type, start_battle_date)

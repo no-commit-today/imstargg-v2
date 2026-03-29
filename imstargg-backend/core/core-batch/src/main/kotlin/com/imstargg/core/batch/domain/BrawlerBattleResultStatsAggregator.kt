@@ -54,7 +54,7 @@ class BrawlerBattleResultStatsAggregator {
                 battleDate = key.battleDate,
                 brawlerBrawlStarsId = key.brawlerBrawlStarsId,
                 resultCount =
-                    ResultCountEmbedded(
+                    ResultCountEmbedded.create(
                         victoryCount = acc.victoryCount,
                         defeatCount = acc.defeatCount,
                         drawCount = acc.drawCount,
