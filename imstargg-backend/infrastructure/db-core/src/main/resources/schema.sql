@@ -373,18 +373,18 @@ create table if not exists brawler_battle_result_stats
     index ix_brawler_battle_result_stats_2 (tier_range, battle_date, brawler_brawlstars_id)
 );
 
--- 일별 브롤러 솔로(1인) 전투 랭크 통계
-create table if not exists brawler_solo_battle_rank_stats
+-- 일별 브롤러 전투 랭크 통계
+create table if not exists brawler_battle_rank_stats
 (
-    brawler_solo_battle_rank_stats_id bigint auto_increment primary key,
-    event_brawlstars_id              bigint       not null,
-    tier_range                       varchar(45)  not null,
-    battle_date                      date         not null,
-    brawler_brawlstars_id            bigint       not null,
-    rank_counts                      json         not null,
-    created_at                       timestamp(6) not null default current_timestamp(6),
-    updated_at                       timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_brawler_solo_battle_rank_stats (event_brawlstars_id, tier_range, battle_date)
+    brawler_battle_rank_stats_id bigint auto_increment primary key,
+    event_brawlstars_id          bigint       not null,
+    tier_range                   varchar(45)  not null,
+    battle_date                  date         not null,
+    brawler_brawlstars_id        bigint       not null,
+    rank_counts                  json         not null,
+    created_at                   timestamp(6) not null default current_timestamp(6),
+    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date)
 );
 
 -- 브롤러 vs 적 브롤러 전투 결과 통계

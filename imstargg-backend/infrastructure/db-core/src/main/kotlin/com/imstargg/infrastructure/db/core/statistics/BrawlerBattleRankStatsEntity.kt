@@ -13,15 +13,15 @@ import java.time.LocalDate
 
 @Entity
 @Table(
-    name = "brawler_solo_battle_rank_stats",
+    name = "brawler_battle_rank_stats",
     indexes = [
         Index(
-            name = "ix_brawler_solo_battle_rank_stats",
+            name = "ix_brawler_battle_rank_stats",
             columnList = "event_brawlstars_id, tier_range, battle_date",
         ),
     ],
 )
-class BrawlerSoloBattleRankStatsEntity(
+class BrawlerBattleRankStatsEntity(
     eventBrawlStarsId: Long,
     tierRange: StatsTierRange,
     battleDate: LocalDate,
@@ -35,7 +35,7 @@ class BrawlerSoloBattleRankStatsEntity(
     ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "brawler_solo_battle_rank_stats_id", nullable = false)
+    @Column(name = "brawler_battle_rank_stats_id", nullable = false)
     val id: Long? = null
 
     @Embedded
