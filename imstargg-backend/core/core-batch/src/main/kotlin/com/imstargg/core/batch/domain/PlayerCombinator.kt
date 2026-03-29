@@ -2,7 +2,7 @@ package com.imstargg.core.batch.domain
 
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 
-class PlayerCombinator {
+object PlayerCombinator {
     fun combine(
         players: List<StatsBattleEntityTeamPlayer>,
         size: Int,

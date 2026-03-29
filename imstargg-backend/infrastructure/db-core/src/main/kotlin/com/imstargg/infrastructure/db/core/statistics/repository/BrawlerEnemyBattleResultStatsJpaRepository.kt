@@ -7,18 +7,18 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
 interface BrawlerEnemyBattleResultStatsJpaRepository : JpaRepository<BrawlerEnemyBattleResultStatsEntity, Long> {
-    fun findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndBattleDate(
+    fun findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
         eventBrawlStarsId: Long,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        battleDate: LocalDate,
+        startBattleDate: LocalDate,
     ): List<BrawlerEnemyBattleResultStatsEntity>
 
-    fun findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndBattleDate(
+    fun findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
         eventBrawlStarsId: Long,
         brawlerBrawlStarsId: Long,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        battleDate: LocalDate,
+        startBattleDate: LocalDate,
     ): List<BrawlerEnemyBattleResultStatsEntity>
 }

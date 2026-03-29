@@ -100,7 +100,7 @@ class BattleEventResultStatisticsRepository(
     ): List<BrawlerEnemyResultCount> {
         val entities =
             enemyBattleResultJpaRepository
-                .findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndBattleDate(
+                .findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
                     eventId.value,
                     brawlerId.value,
                     StatsPeriodType.WEEKLY,

@@ -10,14 +10,14 @@ interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
         eventBrawlStarsId: Long,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        battleDate: LocalDate,
+        startBattleDate: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultStatsEntity>
 
     fun findAllByConditionsAndBrawler(
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        battleDate: LocalDate,
+        startBattleDate: LocalDate,
         brawlerBrawlStarsId: Long,
     ): List<BrawlerTeamBattleResultStatsEntity>
 }

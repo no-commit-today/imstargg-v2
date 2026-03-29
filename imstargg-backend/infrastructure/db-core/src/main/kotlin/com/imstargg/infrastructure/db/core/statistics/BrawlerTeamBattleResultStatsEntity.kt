@@ -2,8 +2,10 @@ package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -21,29 +23,35 @@ import java.time.LocalDate
     indexes = [
         Index(
             name = "ix_brawler_team_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, period_type, battle_date",
+            columnList = "event_brawlstars_id, tier_range, period_type, start_battle_date",
         ),
     ],
 )
-class BrawlerTeamBattleResultStatsEntity internal constructor(
-    eventBrawlStarsId: Long,
+class BrawlerTeamBattleResultStatsEntity(
+    @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
+    val eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
-    tierRange: StatsTierRange,
-    battleDate: LocalDate,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
+    val tierRange: StatsTierRange,
+    @Column(name = "start_battle_date", updatable = false, nullable = false)
+    val startBattleDate: LocalDate,
+    @Column(name = "end_battle_date", updatable = false, nullable = false)
+    val endBattleDate: LocalDate,
     @Column(name = "team_size", updatable = false, nullable = false)
     val teamSize: Int,
-    resultCount: ResultCountEmbedded,
-) : BaseBattleResultStatsEntity(
-        eventBrawlStarsId = eventBrawlStarsId,
-        tierRange = tierRange,
-        battleDate = battleDate,
-        resultCount = resultCount,
-    ) {
+    @Embedded
+    val resultCount: ResultCountEmbedded,
+    initialBrawlerBrawlStarsIds: List<Long>,
+) : BaseTimeEntity() {
     init {
-        require(teamSize in 2..5) {
-            "teamSize($teamSize)는 2~5 사이여야 합니다."
+        require(teamSize in 2..3) {
+            "teamSize($teamSize)는 2~3 사이여야 합니다."
+        }
+        require(startBattleDate <= endBattleDate) {
+            "startBattleDate($startBattleDate)는 endBattleDate($endBattleDate) 이전이어야 합니다."
         }
     }
 
@@ -53,38 +61,11 @@ class BrawlerTeamBattleResultStatsEntity internal constructor(
     val id: Long? = null
 
     @OneToMany(mappedBy = "stats", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val brawlers: MutableList<BrawlerTeamBattleResultStatsBrawlerEntity> = mutableListOf()
+    val brawlers: List<BrawlerTeamBattleResultStatsBrawlerEntity> =
+        initialBrawlerBrawlStarsIds.map {
+            BrawlerTeamBattleResultStatsBrawlerEntity(stats = this, brawlerBrawlStarsId = it)
+        }
 
     val brawlerBrawlStarsIds: List<Long>
         get() = brawlers.map { it.brawlerBrawlStarsId }.sorted()
-
-    companion object {
-        fun create(
-            eventBrawlStarsId: Long,
-            periodType: StatsPeriodType,
-            tierRange: StatsTierRange,
-            battleDate: LocalDate,
-            brawlerBrawlStarsIds: List<Long>,
-            resultCount: ResultCountEmbedded,
-        ): BrawlerTeamBattleResultStatsEntity {
-            val entity =
-                BrawlerTeamBattleResultStatsEntity(
-                    eventBrawlStarsId = eventBrawlStarsId,
-                    periodType = periodType,
-                    tierRange = tierRange,
-                    battleDate = battleDate,
-                    teamSize = brawlerBrawlStarsIds.size,
-                    resultCount = resultCount,
-                )
-            brawlerBrawlStarsIds.forEach { brawlerId ->
-                entity.brawlers.add(
-                    BrawlerTeamBattleResultStatsBrawlerEntity(
-                        stats = entity,
-                        brawlerBrawlStarsId = brawlerId,
-                    ),
-                )
-            }
-            return entity
-        }
-    }
 }

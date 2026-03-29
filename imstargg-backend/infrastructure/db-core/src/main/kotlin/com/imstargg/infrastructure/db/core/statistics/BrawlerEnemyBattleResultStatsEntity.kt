@@ -2,7 +2,9 @@ package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -19,35 +21,40 @@ import java.time.LocalDate
     indexes = [
         Index(
             name = "ix_brawler_enemy_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, period_type, battle_date",
+            columnList = "event_brawlstars_id, tier_range, period_type, start_battle_date",
         ),
         Index(
             name = "ix_brawler_enemy_battle_result_stats_2",
-            columnList = "brawler_brawlstars_id, tier_range, period_type, battle_date",
+            columnList = "brawler_brawlstars_id, tier_range, period_type, start_battle_date",
         ),
     ],
 )
-class BrawlerEnemyBattleResultStatsEntity internal constructor(
-    eventBrawlStarsId: Long,
+class BrawlerEnemyBattleResultStatsEntity(
+    @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
+    val eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val periodType: StatsPeriodType,
-    tierRange: StatsTierRange,
-    battleDate: LocalDate,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
+    val tierRange: StatsTierRange,
+    @Column(name = "start_battle_date", updatable = false, nullable = false)
+    val startBattleDate: LocalDate,
+    @Column(name = "end_battle_date", updatable = false, nullable = false)
+    val endBattleDate: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     @Column(name = "enemy_brawler_brawlstars_id", updatable = false, nullable = false)
     val enemyBrawlerBrawlStarsId: Long,
-    resultCount: ResultCountEmbedded,
-) : BaseBattleResultStatsEntity(
-        eventBrawlStarsId = eventBrawlStarsId,
-        tierRange = tierRange,
-        battleDate = battleDate,
-        resultCount = resultCount,
-    ) {
+    @Embedded
+    val resultCount: ResultCountEmbedded,
+) : BaseTimeEntity() {
     init {
         require(brawlerBrawlStarsId != enemyBrawlerBrawlStarsId) {
             "brawlerBrawlStarsId($brawlerBrawlStarsId)와 enemyBrawlerBrawlStarsId($enemyBrawlerBrawlStarsId)는 달라야 합니다."
+        }
+        require(startBattleDate <= endBattleDate) {
+            "startBattleDate($startBattleDate)는 endBattleDate($endBattleDate) 이전이어야 합니다."
         }
     }
 
@@ -55,24 +62,4 @@ class BrawlerEnemyBattleResultStatsEntity internal constructor(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_enemy_battle_result_stats_id", nullable = false)
     val id: Long? = null
-
-    companion object {
-        fun create(
-            eventBrawlStarsId: Long,
-            periodType: StatsPeriodType,
-            tierRange: StatsTierRange,
-            battleDate: LocalDate,
-            brawlerBrawlStarsId: Long,
-            enemyBrawlerBrawlStarsId: Long,
-            resultCount: ResultCountEmbedded,
-        ) = BrawlerEnemyBattleResultStatsEntity(
-            eventBrawlStarsId = eventBrawlStarsId,
-            periodType = periodType,
-            tierRange = tierRange,
-            battleDate = battleDate,
-            brawlerBrawlStarsId = brawlerBrawlStarsId,
-            enemyBrawlerBrawlStarsId = enemyBrawlerBrawlStarsId,
-            resultCount = resultCount,
-        )
-    }
 }
