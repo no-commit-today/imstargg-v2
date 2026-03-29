@@ -1,19 +1,18 @@
 package com.imstargg.core.domain.statistics
 
-import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import java.time.LocalDate
 
 data class BrawlerResultDailyCount(
     val date: LocalDate,
-    val resultCount: ResultCount,
-    val starPlayerCount: StarPlayerCount,
+    val brawlerResultCount: BrawlerResultCount,
 ) {
-    fun toStatistics(brawlerId: BrawlStarsId) =
+    fun toStatistics() =
         BrawlerResultDailyStatistics(
             date = date,
-            brawlerId = brawlerId,
-            totalBattleCount = resultCount.totalCount,
-            winRate = resultCount.winRate,
-            starPlayerRate = starPlayerCount.starPlayerRate(resultCount.totalCount),
+            brawlerId = brawlerResultCount.brawlerId,
+            totalBattleCount = brawlerResultCount.resultCount.totalCount,
+            winRate = brawlerResultCount.resultCount.winRate,
+            starPlayerRate = brawlerResultCount.starPlayerCount
+                .starPlayerRate(brawlerResultCount.resultCount.totalCount),
         )
 }

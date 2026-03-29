@@ -5,11 +5,22 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEn
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
-interface BrawlerBattleResultStatsJpaRepository :
-    JpaRepository<BrawlerBattleResultStatsEntity, Long>,
-    BrawlerBattleResultStatsJpaRepositoryCustom {
+interface BrawlerBattleResultStatsJpaRepository : JpaRepository<BrawlerBattleResultStatsEntity, Long> {
     fun findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
         eventBrawlStarsId: Long,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerBattleResultStatsEntity>
+
+    fun findAllByTierRangeAndBattleDateBetween(
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerBattleResultStatsEntity>
+
+    fun findAllByBrawlerBrawlStarsIdAndTierRangeAndBattleDateBetween(
+        brawlerBrawlStarsId: Long,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,

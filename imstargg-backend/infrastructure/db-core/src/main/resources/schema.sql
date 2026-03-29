@@ -370,7 +370,7 @@ create table if not exists brawler_battle_result_stats
     created_at                    timestamp(6) not null default current_timestamp(6),
     updated_at                    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_battle_result_stats_1 (event_brawlstars_id, tier_range, battle_date),
-    index ix_brawler_battle_result_stats_2 (tier_range, battle_date, brawler_brawlstars_id)
+    index ix_brawler_battle_result_stats_2 (brawler_brawlstars_id, tier_range, battle_date)
 );
 
 -- 일별 브롤러 전투 랭크 통계

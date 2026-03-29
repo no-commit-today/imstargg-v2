@@ -19,7 +19,7 @@ class BrawlerStatisticsService(
     fun getBrawlerDailyResultStatistics(param: BrawlersStatisticsParam): List<BrawlerResultDailyStatistics> =
         resultRepository
             .findBrawlerDailyResultCounts(param.brawlerId, param.tierRange, param.startDate, param.endDate)
-            .map { it.toStatistics(param.brawlerId) }
+            .map { it.toStatistics() }
 
     fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): List<BrawlersResultStatistics> =
         resultRepository

@@ -20,7 +20,7 @@ import java.time.LocalDate
         ),
         Index(
             name = "ix_brawler_battle_result_stats_2",
-            columnList = "tier_range, battle_date, brawler_brawlstars_id",
+            columnList = "brawler_brawlstars_id, tier_range, battle_date",
         ),
     ],
 )
