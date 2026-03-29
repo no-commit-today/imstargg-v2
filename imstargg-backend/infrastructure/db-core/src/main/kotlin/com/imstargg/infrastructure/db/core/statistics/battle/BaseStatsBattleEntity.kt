@@ -35,4 +35,10 @@ abstract class BaseStatsBattleEntity(
 ) : BaseTimeEntity() {
     @Column(name = "battle_date", updatable = false, nullable = false)
     val battleDate: LocalDate = battleAt.toKoreaLocalDate()
+
+    fun playerTeam(): List<List<StatsBattleEntityTeamPlayer>> =
+        teams.filter { team -> team.any { it.brawlStarsTag == playerBrawlStarsTag } }
+
+    fun enemyTeams(): List<List<StatsBattleEntityTeamPlayer>> =
+        teams.filter { team -> team.none { it.brawlStarsTag == playerBrawlStarsTag } }
 }
