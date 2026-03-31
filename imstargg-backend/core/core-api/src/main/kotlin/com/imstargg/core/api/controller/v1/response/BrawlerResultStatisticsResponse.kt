@@ -9,6 +9,8 @@ data class BrawlerResultStatisticsItemResponse(
     val pickRate: Double,
     val winRate: Double,
     val starPlayerRate: Double,
+    val tierScore: Int,
+    val tier: String,
 )
 
 data class BrawlerResultStatisticsResponse(
@@ -29,6 +31,8 @@ data class BrawlerResultStatisticsResponse(
                         pickRate = item.pickRate,
                         winRate = item.winRate,
                         starPlayerRate = item.starPlayerRate,
+                        tierScore = item.tierScore.value,
+                        tier = item.tierScore.tier().name,
                     )
                 },
         )

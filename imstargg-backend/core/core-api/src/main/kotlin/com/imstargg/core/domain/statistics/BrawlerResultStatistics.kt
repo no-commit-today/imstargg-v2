@@ -8,6 +8,7 @@ data class BrawlerResultStatisticsItem(
     val pickRate: Double,
     val winRate: Double,
     val starPlayerRate: Double,
+    val tierScore: BrawlerTierScore,
 )
 
 data class BrawlerResultStatistics(
@@ -17,6 +18,7 @@ data class BrawlerResultStatistics(
     companion object {
         fun create(counts: List<BrawlerResultCount>): BrawlerResultStatistics {
             val totalBattleCount = counts.sumOf { it.resultCount.totalCount }
+            val tierScores = BrawlerTierScore.create(counts)
             val items =
                 counts.map { count ->
                     BrawlerResultStatisticsItem(
@@ -29,9 +31,13 @@ data class BrawlerResultStatistics(
                                 count.starPlayerCount,
                                 count.resultCount.totalCount,
                             ),
+                        tierScore = tierScores[count.brawlerId] ?: BrawlerTierScore(50),
                     )
                 }
-            return BrawlerResultStatistics(totalBattleCount = totalBattleCount, items = items)
+            return BrawlerResultStatistics(
+                totalBattleCount = totalBattleCount,
+                items = items.sortedByDescending { it.tierScore.value },
+            )
         }
     }
 }
