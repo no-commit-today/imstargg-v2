@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 @Service
 class RenewalService(
     private val renewalRepository: RenewalRepository,
-    private val renewalProducer: RenewalProducer,
+    private val renewalProducer: RenewalMessageProducer,
     private val clock: Clock,
 ) {
     fun getPlayerRenewal(tag: BrawlStarsTag): Renewal =

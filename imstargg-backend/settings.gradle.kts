@@ -8,6 +8,8 @@ include(
     "core:core-worker",
     "infrastructure:db-core",
     "infrastructure:redis-core",
+    "infrastructure:aws-sqs",
+    "infrastructure:aws-s3",
     "client:brawlstars-client",
     "support:logging",
     "support:monitoring"

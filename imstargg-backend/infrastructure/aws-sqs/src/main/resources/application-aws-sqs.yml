@@ -1,0 +1,31 @@
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+
+app:
+  aws:
+    sqs:
+      renewal:
+        player-queue-name: player-renewal
+        club-queue-name: club-renewal
+
+---
+spring.config.activate.on-profile: local
+spring:
+  cloud:
+    aws:
+      sqs:
+        endpoint: http://localhost:4566
+      credentials:
+        access-key: test
+        secret-key: test
+
+---
+spring.config.activate.on-profile: dev | live
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}

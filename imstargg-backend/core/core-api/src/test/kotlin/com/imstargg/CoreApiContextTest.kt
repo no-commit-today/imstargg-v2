@@ -1,6 +1,6 @@
 package com.imstargg
 
-import com.imstargg.core.application.renewal.RenewalProducer
+import com.imstargg.core.application.renewal.RenewalMessageProducer
 import com.imstargg.infrastructure.db.core.test.TestJpaConfig
 import com.ninjasquad.springmockk.MockkBean
 import org.junit.jupiter.api.Tag
@@ -14,5 +14,5 @@ import org.springframework.test.context.TestConstructor
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 abstract class CoreApiContextTest {
     @MockkBean
-    private lateinit var renewalProducer: RenewalProducer
+    private lateinit var renewalProducer: RenewalMessageProducer
 }

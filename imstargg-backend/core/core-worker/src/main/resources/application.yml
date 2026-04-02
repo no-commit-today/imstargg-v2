@@ -8,7 +8,7 @@ spring:
     include:
       - db
       - db-lock
-      - redis
+      - aws-sqs
 
   config:
     import:

@@ -1,6 +1,8 @@
 package com.imstargg
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.worker.consumer.ClubRenewalMessageConsumer
+import com.imstargg.core.worker.consumer.PlayerRenewalMessageConsumer
 import com.imstargg.infrastructure.db.core.test.TestJpaConfig
 import com.ninjasquad.springmockk.MockkBean
 import org.junit.jupiter.api.Tag
@@ -15,4 +17,10 @@ import org.springframework.test.context.TestConstructor
 abstract class CoreWorkerContextTest {
     @MockkBean
     private lateinit var brawlStarsClient: BrawlStarsClient
+
+    @MockkBean(relaxed = true)
+    private lateinit var playerRenewalMessageConsumer: PlayerRenewalMessageConsumer
+
+    @MockkBean(relaxed = true)
+    private lateinit var clubRenewalMessageConsumer: ClubRenewalMessageConsumer
 }

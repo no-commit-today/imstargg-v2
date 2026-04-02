@@ -2,6 +2,14 @@ spring:
   profiles:
     active: test-db
 
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: test
+        secret-key: test
+
   task:
     execution:
       thread-name-prefix: "core-task-"
@@ -14,14 +22,8 @@ spring:
         await-termination-period: 10000
 
 app:
-  redis:
-    stream:
-      player-renewal:
-        key: test-renewal:player
-        maxlen: 10000
-      club-renewal:
-        key: test-renewal:club
-        maxlen: 10000
-      consumer:
-        group: test-renewal-group
-        name: test-worker
+  aws:
+    sqs:
+      renewal:
+        player-queue-name: test-player-renewal
+        club-queue-name: test-club-renewal

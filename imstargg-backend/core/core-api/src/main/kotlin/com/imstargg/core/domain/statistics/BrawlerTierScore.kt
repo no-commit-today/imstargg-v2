@@ -23,9 +23,7 @@ data class BrawlerTierScore(
         private const val SCALING_K = 200.0
         private const val MIN_WEIGHT_BETA = 0.1
 
-        fun create(
-            counts: List<BrawlerResultCount>,
-        ): Map<BrawlStarsId, BrawlerTierScore> {
+        fun create(counts: List<BrawlerResultCount>): Map<BrawlStarsId, BrawlerTierScore> {
             if (counts.isEmpty()) return emptyMap()
 
             val totalBattleCount = counts.sumOf { it.resultCount.totalCount }

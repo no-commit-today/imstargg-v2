@@ -6,15 +6,10 @@ spring:
     active: local
     include:
       - db
+      - aws-s3
 
 vaadin:
   launch-browser: false
-
-app:
-  image-storage:
-    bucket: imstargg-images
-    region: ap-northeast-2
-    cdn-base-url: ""
 
 ---
 spring:
@@ -28,18 +23,6 @@ spring:
 spring:
   config.activate.on-profile: dev
 
-app:
-  image-storage:
-    bucket: ${IMAGE_STORAGE_BUCKET}
-    region: ${IMAGE_STORAGE_REGION:ap-northeast-2}
-    cdn-base-url: ${IMAGE_STORAGE_CDN_BASE_URL:}
-
 ---
 spring:
   config.activate.on-profile: live
-
-app:
-  image-storage:
-    bucket: ${IMAGE_STORAGE_BUCKET}
-    region: ${IMAGE_STORAGE_REGION:ap-northeast-2}
-    cdn-base-url: ${IMAGE_STORAGE_CDN_BASE_URL:}

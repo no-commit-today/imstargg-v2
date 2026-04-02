@@ -6,7 +6,7 @@ dependencies {
     implementation(project(":core:core-enum"))
     implementation(project(":client:brawlstars-client"))
     implementation(project(":infrastructure:db-core"))
-    implementation(project(":infrastructure:redis-core"))
+    implementation(project(":infrastructure:aws-sqs"))
     implementation(project(":support:logging"))
     implementation(project(":support:monitoring"))
 

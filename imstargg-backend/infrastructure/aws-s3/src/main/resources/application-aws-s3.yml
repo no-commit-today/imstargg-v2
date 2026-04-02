@@ -1,0 +1,37 @@
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+
+app:
+  aws:
+    s3:
+      bucket: imstargg-images
+      cdn-base-url: ""
+
+---
+spring.config.activate.on-profile: local
+spring:
+  cloud:
+    aws:
+      s3:
+        endpoint: http://localhost:4566
+        path-style-access-enabled: true
+      credentials:
+        access-key: test
+        secret-key: test
+
+---
+spring.config.activate.on-profile: dev | live
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+
+app:
+  aws:
+    s3:
+      bucket: ${IMAGE_STORAGE_BUCKET}
+      cdn-base-url: ${IMAGE_STORAGE_CDN_BASE_URL:}
