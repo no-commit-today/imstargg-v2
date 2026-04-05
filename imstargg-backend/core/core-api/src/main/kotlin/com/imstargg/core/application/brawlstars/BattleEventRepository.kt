@@ -5,7 +5,9 @@ import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.event.BattleEventMode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
@@ -23,14 +25,25 @@ class BattleEventRepository(
         val eventEntity = battleEventJpaRepository.findByBrawlStarsId(id.value) ?: return null
 
         val mapNameMessages =
-            eventEntity.mapNameMessageCode()?.let { code ->
-                messageJpaRepository.findAllByCode(code)
-            } ?: emptyList()
+            if (eventEntity.mapName != null) {
+                messageJpaRepository.findAllByTypeAndBrawlStarsId(
+                    MessageType.BATTLE_EVENT_NAME,
+                    eventEntity.brawlStarsId,
+                )
+            } else {
+                emptyList()
+            }
 
         val mode =
             eventEntity.mode?.let { modeEntity ->
-                val modeNameMessages = messageJpaRepository.findAllByCode(modeEntity.nameMessageCode())
-                val modeIconImage = brawlStarsImageJpaRepository.findByCode(modeEntity.iconImageCode())
+                val modeNameMessages = messageJpaRepository.findAllByTypeAndBrawlStarsId(
+                    MessageType.BATTLE_EVENT_MODE_NAME,
+                    modeEntity.brawlStarsId,
+                )
+                val modeIconImage = brawlStarsImageJpaRepository.findByTypeAndBrawlStarsId(
+                    BrawlStarsImageType.BATTLE_EVENT_MODE_ICON,
+                    modeEntity.brawlStarsId,
+                )
                 BattleEventMode(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages),

@@ -525,21 +525,23 @@ create table if not exists star_power
 create table if not exists brawlstars_image
 (
     brawlstars_image_id bigint auto_increment primary key,
-    code                varchar(65)  not null,
+    type                varchar(45)  not null,
+    brawlstars_id       bigint       not null,
     stored_name         varchar(255) not null,
     created_at          timestamp(6) not null default current_timestamp(6),
     updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    unique index uk_brawlstars_image__code (code)
+    unique index uk_brawlstars_image__type_brawlstarsid (type, brawlstars_id)
 );
 
 -- message table
 create table if not exists message
 (
-    message_id bigint auto_increment primary key,
-    code       varchar(65)  not null,
-    lang       varchar(25)  not null,
-    content    text         not null,
-    created_at timestamp(6) not null default current_timestamp(6),
-    updated_at timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    unique index uk_message__code_lang (code, lang)
+    message_id    bigint auto_increment primary key,
+    type          varchar(45) not null,
+    brawlstars_id bigint      not null,
+    lang          varchar(25) not null,
+    content       text        not null,
+    created_at    timestamp(6) not null default current_timestamp(6),
+    updated_at    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_message__type_brawlstarsid_lang (type, brawlstars_id, lang)
 );

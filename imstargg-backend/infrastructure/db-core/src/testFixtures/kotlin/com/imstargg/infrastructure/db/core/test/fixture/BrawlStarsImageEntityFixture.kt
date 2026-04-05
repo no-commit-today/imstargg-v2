@@ -1,23 +1,27 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 
 class BrawlStarsImageEntityFixture {
-    private var code: BrawlStarsImageCode = BrawlStarsImageCode("brawler-shelly")
-    private var storedName: String = "brawler-shelly.png"
+    private var type: BrawlStarsImageType = BrawlStarsImageType.BRAWLER_PORTRAIT
+    private var brawlStarsId: Long = 16000000L
+    private var storedName: String = "brawler/16000000/portrait"
 
     companion object {
         fun aBrawlStarsImageEntity() = BrawlStarsImageEntityFixture()
     }
 
-    fun withCode(value: BrawlStarsImageCode) = apply { code = value }
+    fun withType(value: BrawlStarsImageType) = apply { type = value }
+
+    fun withBrawlStarsId(value: Long) = apply { brawlStarsId = value }
 
     fun withStoredName(value: String) = apply { storedName = value }
 
     fun build() =
         BrawlStarsImageEntity(
-            code = code,
+            type = type,
+            brawlStarsId = brawlStarsId,
             storedName = storedName,
         )
 }

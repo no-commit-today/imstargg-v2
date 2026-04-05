@@ -4,8 +4,8 @@ import com.imstargg.core.admin.application.BattleEventAdminService
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.dialog.Dialog
@@ -91,9 +91,8 @@ class BattleEventModeListView(
 
         val saveNameButton =
             Button("이름 저장") {
-                val code = MessageCode.of("event", "mode", mode.mode.brawlStarsId, "name")
                 battleEventAdminService.updateMessages(
-                    code,
+                    MessageType.BATTLE_EVENT_MODE_NAME, mode.mode.brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -103,8 +102,10 @@ class BattleEventModeListView(
 
         val handler =
             UploadHandler.inMemory { metadata, data ->
-                val code = BrawlStarsImageCode.of("event", "mode", mode.mode.brawlStarsId, "icon")
-                battleEventAdminService.updateImage(code, data.inputStream(), metadata.contentType())
+                battleEventAdminService.updateImage(
+                    BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, mode.mode.brawlStarsId,
+                    data.inputStream(), metadata.contentType(),
+                )
                 ui.ifPresent {
                     it.access {
                         Notification.show("아이콘이 업로드되었습니다.")

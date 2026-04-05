@@ -7,10 +7,10 @@ import com.imstargg.core.domain.brawlstars.brawler.Brawler
 import com.imstargg.core.domain.brawlstars.brawler.Gadget
 import com.imstargg.core.domain.brawlstars.brawler.Gear
 import com.imstargg.core.domain.brawlstars.brawler.StarPower
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
@@ -42,14 +42,25 @@ class BrawlerRepository(
         val gearEntities = gearJpaRepository.findAll().toList()
         val brawlerGearEntities = brawlerGearJpaRepository.findAll().toList()
 
-        val messageCodes =
-            brawlerEntities.map { it.nameMessageCode() } +
-                gadgetEntities.map { it.nameMessageCode() } +
-                starPowerEntities.map { it.nameMessageCode() } +
-                gearEntities.map { it.nameMessageCode() }
-        val messagesByCode = messageJpaRepository.findAllByCodeIn(messageCodes).groupBy { it.code }
+        val brawlerIds = brawlerEntities.map { it.brawlStarsId }
+        val gadgetIds = gadgetEntities.map { it.brawlStarsId }
+        val starPowerIds = starPowerEntities.map { it.brawlStarsId }
+        val gearIds = gearEntities.map { it.brawlStarsId }
 
-        val imagesByCode = brawlStarsImageJpaRepository.findAll().associateBy { it.code }
+        val brawlerNames = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
+            .groupBy { it.brawlStarsId }
+        val gadgetNames = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.GADGET_NAME, gadgetIds)
+            .groupBy { it.brawlStarsId }
+        val starPowerNames = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.STARPOWER_NAME, starPowerIds)
+            .groupBy { it.brawlStarsId }
+        val gearNames = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
+            .groupBy { it.brawlStarsId }
+
+        val imagesByKey = brawlStarsImageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
 
         val gearsByBrawlerId = brawlerGearEntities.groupBy { it.brawlerBrawlStarsId }
 
@@ -63,16 +74,16 @@ class BrawlerRepository(
 
             Brawler(
                 id = BrawlStarsId(brawlerId),
-                name = toMessages(messagesByCode[brawlerEntity.nameMessageCode()]),
+                name = toMessages(brawlerNames[brawlerId]),
                 rarity = brawlerEntity.rarity,
                 role = brawlerEntity.role,
-                gadgets = (gadgetsByBrawlerId[brawlerId] ?: emptyList()).map { toGadget(it, messagesByCode, imagesByCode) },
+                gadgets = (gadgetsByBrawlerId[brawlerId] ?: emptyList()).map { toGadget(it, gadgetNames, imagesByKey) },
                 gears =
                     (gearsByBrawlerId[brawlerId] ?: emptyList())
                         .mapNotNull { gearsById[it.gearBrawlStarsId] }
-                        .map { toGear(it, messagesByCode, imagesByCode) },
-                starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, messagesByCode, imagesByCode) },
-                portraitImagePath = imagesByCode[brawlerEntity.portraitImageCode()]?.storedName,
+                        .map { toGear(it, gearNames, imagesByKey) },
+                starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
+                portraitImagePath = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.storedName,
             )
         }
     }
@@ -84,35 +95,35 @@ class BrawlerRepository(
 
     private fun toGadget(
         entity: GadgetEntity,
-        messages: Map<MessageCode, List<MessageEntity>>,
-        images: Map<BrawlStarsImageCode, BrawlStarsImageEntity>,
+        names: Map<Long, List<MessageEntity>>,
+        images: Map<Pair<BrawlStarsImageType, Long>, BrawlStarsImageEntity>,
     ): Gadget =
         Gadget(
             id = BrawlStarsId(entity.brawlStarsId),
-            name = toMessages(messages[entity.nameMessageCode()]),
-            imagePath = images[entity.imageCode()]?.storedName,
+            name = toMessages(names[entity.brawlStarsId]),
+            imagePath = images[BrawlStarsImageType.GADGET to entity.brawlStarsId]?.storedName,
         )
 
     private fun toGear(
         entity: GearEntity,
-        messages: Map<MessageCode, List<MessageEntity>>,
-        images: Map<BrawlStarsImageCode, BrawlStarsImageEntity>,
+        names: Map<Long, List<MessageEntity>>,
+        images: Map<Pair<BrawlStarsImageType, Long>, BrawlStarsImageEntity>,
     ): Gear =
         Gear(
             id = BrawlStarsId(entity.brawlStarsId),
             rarity = entity.rarity,
-            name = toMessages(messages[entity.nameMessageCode()]),
-            imagePath = images[entity.imageCode()]?.storedName,
+            name = toMessages(names[entity.brawlStarsId]),
+            imagePath = images[BrawlStarsImageType.GEAR to entity.brawlStarsId]?.storedName,
         )
 
     private fun toStarPower(
         entity: StarPowerEntity,
-        messages: Map<MessageCode, List<MessageEntity>>,
-        images: Map<BrawlStarsImageCode, BrawlStarsImageEntity>,
+        names: Map<Long, List<MessageEntity>>,
+        images: Map<Pair<BrawlStarsImageType, Long>, BrawlStarsImageEntity>,
     ): StarPower =
         StarPower(
             id = BrawlStarsId(entity.brawlStarsId),
-            name = toMessages(messages[entity.nameMessageCode()]),
-            imagePath = images[entity.imageCode()]?.storedName,
+            name = toMessages(names[entity.brawlStarsId]),
+            imagePath = images[BrawlStarsImageType.STARPOWER to entity.brawlStarsId]?.storedName,
         )
 }

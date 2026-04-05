@@ -5,6 +5,7 @@ import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.combobox.ComboBox
@@ -43,8 +44,7 @@ class BattleEventListView(
 
         grid
             .addComponentColumn { event ->
-                val mapMessageCode = event.event.mapNameMessageCode()
-                if (mapMessageCode != null) {
+                if (event.event.mapName != null) {
                     Button("맵 이름 편집") { openMapNameEditDialog(event) }
                 } else {
                     Button("편집 불가").apply { isEnabled = false }
@@ -89,7 +89,7 @@ class BattleEventListView(
     }
 
     private fun openMapNameEditDialog(event: BattleEventResponse) {
-        val code = event.event.mapNameMessageCode() ?: return
+        if (event.event.mapName == null) return
         val dialog = Dialog()
         dialog.headerTitle = "맵 이름 편집 - ${event.event.mapName}"
 
@@ -99,7 +99,7 @@ class BattleEventListView(
         val saveButton =
             Button("저장") {
                 battleEventAdminService.updateMessages(
-                    code,
+                    MessageType.BATTLE_EVENT_NAME, event.event.brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("맵 이름이 저장되었습니다.")
