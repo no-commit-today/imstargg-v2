@@ -18,6 +18,10 @@ import java.time.OffsetDateTime
             columnList = "battle_date, battle_key",
             unique = true,
         ),
+        Index(
+            name = "ix_stats_result_battle__battle_date_event",
+            columnList = "battle_date, event_brawlstars_id",
+        ),
     ],
 )
 class StatsResultBattleEntity(

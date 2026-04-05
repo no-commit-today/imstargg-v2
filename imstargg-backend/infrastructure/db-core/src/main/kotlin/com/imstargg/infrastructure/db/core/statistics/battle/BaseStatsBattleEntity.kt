@@ -36,7 +36,10 @@ abstract class BaseStatsBattleEntity(
     @Column(name = "battle_date", updatable = false, nullable = false)
     val battleDate: LocalDate = battleAt.toKoreaLocalDate()
 
-    fun playerTeam(): List<List<StatsBattleEntityTeamPlayer>> =
+    /**
+     * 일반적으로 player team 은 1개일 것.
+     */
+    fun playerTeams(): List<List<StatsBattleEntityTeamPlayer>> =
         teams.filter { team -> team.any { it.brawlStarsTag == playerBrawlStarsTag } }
 
     fun enemyTeams(): List<List<StatsBattleEntityTeamPlayer>> =

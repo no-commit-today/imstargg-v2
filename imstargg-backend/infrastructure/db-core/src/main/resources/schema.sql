@@ -266,7 +266,8 @@ create table if not exists stats_rank_battle
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     primary key (stats_rank_battle_id, battle_date),
     unique index uk_stats_rank_battle__battle_date_battle_key_player
-        (battle_date, battle_key, player_brawlstars_tag)
+        (battle_date, battle_key, player_brawlstars_tag),
+    index ix_stats_rank_battle__battle_date_event (battle_date, event_brawlstars_id)
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );
@@ -290,7 +291,8 @@ create table if not exists stats_result_battle
     created_at                 timestamp(6)  not null default current_timestamp(6),
     updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     primary key (stats_result_battle_id, battle_date),
-    unique index uk_stats_result_battle__battle_date_battle_key (battle_date, battle_key)
+    unique index uk_stats_result_battle__battle_date_battle_key (battle_date, battle_key),
+    index ix_stats_result_battle__battle_date_event (battle_date, event_brawlstars_id)
 ) partition by range (to_days(battle_date)) (
     partition p_default values less than maxvalue
 );

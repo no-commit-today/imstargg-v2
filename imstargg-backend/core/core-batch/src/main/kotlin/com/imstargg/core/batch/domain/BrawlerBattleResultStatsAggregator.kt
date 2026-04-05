@@ -5,26 +5,39 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 
-class BrawlerBattleResultStatsAggregator {
-    private val stats = mutableMapOf<BrawlerBattleStatsKey, Accumulator>()
+/**
+ * 개별 브롤러의 승/패/무 결과 통계를 집계한다.
+ *
+ * ## 집계 키
+ * 브롤러 × 이벤트 × 티어 구간 × 날짜
+ *
+ * ## 집계 규칙
+ * - **아군 팀(playerTeam)**: 배틀 결과를 그대로 집계
+ * - **적군 팀(enemyTeams)**: 배틀 결과의 반대(opposite)를 집계.
+ *   예: 아군이 승리하면 적군 각 브롤러에는 패배로 집계
+ * - **스타 플레이어**: 해당 배틀의 스타 플레이어와 태그가 일치하면 카운트 증가
+ * - **티어 구간**: 각 플레이어 본인의 트로피 기준으로 결정
+ */
+class BrawlerBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBattleEntity, BrawlerBattleResultStatsEntity> {
+    private val resultCounts = ResultCountAccumulator<BrawlerBattleStatsKey>()
+    private val starPlayerCounts = StarPlayerCountAccumulator<BrawlerBattleStatsKey>()
 
-    fun aggregate(battle: StatsResultBattleEntity) {
+    override fun aggregate(battle: StatsResultBattleEntity) {
         val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
         val battleResult = EnumCodeType.findByCode<BattleResult>(battle.result) ?: return
 
-        for (team in battle.playerTeam()) {
-            aggregateTeam(battle, team, battleType, battleResult)
+        for (team in battle.playerTeams()) {
+            doAggregate(battle, team, battleType, battleResult)
         }
         for (team in battle.enemyTeams()) {
-            aggregateTeam(battle, team, battleType, battleResult.opposite())
+            doAggregate(battle, team, battleType, battleResult.opposite())
         }
     }
 
-    private fun aggregateTeam(
+    private fun doAggregate(
         battle: StatsResultBattleEntity,
         team: List<StatsBattleEntityTeamPlayer>,
         battleType: BattleType,
@@ -40,45 +53,23 @@ class BrawlerBattleResultStatsAggregator {
                         tierRange = tierRange,
                         battleDate = battle.battleDate,
                     )
-                val acc = stats.getOrPut(key) { Accumulator() }
-                acc.add(result, player.brawlStarsTag == battle.starPlayerBrawlStarsTag)
+                resultCounts.add(key, result)
+                if (player.brawlStarsTag == battle.starPlayerBrawlStarsTag) {
+                    starPlayerCounts.add(key)
+                }
             }
         }
     }
 
-    fun toEntities(): List<BrawlerBattleResultStatsEntity> =
-        stats.map { (key, acc) ->
+    override fun toEntities(): List<BrawlerBattleResultStatsEntity> =
+        resultCounts.map { key, resultCount ->
             BrawlerBattleResultStatsEntity(
                 eventBrawlStarsId = key.eventBrawlStarsId,
                 tierRange = key.tierRange,
                 battleDate = key.battleDate,
                 brawlerBrawlStarsId = key.brawlerBrawlStarsId,
-                resultCount =
-                    ResultCountEmbedded.create(
-                        victoryCount = acc.victoryCount,
-                        defeatCount = acc.defeatCount,
-                        drawCount = acc.drawCount,
-                    ),
-                starPlayerCount = acc.starPlayerCount,
+                resultCount = resultCount,
+                starPlayerCount = starPlayerCounts[key],
             )
         }
-
-    private class Accumulator {
-        var victoryCount: Long = 0
-        var defeatCount: Long = 0
-        var drawCount: Long = 0
-        var starPlayerCount: Long = 0
-
-        fun add(
-            result: BattleResult,
-            isStarPlayer: Boolean,
-        ) {
-            when (result) {
-                BattleResult.VICTORY -> victoryCount++
-                BattleResult.DEFEAT -> defeatCount++
-                BattleResult.DRAW -> drawCount++
-            }
-            if (isStarPlayer) starPlayerCount++
-        }
-    }
 }

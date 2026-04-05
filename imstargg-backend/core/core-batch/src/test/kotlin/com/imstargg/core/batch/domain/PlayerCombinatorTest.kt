@@ -94,9 +94,10 @@ class PlayerCombinatorTest {
             val players = createPlayers(3)
 
             // when
-            val ex = catchThrowableOfType(IllegalArgumentException::class.java) {
-                PlayerCombinator.combine(players, 0)
-            }
+            val ex =
+                catchThrowableOfType(IllegalArgumentException::class.java) {
+                    PlayerCombinator.combine(players, 0)
+                }
 
             // then
             assertThat(ex).isNotNull()
@@ -108,9 +109,10 @@ class PlayerCombinatorTest {
             val players = createPlayers(2)
 
             // when
-            val ex = catchThrowableOfType(IllegalArgumentException::class.java) {
-                PlayerCombinator.combine(players, 3)
-            }
+            val ex =
+                catchThrowableOfType(IllegalArgumentException::class.java) {
+                    PlayerCombinator.combine(players, 3)
+                }
 
             // then
             assertThat(ex).isNotNull()
@@ -122,12 +124,13 @@ class PlayerCombinatorTest {
             StatsBattleEntityTeamPlayer(
                 brawlStarsTag = "#TAG$i",
                 name = "Player$i",
-                brawler = StatsBattleEntityTeamPlayerBrawler(
-                    brawlStarsId = i.toLong(),
-                    name = "Brawler$i",
-                    power = 11,
-                    trophies = 1000,
-                ),
+                brawler =
+                    StatsBattleEntityTeamPlayerBrawler(
+                        brawlStarsId = i.toLong(),
+                        name = "Brawler$i",
+                        power = 11,
+                        trophies = 1000,
+                    ),
             )
         }
 }
