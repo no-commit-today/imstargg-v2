@@ -4,10 +4,10 @@ import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
 import com.imstargg.core.admin.response.toNameMap
 import com.imstargg.core.enums.Language
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
@@ -29,31 +29,35 @@ class BattleEventAdminService(
 ) {
     fun findAllEvents(): List<BattleEventResponse> {
         val events = battleEventJpaRepository.findAll()
-        val messageCodes = events.mapNotNull { it.mapNameMessageCode() }
-        val messagesByCode = messageJpaRepository.findAllByCodeIn(messageCodes).groupBy { it.code }
+        val eventIds = events.filter { it.mapName != null }.map { it.brawlStarsId }
+        val messagesByBrawlStarsId = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_NAME, eventIds)
+            .groupBy { it.brawlStarsId }
 
         return events.map { event ->
-            val mapMessageCode = event.mapNameMessageCode()
             BattleEventResponse(
                 event = event,
-                mapNames = if (mapMessageCode != null) toNameMap(messagesByCode[mapMessageCode]) else emptyMap(),
+                mapNames = if (event.mapName != null) toNameMap(messagesByBrawlStarsId[event.brawlStarsId]) else emptyMap(),
             )
         }
     }
 
     fun findAllModes(): List<BattleEventModeResponse> {
         val modes = battleEventModeJpaRepository.findAll()
-        val messageCodes = modes.map { it.nameMessageCode() }
-        val imageCodes = modes.map { it.iconImageCode() }
+        val modeIds = modes.map { it.brawlStarsId }
 
-        val messagesByCode = messageJpaRepository.findAllByCodeIn(messageCodes).groupBy { it.code }
-        val imagesByCode = imageJpaRepository.findAllByCodeIn(imageCodes).associateBy { it.code }
+        val messagesByBrawlStarsId = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_MODE_NAME, modeIds)
+            .groupBy { it.brawlStarsId }
+        val imagesByBrawlStarsId = imageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, modeIds)
+            .associateBy { it.brawlStarsId }
 
         return modes.map { mode ->
             BattleEventModeResponse(
                 mode = mode,
-                names = toNameMap(messagesByCode[mode.nameMessageCode()]),
-                icon = imagesByCode[mode.iconImageCode()],
+                names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
+                icon = imagesByBrawlStarsId[mode.brawlStarsId],
             )
         }
     }
@@ -78,24 +82,26 @@ class BattleEventAdminService(
 
     @Transactional
     fun updateMessages(
-        code: MessageCode,
+        type: MessageType,
+        brawlStarsId: Long,
         langMap: Map<Language, String>,
     ) {
-        messageJpaRepository.deleteAllByCode(code)
+        messageJpaRepository.deleteAllByTypeAndBrawlStarsId(type, brawlStarsId)
         langMap.filter { it.value.isNotBlank() }.forEach { (lang, content) ->
-            messageJpaRepository.save(MessageEntity(code, lang, content))
+            messageJpaRepository.save(MessageEntity(type, brawlStarsId, lang, content))
         }
     }
 
     @Transactional
     fun updateImage(
-        code: BrawlStarsImageCode,
+        type: BrawlStarsImageType,
+        brawlStarsId: Long,
         inputStream: InputStream,
         contentType: String,
     ) {
-        val key = code.value.replace(":", "/")
-        imageStorageService.upload(key, inputStream, contentType)
-        imageJpaRepository.deleteByCode(code)
-        imageJpaRepository.save(BrawlStarsImageEntity(code, key))
+        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
+        imageStorageService.upload(storedName, inputStream, contentType)
+        imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
     }
 }

@@ -8,7 +8,6 @@ app:
   aws:
     s3:
       bucket: imstargg-images
-      cdn-base-url: ""
 
 ---
 spring.config.activate.on-profile: local
@@ -34,4 +33,3 @@ app:
   aws:
     s3:
       bucket: ${IMAGE_STORAGE_BUCKET}
-      cdn-base-url: ${IMAGE_STORAGE_CDN_BASE_URL:}

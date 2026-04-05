@@ -7,8 +7,8 @@ import com.imstargg.core.admin.response.GearResponse
 import com.imstargg.core.admin.response.StarPowerResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.combobox.MultiSelectComboBox
@@ -71,7 +71,7 @@ class BrawlerDetailView(
         val saveButton =
             Button("이름 저장") {
                 brawlerAdminService.updateMessages(
-                    MessageCode.of("brawler", brawlStarsId, "name"),
+                    MessageType.BRAWLER_NAME, brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -85,7 +85,7 @@ class BrawlerDetailView(
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 brawlerAdminService.updateImage(
-                    BrawlStarsImageCode.of("brawler", brawlStarsId, "portrait"),
+                    BrawlStarsImageType.BRAWLER_PORTRAIT, brawlStarsId,
                     data.inputStream(),
                     metadata.contentType(),
                 )
@@ -203,8 +203,9 @@ class BrawlerDetailView(
         openSubItemEditDialog(
             title = "스타파워 편집 - ${sp.starPower.brawlStarsId}",
             names = sp.names,
-            messageCode = MessageCode.of("starpower", sp.starPower.brawlStarsId, "name"),
-            imageCode = BrawlStarsImageCode.of("starpower", sp.starPower.brawlStarsId),
+            messageType = MessageType.STARPOWER_NAME,
+            imageType = BrawlStarsImageType.STARPOWER,
+            brawlStarsId = sp.starPower.brawlStarsId,
         )
     }
 
@@ -212,16 +213,18 @@ class BrawlerDetailView(
         openSubItemEditDialog(
             title = "가젯 편집 - ${gd.gadget.brawlStarsId}",
             names = gd.names,
-            messageCode = MessageCode.of("gadget", gd.gadget.brawlStarsId, "name"),
-            imageCode = BrawlStarsImageCode.of("gadget", gd.gadget.brawlStarsId),
+            messageType = MessageType.GADGET_NAME,
+            imageType = BrawlStarsImageType.GADGET,
+            brawlStarsId = gd.gadget.brawlStarsId,
         )
     }
 
     private fun openSubItemEditDialog(
         title: String,
         names: Map<Language, String>,
-        messageCode: MessageCode,
-        imageCode: BrawlStarsImageCode,
+        messageType: MessageType,
+        imageType: BrawlStarsImageType,
+        brawlStarsId: Long,
     ) {
         val dialog = Dialog()
         dialog.headerTitle = title
@@ -231,7 +234,7 @@ class BrawlerDetailView(
         val saveNameButton =
             Button("이름 저장") {
                 brawlerAdminService.updateMessages(
-                    messageCode,
+                    messageType, brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -241,7 +244,7 @@ class BrawlerDetailView(
 
         val handler =
             UploadHandler.inMemory { metadata, data ->
-                brawlerAdminService.updateImage(imageCode, data.inputStream(), metadata.contentType())
+                brawlerAdminService.updateImage(imageType, brawlStarsId, data.inputStream(), metadata.contentType())
                 ui.ifPresent {
                     it.access {
                         Notification.show("이미지가 업로드되었습니다.")

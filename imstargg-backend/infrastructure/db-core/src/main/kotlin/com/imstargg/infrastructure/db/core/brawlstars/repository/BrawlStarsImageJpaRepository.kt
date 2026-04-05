@@ -1,13 +1,24 @@
 package com.imstargg.infrastructure.db.core.brawlstars.repository
 
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface BrawlStarsImageJpaRepository : JpaRepository<BrawlStarsImageEntity, Long> {
-    fun findByCode(code: BrawlStarsImageCode): BrawlStarsImageEntity?
+    fun findByTypeAndBrawlStarsId(
+        type: BrawlStarsImageType,
+        brawlStarsId: Long,
+    ): BrawlStarsImageEntity?
 
-    fun findAllByCodeIn(codes: Collection<BrawlStarsImageCode>): List<BrawlStarsImageEntity>
+    fun findAllByTypeAndBrawlStarsIdIn(
+        type: BrawlStarsImageType,
+        brawlStarsIds: Collection<Long>,
+    ): List<BrawlStarsImageEntity>
 
-    fun deleteByCode(code: BrawlStarsImageCode)
+    fun findAllByTypeIn(types: Collection<BrawlStarsImageType>): List<BrawlStarsImageEntity>
+
+    fun deleteByTypeAndBrawlStarsId(
+        type: BrawlStarsImageType,
+        brawlStarsId: Long,
+    )
 }

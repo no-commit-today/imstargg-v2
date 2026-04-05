@@ -2,9 +2,7 @@ package com.imstargg.infrastructure.db.core.brawlstars
 
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
-import jakarta.persistence.AttributeOverride
 import jakarta.persistence.Column
-import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -18,13 +16,15 @@ import jakarta.persistence.Table
 @Table(
     name = "message",
     indexes = [
-        Index(name = "uk_message__code_lang", columnList = "code, lang", unique = true),
+        Index(name = "uk_message__type_brawlstarsid_lang", columnList = "type, brawlstars_id, lang", unique = true),
     ],
 )
 class MessageEntity(
-    @Embedded
-    @AttributeOverride(name = "value", column = Column(name = "code", length = 65, updatable = false, nullable = false))
-    val code: MessageCode,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 45, updatable = false, nullable = false)
+    val type: MessageType,
+    @Column(name = "brawlstars_id", updatable = false, nullable = false)
+    val brawlStarsId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "lang", length = 25, updatable = false, nullable = false)
     val lang: Language,

@@ -1,6 +1,8 @@
 package com.imstargg.core.admin.application
 
 import com.imstargg.core.admin.response.DashboardSummaryResponse
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
@@ -26,49 +28,28 @@ class DashboardService(
         val events = battleEventJpaRepository.findAll()
         val modes = battleEventModeJpaRepository.findAll()
 
-        val allMessageCodes =
-            (
-                brawlers.map { it.nameMessageCode() } +
-                    gears.map { it.nameMessageCode() } +
-                    modes.map { it.nameMessageCode() } +
-                    events.mapNotNull { it.mapNameMessageCode() }
-            ).toSet()
-        val existingMessageCodes =
-            if (allMessageCodes.isNotEmpty()) {
-                messageJpaRepository.findAllByCodeIn(allMessageCodes).map { it.code }.toSet()
-            } else {
-                emptySet()
-            }
+        val existingMessages = messageJpaRepository.findAll()
+            .map { it.type to it.brawlStarsId }
+            .toSet()
 
-        val allImageCodes =
-            (
-                brawlers.map { it.portraitImageCode() } +
-                    gears.map { it.imageCode() } +
-                    modes.map { it.iconImageCode() }
-            ).toSet()
-        val existingImageCodes =
-            if (allImageCodes.isNotEmpty()) {
-                imageJpaRepository.findAllByCodeIn(allImageCodes).map { it.code }.toSet()
-            } else {
-                emptySet()
-            }
+        val existingImages = imageJpaRepository.findAll()
+            .map { it.type to it.brawlStarsId }
+            .toSet()
 
         return DashboardSummaryResponse(
             brawlerTotal = brawlers.size,
-            brawlerWithName = brawlers.count { it.nameMessageCode() in existingMessageCodes },
-            brawlerWithImage = brawlers.count { it.portraitImageCode() in existingImageCodes },
+            brawlerWithName = brawlers.count { (MessageType.BRAWLER_NAME to it.brawlStarsId) in existingMessages },
+            brawlerWithImage = brawlers.count { (BrawlStarsImageType.BRAWLER_PORTRAIT to it.brawlStarsId) in existingImages },
             gearTotal = gears.size,
-            gearWithName = gears.count { it.nameMessageCode() in existingMessageCodes },
-            gearWithImage = gears.count { it.imageCode() in existingImageCodes },
+            gearWithName = gears.count { (MessageType.GEAR_NAME to it.brawlStarsId) in existingMessages },
+            gearWithImage = gears.count { (BrawlStarsImageType.GEAR to it.brawlStarsId) in existingImages },
             eventModeTotal = modes.size,
-            eventModeWithName = modes.count { it.nameMessageCode() in existingMessageCodes },
-            eventModeWithIcon = modes.count { it.iconImageCode() in existingImageCodes },
+            eventModeWithName = modes.count { (MessageType.BATTLE_EVENT_MODE_NAME to it.brawlStarsId) in existingMessages },
+            eventModeWithIcon = modes.count { (BrawlStarsImageType.BATTLE_EVENT_MODE_ICON to it.brawlStarsId) in existingImages },
             eventMapTotal = events.count { it.mapName != null },
-            eventMapWithName =
-                events.count {
-                    val code = it.mapNameMessageCode()
-                    code != null && code in existingMessageCodes
-                },
+            eventMapWithName = events.count {
+                it.mapName != null && (MessageType.BATTLE_EVENT_NAME to it.brawlStarsId) in existingMessages
+            },
         )
     }
 }

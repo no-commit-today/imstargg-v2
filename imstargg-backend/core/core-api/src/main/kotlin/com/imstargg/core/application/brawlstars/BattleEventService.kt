@@ -11,6 +11,7 @@ import java.time.OffsetDateTime
 @Service
 @Transactional(readOnly = true)
 class BattleEventService(
+    private val battleEventRepository: BattleEventRepository,
     private val battleEventRepositoryWithCache: BattleEventRepositoryWithCache,
     private val clock: Clock,
 ) {
@@ -25,4 +26,7 @@ class BattleEventService(
             .findAllSoloRankEventBrawlStarsIds(season.key)
             .mapNotNull { battleEventRepositoryWithCache.find(it) }
     }
+
+    fun search(name: String): List<BattleEvent> =
+        battleEventRepository.searchByMapName(name)
 }

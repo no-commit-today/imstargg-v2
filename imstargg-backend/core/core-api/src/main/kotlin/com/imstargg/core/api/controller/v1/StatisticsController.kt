@@ -25,7 +25,7 @@ import java.time.LocalDate
 class StatisticsController(
     private val statisticsQueryComposer: StatisticsQueryComposer,
 ) {
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/result")
     fun getBattleEventBrawlerResultStatistics(
         @PathVariable eventId: Long,
         @RequestParam tierRange: StatsTierRange,
@@ -39,7 +39,7 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result/duo")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/result/duo")
     fun getBattleEventBrawlerDuoResultStatistics(
         @PathVariable eventId: Long,
         @RequestParam brawlerId: Long,
@@ -60,7 +60,7 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result/trio")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/result/trio")
     fun getBattleEventBrawlerTrioResultStatistics(
         @PathVariable eventId: Long,
         @RequestParam brawlerId: Long,
@@ -81,7 +81,7 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/result/enemy")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/result/enemy")
     fun getBattleEventBrawlerEnemyResultStatistics(
         @PathVariable eventId: Long,
         @RequestParam brawlerId: Long,
@@ -102,7 +102,7 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/rank")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/rank")
     fun getBattleEventBrawlerRankStatistics(
         @PathVariable eventId: Long,
         @RequestParam tierRange: StatsTierRange,
@@ -116,7 +116,7 @@ class StatisticsController(
         return ResponseEntity.ok(ListResponse(responses))
     }
 
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/rank/duo")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/rank/duo")
     fun getBattleEventBrawlerDuoRankStatistics(
         @PathVariable eventId: Long,
         @RequestParam brawlerId: Long,
@@ -137,7 +137,7 @@ class StatisticsController(
         return ResponseEntity.ok(ListResponse(responses))
     }
 
-    @GetMapping("/api/v1/statistics/events/{eventId}/brawler/rank/trio")
+    @GetMapping("/v1/statistics/events/{eventId}/brawler/rank/trio")
     fun getBattleEventBrawlerTrioRankStatistics(
         @PathVariable eventId: Long,
         @RequestParam brawlerId: Long,
@@ -158,7 +158,7 @@ class StatisticsController(
         return ResponseEntity.ok(ListResponse(responses))
     }
 
-    @GetMapping("/api/v1/statistics/brawler/result")
+    @GetMapping("/v1/statistics/brawler/result")
     fun getBrawlerResultStatistics(
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
@@ -171,7 +171,7 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/daily")
+    @GetMapping("/v1/statistics/brawlers/{brawlerId}/result/daily")
     fun getBrawlerDailyResultStatistics(
         @PathVariable brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
@@ -185,7 +185,7 @@ class StatisticsController(
         return ResponseEntity.ok(ListResponse(responses))
     }
 
-    @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/duo")
+    @GetMapping("/v1/statistics/brawlers/{brawlerId}/result/duo")
     fun getBrawlerDuoResultStatistics(
         @PathVariable brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
@@ -199,7 +199,7 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/api/v1/statistics/brawlers/{brawlerId}/result/trio")
+    @GetMapping("/v1/statistics/brawlers/{brawlerId}/result/trio")
     fun getBrawlerTrioResultStatistics(
         @PathVariable brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,

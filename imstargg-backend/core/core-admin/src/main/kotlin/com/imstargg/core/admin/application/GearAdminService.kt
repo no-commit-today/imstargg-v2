@@ -4,10 +4,10 @@ import com.imstargg.core.admin.response.GearResponse
 import com.imstargg.core.admin.response.toNameMap
 import com.imstargg.core.enums.GearRarity
 import com.imstargg.core.enums.Language
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
@@ -26,17 +26,20 @@ class GearAdminService(
 ) {
     fun findAll(): List<GearResponse> {
         val gears = gearJpaRepository.findAll()
-        val messageCodes = gears.map { it.nameMessageCode() }
-        val imageCodes = gears.map { it.imageCode() }
+        val gearIds = gears.map { it.brawlStarsId }
 
-        val messagesByCode = messageJpaRepository.findAllByCodeIn(messageCodes).groupBy { it.code }
-        val imagesByCode = imageJpaRepository.findAllByCodeIn(imageCodes).associateBy { it.code }
+        val messagesByBrawlStarsId = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
+            .groupBy { it.brawlStarsId }
+        val imagesByBrawlStarsId = imageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.GEAR, gearIds)
+            .associateBy { it.brawlStarsId }
 
         return gears.map { gear ->
             GearResponse(
                 gear = gear,
-                names = toNameMap(messagesByCode[gear.nameMessageCode()]),
-                image = imagesByCode[gear.imageCode()],
+                names = toNameMap(messagesByBrawlStarsId[gear.brawlStarsId]),
+                image = imagesByBrawlStarsId[gear.brawlStarsId],
             )
         }
     }
@@ -51,24 +54,26 @@ class GearAdminService(
 
     @Transactional
     fun updateMessages(
-        code: MessageCode,
+        type: MessageType,
+        brawlStarsId: Long,
         langMap: Map<Language, String>,
     ) {
-        messageJpaRepository.deleteAllByCode(code)
+        messageJpaRepository.deleteAllByTypeAndBrawlStarsId(type, brawlStarsId)
         langMap.filter { it.value.isNotBlank() }.forEach { (lang, content) ->
-            messageJpaRepository.save(MessageEntity(code, lang, content))
+            messageJpaRepository.save(MessageEntity(type, brawlStarsId, lang, content))
         }
     }
 
     @Transactional
     fun updateImage(
-        code: BrawlStarsImageCode,
+        type: BrawlStarsImageType,
+        brawlStarsId: Long,
         inputStream: InputStream,
         contentType: String,
     ) {
-        val key = code.value.replace(":", "/")
-        imageStorageService.upload(key, inputStream, contentType)
-        imageJpaRepository.deleteByCode(code)
-        imageJpaRepository.save(BrawlStarsImageEntity(code, key))
+        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
+        imageStorageService.upload(storedName, inputStream, contentType)
+        imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
     }
 }

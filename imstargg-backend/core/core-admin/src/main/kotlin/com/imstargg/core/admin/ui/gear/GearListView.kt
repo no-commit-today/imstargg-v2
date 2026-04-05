@@ -5,8 +5,8 @@ import com.imstargg.core.admin.response.GearResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.GearRarity
 import com.imstargg.core.enums.Language
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.combobox.ComboBox
@@ -93,9 +93,8 @@ class GearListView(
 
         val saveNameButton =
             Button("이름 저장") {
-                val code = MessageCode.of("gear", gear.gear.brawlStarsId, "name")
                 gearAdminService.updateMessages(
-                    code,
+                    MessageType.GEAR_NAME, gear.gear.brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -105,8 +104,10 @@ class GearListView(
 
         val handler =
             UploadHandler.inMemory { metadata, data ->
-                val code = BrawlStarsImageCode.of("gear", gear.gear.brawlStarsId)
-                gearAdminService.updateImage(code, data.inputStream(), metadata.contentType())
+                gearAdminService.updateImage(
+                    BrawlStarsImageType.GEAR, gear.gear.brawlStarsId,
+                    data.inputStream(), metadata.contentType(),
+                )
                 ui.ifPresent {
                     it.access {
                         Notification.show("이미지가 업로드되었습니다.")

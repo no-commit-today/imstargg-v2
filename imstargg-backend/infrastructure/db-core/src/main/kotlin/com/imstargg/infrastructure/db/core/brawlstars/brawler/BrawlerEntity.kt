@@ -3,8 +3,6 @@ package com.imstargg.infrastructure.db.core.brawlstars.brawler
 import com.imstargg.core.enums.BrawlerRarity
 import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -36,8 +34,4 @@ class BrawlerEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_id")
     val id: Long? = null
-
-    fun nameMessageCode(): MessageCode = MessageCode.of("brawler", brawlStarsId, "name")
-
-    fun portraitImageCode(): BrawlStarsImageCode = BrawlStarsImageCode.of("brawler", brawlStarsId, "portrait")
 }

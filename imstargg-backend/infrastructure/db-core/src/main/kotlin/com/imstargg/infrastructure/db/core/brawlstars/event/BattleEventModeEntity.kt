@@ -1,8 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.event
 
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageCode
-import com.imstargg.infrastructure.db.core.brawlstars.MessageCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -28,8 +26,4 @@ class BattleEventModeEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battle_event_mode_id")
     val id: Long? = null
-
-    fun nameMessageCode(): MessageCode = MessageCode.of("event", "mode", brawlStarsId, "name")
-
-    fun iconImageCode(): BrawlStarsImageCode = BrawlStarsImageCode.of("event", "mode", brawlStarsId, "icon")
 }
