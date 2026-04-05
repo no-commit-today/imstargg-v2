@@ -7,6 +7,9 @@ data class Messages(
 ) {
     fun find(language: Language): Message? = messages[language] ?: messages[Language.DEFAULT]
 
+    fun containsIgnoreCase(query: String): Boolean =
+        messages.values.any { it.content.contains(query, ignoreCase = true) }
+
     companion object {
         fun create(messages: List<Message>): Messages = Messages(messages.associateBy { it.language })
 

@@ -72,6 +72,11 @@ imstargg-backend/
 
 - **파일당 1개 클래스 원칙**: 한 파일에 하나의 클래스(또는 data class)만 선언. 사용자가 명시적으로 지시하거나, 제안 후 승인된 경우에만 예외 허용.
 
+### API 경로 컨벤션
+
+- `/api` prefix 사용하지 않음 (예: `/v1/brawlers`, `/v1/events/rotation`)
+- ID가 뒤따르지 않는 경로는 단수형 사용 (예: `/v1/brawler/search`, `/v1/event/search`)
+
 ### Key Patterns
 
 - **패키지**: `com.imstargg.*`
