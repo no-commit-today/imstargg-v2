@@ -22,7 +22,7 @@ spring:
         secret-key: test
 
 ---
-spring.config.activate.on-profile: dev | live
+spring.config.activate.on-profile: dev | prod
 spring:
   cloud:
     aws:

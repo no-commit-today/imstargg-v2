@@ -62,7 +62,7 @@ app:
 spring:
   config:
     activate:
-      on-profile: live
+      on-profile: prod
 
 app:
   alert:

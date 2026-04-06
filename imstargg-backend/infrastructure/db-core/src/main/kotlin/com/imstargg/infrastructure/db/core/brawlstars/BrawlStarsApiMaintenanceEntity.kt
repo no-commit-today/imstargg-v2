@@ -25,6 +25,7 @@ class BrawlStarsApiMaintenanceEntity(
     init {
         require(!startTime.isAfter(endTime)) { "startTime must be before or equal to endTime" }
     }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawlstars_api_maintenance_id")

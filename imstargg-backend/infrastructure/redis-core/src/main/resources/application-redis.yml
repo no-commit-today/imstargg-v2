@@ -41,7 +41,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: live
+      on-profile: prod
 
   data:
     redis:

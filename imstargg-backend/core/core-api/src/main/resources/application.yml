@@ -37,6 +37,6 @@ spring:
 
 ---
 spring:
-  config.activate.on-profile: live
+  config.activate.on-profile: prod
 
   web.resources.add-mappings: false

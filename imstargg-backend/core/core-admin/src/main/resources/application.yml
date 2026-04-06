@@ -25,4 +25,4 @@ spring:
 
 ---
 spring:
-  config.activate.on-profile: live
+  config.activate.on-profile: prod

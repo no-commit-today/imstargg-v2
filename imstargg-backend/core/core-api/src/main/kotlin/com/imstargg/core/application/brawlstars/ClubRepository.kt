@@ -1,11 +1,11 @@
 package com.imstargg.core.application.brawlstars
 
-import com.imstargg.core.enums.ClubStatus
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.player.Club
 import com.imstargg.core.domain.brawlstars.player.ClubMember
 import com.imstargg.core.enums.ClubMemberRole
+import com.imstargg.core.enums.ClubStatus
 import com.imstargg.core.enums.ClubType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity

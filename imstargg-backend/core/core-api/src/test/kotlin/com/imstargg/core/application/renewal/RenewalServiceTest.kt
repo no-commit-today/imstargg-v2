@@ -28,14 +28,15 @@ class RenewalServiceTest {
     private val clubRepository = mockk<ClubRepository>()
     private val clock = Clock.fixed(Instant.parse("2025-01-17T10:00:00Z"), ZoneOffset.UTC)
 
-    private val sut = RenewalService(
-        renewalRepository = renewalRepository,
-        renewalProducer = renewalProducer,
-        brawlStarsApiMaintenanceRepository = brawlStarsApiMaintenanceRepository,
-        playerRepository = playerRepository,
-        clubRepository = clubRepository,
-        clock = clock,
-    )
+    private val sut =
+        RenewalService(
+            renewalRepository = renewalRepository,
+            renewalProducer = renewalProducer,
+            brawlStarsApiMaintenanceRepository = brawlStarsApiMaintenanceRepository,
+            playerRepository = playerRepository,
+            clubRepository = clubRepository,
+            clock = clock,
+        )
 
     @Nested
     inner class RenewPlayer {
@@ -56,11 +57,12 @@ class RenewalServiceTest {
         fun `존재하지 않는 플레이어에 대한 갱신 요청은 정상 처리된다`() {
             // given
             val tag = BrawlStarsTag("#TEST")
-            val renewal = aRenewal()
-                .withTag(tag)
-                .withType(RenewalType.PLAYER)
-                .withStatus(RenewalStatus.PENDING)
-                .build()
+            val renewal =
+                aRenewal()
+                    .withTag(tag)
+                    .withType(RenewalType.PLAYER)
+                    .withStatus(RenewalStatus.PENDING)
+                    .build()
             every { playerRepository.isDeleted(tag) } returns false
             every { brawlStarsApiMaintenanceRepository.isUnderMaintenance() } returns false
             every { renewalRepository.find(tag, RenewalType.PLAYER) } returns null
@@ -95,11 +97,12 @@ class RenewalServiceTest {
         fun `존재하지 않는 클럽에 대한 갱신 요청은 정상 처리된다`() {
             // given
             val tag = BrawlStarsTag("#TEST")
-            val renewal = aRenewal()
-                .withTag(tag)
-                .withType(RenewalType.CLUB)
-                .withStatus(RenewalStatus.PENDING)
-                .build()
+            val renewal =
+                aRenewal()
+                    .withTag(tag)
+                    .withType(RenewalType.CLUB)
+                    .withStatus(RenewalStatus.PENDING)
+                    .build()
             every { clubRepository.isDeleted(tag) } returns false
             every { brawlStarsApiMaintenanceRepository.isUnderMaintenance() } returns false
             every { renewalRepository.find(tag, RenewalType.CLUB) } returns null

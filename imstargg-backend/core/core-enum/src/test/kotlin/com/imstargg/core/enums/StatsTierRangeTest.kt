@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class StatsTierRangeTest {
     @Nested
-    inner class resolveAll {
+    inner class ResolveAll {
         @Nested
         inner class `일반 전투` {
             @Test

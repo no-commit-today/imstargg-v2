@@ -94,7 +94,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: live
+      on-profile: prod
 
 storage:
   datasource:
@@ -123,6 +123,6 @@ storage:
     core:
       hikari:
         minimum-idle: 0
-        maximum-pool-size: 1
+        maximum-pool-size: 5
         data-source-properties:
           socketTimeout: 0

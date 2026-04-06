@@ -39,7 +39,7 @@ spring:
 ---
 spring:
   config.activate.on-profile:
-    - live
+    - prod
 
   cloud.openfeign:
     client:

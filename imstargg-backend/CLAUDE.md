@@ -121,7 +121,7 @@ class SomeEntity(
 - `local`: 로컬 Docker 인프라 연결 (기본값)
 - `local-dev`: DEV 환경 연결
 - `dev`: DEV 배포
-- `live`: 프로덕션 배포
+- `prod`: 프로덕션 배포
 
 ## Test Code Conventions
 
