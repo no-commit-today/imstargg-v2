@@ -4,10 +4,12 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
+import com.imstargg.core.domain.brawlstars.brawler.Buffy
 import com.imstargg.core.domain.brawlstars.brawler.Gadget
 import com.imstargg.core.domain.brawlstars.brawler.Gear
 import com.imstargg.core.domain.brawlstars.brawler.HyperCharge
 import com.imstargg.core.domain.brawlstars.brawler.StarPower
+import com.imstargg.core.enums.BuffyType
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
@@ -100,6 +102,12 @@ class BrawlerRepository(
                 starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
                 hyperCharges = (hyperChargesByBrawlerId[brawlerId] ?: emptyList()).map { toHyperCharge(it, hyperChargeNames, imagesByKey) },
                 portraitImagePath = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.storedName,
+                buffies =
+                    listOf(
+                        Buffy(BuffyType.GADGET, imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlerId]?.storedName),
+                        Buffy(BuffyType.STAR_POWER, imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlerId]?.storedName),
+                        Buffy(BuffyType.HYPER_CHARGE, imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlerId]?.storedName),
+                    ),
             )
         }
     }

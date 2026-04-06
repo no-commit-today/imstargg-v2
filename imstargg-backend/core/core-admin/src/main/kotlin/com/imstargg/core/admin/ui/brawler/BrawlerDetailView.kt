@@ -53,6 +53,7 @@ class BrawlerDetailView(
         add(buildInfoSection(detail))
         add(buildNameSection(detail))
         add(buildImageSection(detail))
+        add(buildBuffyImageSection(detail))
         add(buildStarPowerSection(detail))
         add(buildGadgetSection(detail))
         add(buildHyperChargeSection(detail))
@@ -106,6 +107,40 @@ class BrawlerDetailView(
                 maxFiles = 1
             }
         return VerticalLayout(H3("이미지"), imageStatus, upload).apply { isPadding = false }
+    }
+
+    private fun buildBuffyImageSection(detail: BrawlerResponse): VerticalLayout {
+        val buffyTypes =
+            listOf(
+                Triple("가젯 버피", BrawlStarsImageType.BUFFY_GADGET, detail.buffyImages[BrawlStarsImageType.BUFFY_GADGET]),
+                Triple("스타파워 버피", BrawlStarsImageType.BUFFY_STAR_POWER, detail.buffyImages[BrawlStarsImageType.BUFFY_STAR_POWER]),
+                Triple("하이퍼차지 버피", BrawlStarsImageType.BUFFY_HYPER_CHARGE, detail.buffyImages[BrawlStarsImageType.BUFFY_HYPER_CHARGE]),
+            )
+
+        val content = VerticalLayout().apply { isPadding = false }
+        content.add(H3("버피 이미지"))
+
+        buffyTypes.forEach { (label, imageType, imageEntity) ->
+            val imageStatus = Span("$label: ${imageEntity?.storedName ?: "이미지 없음"}")
+            val handler =
+                UploadHandler.inMemory { metadata, data ->
+                    brawlerAdminService.updateImage(imageType, brawlStarsId, data.inputStream(), metadata.contentType())
+                    ui.ifPresent {
+                        it.access {
+                            Notification.show("$label 이미지가 업로드되었습니다.")
+                            buildContent()
+                        }
+                    }
+                }
+            val upload =
+                Upload(handler).apply {
+                    setAcceptedFileTypes("image/*")
+                    maxFiles = 1
+                }
+            content.add(imageStatus, upload)
+        }
+
+        return content
     }
 
     private fun buildStarPowerSection(detail: BrawlerResponse): VerticalLayout {

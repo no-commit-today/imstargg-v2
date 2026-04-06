@@ -7,4 +7,7 @@ enum class BrawlStarsImageType {
     GEAR,
     HYPERCHARGE,
     BATTLE_EVENT_MODE_ICON,
+    BUFFY_GADGET,
+    BUFFY_STAR_POWER,
+    BUFFY_HYPER_CHARGE,
 }

@@ -14,6 +14,7 @@ data class BrawlerResponse(
     val starPowers: List<StarPowerResponse>,
     val hyperCharges: List<HyperChargeResponse>,
     val portraitImagePath: String?,
+    val buffies: List<BuffyResponse>,
 ) {
     companion object {
         fun of(brawler: Brawler) =
@@ -27,6 +28,7 @@ data class BrawlerResponse(
                 starPowers = brawler.starPowers.map { StarPowerResponse.of(it) },
                 hyperCharges = brawler.hyperCharges.map { HyperChargeResponse.of(it) },
                 portraitImagePath = brawler.portraitImagePath,
+                buffies = brawler.buffies.map { BuffyResponse(it.type, it.imagePath) },
             )
     }
 }

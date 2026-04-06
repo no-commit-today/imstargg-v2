@@ -118,6 +118,12 @@ class BrawlerAdminService(
                 },
             linkedGearIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
             allGears = allGears.map { GearResponse(gear = it, names = emptyMap(), image = null) },
+            buffyImages =
+                mapOf(
+                    BrawlStarsImageType.BUFFY_GADGET to imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId],
+                    BrawlStarsImageType.BUFFY_STAR_POWER to imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlStarsId],
+                    BrawlStarsImageType.BUFFY_HYPER_CHARGE to imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlStarsId],
+                ),
         )
     }
 
