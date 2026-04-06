@@ -68,10 +68,10 @@ storage:
           logger: Slf4JLogger
           maxQuerySizeToLog: 999999
 
-logging.level:
-  org.hibernate:
-    SQL: debug
-    orm.jdbc.bind: trace
+#logging.level:
+#  org.hibernate:
+#    SQL: debug
+#    orm.jdbc.bind: trace
 
 ---
 spring:
@@ -79,10 +79,10 @@ spring:
     activate:
       on-profile: local-dev
 
-logging.level:
-  org.hibernate:
-    SQL: debug
-    orm.jdbc.bind: trace
+#logging.level:
+#  org.hibernate:
+#    SQL: debug
+#    orm.jdbc.bind: trace
 
 ---
 spring:
