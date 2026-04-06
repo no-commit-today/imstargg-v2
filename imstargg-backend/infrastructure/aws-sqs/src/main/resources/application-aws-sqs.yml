@@ -22,10 +22,39 @@ spring:
         access-key: test
         secret-key: test
 
+app:
+  aws:
+    sqs:
+      renewal:
+        player-queue-name: local-player-renewal
+        club-queue-name: local-club-renewal
+
 ---
-spring.config.activate.on-profile: dev | prod
+spring.config.activate.on-profile: dev
 spring:
   cloud:
     aws:
       region:
         static: ${AWS_REGION:ap-northeast-2}
+
+app:
+  aws:
+    sqs:
+      renewal:
+        player-queue-name: dev-player-renewal
+        club-queue-name: dev-club-renewal
+
+---
+spring.config.activate.on-profile: prod
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+
+app:
+  aws:
+    sqs:
+      renewal:
+        player-queue-name: prod-player-renewal
+        club-queue-name: prod-club-renewal
