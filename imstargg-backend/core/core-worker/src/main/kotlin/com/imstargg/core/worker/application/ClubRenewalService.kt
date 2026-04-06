@@ -11,10 +11,18 @@ class ClubRenewalService(
     private val brawlStarsClient: BrawlStarsClient,
     private val clubRenewalProcessor: ClubRenewalProcessor,
     private val clubUpdater: ClubUpdater,
+    private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
+    private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun renew(brawlStarsTag: String) {
+        if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
+            clubRenewalProcessor.failByTag(brawlStarsTag)
+            log.info("[클럽 갱신] API 점검 중 tag={}", brawlStarsTag)
+            return
+        }
+
         val renewalId = clubRenewalProcessor.executing(brawlStarsTag)
 
         try {
@@ -25,6 +33,7 @@ class ClubRenewalService(
             clubRenewalProcessor.notFound(renewalId)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[클럽 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
+            brawlStarsApiMaintenanceAutoRegistrar.register()
             clubRenewalProcessor.fail(renewalId)
         } catch (ex: Exception) {
             clubRenewalProcessor.fail(renewalId)

@@ -9,7 +9,6 @@ import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -39,33 +38,34 @@ class BattleEventRotationSyncJobConfig(
     @Bean(STEP_NAME)
     fun battleEventRotationSyncStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
-            .tasklet({ _, _ ->
-                val now = OffsetDateTime.now(clock)
-                val rotations = brawlStarsClient.getEventRotation()
-                val activeSlotIds =
-                    battleEventRotationItemJpaRepository
-                        .findAllByEndTimeAfter(now)
-                        .map { it.slotId }
-                        .toSet()
+            .tasklet(
+                BrawlStarsApiTasklet(JOB_NAME) {
+                    val now = OffsetDateTime.now(clock)
+                    val rotations = brawlStarsClient.getEventRotation()
+                    val activeSlotIds =
+                        battleEventRotationItemJpaRepository
+                            .findAllByEndTimeAfter(now)
+                            .map { it.slotId }
+                            .toSet()
 
-                val newRotations =
-                    rotations
-                        .filter { it.slotId !in activeSlotIds }
-                        .map {
-                            BattleEventRotationItemEntity(
-                                eventBrawlStarsId = it.event.id,
-                                eventModeName = it.event.mode,
-                                eventModeBrawlStarsId = it.event.modeId.toLong(),
-                                eventMapName = it.event.map,
-                                modifiers = it.event.modifiers ?: emptyList(),
-                                slotId = it.slotId,
-                                startTime = it.startTime,
-                                endTime = it.endTime,
-                            )
-                        }
+                    val newRotations =
+                        rotations
+                            .filter { it.slotId !in activeSlotIds }
+                            .map {
+                                BattleEventRotationItemEntity(
+                                    eventBrawlStarsId = it.event.id,
+                                    eventModeName = it.event.mode,
+                                    eventModeBrawlStarsId = it.event.modeId.toLong(),
+                                    eventMapName = it.event.map,
+                                    modifiers = it.event.modifiers ?: emptyList(),
+                                    slotId = it.slotId,
+                                    startTime = it.startTime,
+                                    endTime = it.endTime,
+                                )
+                            }
 
-                battleEventRotationItemJpaRepository.saveAll(newRotations)
-                RepeatStatus.FINISHED
-            }, txManager)
-            .build()
+                    battleEventRotationItemJpaRepository.saveAll(newRotations)
+                },
+                txManager,
+            ).build()
 }

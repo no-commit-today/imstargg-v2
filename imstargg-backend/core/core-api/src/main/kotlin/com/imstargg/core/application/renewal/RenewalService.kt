@@ -1,5 +1,6 @@
 package com.imstargg.core.application.renewal
 
+import com.imstargg.core.application.brawlstars.BrawlStarsApiMaintenanceRepository
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.renewal.Renewal
 import com.imstargg.core.domain.renewal.RenewalCreate
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime
 class RenewalService(
     private val renewalRepository: RenewalRepository,
     private val renewalProducer: RenewalMessageProducer,
+    private val brawlStarsApiMaintenanceRepository: BrawlStarsApiMaintenanceRepository,
     private val clock: Clock,
 ) {
     fun getPlayerRenewal(tag: BrawlStarsTag): Renewal =
@@ -39,6 +41,10 @@ class RenewalService(
         type: RenewalType,
         publishAction: () -> Unit,
     ): Renewal {
+        if (brawlStarsApiMaintenanceRepository.isUnderMaintenance()) {
+            throw CoreException(ErrorType.BRAWLSTARS_API_UNDER_MAINTENANCE)
+        }
+
         val now = OffsetDateTime.now(clock)
         val existing = renewalRepository.find(tag, type)
 

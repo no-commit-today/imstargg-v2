@@ -11,7 +11,6 @@ import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -39,19 +38,20 @@ class BattleEventModeSyncJobConfig(
     @Bean(STEP_NAME)
     fun battleEventModeSyncStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
-            .tasklet({ _, _ ->
-                val gameModes = brawlStarsClient.getGameModes().items
-                val existingIds =
-                    battleEventModeJpaRepository
-                        .findAll()
-                        .map { it.brawlStarsId }
-                        .toSet()
+            .tasklet(
+                BrawlStarsApiTasklet(JOB_NAME) {
+                    val gameModes = brawlStarsClient.getGameModes().items
+                    val existingIds =
+                        battleEventModeJpaRepository
+                            .findAll()
+                            .map { it.brawlStarsId }
+                            .toSet()
 
-                val newModes = gameModes.filter { it.id !in existingIds }
-                alertNewModes(newModes)
-                RepeatStatus.FINISHED
-            }, txManager)
-            .build()
+                    val newModes = gameModes.filter { it.id !in existingIds }
+                    alertNewModes(newModes)
+                },
+                txManager,
+            ).build()
 
     private fun alertNewModes(newModes: List<EventTypeResponse>) {
         if (newModes.isEmpty()) return

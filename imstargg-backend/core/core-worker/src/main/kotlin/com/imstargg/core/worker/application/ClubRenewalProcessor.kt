@@ -31,6 +31,11 @@ class ClubRenewalProcessor(
         renewal.toFailed(clock)
     }
 
+    fun failByTag(brawlStarsTag: String) {
+        val renewal = getEntityByTag(brawlStarsTag)
+        renewal.toFailed(clock)
+    }
+
     private fun getEntityByTag(brawlStarsTag: String) =
         renewalRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
             brawlStarsTag,

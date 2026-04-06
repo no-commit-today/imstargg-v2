@@ -83,7 +83,7 @@ class RenewalEntity(
     }
 
     fun toFailed(clock: Clock) {
-        check(status == RenewalStatus.EXECUTING) {
+        check(status.isProgressing()) {
             "Cannot transition to FAILED from $status"
         }
         completedAt = OffsetDateTime.now(clock)

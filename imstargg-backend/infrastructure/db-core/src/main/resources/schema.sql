@@ -582,3 +582,14 @@ create table if not exists message
     updated_at    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_message__type_brawlstarsid_lang (type, brawlstars_id, lang)
 );
+
+-- brawlstars_api_maintenance table
+create table if not exists brawlstars_api_maintenance
+(
+    brawlstars_api_maintenance_id bigint auto_increment primary key,
+    start_time                    timestamp(6) not null,
+    end_time                      timestamp(6) not null,
+    created_at                    timestamp(6) not null default current_timestamp(6),
+    updated_at                    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    index ix_brawlstars_api_maintenance__end_time (end_time)
+);

@@ -11,7 +11,6 @@ import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -39,21 +38,22 @@ class BrawlerSyncJobConfig(
     @Bean(STEP_NAME)
     fun brawlerSyncStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
-            .tasklet({ _, _ ->
-                val brawlers = brawlStarsClient.getBrawlers().items
-                val existingIds =
-                    brawlerJpaRepository
-                        .findAll()
-                        .map { it.brawlStarsId }
-                        .toSet()
+            .tasklet(
+                BrawlStarsApiTasklet(JOB_NAME) {
+                    val brawlers = brawlStarsClient.getBrawlers().items
+                    val existingIds =
+                        brawlerJpaRepository
+                            .findAll()
+                            .map { it.brawlStarsId }
+                            .toSet()
 
-                val newBrawlers =
-                    brawlers.filter { it.id !in existingIds }
+                    val newBrawlers =
+                        brawlers.filter { it.id !in existingIds }
 
-                alertNewBrawlers(newBrawlers)
-                RepeatStatus.FINISHED
-            }, txManager)
-            .build()
+                    alertNewBrawlers(newBrawlers)
+                },
+                txManager,
+            ).build()
 
     private fun alertNewBrawlers(newBrawlers: List<BrawlerResponse>) {
         if (newBrawlers.isEmpty()) return

@@ -13,4 +13,5 @@ enum class ErrorType(
     NOT_FOUND(HttpStatus.NOT_FOUND, "해당 데이터를 찾을 수 없습니다.", LogLevel.DEBUG),
 
     RENEWAL_ALREADY_IN_PROGRESS(HttpStatus.CONFLICT, "갱신이 이미 진행 중입니다.", LogLevel.DEBUG),
+    BRAWLSTARS_API_UNDER_MAINTENANCE(HttpStatus.SERVICE_UNAVAILABLE, "브롤스타즈 API가 점검 중입니다.", LogLevel.INFO),
 }

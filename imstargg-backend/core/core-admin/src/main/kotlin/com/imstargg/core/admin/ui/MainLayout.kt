@@ -4,6 +4,7 @@ import com.imstargg.core.admin.ui.brawler.BrawlerListView
 import com.imstargg.core.admin.ui.event.BattleEventListView
 import com.imstargg.core.admin.ui.event.BattleEventModeListView
 import com.imstargg.core.admin.ui.gear.GearListView
+import com.imstargg.core.admin.ui.maintenance.BrawlStarsApiMaintenanceListView
 import com.vaadin.flow.component.applayout.AppLayout
 import com.vaadin.flow.component.applayout.DrawerToggle
 import com.vaadin.flow.component.html.H1
@@ -37,6 +38,7 @@ class MainLayout : AppLayout() {
                 addItem(SideNavItem("기어 관리", GearListView::class.java))
                 addItem(SideNavItem("이벤트 관리", BattleEventListView::class.java))
                 addItem(SideNavItem("이벤트 모드 관리", BattleEventModeListView::class.java))
+                addItem(SideNavItem("API 점검 관리", BrawlStarsApiMaintenanceListView::class.java))
             }
         val scroller =
             Scroller(nav).apply {
