@@ -10,7 +10,7 @@
 | dev | `dev-player-renewal` | `dev-club-renewal` |
 | prod | `prod-player-renewal` | `prod-club-renewal` |
 
-- local 환경은 LocalStack 사용, `LocalAwsSqsInitializer`가 자동 생성
+- local 환경은 Floci 사용, `LocalAwsSqsInitializer`가 자동 생성
 - dev/prod 환경은 AWS 콘솔에서 수동 생성
 
 ## 큐 생성 설정
