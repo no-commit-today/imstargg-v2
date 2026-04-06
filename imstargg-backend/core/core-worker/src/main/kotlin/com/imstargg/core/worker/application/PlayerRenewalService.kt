@@ -3,6 +3,7 @@ package com.imstargg.core.worker.application
 import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.enums.RenewalStatus
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -20,6 +21,11 @@ class PlayerRenewalService(
 
     fun renew(brawlStarsTag: String) {
         var renewal = playerRenewalFinder.findByTag(brawlStarsTag)
+
+        if (renewal.status != RenewalStatus.PENDING) {
+            log.info("[플레이어 갱신] 이미 처리됨 tag={}, status={}", brawlStarsTag, renewal.status)
+            return
+        }
 
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
             playerRenewalProcessor.fail(renewal)
@@ -44,8 +50,8 @@ class PlayerRenewalService(
             brawlStarsApiMaintenanceAutoRegistrar.register()
             playerRenewalProcessor.fail(renewal)
         } catch (ex: Exception) {
+            log.error("[플레이어 갱신] 실패 tag={}", brawlStarsTag, ex)
             playerRenewalProcessor.fail(renewal)
-            throw ex
         }
     }
 }

@@ -70,12 +70,10 @@ class RenewalEntity(
     }
 
     fun toExecuting(clock: Clock) {
-        check(status == RenewalStatus.REQUESTED || status == RenewalStatus.PENDING || status == RenewalStatus.EXECUTING) {
+        check(status == RenewalStatus.PENDING) {
             "Cannot transition to EXECUTING from $status"
         }
-        if (executedAt == null) {
-            executedAt = OffsetDateTime.now(clock)
-        }
+        executedAt = OffsetDateTime.now(clock)
         status = RenewalStatus.EXECUTING
     }
 
