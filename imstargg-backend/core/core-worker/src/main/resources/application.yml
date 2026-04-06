@@ -12,6 +12,7 @@ spring:
 
   config:
     import:
+      - brawlstars-client.yml
       - logging.yml
       - monitoring.yml
 
