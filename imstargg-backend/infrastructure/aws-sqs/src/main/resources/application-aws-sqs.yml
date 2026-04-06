@@ -4,13 +4,6 @@ spring:
       region:
         static: ap-northeast-2
 
-app:
-  aws:
-    sqs:
-      renewal:
-        player-queue-name: player-renewal
-        club-queue-name: club-renewal
-
 ---
 spring.config.activate.on-profile: local
 spring:
@@ -26,8 +19,8 @@ app:
   aws:
     sqs:
       renewal:
-        player-queue-name: local-player-renewal
-        club-queue-name: local-club-renewal
+        player-queue-name: imstargg-player-renewal-local
+        club-queue-name: imstargg-club-renewal-local
 
 ---
 spring.config.activate.on-profile: dev
@@ -41,8 +34,8 @@ app:
   aws:
     sqs:
       renewal:
-        player-queue-name: dev-player-renewal
-        club-queue-name: dev-club-renewal
+        player-queue-name: imstargg-player-renewal-dev
+        club-queue-name: imstargg-club-renewal-dev
 
 ---
 spring.config.activate.on-profile: prod
@@ -56,5 +49,5 @@ app:
   aws:
     sqs:
       renewal:
-        player-queue-name: prod-player-renewal
-        club-queue-name: prod-club-renewal
+        player-queue-name: imstargg-player-renewal-prod
+        club-queue-name: imstargg-club-renewal-prod

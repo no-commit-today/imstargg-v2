@@ -4,11 +4,6 @@ spring:
       region:
         static: ap-northeast-2
 
-app:
-  aws:
-    s3:
-      bucket: imstargg-images
-
 ---
 spring.config.activate.on-profile: local
 spring:
@@ -21,8 +16,13 @@ spring:
         access-key: test
         secret-key: test
 
+app:
+  aws:
+    s3:
+      bucket: imstargg-images-local
+
 ---
-spring.config.activate.on-profile: dev | prod
+spring.config.activate.on-profile: dev
 spring:
   cloud:
     aws:
@@ -32,4 +32,17 @@ spring:
 app:
   aws:
     s3:
-      bucket: ${IMAGE_STORAGE_BUCKET}
+      bucket: imstargg-images-dev
+
+---
+spring.config.activate.on-profile: prod
+spring:
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+
+app:
+  aws:
+    s3:
+      bucket: imstargg-images-prod
