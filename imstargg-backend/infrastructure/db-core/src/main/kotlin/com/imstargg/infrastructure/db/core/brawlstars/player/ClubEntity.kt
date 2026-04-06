@@ -1,8 +1,11 @@
 package com.imstargg.infrastructure.db.core.brawlstars.player
 
+import com.imstargg.core.enums.ClubStatus
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -54,6 +57,15 @@ class ClubEntity(
     @Column(name = "trophies", nullable = false)
     var trophies: Int = trophies
         protected set
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 25, nullable = false)
+    var status: ClubStatus = ClubStatus.ACTIVE
+        protected set
+
+    fun toDeleted() {
+        status = ClubStatus.DELETED
+    }
 
     fun update(
         badgeBrawlStarsId: Long,

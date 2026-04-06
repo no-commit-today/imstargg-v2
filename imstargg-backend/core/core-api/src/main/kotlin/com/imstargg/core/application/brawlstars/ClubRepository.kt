@@ -1,5 +1,6 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.enums.ClubStatus
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.player.Club
@@ -20,6 +21,11 @@ class ClubRepository(
     private val clubJpaRepository: ClubJpaRepository,
     private val clubMemberJpaRepository: ClubMemberJpaRepository,
 ) {
+    fun isDeleted(tag: BrawlStarsTag): Boolean {
+        val entity = clubJpaRepository.findByBrawlStarsTag(tag.value) ?: return false
+        return entity.status == ClubStatus.DELETED
+    }
+
     fun find(tag: BrawlStarsTag): Club? {
         val clubEntity = clubJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
         val memberEntities = clubMemberJpaRepository.findAllByClub(clubEntity)

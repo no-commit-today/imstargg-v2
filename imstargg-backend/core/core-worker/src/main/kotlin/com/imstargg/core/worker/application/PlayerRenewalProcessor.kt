@@ -9,6 +9,7 @@ import java.time.Clock
 @Component
 class PlayerRenewalProcessor(
     private val renewalRepository: RenewalJpaRepository,
+    private val playerDeactivator: PlayerDeactivator,
     private val clock: Clock,
 ) {
     @Transactional
@@ -25,6 +26,7 @@ class PlayerRenewalProcessor(
 
     @Transactional
     fun notFound(renewal: RenewalEntity): RenewalEntity {
+        playerDeactivator.deactivate(renewal.brawlStarsTag)
         renewal.toNotFound(clock)
         return renewalRepository.save(renewal)
     }

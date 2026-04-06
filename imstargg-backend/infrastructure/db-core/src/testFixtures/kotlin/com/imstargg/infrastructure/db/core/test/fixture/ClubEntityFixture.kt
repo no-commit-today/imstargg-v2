@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
+import com.imstargg.core.enums.ClubStatus
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
 
 class ClubEntityFixture {
@@ -10,6 +11,7 @@ class ClubEntityFixture {
     private var type: String = "open"
     private var requiredTrophies: Int = 0
     private var trophies: Int = 100000
+    private var status: ClubStatus = ClubStatus.ACTIVE
 
     companion object {
         fun aClubEntity() = ClubEntityFixture()
@@ -29,14 +31,22 @@ class ClubEntityFixture {
 
     fun withTrophies(value: Int) = apply { trophies = value }
 
-    fun build() =
-        ClubEntity(
-            brawlStarsTag = brawlStarsTag,
-            badgeBrawlStarsId = badgeBrawlStarsId,
-            name = name,
-            description = description,
-            type = type,
-            requiredTrophies = requiredTrophies,
-            trophies = trophies,
-        )
+    fun withStatus(value: ClubStatus) = apply { status = value }
+
+    fun build(): ClubEntity {
+        val entity =
+            ClubEntity(
+                brawlStarsTag = brawlStarsTag,
+                badgeBrawlStarsId = badgeBrawlStarsId,
+                name = name,
+                description = description,
+                type = type,
+                requiredTrophies = requiredTrophies,
+                trophies = trophies,
+            )
+        if (status == ClubStatus.DELETED) {
+            entity.toDeleted()
+        }
+        return entity
+    }
 }

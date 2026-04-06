@@ -107,6 +107,7 @@ create table if not exists club
     type                 varchar(45)  not null,
     required_trophies    int          not null,
     trophies             int          not null,
+    status               varchar(25)  not null default 'ACTIVE',
     created_at           timestamp(6)  not null default current_timestamp(6),
     updated_at           timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_club__brawlstarstag (brawlstars_tag)

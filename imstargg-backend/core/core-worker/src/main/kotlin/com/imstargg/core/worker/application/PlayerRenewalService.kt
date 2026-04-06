@@ -13,7 +13,6 @@ class PlayerRenewalService(
     private val playerRenewalFinder: PlayerRenewalFinder,
     private val playerRenewalProcessor: PlayerRenewalProcessor,
     private val playerUpdater: PlayerUpdater,
-    private val playerDeactivator: PlayerDeactivator,
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
     private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
 ) {
@@ -43,7 +42,6 @@ class PlayerRenewalService(
 
             playerRenewalProcessor.complete(renewal)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            playerDeactivator.deactivate(brawlStarsTag)
             playerRenewalProcessor.notFound(renewal)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[플레이어 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)

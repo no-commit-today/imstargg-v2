@@ -7,6 +7,7 @@ import com.imstargg.core.domain.brawlstars.player.Player
 import com.imstargg.core.domain.brawlstars.player.PlayerBrawler
 import com.imstargg.core.domain.brawlstars.player.PlayerClub
 import com.imstargg.core.enums.BuffyType
+import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository
@@ -23,6 +24,11 @@ class PlayerRepository(
     private val playerBrawlerBuffyJpaRepository: PlayerBrawlerBuffyJpaRepository,
     private val brawlerRepositoryWithCache: BrawlerRepositoryWithCache,
 ) {
+    fun isDeleted(tag: BrawlStarsTag): Boolean {
+        val entity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return false
+        return entity.status == PlayerStatus.DELETED
+    }
+
     fun find(tag: BrawlStarsTag): Player? {
         val entity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
         return toPlayer(entity)
