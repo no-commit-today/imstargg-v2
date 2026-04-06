@@ -38,15 +38,15 @@ class BrawlStarsImageEntity(
             brawlStarsId: Long,
         ): String =
             when (type) {
-                BrawlStarsImageType.BRAWLER_PORTRAIT -> "brawler/$brawlStarsId/portrait"
+                BrawlStarsImageType.BRAWLER_PORTRAIT -> "brawler/portrait/$brawlStarsId"
                 BrawlStarsImageType.STARPOWER -> "starpower/$brawlStarsId"
                 BrawlStarsImageType.GADGET -> "gadget/$brawlStarsId"
                 BrawlStarsImageType.GEAR -> "gear/$brawlStarsId"
                 BrawlStarsImageType.HYPERCHARGE -> "hypercharge/$brawlStarsId"
-                BrawlStarsImageType.BATTLE_EVENT_MODE_ICON -> "event/mode/$brawlStarsId/icon"
-                BrawlStarsImageType.BUFFY_GADGET -> "brawler/$brawlStarsId/buffy_gadget"
-                BrawlStarsImageType.BUFFY_STAR_POWER -> "brawler/$brawlStarsId/buffy_starpower"
-                BrawlStarsImageType.BUFFY_HYPER_CHARGE -> "brawler/$brawlStarsId/buffy_hypercharge"
+                BrawlStarsImageType.BATTLE_EVENT_MODE_ICON -> "event/mode/icon/$brawlStarsId"
+                BrawlStarsImageType.BUFFY_GADGET -> "brawler/buffy_gadget/$brawlStarsId"
+                BrawlStarsImageType.BUFFY_STAR_POWER -> "brawler/buffy_starpower/$brawlStarsId"
+                BrawlStarsImageType.BUFFY_HYPER_CHARGE -> "brawler/buffy_hypercharge/$brawlStarsId"
             }
     }
 }
