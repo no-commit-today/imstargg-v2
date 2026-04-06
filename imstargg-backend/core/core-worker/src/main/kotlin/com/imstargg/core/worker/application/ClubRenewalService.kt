@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 @Service
 class ClubRenewalService(
     private val brawlStarsClient: BrawlStarsClient,
+    private val clubRenewalFinder: ClubRenewalFinder,
     private val clubRenewalProcessor: ClubRenewalProcessor,
     private val clubUpdater: ClubUpdater,
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
@@ -17,26 +18,28 @@ class ClubRenewalService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun renew(brawlStarsTag: String) {
+        var renewal = clubRenewalFinder.findByTag(brawlStarsTag)
+
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
-            clubRenewalProcessor.failByTag(brawlStarsTag)
+            clubRenewalProcessor.fail(renewal)
             log.info("[클럽 갱신] API 점검 중 tag={}", brawlStarsTag)
             return
         }
 
-        val renewalId = clubRenewalProcessor.executing(brawlStarsTag)
+        renewal = clubRenewalProcessor.executing(renewal)
 
         try {
             val clubResponse = brawlStarsClient.getClub(brawlStarsTag)
             clubUpdater.update(clubResponse)
-            clubRenewalProcessor.complete(renewalId)
+            clubRenewalProcessor.complete(renewal)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            clubRenewalProcessor.notFound(renewalId)
+            clubRenewalProcessor.notFound(renewal)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[클럽 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
             brawlStarsApiMaintenanceAutoRegistrar.register()
-            clubRenewalProcessor.fail(renewalId)
+            clubRenewalProcessor.fail(renewal)
         } catch (ex: Exception) {
-            clubRenewalProcessor.fail(renewalId)
+            clubRenewalProcessor.fail(renewal)
             throw ex
         }
     }

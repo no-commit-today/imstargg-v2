@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 @Service
 class PlayerRenewalService(
     private val brawlStarsClient: BrawlStarsClient,
+    private val playerRenewalFinder: PlayerRenewalFinder,
     private val playerRenewalProcessor: PlayerRenewalProcessor,
     private val playerUpdater: PlayerUpdater,
     private val playerDeactivator: PlayerDeactivator,
@@ -18,13 +19,15 @@ class PlayerRenewalService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     fun renew(brawlStarsTag: String) {
+        var renewal = playerRenewalFinder.findByTag(brawlStarsTag)
+
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
-            playerRenewalProcessor.failByTag(brawlStarsTag)
+            playerRenewalProcessor.fail(renewal)
             log.info("[플레이어 갱신] API 점검 중 tag={}", brawlStarsTag)
             return
         }
 
-        val renewalId = playerRenewalProcessor.executing(brawlStarsTag)
+        renewal = playerRenewalProcessor.executing(renewal)
 
         try {
             val playerResponse = brawlStarsClient.getPlayerInformation(brawlStarsTag)
@@ -32,16 +35,16 @@ class PlayerRenewalService(
 
             playerUpdater.update(playerResponse, battleResponses)
 
-            playerRenewalProcessor.complete(renewalId)
+            playerRenewalProcessor.complete(renewal)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
             playerDeactivator.deactivate(brawlStarsTag)
-            playerRenewalProcessor.notFound(renewalId)
+            playerRenewalProcessor.notFound(renewal)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[플레이어 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
             brawlStarsApiMaintenanceAutoRegistrar.register()
-            playerRenewalProcessor.fail(renewalId)
+            playerRenewalProcessor.fail(renewal)
         } catch (ex: Exception) {
-            playerRenewalProcessor.fail(renewalId)
+            playerRenewalProcessor.fail(renewal)
             throw ex
         }
     }

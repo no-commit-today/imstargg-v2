@@ -1,8 +1,9 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.core.enums.RenewalType
+import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 
 @Component
@@ -10,40 +11,27 @@ class ClubRenewalProcessor(
     private val renewalRepository: RenewalJpaRepository,
     private val clock: Clock,
 ) {
-    fun executing(brawlStarsTag: String): Long {
-        val renewal = getEntityByTag(brawlStarsTag)
+    @Transactional
+    fun executing(renewal: RenewalEntity): RenewalEntity {
         renewal.toExecuting(clock)
-        return renewal.id!!
+        return renewalRepository.save(renewal)
     }
 
-    fun complete(renewalId: Long) {
-        val renewal = getEntityById(renewalId)
+    @Transactional
+    fun complete(renewal: RenewalEntity): RenewalEntity {
         renewal.toCompleted(clock)
+        return renewalRepository.save(renewal)
     }
 
-    fun notFound(renewalId: Long) {
-        val renewal = getEntityById(renewalId)
+    @Transactional
+    fun notFound(renewal: RenewalEntity): RenewalEntity {
         renewal.toNotFound(clock)
+        return renewalRepository.save(renewal)
     }
 
-    fun fail(renewalId: Long) {
-        val renewal = getEntityById(renewalId)
+    @Transactional
+    fun fail(renewal: RenewalEntity): RenewalEntity {
         renewal.toFailed(clock)
+        return renewalRepository.save(renewal)
     }
-
-    fun failByTag(brawlStarsTag: String) {
-        val renewal = getEntityByTag(brawlStarsTag)
-        renewal.toFailed(clock)
-    }
-
-    private fun getEntityByTag(brawlStarsTag: String) =
-        renewalRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
-            brawlStarsTag,
-            RenewalType.CLUB,
-        ) ?: throw IllegalArgumentException("Renewal not found for tag: $brawlStarsTag")
-
-    private fun getEntityById(renewalId: Long) =
-        renewalRepository
-            .findById(renewalId)
-            .orElseThrow { IllegalArgumentException("Renewal not found for id: $renewalId") }
 }
