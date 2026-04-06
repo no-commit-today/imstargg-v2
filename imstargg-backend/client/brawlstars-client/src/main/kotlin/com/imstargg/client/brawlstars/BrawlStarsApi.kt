@@ -13,9 +13,9 @@ import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.client.brawlstars.response.ScheduledEventResponse
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.cloud.openfeign.SpringQueryMap
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PathVariable
 
 @FeignClient(
@@ -55,7 +55,7 @@ internal interface BrawlStarsApi {
     @GetMapping(value = ["/v1/clubs/{clubTag}/members"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun getListClubMembers(
         @PathVariable clubTag: String,
-        @ModelAttribute paging: PagingParam,
+        @SpringQueryMap paging: PagingParam,
     ): ListResponse<ClubMemberResponse>
 
     /**
@@ -79,7 +79,7 @@ internal interface BrawlStarsApi {
     @GetMapping(value = ["/v1/rankings/{countryCode}/clubs"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun getClubRankingsForACountryOrGlobalRankings(
         @PathVariable countryCode: String,
-        @ModelAttribute paging: PagingParam,
+        @SpringQueryMap paging: PagingParam,
     ): ListResponse<ClubRankingResponse>
 
     /**
@@ -93,7 +93,7 @@ internal interface BrawlStarsApi {
     fun getBrawlerRankingsForACountryOrGlobalRankings(
         @PathVariable countryCode: String,
         @PathVariable brawlerId: Long,
-        @ModelAttribute paging: PagingParam,
+        @SpringQueryMap paging: PagingParam,
     ): ListResponse<PlayerRankingResponse>
 
     /**
@@ -104,7 +104,7 @@ internal interface BrawlStarsApi {
     @GetMapping(value = ["/v1/rankings/{countryCode}/players"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun getPlayerRankingsForACountryOrGlobalRankings(
         @PathVariable countryCode: String,
-        @ModelAttribute paging: PagingParam,
+        @SpringQueryMap paging: PagingParam,
     ): ListResponse<PlayerRankingResponse>
 
     /**
@@ -112,7 +112,7 @@ internal interface BrawlStarsApi {
      */
     @GetMapping(value = ["/v1/brawlers"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun getListOfAvailableBrawlers(
-        @ModelAttribute paging: PagingParam,
+        @SpringQueryMap paging: PagingParam,
     ): ListResponse<BrawlerResponse>
 
     /**
@@ -134,6 +134,6 @@ internal interface BrawlStarsApi {
      */
     @GetMapping(value = ["/v1/gamemodes"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun getGameModes(
-        @ModelAttribute paging: PagingParam,
+        @SpringQueryMap paging: PagingParam,
     ): ListResponse<EventTypeResponse>
 }
