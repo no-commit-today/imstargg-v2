@@ -60,7 +60,7 @@ create table if not exists player_brawler_star_power
     star_power_brawlstars_id     bigint      not null,
     created_at                   timestamp(6) not null default current_timestamp(6),
     updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    unique index uk_playerbrawlerstarpower__playerbrawlerid_starpowerbrawlstarsid (player_brawler_id, star_power_brawlstars_id)
+    unique index uk_player_brawler_star_power__1 (player_brawler_id, star_power_brawlstars_id)
 );
 
 -- player brawler hyper charge table
@@ -71,7 +71,7 @@ create table if not exists player_brawler_hyper_charge
     hyper_charge_brawlstars_id     bigint      not null,
     created_at                     timestamp(6) not null default current_timestamp(6),
     updated_at                     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    unique index uk_playerbrawlerhypercharge__playerbrawlerid_hyperchargebrawlstarsid (player_brawler_id, hyper_charge_brawlstars_id)
+    unique index uk_player_brawler_hyper_charge__1 (player_brawler_id, hyper_charge_brawlstars_id)
 );
 
 -- player brawler buffy table
@@ -211,7 +211,7 @@ create table if not exists player_ranking_item
     trophies                  int          not null,
     created_at                timestamp(6) not null default current_timestamp(6),
     updated_at                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    unique index uk_player_ranking_item__player_ranking_id_player_brawlstars_tag (player_ranking_id, player_brawlstars_tag)
+    unique index uk_player_ranking_item__1 (player_ranking_id, player_brawlstars_tag)
 );
 
 -- brawler_ranking table
@@ -240,7 +240,7 @@ create table if not exists brawler_ranking_item
     trophies                  int          not null,
     created_at                timestamp(6) not null default current_timestamp(6),
     updated_at                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    unique index uk_brawler_ranking_item__brawler_ranking_id_player_brawlstars_tag (brawler_ranking_id, player_brawlstars_tag)
+    unique index uk_brawler_ranking_item__1 (brawler_ranking_id, player_brawlstars_tag)
 );
 
 -- club_ranking table

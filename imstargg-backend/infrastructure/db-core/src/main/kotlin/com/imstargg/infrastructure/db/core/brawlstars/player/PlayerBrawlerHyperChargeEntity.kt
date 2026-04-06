@@ -19,7 +19,7 @@ import jakarta.persistence.Table
     name = "player_brawler_hyper_charge",
     indexes = [
         Index(
-            name = "uk_playerbrawlerhypercharge__playerbrawlerid_hyperchargebrawlstarsid",
+            name = "uk_player_brawler_hyper_charge__1",
             columnList = "player_brawler_id, hyper_charge_brawlstars_id",
             unique = true,
         ),
