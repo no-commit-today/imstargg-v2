@@ -7,7 +7,6 @@ import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
-import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
@@ -31,7 +30,6 @@ class BrawlerSyncJobConfig(
     @Bean(JOB_NAME)
     fun brawlerSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .incrementer(RunIdIncrementer())
             .start(brawlerSyncStep())
             .build()
 

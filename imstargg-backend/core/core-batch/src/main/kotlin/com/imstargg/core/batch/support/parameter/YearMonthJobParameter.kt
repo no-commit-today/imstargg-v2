@@ -8,16 +8,11 @@ import java.time.YearMonth
 open class YearMonthJobParameter {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    var yearMonth: YearMonth? = null
-        private set
-
-    @Value("#{jobParameters['$KEY']}")
-    fun setYearMonth(yearMonth: YearMonth?) {
-        this.yearMonth = yearMonth
-    }
+    @set:Value("#{jobParameters['$KEY']}")
+    open var yearMonth: YearMonth? = null
 
     @PostConstruct
-    fun init() {
+    open fun init() {
         log.debug("JobParameter[$KEY]={}", yearMonth)
     }
 

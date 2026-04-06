@@ -9,7 +9,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerR
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
-import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
@@ -36,7 +35,6 @@ class PlayerRankingCollectJobConfig(
     @Bean(JOB_NAME)
     fun playerRankingCollectJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .incrementer(RunIdIncrementer())
             .start(playerRankingCollectStep())
             .build()
 

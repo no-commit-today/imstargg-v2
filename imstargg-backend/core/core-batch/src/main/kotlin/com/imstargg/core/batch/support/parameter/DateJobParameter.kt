@@ -8,16 +8,11 @@ import java.time.LocalDate
 open class DateJobParameter {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    var date: LocalDate? = null
-        private set
-
-    @Value("#{jobParameters['$KEY']}")
-    fun setDate(date: LocalDate?) {
-        this.date = date
-    }
+    @set:Value("#{jobParameters['$KEY']}")
+    open var date: LocalDate? = null
 
     @PostConstruct
-    fun init() {
+    open fun init() {
         log.debug("JobParameter[$KEY]={}", date)
     }
 
