@@ -3,19 +3,19 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
 
-    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
-        <options>
-            <dsn>YOUR_DSN</dsn>
-        </options>
-        <minimumEventLevel>WARN</minimumEventLevel>
-        <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>
-    </appender>
+<!--    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">-->
+<!--        <options>-->
+<!--            <dsn>YOUR_DSN</dsn>-->
+<!--        </options>-->
+<!--        <minimumEventLevel>WARN</minimumEventLevel>-->
+<!--        <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>-->
+<!--    </appender>-->
 
     <logger name="org.springframework" level="INFO"/>
     <logger name="com.imstargg" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="SENTRY"/>
+<!--        <appender-ref ref="SENTRY"/>-->
     </root>
 </configuration>
