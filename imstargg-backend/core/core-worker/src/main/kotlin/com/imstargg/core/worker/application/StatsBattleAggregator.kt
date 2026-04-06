@@ -1,17 +1,14 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.core.worker.domain.BattleResult
-import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsBattleHelper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import java.time.Clock
 
 @Component
 class StatsBattleAggregator(
-    private val clock: Clock,
     private val statsBattleAggregateApplier: StatsBattleAggregateApplier,
 ) {
     @Async
@@ -34,7 +31,6 @@ class StatsBattleAggregator(
     }
 
     private fun doAggregate(battles: List<BattleResult>) {
-        val aggregatableBattles = battles.filter { StatsBattleHelper.canAggregate(clock, it.battleAt) }
-        statsBattleAggregateApplier.apply(aggregatableBattles)
+        statsBattleAggregateApplier.apply(battles)
     }
 }

@@ -12,21 +12,25 @@ import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRan
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.OffsetDateTime
 
 @Component
 class StatsBattleAggregateApplier(
+    private val clock: Clock,
     private val statsRankBattleRepository: StatsRankBattleJpaRepository,
     private val statsResultBattleRepository: StatsResultBattleJpaRepository,
 ) {
     @Transactional
     fun apply(battles: List<BattleResult>) {
+        val aggregatableBattles = battles.filter { canAggregate(it) }
         val statsRankBattles =
-            battles
+            aggregatableBattles
                 .filter { canCreateRankBattle(it) }
                 .map { toStatsRankBattle(it) }
 
         val statsResultBattles =
-            battles
+            aggregatableBattles
                 .filter { canCreateResultBattle(it) }
                 .map { toStatsResultBattle(it) }
 
@@ -46,6 +50,11 @@ class StatsBattleAggregateApplier(
 
         statsRankBattleRepository.saveAll(newRankBattles)
         statsResultBattleRepository.saveAll(newResultBattles)
+    }
+
+    private fun canAggregate(battle: BattleResult): Boolean {
+        val now = OffsetDateTime.now(clock)
+        return battle.battleAt.isAfter(now.minusDays(BATTLE_MAX_AGE_DAYS))
     }
 
     private fun canCreateStatsBattle(battle: BattleResult): Boolean {
@@ -125,4 +134,8 @@ class StatsBattleAggregateApplier(
                 )
             }
         }
+
+    companion object {
+        private const val BATTLE_MAX_AGE_DAYS = 7L
+    }
 }
