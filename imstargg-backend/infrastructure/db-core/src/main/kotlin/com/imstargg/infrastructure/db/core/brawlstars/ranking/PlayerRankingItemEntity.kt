@@ -14,7 +14,11 @@ import jakarta.persistence.Table
 @Table(
     name = "player_ranking_item",
     indexes = [
-        Index(name = "ix_player_ranking_item__player_ranking_id", columnList = "player_ranking_id"),
+        Index(
+            name = "uk_player_ranking_item__player_ranking_id_player_brawlstars_tag",
+            columnList = "player_ranking_id, player_brawlstars_tag",
+            unique = true,
+        ),
     ],
 )
 class PlayerRankingItemEntity(

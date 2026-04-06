@@ -94,7 +94,8 @@ class GearListView(
         val saveNameButton =
             Button("이름 저장") {
                 gearAdminService.updateMessages(
-                    MessageType.GEAR_NAME, gear.gear.brawlStarsId,
+                    MessageType.GEAR_NAME,
+                    gear.gear.brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -105,8 +106,10 @@ class GearListView(
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 gearAdminService.updateImage(
-                    BrawlStarsImageType.GEAR, gear.gear.brawlStarsId,
-                    data.inputStream(), metadata.contentType(),
+                    BrawlStarsImageType.GEAR,
+                    gear.gear.brawlStarsId,
+                    data.inputStream(),
+                    metadata.contentType(),
                 )
                 ui.ifPresent {
                     it.access {

@@ -5,10 +5,10 @@ import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.event.BattleEventMode
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
@@ -24,10 +24,11 @@ class BattleEventRepository(
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
 ) {
     fun searchByMapName(name: String): List<BattleEvent> {
-        val matchingEventIds = messageJpaRepository
-            .findAllByTypeAndContentContainingIgnoreCase(MessageType.BATTLE_EVENT_NAME, name)
-            .map { it.brawlStarsId }
-            .distinct()
+        val matchingEventIds =
+            messageJpaRepository
+                .findAllByTypeAndContentContainingIgnoreCase(MessageType.BATTLE_EVENT_NAME, name)
+                .map { it.brawlStarsId }
+                .distinct()
 
         if (matchingEventIds.isEmpty()) return emptyList()
 
@@ -35,16 +36,19 @@ class BattleEventRepository(
         val modeEntities = eventEntities.mapNotNull { it.mode }
         val modeIds = modeEntities.map { it.brawlStarsId }
 
-        val mapNameMessages = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_NAME, matchingEventIds)
-            .groupBy { it.brawlStarsId }
-        val modeNameMessages = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_MODE_NAME, modeIds)
-            .groupBy { it.brawlStarsId }
+        val mapNameMessages =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_NAME, matchingEventIds)
+                .groupBy { it.brawlStarsId }
+        val modeNameMessages =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_MODE_NAME, modeIds)
+                .groupBy { it.brawlStarsId }
 
-        val modeIconImages = brawlStarsImageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, modeIds)
-            .associateBy { it.brawlStarsId }
+        val modeIconImages =
+            brawlStarsImageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, modeIds)
+                .associateBy { it.brawlStarsId }
 
         return eventEntities.map { eventEntity ->
             toBattleEvent(eventEntity, mapNameMessages, modeNameMessages, modeIconImages)
@@ -66,14 +70,16 @@ class BattleEventRepository(
 
         val mode =
             eventEntity.mode?.let { modeEntity ->
-                val modeNameMessages = messageJpaRepository.findAllByTypeAndBrawlStarsId(
-                    MessageType.BATTLE_EVENT_MODE_NAME,
-                    modeEntity.brawlStarsId,
-                )
-                val modeIconImage = brawlStarsImageJpaRepository.findByTypeAndBrawlStarsId(
-                    BrawlStarsImageType.BATTLE_EVENT_MODE_ICON,
-                    modeEntity.brawlStarsId,
-                )
+                val modeNameMessages =
+                    messageJpaRepository.findAllByTypeAndBrawlStarsId(
+                        MessageType.BATTLE_EVENT_MODE_NAME,
+                        modeEntity.brawlStarsId,
+                    )
+                val modeIconImage =
+                    brawlStarsImageJpaRepository.findByTypeAndBrawlStarsId(
+                        BrawlStarsImageType.BATTLE_EVENT_MODE_ICON,
+                        modeEntity.brawlStarsId,
+                    )
                 BattleEventMode(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages),
@@ -94,21 +100,23 @@ class BattleEventRepository(
         modeNameMessages: Map<Long, List<MessageEntity>>,
         modeIconImages: Map<Long, BrawlStarsImageEntity>,
     ): BattleEvent {
-        val mode = eventEntity.mode?.let { modeEntity ->
-            BattleEventMode(
-                id = BrawlStarsId(modeEntity.brawlStarsId),
-                name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
-                iconImagePath = modeIconImages[modeEntity.brawlStarsId]?.storedName,
-            )
-        }
+        val mode =
+            eventEntity.mode?.let { modeEntity ->
+                BattleEventMode(
+                    id = BrawlStarsId(modeEntity.brawlStarsId),
+                    name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
+                    iconImagePath = modeIconImages[modeEntity.brawlStarsId]?.storedName,
+                )
+            }
         return BattleEvent(
             id = BrawlStarsId(eventEntity.brawlStarsId),
             mode = mode,
-            mapName = if (eventEntity.mapName != null) {
-                toMessages(mapNameMessages[eventEntity.brawlStarsId])
-            } else {
-                toMessages(null)
-            },
+            mapName =
+                if (eventEntity.mapName != null) {
+                    toMessages(mapNameMessages[eventEntity.brawlStarsId])
+                } else {
+                    toMessages(null)
+                },
         )
     }
 

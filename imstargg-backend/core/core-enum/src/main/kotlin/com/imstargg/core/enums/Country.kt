@@ -5,6 +5,10 @@ enum class Country(
 ) : EnumCodeType {
     GLOBAL("global"),
     KOREA("kr"),
+    CHINA("cn"),
+    JAPAN("jp"),
+    GERMANY("de"),
+    UNITED_STATES("us"),
     ;
 
     companion object {

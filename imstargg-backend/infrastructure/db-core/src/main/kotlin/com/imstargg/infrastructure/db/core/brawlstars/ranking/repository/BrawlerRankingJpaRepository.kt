@@ -16,4 +16,15 @@ interface BrawlerRankingJpaRepository : JpaRepository<BrawlerRankingEntity, Long
         brawlerBrawlStarsId: Long,
         collectedAt: OffsetDateTime,
     ): BrawlerRankingEntity?
+
+    fun findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(
+        from: OffsetDateTime,
+        to: OffsetDateTime,
+    ): List<BrawlerRankingEntity>
+
+    fun findAllByCountryAndCollectedAtGreaterThanEqualAndCollectedAtLessThan(
+        country: Country,
+        from: OffsetDateTime,
+        to: OffsetDateTime,
+    ): List<BrawlerRankingEntity>
 }

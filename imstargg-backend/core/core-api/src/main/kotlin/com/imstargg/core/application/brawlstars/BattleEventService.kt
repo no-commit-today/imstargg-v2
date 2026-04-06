@@ -27,6 +27,5 @@ class BattleEventService(
             .mapNotNull { battleEventRepositoryWithCache.find(it) }
     }
 
-    fun search(name: String): List<BattleEvent> =
-        battleEventRepository.searchByMapName(name)
+    fun search(name: String): List<BattleEvent> = battleEventRepository.searchByMapName(name)
 }

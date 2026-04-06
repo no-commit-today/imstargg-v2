@@ -18,9 +18,8 @@ import java.time.OffsetDateTime
     name = "brawler_ranking",
     indexes = [
         Index(
-            name = "uk_brawler_ranking__country_brawler_collected_at",
+            name = "ix_brawler_ranking__country_brawler_collected_at",
             columnList = "country, brawler_brawlstars_id, collected_at",
-            unique = true,
         ),
     ],
 )

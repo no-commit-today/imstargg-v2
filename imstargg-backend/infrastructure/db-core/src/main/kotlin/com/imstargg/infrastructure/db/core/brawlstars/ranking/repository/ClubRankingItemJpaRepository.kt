@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface ClubRankingItemJpaRepository : JpaRepository<ClubRankingItemEntity, Long> {
     fun findAllByClubRankingId(clubRankingId: Long): List<ClubRankingItemEntity>
+
+    fun findAllByClubRankingIdIn(clubRankingIds: List<Long>): List<ClubRankingItemEntity>
 }

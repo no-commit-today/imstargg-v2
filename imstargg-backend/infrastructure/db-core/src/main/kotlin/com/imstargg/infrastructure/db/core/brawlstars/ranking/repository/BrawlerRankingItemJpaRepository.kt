@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface BrawlerRankingItemJpaRepository : JpaRepository<BrawlerRankingItemEntity, Long> {
     fun findAllByBrawlerRankingId(brawlerRankingId: Long): List<BrawlerRankingItemEntity>
+
+    fun findAllByBrawlerRankingIdIn(brawlerRankingIds: List<Long>): List<BrawlerRankingItemEntity>
 }

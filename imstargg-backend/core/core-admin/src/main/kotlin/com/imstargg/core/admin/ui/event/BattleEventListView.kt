@@ -99,7 +99,8 @@ class BattleEventListView(
         val saveButton =
             Button("저장") {
                 battleEventAdminService.updateMessages(
-                    MessageType.BATTLE_EVENT_NAME, event.event.brawlStarsId,
+                    MessageType.BATTLE_EVENT_NAME,
+                    event.event.brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("맵 이름이 저장되었습니다.")

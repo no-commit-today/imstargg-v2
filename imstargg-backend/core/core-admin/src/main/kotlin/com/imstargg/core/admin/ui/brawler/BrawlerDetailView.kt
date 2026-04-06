@@ -73,7 +73,8 @@ class BrawlerDetailView(
         val saveButton =
             Button("이름 저장") {
                 brawlerAdminService.updateMessages(
-                    MessageType.BRAWLER_NAME, brawlStarsId,
+                    MessageType.BRAWLER_NAME,
+                    brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -87,7 +88,8 @@ class BrawlerDetailView(
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 brawlerAdminService.updateImage(
-                    BrawlStarsImageType.BRAWLER_PORTRAIT, brawlStarsId,
+                    BrawlStarsImageType.BRAWLER_PORTRAIT,
+                    brawlStarsId,
                     data.inputStream(),
                     metadata.contentType(),
                 )
@@ -283,7 +285,8 @@ class BrawlerDetailView(
         val saveNameButton =
             Button("이름 저장") {
                 brawlerAdminService.updateMessages(
-                    messageType, brawlStarsId,
+                    messageType,
+                    brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")

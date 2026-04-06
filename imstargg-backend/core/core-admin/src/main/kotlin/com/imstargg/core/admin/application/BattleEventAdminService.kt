@@ -30,9 +30,10 @@ class BattleEventAdminService(
     fun findAllEvents(): List<BattleEventResponse> {
         val events = battleEventJpaRepository.findAll()
         val eventIds = events.filter { it.mapName != null }.map { it.brawlStarsId }
-        val messagesByBrawlStarsId = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_NAME, eventIds)
-            .groupBy { it.brawlStarsId }
+        val messagesByBrawlStarsId =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_NAME, eventIds)
+                .groupBy { it.brawlStarsId }
 
         return events.map { event ->
             BattleEventResponse(
@@ -46,12 +47,14 @@ class BattleEventAdminService(
         val modes = battleEventModeJpaRepository.findAll()
         val modeIds = modes.map { it.brawlStarsId }
 
-        val messagesByBrawlStarsId = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_MODE_NAME, modeIds)
-            .groupBy { it.brawlStarsId }
-        val imagesByBrawlStarsId = imageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, modeIds)
-            .associateBy { it.brawlStarsId }
+        val messagesByBrawlStarsId =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.BATTLE_EVENT_MODE_NAME, modeIds)
+                .groupBy { it.brawlStarsId }
+        val imagesByBrawlStarsId =
+            imageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, modeIds)
+                .associateBy { it.brawlStarsId }
 
         return modes.map { mode ->
             BattleEventModeResponse(

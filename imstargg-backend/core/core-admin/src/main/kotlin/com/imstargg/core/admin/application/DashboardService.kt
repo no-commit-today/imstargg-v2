@@ -28,13 +28,17 @@ class DashboardService(
         val events = battleEventJpaRepository.findAll()
         val modes = battleEventModeJpaRepository.findAll()
 
-        val existingMessages = messageJpaRepository.findAll()
-            .map { it.type to it.brawlStarsId }
-            .toSet()
+        val existingMessages =
+            messageJpaRepository
+                .findAll()
+                .map { it.type to it.brawlStarsId }
+                .toSet()
 
-        val existingImages = imageJpaRepository.findAll()
-            .map { it.type to it.brawlStarsId }
-            .toSet()
+        val existingImages =
+            imageJpaRepository
+                .findAll()
+                .map { it.type to it.brawlStarsId }
+                .toSet()
 
         return DashboardSummaryResponse(
             brawlerTotal = brawlers.size,
@@ -47,9 +51,10 @@ class DashboardService(
             eventModeWithName = modes.count { (MessageType.BATTLE_EVENT_MODE_NAME to it.brawlStarsId) in existingMessages },
             eventModeWithIcon = modes.count { (BrawlStarsImageType.BATTLE_EVENT_MODE_ICON to it.brawlStarsId) in existingImages },
             eventMapTotal = events.count { it.mapName != null },
-            eventMapWithName = events.count {
-                it.mapName != null && (MessageType.BATTLE_EVENT_NAME to it.brawlStarsId) in existingMessages
-            },
+            eventMapWithName =
+                events.count {
+                    it.mapName != null && (MessageType.BATTLE_EVENT_NAME to it.brawlStarsId) in existingMessages
+                },
         )
     }
 }

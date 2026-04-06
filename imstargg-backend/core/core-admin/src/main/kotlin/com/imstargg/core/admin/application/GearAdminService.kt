@@ -28,12 +28,14 @@ class GearAdminService(
         val gears = gearJpaRepository.findAll()
         val gearIds = gears.map { it.brawlStarsId }
 
-        val messagesByBrawlStarsId = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
-            .groupBy { it.brawlStarsId }
-        val imagesByBrawlStarsId = imageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.GEAR, gearIds)
-            .associateBy { it.brawlStarsId }
+        val messagesByBrawlStarsId =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
+                .groupBy { it.brawlStarsId }
+        val imagesByBrawlStarsId =
+            imageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.GEAR, gearIds)
+                .associateBy { it.brawlStarsId }
 
         return gears.map { gear ->
             GearResponse(

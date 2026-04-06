@@ -12,4 +12,15 @@ interface PlayerRankingJpaRepository : JpaRepository<PlayerRankingEntity, Long> 
         country: Country,
         collectedAt: OffsetDateTime,
     ): PlayerRankingEntity?
+
+    fun findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(
+        from: OffsetDateTime,
+        to: OffsetDateTime,
+    ): List<PlayerRankingEntity>
+
+    fun findAllByCountryAndCollectedAtGreaterThanEqualAndCollectedAtLessThan(
+        country: Country,
+        from: OffsetDateTime,
+        to: OffsetDateTime,
+    ): List<PlayerRankingEntity>
 }

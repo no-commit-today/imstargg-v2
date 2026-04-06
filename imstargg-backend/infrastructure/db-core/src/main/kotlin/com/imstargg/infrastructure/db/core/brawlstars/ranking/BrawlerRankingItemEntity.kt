@@ -14,7 +14,11 @@ import jakarta.persistence.Table
 @Table(
     name = "brawler_ranking_item",
     indexes = [
-        Index(name = "ix_brawler_ranking_item__brawler_ranking_id", columnList = "brawler_ranking_id"),
+        Index(
+            name = "uk_brawler_ranking_item__brawler_ranking_id_player_brawlstars_tag",
+            columnList = "brawler_ranking_id, player_brawlstars_tag",
+            unique = true,
+        ),
     ],
 )
 class BrawlerRankingItemEntity(

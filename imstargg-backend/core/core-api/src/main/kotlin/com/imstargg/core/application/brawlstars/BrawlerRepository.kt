@@ -53,21 +53,26 @@ class BrawlerRepository(
         val gearIds = gearEntities.map { it.brawlStarsId }
         val hyperChargeIds = hyperChargeEntities.map { it.brawlStarsId }
 
-        val brawlerNames = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
-            .groupBy { it.brawlStarsId }
-        val gadgetNames = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.GADGET_NAME, gadgetIds)
-            .groupBy { it.brawlStarsId }
-        val starPowerNames = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.STARPOWER_NAME, starPowerIds)
-            .groupBy { it.brawlStarsId }
-        val gearNames = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
-            .groupBy { it.brawlStarsId }
-        val hyperChargeNames = messageJpaRepository
-            .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperChargeIds)
-            .groupBy { it.brawlStarsId }
+        val brawlerNames =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
+                .groupBy { it.brawlStarsId }
+        val gadgetNames =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.GADGET_NAME, gadgetIds)
+                .groupBy { it.brawlStarsId }
+        val starPowerNames =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.STARPOWER_NAME, starPowerIds)
+                .groupBy { it.brawlStarsId }
+        val gearNames =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
+                .groupBy { it.brawlStarsId }
+        val hyperChargeNames =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperChargeIds)
+                .groupBy { it.brawlStarsId }
 
         val imagesByKey = brawlStarsImageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
 

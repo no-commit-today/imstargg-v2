@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
 @Table(
     name = "player_ranking",
     indexes = [
-        Index(name = "uk_player_ranking__country_collected_at", columnList = "country, collected_at", unique = true),
+        Index(name = "ix_player_ranking__country_collected_at", columnList = "country, collected_at"),
     ],
 )
 class PlayerRankingEntity(

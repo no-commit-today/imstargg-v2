@@ -92,7 +92,8 @@ class BattleEventModeListView(
         val saveNameButton =
             Button("이름 저장") {
                 battleEventAdminService.updateMessages(
-                    MessageType.BATTLE_EVENT_MODE_NAME, mode.mode.brawlStarsId,
+                    MessageType.BATTLE_EVENT_MODE_NAME,
+                    mode.mode.brawlStarsId,
                     mapOf(Language.KOREAN to koField.value, Language.ENGLISH to enField.value),
                 )
                 Notification.show("이름이 저장되었습니다.")
@@ -103,8 +104,10 @@ class BattleEventModeListView(
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 battleEventAdminService.updateImage(
-                    BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, mode.mode.brawlStarsId,
-                    data.inputStream(), metadata.contentType(),
+                    BrawlStarsImageType.BATTLE_EVENT_MODE_ICON,
+                    mode.mode.brawlStarsId,
+                    data.inputStream(),
+                    metadata.contentType(),
                 )
                 ui.ifPresent {
                     it.access {

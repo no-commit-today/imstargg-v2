@@ -33,9 +33,10 @@ class PlayerRepository(
         val brawlerEntities = playerBrawlerJpaRepository.findAllByPlayer(playerEntity)
         val brawlers = brawlerRepositoryWithCache.findBrawlers()
 
-        val buffiesByBrawlerId = playerBrawlerBuffyJpaRepository
-            .findAllByPlayerBrawlerIn(brawlerEntities)
-            .groupBy({ it.playerBrawler.id!! }, { it.buffyType })
+        val buffiesByBrawlerId =
+            playerBrawlerBuffyJpaRepository
+                .findAllByPlayerBrawlerIn(brawlerEntities)
+                .groupBy({ it.playerBrawler.id!! }, { it.buffyType })
 
         return brawlerEntities.map { entity ->
             toPlayerBrawler(
