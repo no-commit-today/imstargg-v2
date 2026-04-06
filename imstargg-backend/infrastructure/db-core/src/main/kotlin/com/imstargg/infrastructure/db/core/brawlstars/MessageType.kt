@@ -5,6 +5,7 @@ enum class MessageType {
     STARPOWER_NAME,
     GADGET_NAME,
     GEAR_NAME,
+    HYPERCHARGE_NAME,
     BATTLE_EVENT_MODE_NAME,
     BATTLE_EVENT_NAME,
 }

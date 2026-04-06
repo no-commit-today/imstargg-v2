@@ -16,6 +16,7 @@ create table if not exists player
     victories_duo                         int          not null,
     best_robo_rumble_time                 int          not null,
     best_time_as_big_brawler              int          not null,
+    total_prestige_level                  int          not null,
     status                                varchar(25)  not null default 'ACTIVE',
     club_brawlstars_tag                   varchar(45)  null,
     club_name                             varchar(105) null,
@@ -34,6 +35,7 @@ create table if not exists player_brawler
     trophy_rank           int         not null,
     trophies              int         not null,
     highest_trophies      int         not null,
+    prestige_level        int         not null,
     created_at            timestamp(6) not null default current_timestamp(6),
     updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_playerbrawler__playerid_brawlerbrawlstarsid (player_id, brawler_brawlstars_id)
@@ -59,6 +61,28 @@ create table if not exists player_brawler_star_power
     created_at                   timestamp(6) not null default current_timestamp(6),
     updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_playerbrawlerstarpower__playerbrawlerid_starpowerbrawlstarsid (player_brawler_id, star_power_brawlstars_id)
+);
+
+-- player brawler hyper charge table
+create table if not exists player_brawler_hyper_charge
+(
+    player_brawler_hyper_charge_id bigint auto_increment primary key,
+    player_brawler_id              bigint      not null,
+    hyper_charge_brawlstars_id     bigint      not null,
+    created_at                     timestamp(6) not null default current_timestamp(6),
+    updated_at                     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_playerbrawlerhypercharge__playerbrawlerid_hyperchargebrawlstarsid (player_brawler_id, hyper_charge_brawlstars_id)
+);
+
+-- player brawler buffy table
+create table if not exists player_brawler_buffy
+(
+    player_brawler_buffy_id bigint auto_increment primary key,
+    player_brawler_id       bigint      not null,
+    buffy_type              varchar(25) not null,
+    created_at              timestamp(6) not null default current_timestamp(6),
+    updated_at              timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_playerbrawlerbuffy__playerbrawlerid_buffytype (player_brawler_id, buffy_type)
 );
 
 -- player brawler gadget table
@@ -510,6 +534,17 @@ create table if not exists gear
     created_at        timestamp(6) not null default current_timestamp(6),
     updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_gear__brawlstarsid (brawlstars_id)
+);
+
+-- hyper_charge table
+create table if not exists hyper_charge
+(
+    hyper_charge_id       bigint auto_increment primary key,
+    brawlstars_id         bigint       not null,
+    brawler_brawlstars_id bigint       not null,
+    created_at            timestamp(6) not null default current_timestamp(6),
+    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_hypercharge__brawlstarsid (brawlstars_id)
 );
 
 -- star_power table

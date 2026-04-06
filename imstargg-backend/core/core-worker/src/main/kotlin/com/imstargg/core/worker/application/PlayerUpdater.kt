@@ -60,6 +60,7 @@ class PlayerUpdater(
             victoriesDuo = response.victoriesDuo,
             bestRoboRumbleTime = response.bestRoboRumbleTime,
             bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
+            totalPrestigeLevel = response.totalPrestigeLevel,
             club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
         )
 }

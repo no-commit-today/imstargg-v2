@@ -2,14 +2,19 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.BrawlerStatResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
+import com.imstargg.core.enums.BuffyType
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerBuffyEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerGadgetEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerGearEntity
+import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerHyperChargeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerStarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerGadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerGearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerHyperChargeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerStarPowerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
@@ -23,6 +28,8 @@ class PlayerUpdateApplier(
     private val playerBrawlerGearRepository: PlayerBrawlerGearJpaRepository,
     private val playerBrawlerStarPowerRepository: PlayerBrawlerStarPowerJpaRepository,
     private val playerBrawlerGadgetRepository: PlayerBrawlerGadgetJpaRepository,
+    private val playerBrawlerHyperChargeRepository: PlayerBrawlerHyperChargeJpaRepository,
+    private val playerBrawlerBuffyRepository: PlayerBrawlerBuffyJpaRepository,
 ) {
     @Transactional
     fun apply(
@@ -51,6 +58,7 @@ class PlayerUpdateApplier(
             victoriesDuo = response.victoriesDuo,
             bestRoboRumbleTime = response.bestRoboRumbleTime,
             bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
+            totalPrestigeLevel = response.totalPrestigeLevel,
             club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
         )
         playerRepository.save(player)
@@ -69,7 +77,13 @@ class PlayerUpdateApplier(
             brawlerResponses.map { response ->
                 val existing = existingBrawlers[response.id]
                 if (existing != null) {
-                    existing.update(response.power, response.rank, response.trophies, response.highestTrophies)
+                    existing.update(
+                        response.power,
+                        response.rank,
+                        response.trophies,
+                        response.highestTrophies,
+                        response.prestigeLevel,
+                    )
                     existing
                 } else {
                     playerBrawlerRepository.save(
@@ -80,6 +94,7 @@ class PlayerUpdateApplier(
                             response.rank,
                             response.trophies,
                             response.highestTrophies,
+                            response.prestigeLevel,
                         ),
                     )
                 }
@@ -106,6 +121,14 @@ class PlayerUpdateApplier(
             playerBrawlerGadgetRepository
                 .findAllByPlayerBrawlerIn(brawlers)
                 .groupBy({ it.playerBrawler.id!! }, { it.gadgetBrawlStarsId })
+        val existingHyperCharges =
+            playerBrawlerHyperChargeRepository
+                .findAllByPlayerBrawlerIn(brawlers)
+                .groupBy({ it.playerBrawler.id!! }, { it.hyperChargeBrawlStarsId })
+        val existingBuffies =
+            playerBrawlerBuffyRepository
+                .findAllByPlayerBrawlerIn(brawlers)
+                .groupBy({ it.playerBrawler.id!! }, { it.buffyType })
 
         val brawlerMap = brawlers.associateBy { it.brawlerBrawlStarsId }
 
@@ -126,6 +149,25 @@ class PlayerUpdateApplier(
             val existingGadgetIds = existingGadgets[brawlerId]?.toSet() ?: emptySet()
             response.gadgets.filter { it.id !in existingGadgetIds }.forEach {
                 playerBrawlerGadgetRepository.save(PlayerBrawlerGadgetEntity(brawler, it.id))
+            }
+
+            val existingHyperChargeIds = existingHyperCharges[brawlerId]?.toSet() ?: emptySet()
+            response.hyperCharges.filter { it.id !in existingHyperChargeIds }.forEach {
+                playerBrawlerHyperChargeRepository.save(PlayerBrawlerHyperChargeEntity(brawler, it.id))
+            }
+
+            val activeBuffies =
+                buildSet {
+                    if (response.buffies.gadget) add(BuffyType.GADGET)
+                    if (response.buffies.starPower) add(BuffyType.STAR_POWER)
+                    if (response.buffies.hyperCharge) add(BuffyType.HYPER_CHARGE)
+                }
+            val existingBuffyTypes = existingBuffies[brawlerId]?.toSet() ?: emptySet()
+            if (activeBuffies != existingBuffyTypes) {
+                playerBrawlerBuffyRepository.deleteAllByPlayerBrawler(brawler)
+                activeBuffies.forEach { type ->
+                    playerBrawlerBuffyRepository.save(PlayerBrawlerBuffyEntity(brawler, type))
+                }
             }
         }
     }

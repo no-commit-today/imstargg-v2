@@ -20,6 +20,7 @@ data class PlayerResponse(
     val victoriesDuo: Int,
     val bestRoboRumbleTime: Int,
     val bestTimeAsBigBrawler: Int,
+    val totalPrestigeLevel: Int,
     val club: PlayerClubResponse?,
     val brawlers: List<BrawlerStatResponse>,
 )

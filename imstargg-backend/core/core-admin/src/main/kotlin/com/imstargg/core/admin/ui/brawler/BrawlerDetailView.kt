@@ -4,6 +4,7 @@ import com.imstargg.core.admin.application.BrawlerAdminService
 import com.imstargg.core.admin.response.BrawlerResponse
 import com.imstargg.core.admin.response.GadgetResponse
 import com.imstargg.core.admin.response.GearResponse
+import com.imstargg.core.admin.response.HyperChargeResponse
 import com.imstargg.core.admin.response.StarPowerResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
@@ -54,6 +55,7 @@ class BrawlerDetailView(
         add(buildImageSection(detail))
         add(buildStarPowerSection(detail))
         add(buildGadgetSection(detail))
+        add(buildHyperChargeSection(detail))
         add(buildGearSection(detail))
     }
 
@@ -134,6 +136,21 @@ class BrawlerDetailView(
         return VerticalLayout(H3("가젯"), addButton, grid).apply { isPadding = false }
     }
 
+    private fun buildHyperChargeSection(detail: BrawlerResponse): VerticalLayout {
+        val grid =
+            Grid(HyperChargeResponse::class.java, false).apply {
+                addColumn { it.hyperCharge.brawlStarsId }.setHeader("BrawlStars ID")
+                addColumn { it.names[Language.KOREAN] ?: "" }.setHeader("이름(KO)")
+                addColumn { it.names[Language.ENGLISH] ?: "" }.setHeader("이름(EN)")
+                addColumn { if (it.image != null) "O" else "X" }.setHeader("이미지")
+                addComponentColumn { hc -> Button("편집") { openHyperChargeEditDialog(hc) } }.setHeader("편집")
+                setItems(detail.hyperCharges)
+            }
+
+        val addButton = Button("하이퍼차지 등록") { openAddHyperChargeDialog() }
+        return VerticalLayout(H3("하이퍼차지"), addButton, grid).apply { isPadding = false }
+    }
+
     private fun buildGearSection(detail: BrawlerResponse): VerticalLayout {
         val comboBox =
             MultiSelectComboBox<GearResponse>("연결된 기어").apply {
@@ -197,6 +214,38 @@ class BrawlerDetailView(
         dialog.add(idField)
         dialog.footer.add(Button("취소") { dialog.close() }, saveButton)
         dialog.open()
+    }
+
+    private fun openAddHyperChargeDialog() {
+        val dialog = Dialog()
+        dialog.headerTitle = "하이퍼차지 등록"
+        val idField = TextField("BrawlStars ID")
+        val saveButton =
+            Button("저장") {
+                val id = idField.value?.toLongOrNull()
+                if (id == null) {
+                    Notification.show("ID를 입력하세요.").addThemeVariants(NotificationVariant.LUMO_ERROR)
+                    return@Button
+                }
+                brawlerAdminService.createHyperCharge(id, brawlStarsId)
+                Notification.show("하이퍼차지가 등록되었습니다.")
+                dialog.close()
+                buildContent()
+            }
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
+        dialog.add(idField)
+        dialog.footer.add(Button("취소") { dialog.close() }, saveButton)
+        dialog.open()
+    }
+
+    private fun openHyperChargeEditDialog(hc: HyperChargeResponse) {
+        openSubItemEditDialog(
+            title = "하이퍼차지 편집 - ${hc.hyperCharge.brawlStarsId}",
+            names = hc.names,
+            messageType = MessageType.HYPERCHARGE_NAME,
+            imageType = BrawlStarsImageType.HYPERCHARGE,
+            brawlStarsId = hc.hyperCharge.brawlStarsId,
+        )
     }
 
     private fun openStarPowerEditDialog(sp: StarPowerResponse) {

@@ -10,6 +10,7 @@ data class BrawlerResponse(
     val image: BrawlStarsImageEntity?,
     val starPowers: List<StarPowerResponse> = emptyList(),
     val gadgets: List<GadgetResponse> = emptyList(),
+    val hyperCharges: List<HyperChargeResponse> = emptyList(),
     val linkedGearIds: Set<Long> = emptySet(),
     val allGears: List<GearResponse> = emptyList(),
 )

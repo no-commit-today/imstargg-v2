@@ -42,6 +42,7 @@ class BrawlStarsImageEntity(
                 BrawlStarsImageType.STARPOWER -> "starpower/$brawlStarsId"
                 BrawlStarsImageType.GADGET -> "gadget/$brawlStarsId"
                 BrawlStarsImageType.GEAR -> "gear/$brawlStarsId"
+                BrawlStarsImageType.HYPERCHARGE -> "hypercharge/$brawlStarsId"
                 BrawlStarsImageType.BATTLE_EVENT_MODE_ICON -> "event/mode/$brawlStarsId/icon"
             }
     }

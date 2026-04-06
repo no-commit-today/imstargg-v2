@@ -11,6 +11,7 @@ class PlayerBrawlerEntityFixture {
     private var rank: Int = 25
     private var trophies: Int = 750
     private var highestTrophies: Int = 800
+    private var prestigeLevel: Int = 0
 
     companion object {
         fun aPlayerBrawlerEntity() = PlayerBrawlerEntityFixture()
@@ -28,6 +29,8 @@ class PlayerBrawlerEntityFixture {
 
     fun withHighestTrophies(value: Int) = apply { highestTrophies = value }
 
+    fun withPrestigeLevel(value: Int) = apply { prestigeLevel = value }
+
     fun build() =
         PlayerBrawlerEntity(
             player = player,
@@ -36,5 +39,6 @@ class PlayerBrawlerEntityFixture {
             rank = rank,
             trophies = trophies,
             highestTrophies = highestTrophies,
+            prestigeLevel = prestigeLevel,
         )
 }

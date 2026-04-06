@@ -31,6 +31,7 @@ class PlayerBrawlerEntity(
     rank: Int,
     trophies: Int,
     highestTrophies: Int,
+    prestigeLevel: Int,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,15 +54,21 @@ class PlayerBrawlerEntity(
     var highestTrophies: Int = highestTrophies
         protected set
 
+    @Column(name = "prestige_level", nullable = false)
+    var prestigeLevel: Int = prestigeLevel
+        protected set
+
     fun update(
         power: Int,
         rank: Int,
         trophies: Int,
         highestTrophies: Int,
+        prestigeLevel: Int,
     ) {
         this.power = power
         this.rank = rank
         this.trophies = trophies
         this.highestTrophies = highestTrophies
+        this.prestigeLevel = prestigeLevel
     }
 }

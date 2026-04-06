@@ -3,6 +3,7 @@ package com.imstargg.core.admin.application
 import com.imstargg.core.admin.response.BrawlerResponse
 import com.imstargg.core.admin.response.GadgetResponse
 import com.imstargg.core.admin.response.GearResponse
+import com.imstargg.core.admin.response.HyperChargeResponse
 import com.imstargg.core.admin.response.StarPowerResponse
 import com.imstargg.core.admin.response.toNameMap
 import com.imstargg.core.enums.BrawlerRarity
@@ -15,11 +16,13 @@ import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.HyperChargeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.HyperChargeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.StarPowerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
@@ -33,6 +36,7 @@ class BrawlerAdminService(
     private val brawlerJpaRepository: BrawlerJpaRepository,
     private val gadgetJpaRepository: GadgetJpaRepository,
     private val starPowerJpaRepository: StarPowerJpaRepository,
+    private val hyperChargeJpaRepository: HyperChargeJpaRepository,
     private val gearJpaRepository: GearJpaRepository,
     private val brawlerGearJpaRepository: BrawlerGearJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
@@ -61,10 +65,10 @@ class BrawlerAdminService(
 
         val starPowers = starPowerJpaRepository.findAll().filter { it.brawlerBrawlStarsId == brawlStarsId }
         val gadgets = gadgetJpaRepository.findAll().filter { it.brawlerBrawlStarsId == brawlStarsId }
+        val hyperCharges = hyperChargeJpaRepository.findAll().filter { it.brawlerBrawlStarsId == brawlStarsId }
         val brawlerGears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
         val allGears = gearJpaRepository.findAll()
 
-        val allIds = listOf(brawlStarsId) + starPowers.map { it.brawlStarsId } + gadgets.map { it.brawlStarsId }
         val brawlerNameMessages = messageJpaRepository
             .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, listOf(brawlStarsId))
             .groupBy { it.brawlStarsId }
@@ -73,6 +77,9 @@ class BrawlerAdminService(
             .groupBy { it.brawlStarsId }
         val gadgetNameMessages = messageJpaRepository
             .findAllByTypeAndBrawlStarsIdIn(MessageType.GADGET_NAME, gadgets.map { it.brawlStarsId })
+            .groupBy { it.brawlStarsId }
+        val hyperChargeNameMessages = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperCharges.map { it.brawlStarsId })
             .groupBy { it.brawlStarsId }
         val imagesByKey = imageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
 
@@ -94,6 +101,14 @@ class BrawlerAdminService(
                         gadget = gd,
                         names = toNameMap(gadgetNameMessages[gd.brawlStarsId]),
                         image = imagesByKey[BrawlStarsImageType.GADGET to gd.brawlStarsId],
+                    )
+                },
+            hyperCharges =
+                hyperCharges.map { hc ->
+                    HyperChargeResponse(
+                        hyperCharge = hc,
+                        names = toNameMap(hyperChargeNameMessages[hc.brawlStarsId]),
+                        image = imagesByKey[BrawlStarsImageType.HYPERCHARGE to hc.brawlStarsId],
                     )
                 },
             linkedGearIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
@@ -124,6 +139,14 @@ class BrawlerAdminService(
         brawlerBrawlStarsId: Long,
     ) {
         gadgetJpaRepository.save(GadgetEntity(brawlStarsId, brawlerBrawlStarsId))
+    }
+
+    @Transactional
+    fun createHyperCharge(
+        brawlStarsId: Long,
+        brawlerBrawlStarsId: Long,
+    ) {
+        hyperChargeJpaRepository.save(HyperChargeEntity(brawlStarsId, brawlerBrawlStarsId))
     }
 
     @Transactional

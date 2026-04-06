@@ -17,6 +17,7 @@ data class PlayerResponse(
     val victoriesDuo: Int,
     val bestRoboRumbleTime: Int,
     val bestTimeAsBigBrawler: Int,
+    val totalPrestigeLevel: Int,
     val club: PlayerClubResponse?,
 ) {
     companion object {
@@ -36,6 +37,7 @@ data class PlayerResponse(
                 victoriesDuo = player.victoriesDuo,
                 bestRoboRumbleTime = player.bestRoboRumbleTime,
                 bestTimeAsBigBrawler = player.bestTimeAsBigBrawler,
+                totalPrestigeLevel = player.totalPrestigeLevel,
                 club = player.club?.let { PlayerClubResponse.of(it) },
             )
     }

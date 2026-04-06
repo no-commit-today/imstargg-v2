@@ -6,6 +6,7 @@ import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
 import com.imstargg.core.domain.brawlstars.brawler.Gadget
 import com.imstargg.core.domain.brawlstars.brawler.Gear
+import com.imstargg.core.domain.brawlstars.brawler.HyperCharge
 import com.imstargg.core.domain.brawlstars.brawler.StarPower
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -13,11 +14,13 @@ import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.HyperChargeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.HyperChargeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.StarPowerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImageJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
@@ -31,6 +34,7 @@ class BrawlerRepository(
     private val gadgetJpaRepository: GadgetJpaRepository,
     private val starPowerJpaRepository: StarPowerJpaRepository,
     private val gearJpaRepository: GearJpaRepository,
+    private val hyperChargeJpaRepository: HyperChargeJpaRepository,
     private val brawlerGearJpaRepository: BrawlerGearJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
@@ -40,12 +44,14 @@ class BrawlerRepository(
         val gadgetEntities = gadgetJpaRepository.findAll().toList()
         val starPowerEntities = starPowerJpaRepository.findAll().toList()
         val gearEntities = gearJpaRepository.findAll().toList()
+        val hyperChargeEntities = hyperChargeJpaRepository.findAll().toList()
         val brawlerGearEntities = brawlerGearJpaRepository.findAll().toList()
 
         val brawlerIds = brawlerEntities.map { it.brawlStarsId }
         val gadgetIds = gadgetEntities.map { it.brawlStarsId }
         val starPowerIds = starPowerEntities.map { it.brawlStarsId }
         val gearIds = gearEntities.map { it.brawlStarsId }
+        val hyperChargeIds = hyperChargeEntities.map { it.brawlStarsId }
 
         val brawlerNames = messageJpaRepository
             .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
@@ -59,6 +65,9 @@ class BrawlerRepository(
         val gearNames = messageJpaRepository
             .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, gearIds)
             .groupBy { it.brawlStarsId }
+        val hyperChargeNames = messageJpaRepository
+            .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperChargeIds)
+            .groupBy { it.brawlStarsId }
 
         val imagesByKey = brawlStarsImageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
 
@@ -66,6 +75,7 @@ class BrawlerRepository(
 
         val gadgetsByBrawlerId = gadgetEntities.groupBy { it.brawlerBrawlStarsId }
         val starPowersByBrawlerId = starPowerEntities.groupBy { it.brawlerBrawlStarsId }
+        val hyperChargesByBrawlerId = hyperChargeEntities.groupBy { it.brawlerBrawlStarsId }
 
         val gearsById = gearEntities.associateBy { it.brawlStarsId }
 
@@ -83,6 +93,7 @@ class BrawlerRepository(
                         .mapNotNull { gearsById[it.gearBrawlStarsId] }
                         .map { toGear(it, gearNames, imagesByKey) },
                 starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
+                hyperCharges = (hyperChargesByBrawlerId[brawlerId] ?: emptyList()).map { toHyperCharge(it, hyperChargeNames, imagesByKey) },
                 portraitImagePath = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.storedName,
             )
         }
@@ -125,5 +136,16 @@ class BrawlerRepository(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
             imagePath = images[BrawlStarsImageType.STARPOWER to entity.brawlStarsId]?.storedName,
+        )
+
+    private fun toHyperCharge(
+        entity: HyperChargeEntity,
+        names: Map<Long, List<MessageEntity>>,
+        images: Map<Pair<BrawlStarsImageType, Long>, BrawlStarsImageEntity>,
+    ): HyperCharge =
+        HyperCharge(
+            id = BrawlStarsId(entity.brawlStarsId),
+            name = toMessages(names[entity.brawlStarsId]),
+            imagePath = images[BrawlStarsImageType.HYPERCHARGE to entity.brawlStarsId]?.storedName,
         )
 }

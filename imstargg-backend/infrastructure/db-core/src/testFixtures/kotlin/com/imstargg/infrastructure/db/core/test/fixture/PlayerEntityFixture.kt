@@ -19,6 +19,7 @@ class PlayerEntityFixture {
     private var victoriesDuo: Int = 300
     private var bestRoboRumbleTime: Int = 0
     private var bestTimeAsBigBrawler: Int = 0
+    private var totalPrestigeLevel: Int = 0
     private var club: PlayerEntityClub? = defaultPlayerEntityClub()
     private var status: PlayerStatus = PlayerStatus.ACTIVE
 
@@ -60,6 +61,8 @@ class PlayerEntityFixture {
 
     fun withBestTimeAsBigBrawler(value: Int) = apply { bestTimeAsBigBrawler = value }
 
+    fun withTotalPrestigeLevel(value: Int) = apply { totalPrestigeLevel = value }
+
     fun withClub(value: PlayerEntityClub?) = apply { club = value }
 
     fun withStatus(value: PlayerStatus) = apply { status = value }
@@ -81,6 +84,7 @@ class PlayerEntityFixture {
                 victoriesDuo = victoriesDuo,
                 bestRoboRumbleTime = bestRoboRumbleTime,
                 bestTimeAsBigBrawler = bestTimeAsBigBrawler,
+                totalPrestigeLevel = totalPrestigeLevel,
                 club = club,
             )
         if (status == PlayerStatus.DELETED) {

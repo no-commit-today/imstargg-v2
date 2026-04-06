@@ -18,5 +18,6 @@ data class Player(
     val victoriesDuo: Int,
     val bestRoboRumbleTime: Int,
     val bestTimeAsBigBrawler: Int,
+    val totalPrestigeLevel: Int,
     val club: PlayerClub?,
 )

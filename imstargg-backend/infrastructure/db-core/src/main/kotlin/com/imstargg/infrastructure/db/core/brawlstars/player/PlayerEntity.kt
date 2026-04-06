@@ -36,6 +36,7 @@ class PlayerEntity(
     victoriesDuo: Int,
     bestRoboRumbleTime: Int,
     bestTimeAsBigBrawler: Int,
+    totalPrestigeLevel: Int,
     club: PlayerEntityClub?,
 ) : BaseTimeEntity() {
     @Id
@@ -95,6 +96,10 @@ class PlayerEntity(
     var bestTimeAsBigBrawler: Int = bestTimeAsBigBrawler
         protected set
 
+    @Column(name = "total_prestige_level", nullable = false)
+    var totalPrestigeLevel: Int = totalPrestigeLevel
+        protected set
+
     @Embedded
     var club: PlayerEntityClub? = club
         protected set
@@ -122,6 +127,7 @@ class PlayerEntity(
         victoriesDuo: Int,
         bestRoboRumbleTime: Int,
         bestTimeAsBigBrawler: Int,
+        totalPrestigeLevel: Int,
         club: PlayerEntityClub?,
     ) {
         this.name = name
@@ -137,6 +143,7 @@ class PlayerEntity(
         this.victoriesDuo = victoriesDuo
         this.bestRoboRumbleTime = bestRoboRumbleTime
         this.bestTimeAsBigBrawler = bestTimeAsBigBrawler
+        this.totalPrestigeLevel = totalPrestigeLevel
         this.club = club
     }
 }

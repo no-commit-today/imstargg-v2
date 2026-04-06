@@ -5,4 +5,6 @@ data class BrawlerResponse(
     val name: String,
     val starPowers: List<StarPowerResponse>,
     val gadgets: List<AccessoryResponse>,
+    val hyperCharges: List<HyperChargeResponse>,
+    val gears: List<GearStatResponse>,
 )
