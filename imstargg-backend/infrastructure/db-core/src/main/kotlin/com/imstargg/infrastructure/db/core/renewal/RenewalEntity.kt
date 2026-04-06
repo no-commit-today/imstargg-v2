@@ -19,7 +19,7 @@ import java.time.OffsetDateTime
 @Table(
     name = "renewal",
     indexes = [
-        Index(name = "ix_renewal__brawlstarstag_requestedat", columnList = "brawlstars_tag, requested_at desc"),
+        Index(name = "uk_renewal__brawlstarstag_type", columnList = "brawlstars_tag, type", unique = true),
     ],
 )
 class RenewalEntity(
@@ -28,13 +28,16 @@ class RenewalEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "type", length = 25, updatable = false, nullable = false)
     val type: RenewalType,
-    @Column(name = "requested_at", nullable = false)
-    val requestedAt: OffsetDateTime,
+    requestedAt: OffsetDateTime,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "renewal_id")
     val id: Long? = null
+
+    @Column(name = "requested_at", nullable = false)
+    var requestedAt: OffsetDateTime = requestedAt
+        protected set
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 25, nullable = false)
@@ -48,6 +51,16 @@ class RenewalEntity(
     @Column(name = "completed_at", nullable = true)
     var completedAt: OffsetDateTime? = null
         protected set
+
+    fun reRequest(requestedAt: OffsetDateTime) {
+        check(status != RenewalStatus.PENDING && status != RenewalStatus.EXECUTING) {
+            "Cannot re-request from $status"
+        }
+        this.requestedAt = requestedAt
+        this.status = RenewalStatus.REQUESTED
+        this.executedAt = null
+        this.completedAt = null
+    }
 
     fun toPending() {
         check(status == RenewalStatus.REQUESTED) {

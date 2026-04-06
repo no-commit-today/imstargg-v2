@@ -140,7 +140,7 @@ create table if not exists renewal
     completed_at   timestamp(6) null,
     created_at     timestamp(6) not null default current_timestamp(6),
     updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
-    index ix_renewal__brawlstarstag_requestedat (brawlstars_tag, requested_at desc)
+    unique index uk_renewal__brawlstarstag_type (brawlstars_tag, type)
 );
 
 -- battle table

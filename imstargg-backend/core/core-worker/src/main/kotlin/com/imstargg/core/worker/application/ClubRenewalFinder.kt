@@ -10,7 +10,7 @@ class ClubRenewalFinder(
     private val renewalRepository: RenewalJpaRepository,
 ) {
     fun findByTag(brawlStarsTag: String): RenewalEntity =
-        renewalRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
+        renewalRepository.findByBrawlStarsTagAndType(
             brawlStarsTag,
             RenewalType.CLUB,
         ) ?: throw IllegalArgumentException("Renewal not found for tag: $brawlStarsTag")

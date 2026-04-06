@@ -3,7 +3,6 @@ package com.imstargg.core.application.renewal
 import com.imstargg.core.application.brawlstars.BrawlStarsApiMaintenanceRepository
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.renewal.Renewal
-import com.imstargg.core.domain.renewal.RenewalCreate
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
@@ -52,7 +51,7 @@ class RenewalService(
             throw CoreException(ErrorType.RENEWAL_ALREADY_IN_PROGRESS, "tag=$tag, type=$type")
         }
 
-        val renewal = renewalRepository.create(RenewalCreate(tag, type, now))
+        val renewal = renewalRepository.request(tag, type, now)
 
         publishAction()
 

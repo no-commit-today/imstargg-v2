@@ -2,12 +2,12 @@ package com.imstargg.core.application.renewal
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.renewal.Renewal
-import com.imstargg.core.domain.renewal.RenewalCreate
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.time.OffsetDateTime
 
 @Repository
 @Transactional(readOnly = true)
@@ -19,7 +19,7 @@ class RenewalRepository(
         type: RenewalType,
     ): Renewal? {
         val entity =
-            renewalJpaRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
+            renewalJpaRepository.findByBrawlStarsTagAndType(
                 tag.value,
                 type,
             ) ?: return null
@@ -27,21 +27,30 @@ class RenewalRepository(
     }
 
     @Transactional
-    fun create(renewalCreate: RenewalCreate): Renewal {
-        val entity =
+    fun request(
+        tag: BrawlStarsTag,
+        type: RenewalType,
+        requestedAt: OffsetDateTime,
+    ): Renewal {
+        val entity = renewalJpaRepository.findByBrawlStarsTagAndType(tag.value, type)
+        if (entity != null) {
+            entity.reRequest(requestedAt)
+            return toRenewal(entity)
+        }
+        val newEntity =
             RenewalEntity(
-                brawlStarsTag = renewalCreate.tag.value,
-                type = renewalCreate.type,
-                requestedAt = renewalCreate.requestedAt,
+                brawlStarsTag = tag.value,
+                type = type,
+                requestedAt = requestedAt,
             )
-        renewalJpaRepository.save(entity)
-        return toRenewal(entity)
+        renewalJpaRepository.save(newEntity)
+        return toRenewal(newEntity)
     }
 
     @Transactional
     fun toPending(renewal: Renewal): Renewal {
         val entity =
-            renewalJpaRepository.findTopByBrawlStarsTagAndTypeOrderByRequestedAtDesc(
+            renewalJpaRepository.findByBrawlStarsTagAndType(
                 renewal.tag.value,
                 renewal.type,
             ) ?: throw NoSuchElementException("Renewal not found: tag=${renewal.tag}, type=${renewal.type}")
