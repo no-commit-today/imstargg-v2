@@ -1,10 +1,10 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
-import com.imstargg.client.brawlstars.response.BrawlerResponse
+import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -16,52 +16,50 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class BrawlerSyncJobConfig(
+class BattleEventModeSyncJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val brawlStarsClient: BrawlStarsClient,
-    private val brawlerJpaRepository: BrawlerJpaRepository,
+    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val alertManager: AlertManager,
 ) {
     companion object {
-        const val JOB_NAME = "brawlerSyncJob"
-        const val STEP_NAME = "brawlerSyncStep"
+        const val JOB_NAME = "battleEventModeSyncJob"
+        const val STEP_NAME = "battleEventModeSyncStep"
     }
 
     @Bean(JOB_NAME)
-    fun brawlerSyncJob(): Job =
+    fun battleEventModeSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .incrementer(RunIdIncrementer())
-            .start(brawlerSyncStep())
+            .start(battleEventModeSyncStep())
             .build()
 
     @Bean(STEP_NAME)
-    fun brawlerSyncStep(): Step =
+    fun battleEventModeSyncStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
-                    val brawlers = brawlStarsClient.getBrawlers().items
+                    val gameModes = brawlStarsClient.getGameModes().items
                     val existingIds =
-                        brawlerJpaRepository
+                        battleEventModeJpaRepository
                             .findAll()
                             .map { it.brawlStarsId }
                             .toSet()
 
-                    val newBrawlers =
-                        brawlers.filter { it.id !in existingIds }
-
-                    alertNewBrawlers(newBrawlers)
+                    val newModes = gameModes.filter { it.id !in existingIds }
+                    alertNewModes(newModes)
                 },
                 txManager,
             ).build()
 
-    private fun alertNewBrawlers(newBrawlers: List<BrawlerResponse>) {
-        if (newBrawlers.isEmpty()) return
-        val content = newBrawlers.joinToString("\n") { it.toString() }
+    private fun alertNewModes(newModes: List<EventTypeResponse>) {
+        if (newModes.isEmpty()) return
+        val content = newModes.joinToString("\n") { it.toString() }
         alertManager.alert(
             AlertCommand
                 .builder()
-                .title("[$JOB_NAME] 새로운 브롤러 발견")
+                .title("[$JOB_NAME] 새로운 이벤트 모드 발견")
                 .content(content)
                 .build(),
         )

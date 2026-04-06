@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerDailyRankingEntity
@@ -65,7 +65,8 @@ class BrawlerRankingDailyJobConfig(
                             )
                     if (rankings.isEmpty()) return@forEach
 
-                    rankings.groupBy { it.brawlerBrawlStarsId }
+                    rankings
+                        .groupBy { it.brawlerBrawlStarsId }
                         .forEach { (brawlerBrawlStarsId, group) ->
                             val latest = group.maxByOrNull { it.collectedAt } ?: return@forEach
                             val latestItems =

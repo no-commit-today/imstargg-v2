@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import org.slf4j.LoggerFactory

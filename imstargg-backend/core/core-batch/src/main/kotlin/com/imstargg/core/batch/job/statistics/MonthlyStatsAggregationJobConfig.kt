@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.support.parameter.YearMonthJobParameter
 import com.imstargg.core.enums.StatsPeriodType

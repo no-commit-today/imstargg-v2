@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerDailyRankingEntity

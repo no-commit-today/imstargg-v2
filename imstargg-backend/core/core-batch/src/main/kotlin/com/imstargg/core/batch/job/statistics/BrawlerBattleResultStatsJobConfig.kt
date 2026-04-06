@@ -1,9 +1,8 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerEnemyBattleResultStatsAggregator
+import com.imstargg.core.batch.domain.BrawlerBattleResultStatsAggregator
 import com.imstargg.core.batch.support.parameter.DateJobParameter
-import com.imstargg.core.enums.StatsPeriodType
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsEntity.Companion.brawlerBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.batch.core.configuration.annotation.JobScope
@@ -19,15 +18,15 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class BrawlerEnemyBattleResultStatsJobConfig(
+class BrawlerBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val entityManagerFactory: EntityManagerFactory,
 ) {
     companion object {
-        const val JOB_NAME = "brawlerEnemyBattleResultStatsJob"
-        const val DATE_PARAMETER_NAME = "brawlerEnemyBattleResultStatsJobDateJobParameter"
-        private const val STEP_NAME = "brawlerEnemyBattleResultStatsStep"
+        const val JOB_NAME = "brawlerBattleResultStatsJob"
+        const val DATE_PARAMETER_NAME = "brawlerBattleResultStatsJobDateJobParameter"
+        private const val STEP_NAME = "brawlerBattleResultStatsStep"
     }
 
     @Bean(DATE_PARAMETER_NAME)
@@ -35,16 +34,16 @@ class BrawlerEnemyBattleResultStatsJobConfig(
     fun dateJobParameter() = DateJobParameter()
 
     @Bean(JOB_NAME)
-    fun brawlerEnemyBattleResultStatsJob(): Job =
+    fun brawlerBattleResultStatsJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .incrementer(RunIdIncrementer())
             .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(brawlerEnemyBattleResultStatsStep())
+            .start(brawlerBattleResultStatsStep())
             .build()
 
     @Bean(STEP_NAME)
     @JobScope
-    fun brawlerEnemyBattleResultStatsStep(): Step =
+    fun brawlerBattleResultStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 DailyBattleStatsTasklet(
@@ -63,15 +62,12 @@ class BrawlerEnemyBattleResultStatsJobConfig(
                             .toList()
                     },
                     getId = { it.id!! },
-                    aggregatorFactory = { BrawlerEnemyBattleResultStatsAggregator() },
+                    aggregatorFactory = { BrawlerBattleResultStatsAggregator() },
                     deleteExisting = { queryFactory, date ->
                         queryFactory
-                            .delete(brawlerEnemyBattleResultStatsEntity)
-                            .where(
-                                brawlerEnemyBattleResultStatsEntity.periodType
-                                    .eq(StatsPeriodType.DAILY),
-                                brawlerEnemyBattleResultStatsEntity.startBattleDate.eq(date),
-                            ).execute()
+                            .delete(brawlerBattleResultStatsEntity)
+                            .where(brawlerBattleResultStatsEntity.battleDate.eq(date))
+                            .execute()
                     },
                 ),
                 txManager,

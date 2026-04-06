@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job
+package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
