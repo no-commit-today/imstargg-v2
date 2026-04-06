@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.brawlstars
 
+import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubDailyRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubDailyRankingItemEntity
@@ -7,8 +8,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubDai
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubDailyRankingJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingJpaRepository
+import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
@@ -18,7 +21,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.Clock
-import java.time.LocalDate
 import java.time.LocalTime
 
 @Configuration
@@ -33,21 +35,28 @@ class ClubRankingDailyJobConfig(
 ) {
     companion object {
         const val JOB_NAME = "clubRankingDailyJob"
+        const val DATE_PARAMETER_NAME = "clubRankingDailyJobDateJobParameter"
         private const val STEP_NAME = "clubRankingDailyStep"
     }
+
+    @Bean(DATE_PARAMETER_NAME)
+    @JobScope
+    fun dateJobParameter() = DateJobParameter()
 
     @Bean(JOB_NAME)
     fun clubRankingDailyJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .incrementer(RunIdIncrementer())
+            .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
             .start(clubRankingDailyStep())
             .build()
 
     @Bean(STEP_NAME)
+    @JobScope
     fun clubRankingDailyStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
-                val date = LocalDate.now(clock)
+                val date = dateJobParameter().date!!
                 val endTime =
                     date
                         .atTime(LocalTime.of(18, 0))
