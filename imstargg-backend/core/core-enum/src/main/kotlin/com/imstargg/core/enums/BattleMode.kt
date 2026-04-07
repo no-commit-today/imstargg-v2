@@ -25,6 +25,7 @@ enum class BattleMode(
     HUNTERS("hunters"),
     BOT_DROP("botDrop"),
     HOLD_THE_TROPHY("holdTheTrophy"),
+    UNKNOWN("unknown"),
     ;
 
     companion object {

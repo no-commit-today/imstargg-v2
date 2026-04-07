@@ -72,7 +72,7 @@ class BattleRepository(
         return Battle(
             battleTime = entity.battleAt,
             event = findEvent(entity.event?.brawlStarsId),
-            mode = entity.mode?.let { EnumCodeType.findByCode<BattleMode>(it) },
+            mode = entity.mode?.let { EnumCodeType.findByCode<BattleMode>(it) } ?: BattleMode.UNKNOWN,
             type = battleType,
             result = entity.result?.let { EnumCodeType.findByCode<BattleResult>(it) },
             duration = entity.duration,

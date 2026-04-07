@@ -9,7 +9,7 @@ import java.time.OffsetDateTime
 data class BattleResponse(
     val battleTime: OffsetDateTime,
     val event: BattleEventResponse?,
-    val mode: BattleMode?,
+    val mode: BattleMode,
     val type: BattleType?,
     val result: BattleResult?,
     val duration: Int?,

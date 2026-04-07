@@ -26,4 +26,9 @@ class BattleEventModeEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battle_event_mode_id")
     val id: Long? = null
+
+    companion object {
+        // API 응답에서 name이 null인 경우 사용
+        const val UNKNOWN_NAME = "UNKNOWN"
+    }
 }
