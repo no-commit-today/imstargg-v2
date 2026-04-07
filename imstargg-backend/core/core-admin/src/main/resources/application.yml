@@ -15,6 +15,10 @@ vaadin:
 spring:
   config.activate.on-profile: local
 
+app:
+  image:
+    base-url: http://localhost:4566/imstargg-images-local
+
 ---
 spring:
   config.activate.on-profile: local-dev
@@ -26,3 +30,7 @@ spring:
 ---
 spring:
   config.activate.on-profile: prod
+
+app:
+  image:
+    base-url: https://cdn.imstargg.com

@@ -1,6 +1,7 @@
 package com.imstargg.core.admin.ui.brawler
 
 import com.imstargg.core.admin.application.BrawlerAdminService
+import com.imstargg.core.admin.config.ImageProperties
 import com.imstargg.core.admin.response.BrawlerResponse
 import com.imstargg.core.admin.response.GadgetResponse
 import com.imstargg.core.admin.response.GearResponse
@@ -16,6 +17,7 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.grid.Grid
 import com.vaadin.flow.component.html.H3
+import com.vaadin.flow.component.html.Image
 import com.vaadin.flow.component.html.Span
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
@@ -33,6 +35,7 @@ import com.vaadin.flow.server.streams.UploadHandler
 @PageTitle("브롤러 상세")
 class BrawlerDetailView(
     private val brawlerAdminService: BrawlerAdminService,
+    private val imageProperties: ImageProperties,
 ) : VerticalLayout(),
     BeforeEnterObserver {
     private var brawlStarsId: Long = 0
@@ -85,7 +88,15 @@ class BrawlerDetailView(
     }
 
     private fun buildImageSection(detail: BrawlerResponse): VerticalLayout {
-        val imageStatus = Span(if (detail.image != null) "이미지: ${detail.image.storedName}" else "이미지 없음")
+        val imageStatus =
+            if (detail.image != null) {
+                Image("${imageProperties.baseUrl}/${detail.image.storedName}", "브롤러 이미지").apply {
+                    maxWidth = "128px"
+                    maxHeight = "128px"
+                }
+            } else {
+                Span("이미지 없음")
+            }
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 brawlerAdminService.updateImage(
@@ -121,7 +132,15 @@ class BrawlerDetailView(
         content.add(H3("버피 이미지"))
 
         buffyTypes.forEach { (label, imageType, imageEntity) ->
-            val imageStatus = Span("$label: ${imageEntity?.storedName ?: "이미지 없음"}")
+            val imageStatus =
+                if (imageEntity != null) {
+                    Image("${imageProperties.baseUrl}/${imageEntity.storedName}", "$label 이미지").apply {
+                        maxWidth = "128px"
+                        maxHeight = "128px"
+                    }
+                } else {
+                    Span("$label: 이미지 없음")
+                }
             val handler =
                 UploadHandler.inMemory { metadata, data ->
                     brawlerAdminService.updateImage(imageType, brawlStarsId, data.inputStream(), metadata.contentType())
