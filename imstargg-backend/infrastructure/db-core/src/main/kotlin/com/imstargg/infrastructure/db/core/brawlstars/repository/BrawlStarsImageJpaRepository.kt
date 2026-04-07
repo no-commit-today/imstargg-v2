@@ -17,6 +17,11 @@ interface BrawlStarsImageJpaRepository : JpaRepository<BrawlStarsImageEntity, Lo
 
     fun findAllByTypeIn(types: Collection<BrawlStarsImageType>): List<BrawlStarsImageEntity>
 
+    fun findAllByTypeInAndBrawlStarsIdIn(
+        types: Collection<BrawlStarsImageType>,
+        brawlStarsIds: Collection<Long>,
+    ): List<BrawlStarsImageEntity>
+
     fun deleteByTypeAndBrawlStarsId(
         type: BrawlStarsImageType,
         brawlStarsId: Long,

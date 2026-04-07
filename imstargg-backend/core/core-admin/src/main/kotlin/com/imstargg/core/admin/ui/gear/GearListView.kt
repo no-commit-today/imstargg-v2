@@ -12,6 +12,8 @@ import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.grid.Grid
+import com.vaadin.flow.component.html.Image
+import com.vaadin.flow.component.html.Span
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
@@ -103,6 +105,16 @@ class GearListView(
             }
         saveNameButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
 
+        val imageStatus =
+            if (gear.image != null) {
+                Image(gear.image.url, "기어 이미지").apply {
+                    maxWidth = "128px"
+                    maxHeight = "128px"
+                }
+            } else {
+                Span("이미지 없음")
+            }
+
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 gearAdminService.updateImage(
@@ -128,6 +140,7 @@ class GearListView(
             VerticalLayout(
                 HorizontalLayout(koField, enField),
                 saveNameButton,
+                imageStatus,
                 upload,
             ),
         )

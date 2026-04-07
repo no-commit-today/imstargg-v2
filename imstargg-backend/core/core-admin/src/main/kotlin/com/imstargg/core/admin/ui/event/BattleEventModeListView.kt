@@ -10,6 +10,8 @@ import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.button.ButtonVariant
 import com.vaadin.flow.component.dialog.Dialog
 import com.vaadin.flow.component.grid.Grid
+import com.vaadin.flow.component.html.Image
+import com.vaadin.flow.component.html.Span
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
@@ -101,6 +103,16 @@ class BattleEventModeListView(
             }
         saveNameButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
 
+        val imageStatus =
+            if (mode.icon != null) {
+                Image(mode.icon.url, "모드 아이콘").apply {
+                    maxWidth = "128px"
+                    maxHeight = "128px"
+                }
+            } else {
+                Span("아이콘 없음")
+            }
+
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 battleEventAdminService.updateImage(
@@ -122,7 +134,7 @@ class BattleEventModeListView(
                 maxFiles = 1
             }
 
-        dialog.add(VerticalLayout(HorizontalLayout(koField, enField), saveNameButton, upload))
+        dialog.add(VerticalLayout(HorizontalLayout(koField, enField), saveNameButton, imageStatus, upload))
         dialog.footer.add(Button("닫기") { dialog.close() })
         dialog.open()
     }

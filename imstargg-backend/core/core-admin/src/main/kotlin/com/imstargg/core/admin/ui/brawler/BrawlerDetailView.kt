@@ -8,6 +8,7 @@ import com.imstargg.core.admin.response.HyperChargeResponse
 import com.imstargg.core.admin.response.StarPowerResponse
 import com.imstargg.core.admin.ui.MainLayout
 import com.imstargg.core.enums.Language
+import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.vaadin.flow.component.button.Button
@@ -299,6 +300,7 @@ class BrawlerDetailView(
             messageType = MessageType.HYPERCHARGE_NAME,
             imageType = BrawlStarsImageType.HYPERCHARGE,
             brawlStarsId = hc.hyperCharge.brawlStarsId,
+            existingImage = hc.image,
         )
     }
 
@@ -309,6 +311,7 @@ class BrawlerDetailView(
             messageType = MessageType.STARPOWER_NAME,
             imageType = BrawlStarsImageType.STARPOWER,
             brawlStarsId = sp.starPower.brawlStarsId,
+            existingImage = sp.image,
         )
     }
 
@@ -319,6 +322,7 @@ class BrawlerDetailView(
             messageType = MessageType.GADGET_NAME,
             imageType = BrawlStarsImageType.GADGET,
             brawlStarsId = gd.gadget.brawlStarsId,
+            existingImage = gd.image,
         )
     }
 
@@ -328,6 +332,7 @@ class BrawlerDetailView(
         messageType: MessageType,
         imageType: BrawlStarsImageType,
         brawlStarsId: Long,
+        existingImage: BrawlStarsImageEntity?,
     ) {
         val dialog = Dialog()
         dialog.headerTitle = title
@@ -346,6 +351,16 @@ class BrawlerDetailView(
             }
         saveNameButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
 
+        val imageStatus =
+            if (existingImage != null) {
+                Image(existingImage.url, "이미지").apply {
+                    maxWidth = "128px"
+                    maxHeight = "128px"
+                }
+            } else {
+                Span("이미지 없음")
+            }
+
         val handler =
             UploadHandler.inMemory { metadata, data ->
                 brawlerAdminService.updateImage(imageType, brawlStarsId, data.inputStream(), metadata.contentType())
@@ -362,7 +377,7 @@ class BrawlerDetailView(
                 maxFiles = 1
             }
 
-        dialog.add(VerticalLayout(HorizontalLayout(koField, enField), saveNameButton, upload))
+        dialog.add(VerticalLayout(HorizontalLayout(koField, enField), saveNameButton, imageStatus, upload))
         dialog.footer.add(Button("닫기") { dialog.close() })
         dialog.open()
     }

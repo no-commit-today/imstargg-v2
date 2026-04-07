@@ -50,23 +50,26 @@ class BrawlerAdminService(
             messageJpaRepository
                 .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
                 .groupBy { it.brawlStarsId }
-        val imagesByKey = imageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
+        val imagesByBrawlStarsId =
+            imageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(BrawlStarsImageType.BRAWLER_PORTRAIT, brawlerIds)
+                .associateBy { it.brawlStarsId }
 
         return brawlers.map { brawler ->
             BrawlerResponse(
                 brawler = brawler,
                 names = toNameMap(messagesByBrawlStarsId[brawler.brawlStarsId]),
-                image = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawler.brawlStarsId],
+                image = imagesByBrawlStarsId[brawler.brawlStarsId],
             )
         }
     }
 
     fun findDetail(brawlStarsId: Long): BrawlerResponse? {
-        val brawler = brawlerJpaRepository.findAll().find { it.brawlStarsId == brawlStarsId } ?: return null
+        val brawler = brawlerJpaRepository.findByBrawlStarsId(brawlStarsId) ?: return null
 
-        val starPowers = starPowerJpaRepository.findAll().filter { it.brawlerBrawlStarsId == brawlStarsId }
-        val gadgets = gadgetJpaRepository.findAll().filter { it.brawlerBrawlStarsId == brawlStarsId }
-        val hyperCharges = hyperChargeJpaRepository.findAll().filter { it.brawlerBrawlStarsId == brawlStarsId }
+        val starPowers = starPowerJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
+        val gadgets = gadgetJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
+        val hyperCharges = hyperChargeJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
         val brawlerGears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
         val allGears = gearJpaRepository.findAll()
 
@@ -86,7 +89,25 @@ class BrawlerAdminService(
             messageJpaRepository
                 .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperCharges.map { it.brawlStarsId })
                 .groupBy { it.brawlStarsId }
-        val imagesByKey = imageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
+        val relevantTypes =
+            listOf(
+                BrawlStarsImageType.BRAWLER_PORTRAIT,
+                BrawlStarsImageType.STARPOWER,
+                BrawlStarsImageType.GADGET,
+                BrawlStarsImageType.HYPERCHARGE,
+                BrawlStarsImageType.BUFFY_GADGET,
+                BrawlStarsImageType.BUFFY_STAR_POWER,
+                BrawlStarsImageType.BUFFY_HYPER_CHARGE,
+            )
+        val relevantIds =
+            listOf(brawlStarsId) +
+                starPowers.map { it.brawlStarsId } +
+                gadgets.map { it.brawlStarsId } +
+                hyperCharges.map { it.brawlStarsId }
+        val imagesByKey =
+            imageJpaRepository
+                .findAllByTypeInAndBrawlStarsIdIn(relevantTypes, relevantIds)
+                .associateBy { it.type to it.brawlStarsId }
 
         return BrawlerResponse(
             brawler = brawler,
