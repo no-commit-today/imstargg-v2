@@ -15,9 +15,11 @@ import java.time.OffsetDateTime
 @Entity
 @Table(
     name = "battle_event_rotation_item",
-    indexes = [Index(name = "ix_battle_event_rotation_item__end_time", columnList = "end_time")],
+    indexes = [Index(name = "ix_battle_event_rotation_item__battle_event_rotation_id", columnList = "battle_event_rotation_id")],
 )
 class BattleEventRotationItemEntity(
+    @Column(name = "battle_event_rotation_id", updatable = false, nullable = false)
+    val battleEventRotationId: Long,
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
     @Column(name = "event_mode_name", updatable = false)

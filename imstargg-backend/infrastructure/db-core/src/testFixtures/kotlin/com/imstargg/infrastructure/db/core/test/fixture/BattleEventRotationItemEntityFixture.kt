@@ -4,6 +4,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationI
 import java.time.OffsetDateTime
 
 class BattleEventRotationItemEntityFixture {
+    private var battleEventRotationId: Long? = null
     private var eventBrawlStarsId: Long = 15000001L
     private var modifiers: List<String> = emptyList()
     private var slotId: Int = 1
@@ -16,6 +17,8 @@ class BattleEventRotationItemEntityFixture {
     companion object {
         fun aBattleEventRotationItemEntity() = BattleEventRotationItemEntityFixture()
     }
+
+    fun withBattleEventRotationId(value: Long) = apply { battleEventRotationId = value }
 
     fun withEventBrawlStarsId(value: Long) = apply { eventBrawlStarsId = value }
 
@@ -33,8 +36,10 @@ class BattleEventRotationItemEntityFixture {
 
     fun withEventMapName(value: String?) = apply { eventMapName = value }
 
-    fun build() =
-        BattleEventRotationItemEntity(
+    fun build(): BattleEventRotationItemEntity {
+        requireNotNull(battleEventRotationId) { "battleEventRotationId must be set" }
+        return BattleEventRotationItemEntity(
+            battleEventRotationId = battleEventRotationId!!,
             eventBrawlStarsId = eventBrawlStarsId,
             modifiers = modifiers,
             slotId = slotId,
@@ -44,4 +49,5 @@ class BattleEventRotationItemEntityFixture {
             eventModeBrawlStarsId = eventModeBrawlStarsId,
             eventMapName = eventMapName,
         )
+    }
 }
