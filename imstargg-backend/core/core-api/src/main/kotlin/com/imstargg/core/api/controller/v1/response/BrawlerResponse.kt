@@ -13,7 +13,7 @@ data class BrawlerResponse(
     val gears: List<GearResponse>,
     val starPowers: List<StarPowerResponse>,
     val hyperCharges: List<HyperChargeResponse>,
-    val portraitImagePath: String?,
+    val portraitImageUrl: String?,
     val buffies: List<BuffyResponse>,
 ) {
     companion object {
@@ -27,8 +27,8 @@ data class BrawlerResponse(
                 gears = brawler.gears.map { GearResponse.of(it) },
                 starPowers = brawler.starPowers.map { StarPowerResponse.of(it) },
                 hyperCharges = brawler.hyperCharges.map { HyperChargeResponse.of(it) },
-                portraitImagePath = brawler.portraitImagePath,
-                buffies = brawler.buffies.map { BuffyResponse(it.type, it.imagePath) },
+                portraitImageUrl = brawler.portraitImageUrl,
+                buffies = brawler.buffies.map { BuffyResponse(it.type, it.imageUrl) },
             )
     }
 }

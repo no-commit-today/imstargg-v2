@@ -7,7 +7,7 @@ data class GearResponse(
     val id: Long,
     val rarity: GearRarity,
     val name: MessagesResponse,
-    val imagePath: String?,
+    val imageUrl: String?,
 ) {
     companion object {
         fun of(gear: Gear) =
@@ -15,7 +15,7 @@ data class GearResponse(
                 id = gear.id.value,
                 rarity = gear.rarity,
                 name = MessagesResponse.of(gear.name),
-                imagePath = gear.imagePath,
+                imageUrl = gear.imageUrl,
             )
     }
 }

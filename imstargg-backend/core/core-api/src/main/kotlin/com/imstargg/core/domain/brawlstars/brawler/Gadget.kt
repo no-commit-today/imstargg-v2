@@ -6,5 +6,5 @@ import com.imstargg.core.domain.brawlstars.Messages
 data class Gadget(
     val id: BrawlStarsId,
     val name: Messages,
-    val imagePath: String?,
+    val imageUrl: String?,
 )

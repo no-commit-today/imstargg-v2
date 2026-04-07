@@ -1,7 +1,6 @@
 package com.imstargg.core.admin.ui.brawler
 
 import com.imstargg.core.admin.application.BrawlerAdminService
-import com.imstargg.core.admin.config.ImageProperties
 import com.imstargg.core.admin.response.BrawlerResponse
 import com.imstargg.core.admin.response.GadgetResponse
 import com.imstargg.core.admin.response.GearResponse
@@ -35,7 +34,6 @@ import com.vaadin.flow.server.streams.UploadHandler
 @PageTitle("브롤러 상세")
 class BrawlerDetailView(
     private val brawlerAdminService: BrawlerAdminService,
-    private val imageProperties: ImageProperties,
 ) : VerticalLayout(),
     BeforeEnterObserver {
     private var brawlStarsId: Long = 0
@@ -90,7 +88,7 @@ class BrawlerDetailView(
     private fun buildImageSection(detail: BrawlerResponse): VerticalLayout {
         val imageStatus =
             if (detail.image != null) {
-                Image("${imageProperties.baseUrl}/${detail.image.storedName}", "브롤러 이미지").apply {
+                Image(detail.image.url, "브롤러 이미지").apply {
                     maxWidth = "128px"
                     maxHeight = "128px"
                 }
@@ -134,7 +132,7 @@ class BrawlerDetailView(
         buffyTypes.forEach { (label, imageType, imageEntity) ->
             val imageStatus =
                 if (imageEntity != null) {
-                    Image("${imageProperties.baseUrl}/${imageEntity.storedName}", "$label 이미지").apply {
+                    Image(imageEntity.url, "$label 이미지").apply {
                         maxWidth = "128px"
                         maxHeight = "128px"
                     }

@@ -8,5 +8,5 @@ data class Gear(
     val id: BrawlStarsId,
     val rarity: GearRarity,
     val name: Messages,
-    val imagePath: String?,
+    val imageUrl: String?,
 )

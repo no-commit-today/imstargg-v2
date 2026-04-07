@@ -101,12 +101,12 @@ class BrawlerRepository(
                         .map { toGear(it, gearNames, imagesByKey) },
                 starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
                 hyperCharges = (hyperChargesByBrawlerId[brawlerId] ?: emptyList()).map { toHyperCharge(it, hyperChargeNames, imagesByKey) },
-                portraitImagePath = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.storedName,
+                portraitImageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.url,
                 buffies =
                     listOf(
-                        Buffy(BuffyType.GADGET, imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlerId]?.storedName),
-                        Buffy(BuffyType.STAR_POWER, imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlerId]?.storedName),
-                        Buffy(BuffyType.HYPER_CHARGE, imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlerId]?.storedName),
+                        Buffy(BuffyType.GADGET, imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlerId]?.url),
+                        Buffy(BuffyType.STAR_POWER, imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlerId]?.url),
+                        Buffy(BuffyType.HYPER_CHARGE, imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlerId]?.url),
                     ),
             )
         }
@@ -125,7 +125,7 @@ class BrawlerRepository(
         Gadget(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
-            imagePath = images[BrawlStarsImageType.GADGET to entity.brawlStarsId]?.storedName,
+            imageUrl = images[BrawlStarsImageType.GADGET to entity.brawlStarsId]?.url,
         )
 
     private fun toGear(
@@ -137,7 +137,7 @@ class BrawlerRepository(
             id = BrawlStarsId(entity.brawlStarsId),
             rarity = entity.rarity,
             name = toMessages(names[entity.brawlStarsId]),
-            imagePath = images[BrawlStarsImageType.GEAR to entity.brawlStarsId]?.storedName,
+            imageUrl = images[BrawlStarsImageType.GEAR to entity.brawlStarsId]?.url,
         )
 
     private fun toStarPower(
@@ -148,7 +148,7 @@ class BrawlerRepository(
         StarPower(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
-            imagePath = images[BrawlStarsImageType.STARPOWER to entity.brawlStarsId]?.storedName,
+            imageUrl = images[BrawlStarsImageType.STARPOWER to entity.brawlStarsId]?.url,
         )
 
     private fun toHyperCharge(
@@ -159,6 +159,6 @@ class BrawlerRepository(
         HyperCharge(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
-            imagePath = images[BrawlStarsImageType.HYPERCHARGE to entity.brawlStarsId]?.storedName,
+            imageUrl = images[BrawlStarsImageType.HYPERCHARGE to entity.brawlStarsId]?.url,
         )
 }

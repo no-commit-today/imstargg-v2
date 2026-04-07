@@ -5,14 +5,14 @@ import com.imstargg.core.domain.brawlstars.event.BattleEventMode
 data class BattleEventModeResponse(
     val id: Long,
     val name: MessagesResponse,
-    val iconImagePath: String?,
+    val iconImageUrl: String?,
 ) {
     companion object {
         fun of(mode: BattleEventMode) =
             BattleEventModeResponse(
                 id = mode.id.value,
                 name = MessagesResponse.of(mode.name),
-                iconImagePath = mode.iconImagePath,
+                iconImageUrl = mode.iconImageUrl,
             )
     }
 }

@@ -14,6 +14,6 @@ data class Brawler(
     val gears: List<Gear>,
     val starPowers: List<StarPower>,
     val hyperCharges: List<HyperCharge>,
-    val portraitImagePath: String?,
+    val portraitImageUrl: String?,
     val buffies: List<Buffy>,
 )

@@ -83,7 +83,7 @@ class BattleEventRepository(
                 BattleEventMode(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages),
-                    iconImagePath = modeIconImage?.storedName,
+                    iconImageUrl = modeIconImage?.url,
                 )
             }
 
@@ -105,7 +105,7 @@ class BattleEventRepository(
                 BattleEventMode(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
-                    iconImagePath = modeIconImages[modeEntity.brawlStarsId]?.storedName,
+                    iconImageUrl = modeIconImages[modeEntity.brawlStarsId]?.url,
                 )
             }
         return BattleEvent(

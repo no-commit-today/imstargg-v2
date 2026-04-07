@@ -27,7 +27,8 @@ class S3ImageStorageService(
                 .contentType(contentType)
                 .build()
         s3Client.putObject(request, RequestBody.fromBytes(bytes))
-        return key
+        val url = s3Client.utilities().getUrl { it.bucket(properties.bucket).key(key) }
+        return url.toString()
     }
 
     override fun delete(key: String) {

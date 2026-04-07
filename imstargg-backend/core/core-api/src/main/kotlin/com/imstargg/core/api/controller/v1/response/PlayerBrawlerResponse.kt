@@ -22,12 +22,12 @@ data class PlayerBrawlerResponse(
                 prestigeLevel = playerBrawler.prestigeLevel,
                 buffies =
                     playerBrawler.buffies.map { buffyType ->
-                        val imagePath =
+                        val imageUrl =
                             playerBrawler.brawler
                                 ?.buffies
                                 ?.find { it.type == buffyType }
-                                ?.imagePath
-                        BuffyResponse(type = buffyType, imagePath = imagePath)
+                                ?.imageUrl
+                        BuffyResponse(type = buffyType, imageUrl = imageUrl)
                     },
             )
     }

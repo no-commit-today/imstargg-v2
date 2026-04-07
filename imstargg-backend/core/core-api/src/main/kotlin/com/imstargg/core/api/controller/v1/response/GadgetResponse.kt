@@ -5,14 +5,14 @@ import com.imstargg.core.domain.brawlstars.brawler.Gadget
 data class GadgetResponse(
     val id: Long,
     val name: MessagesResponse,
-    val imagePath: String?,
+    val imageUrl: String?,
 ) {
     companion object {
         fun of(gadget: Gadget) =
             GadgetResponse(
                 id = gadget.id.value,
                 name = MessagesResponse.of(gadget.name),
-                imagePath = gadget.imagePath,
+                imageUrl = gadget.imageUrl,
             )
     }
 }

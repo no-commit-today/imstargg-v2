@@ -666,6 +666,7 @@ create table if not exists brawlstars_image
     type                varchar(45)  not null,
     brawlstars_id       bigint       not null,
     stored_name         varchar(255) not null,
+    url                 varchar(512) not null,
     created_at          timestamp(6) not null default current_timestamp(6),
     updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawlstars_image__type_brawlstarsid (type, brawlstars_id)

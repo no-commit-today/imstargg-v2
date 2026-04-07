@@ -6,5 +6,5 @@ import com.imstargg.core.domain.brawlstars.Messages
 data class BattleEventMode(
     val id: BrawlStarsId,
     val name: Messages,
-    val iconImagePath: String?,
+    val iconImageUrl: String?,
 )

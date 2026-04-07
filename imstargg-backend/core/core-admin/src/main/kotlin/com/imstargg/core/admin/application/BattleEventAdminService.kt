@@ -103,8 +103,8 @@ class BattleEventAdminService(
         contentType: String,
     ) {
         val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        imageStorageService.upload(storedName, inputStream, contentType)
+        val url = imageStorageService.upload(storedName, inputStream, contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
-        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
     }
 }

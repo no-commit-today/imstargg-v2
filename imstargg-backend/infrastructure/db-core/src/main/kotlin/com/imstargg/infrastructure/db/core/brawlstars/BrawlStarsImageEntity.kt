@@ -26,6 +26,8 @@ class BrawlStarsImageEntity(
     val brawlStarsId: Long,
     @Column(name = "stored_name", updatable = false, nullable = false)
     val storedName: String,
+    @Column(name = "url", nullable = false)
+    val url: String,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
