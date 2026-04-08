@@ -3,6 +3,7 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
 import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -26,7 +27,7 @@ class BattleRankStatisticsService(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): List<BrawlerTeamRankStatistics> =
         rankRepository
             .findBrawlerTeamRankCounts(eventId, brawlerId, tierRange, startDate, teamSize)

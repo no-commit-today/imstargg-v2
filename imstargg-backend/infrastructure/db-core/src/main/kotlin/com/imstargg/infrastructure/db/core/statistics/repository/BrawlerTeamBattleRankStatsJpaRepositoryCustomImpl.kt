@@ -1,6 +1,7 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsBrawlerEntity.Companion.brawlerTeamBattleRankStatsBrawlerEntity
@@ -21,7 +22,7 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
         tierRange: StatsTierRange,
         startBattleDate: LocalDate,
         brawlerBrawlStarsId: Long,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): List<BrawlerTeamBattleRankStatsEntity> {
         val stats = brawlerTeamBattleRankStatsEntity
         val brawler = brawlerTeamBattleRankStatsBrawlerEntity

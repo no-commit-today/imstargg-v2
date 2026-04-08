@@ -9,6 +9,7 @@ import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsRes
 import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsResponse
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -42,7 +43,7 @@ class StatisticsController(
     fun getBrawlerTeamResultStatistics(
         @RequestParam eventId: Long?,
         @RequestParam brawlerId: Long,
-        @RequestParam teamSize: Int,
+        @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
@@ -97,7 +98,7 @@ class StatisticsController(
     fun getBrawlerTeamRankStatistics(
         @PathVariable eventId: Long,
         @RequestParam brawlerId: Long,
-        @RequestParam teamSize: Int,
+        @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,

@@ -3,6 +3,7 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerTeamResultCount
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -21,7 +22,7 @@ class BrawlerTeamResultStatisticsRepositoryWithCache(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): List<BrawlerTeamResultCount> =
         brawlerTeamResultStatisticsRepository.findBrawlerTeamResultCounts(eventId, brawlerId, tierRange, startDate, teamSize)
 }

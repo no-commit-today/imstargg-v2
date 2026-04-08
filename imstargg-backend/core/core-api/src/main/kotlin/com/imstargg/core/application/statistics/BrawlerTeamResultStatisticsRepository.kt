@@ -4,6 +4,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerTeamResultCount
 import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTeamBattleResultStatsJpaRepository
@@ -21,7 +22,7 @@ class BrawlerTeamResultStatisticsRepository(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): List<BrawlerTeamResultCount> {
         val entities =
             teamBattleResultJpaRepository.findAllByConditionsAndBrawler(
@@ -33,8 +34,8 @@ class BrawlerTeamResultStatisticsRepository(
                 teamSize = teamSize,
             )
         return when (teamSize) {
-            2 -> extractDuoResultCounts(entities, brawlerId)
-            3 ->
+            StatsTeamSize.SIZE_2 -> extractDuoResultCounts(entities, brawlerId)
+            StatsTeamSize.SIZE_3 ->
                 entities.map {
                     BrawlerTeamResultCount(
                         brawlerIds = it.brawlerBrawlStarsIds.map { id -> BrawlStarsId(id) },
@@ -46,7 +47,6 @@ class BrawlerTeamResultStatisticsRepository(
                             ),
                     )
                 }
-            else -> throw IllegalArgumentException("teamSize must be 2 or 3, but was $teamSize")
         }
     }
 

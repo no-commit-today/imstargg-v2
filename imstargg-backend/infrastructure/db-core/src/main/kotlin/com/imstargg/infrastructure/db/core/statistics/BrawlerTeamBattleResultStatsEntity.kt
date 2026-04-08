@@ -1,10 +1,12 @@
 package com.imstargg.infrastructure.db.core.statistics
 
 import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -40,16 +42,14 @@ class BrawlerTeamBattleResultStatsEntity(
     val startBattleDate: LocalDate,
     @Column(name = "end_battle_date", updatable = false, nullable = false)
     val endBattleDate: LocalDate,
+    @Convert(converter = StatsTeamSizeConverter::class)
     @Column(name = "team_size", updatable = false, nullable = false)
-    val teamSize: Int,
+    val teamSize: StatsTeamSize,
     @Embedded
     val resultCount: ResultCountEmbedded,
     initialBrawlerBrawlStarsIds: List<Long>,
 ) : BaseTimeEntity() {
     init {
-        require(teamSize in 2..3) {
-            "teamSize($teamSize)는 2~3 사이여야 합니다."
-        }
         require(startBattleDate <= endBattleDate) {
             "startBattleDate($startBattleDate)는 endBattleDate($endBattleDate) 이전이어야 합니다."
         }

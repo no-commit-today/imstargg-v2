@@ -5,6 +5,7 @@ import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerTeamRankCount
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTeamBattleRankStatsJpaRepository
@@ -43,7 +44,7 @@ class BattleEventRankStatisticsRepository(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): List<BrawlerTeamRankCount> {
         val entities =
             teamBattleRankJpaRepository

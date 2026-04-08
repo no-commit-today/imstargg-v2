@@ -5,6 +5,7 @@ import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerTeamResultStatistics
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -35,7 +36,7 @@ class BattleResultStatisticsService(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): BrawlerTeamResultStatistics =
         BrawlerTeamResultStatistics.create(
             brawlerTeamResultRepository.findBrawlerTeamResultCounts(

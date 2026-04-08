@@ -12,6 +12,7 @@ import com.imstargg.core.application.statistics.BattleRankStatisticsService
 import com.imstargg.core.application.statistics.BattleResultStatisticsService
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
+import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Component
 import java.time.LocalDate
@@ -40,7 +41,7 @@ class StatisticsQueryComposer(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): BrawlerTeamResultStatisticsResponse {
         val brawlers = brawlers()
         return BrawlerTeamResultStatisticsResponse.of(
@@ -91,7 +92,7 @@ class StatisticsQueryComposer(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-        teamSize: Int,
+        teamSize: StatsTeamSize,
     ): List<BrawlerTeamRankStatisticsResponse> {
         val brawlers = brawlers()
         return battleRankStatisticsService
