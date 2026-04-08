@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable
     url = "\${app.client.brawlstars.url}",
     configuration = [BrawlStarsApiConfig::class],
 )
-@RateLimiter(name = "brawlstars-api")
+@RateLimiter(name = "brawlstars")
 internal interface BrawlStarsApi {
     /**
      * Get list of recent battle results for a player.

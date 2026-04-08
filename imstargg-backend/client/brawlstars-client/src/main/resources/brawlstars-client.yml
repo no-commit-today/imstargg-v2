@@ -1,7 +1,7 @@
 spring.cloud.openfeign:
   client:
     config:
-      brawlstars-api:
+      brawlstars:
         connect-timeout: 2100
         read-timeout: 5000
         logger-level: full
@@ -14,7 +14,7 @@ spring.cloud.openfeign:
 
 resilience4j.ratelimiter:
   instances:
-    brawlstars-api:
+    brawlstars:
       limit-for-period: 1
       limit-refresh-period: 1s
       timeout-duration: 600s
@@ -49,5 +49,5 @@ spring:
 
 resilience4j.ratelimiter:
   instances:
-    brawlstars-api:
+    brawlstars:
       limit-for-period: 10
