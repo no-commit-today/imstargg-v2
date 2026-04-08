@@ -1,6 +1,7 @@
 services:
   mysql:
     image: mysql:8.4.7
+    container_name: imstargg-mysql
     ports:
       - "3306:3306"
     environment:
@@ -16,6 +17,7 @@ services:
       - ./docker/mysql/init:/docker-entrypoint-initdb.d # init
   valkey:
     image: valkey/valkey:9.0.3
+    container_name: imstargg-valkey
     ports:
       - "6379:6379"
     environment:
@@ -24,6 +26,7 @@ services:
       - ./docker/valkey/data:/data
   floci:
     image: hectorvent/floci:1.3.0
+    container_name: imstargg-floci
     ports:
       - "4566:4566"
     volumes:
