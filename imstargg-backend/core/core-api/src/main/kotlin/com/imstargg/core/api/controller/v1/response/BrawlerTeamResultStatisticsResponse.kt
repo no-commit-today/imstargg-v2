@@ -1,28 +1,28 @@
 package com.imstargg.core.api.controller.v1.response
 
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
-import com.imstargg.core.domain.statistics.BrawlersResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerTeamResultStatistics
 
-data class BrawlersResultStatisticsItemResponse(
+data class BrawlerTeamResultStatisticsItemResponse(
     val brawlers: List<BrawlerResponse?>,
     val totalBattleCount: Long,
     val pickRate: Double,
     val winRate: Double,
 )
 
-data class BrawlersResultStatisticsResponse(
+data class BrawlerTeamResultStatisticsResponse(
     val totalBattleCount: Long,
-    val items: List<BrawlersResultStatisticsItemResponse>,
+    val items: List<BrawlerTeamResultStatisticsItemResponse>,
 ) {
     companion object {
         fun of(
-            statistics: BrawlersResultStatistics,
+            statistics: BrawlerTeamResultStatistics,
             brawlers: Brawlers,
-        ) = BrawlersResultStatisticsResponse(
+        ) = BrawlerTeamResultStatisticsResponse(
             totalBattleCount = statistics.totalBattleCount,
             items =
                 statistics.items.map { item ->
-                    BrawlersResultStatisticsItemResponse(
+                    BrawlerTeamResultStatisticsItemResponse(
                         brawlers =
                             item.brawlerIds.map { id ->
                                 brawlers.find(id)?.let { BrawlerResponse.of(it) }

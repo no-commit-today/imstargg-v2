@@ -6,18 +6,12 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultSta
 import java.time.LocalDate
 
 interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
-    fun findAllByEventAndConditionsAndBrawler(
-        eventBrawlStarsId: Long,
-        periodType: StatsPeriodType,
-        tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
-        brawlerBrawlStarsId: Long,
-    ): List<BrawlerTeamBattleResultStatsEntity>
-
     fun findAllByConditionsAndBrawler(
+        eventBrawlStarsId: Long?,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
         startBattleDate: LocalDate,
         brawlerBrawlStarsId: Long,
+        teamSize: Int,
     ): List<BrawlerTeamBattleResultStatsEntity>
 }

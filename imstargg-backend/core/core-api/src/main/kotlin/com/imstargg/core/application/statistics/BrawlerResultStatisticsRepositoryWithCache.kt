@@ -2,9 +2,9 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
-import com.imstargg.core.domain.statistics.BrawlersResultCount
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -38,21 +38,11 @@ class BrawlerResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerDuoResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
+        key = "'brawlerEnemyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
     )
-    fun findBrawlerDuoResultCounts(
+    fun findBrawlerEnemyResultCounts(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-    ): List<BrawlersResultCount> = brawlerResultStatisticsRepository.findBrawlerDuoResultCounts(brawlerId, tierRange, startDate)
-
-    @Cacheable(
-        cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerTrioResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
-    )
-    fun findBrawlerTrioResultCounts(
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-    ): List<BrawlersResultCount> = brawlerResultStatisticsRepository.findBrawlerTrioResultCounts(brawlerId, tierRange, startDate)
+    ): List<BrawlerEnemyResultCount> = brawlerResultStatisticsRepository.findBrawlerEnemyResultCounts(brawlerId, tierRange, startDate)
 }

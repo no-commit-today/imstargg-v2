@@ -15,41 +15,13 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
 ) : BrawlerTeamBattleResultStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findAllByEventAndConditionsAndBrawler(
-        eventBrawlStarsId: Long,
-        periodType: StatsPeriodType,
-        tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
-        brawlerBrawlStarsId: Long,
-    ): List<BrawlerTeamBattleResultStatsEntity> {
-        val stats = brawlerTeamBattleResultStatsEntity
-        val brawler = brawlerTeamBattleResultStatsBrawlerEntity
-
-        val statsIdsWithBrawler =
-            JPAExpressions
-                .select(brawler.stats.id)
-                .from(brawler)
-                .where(brawler.brawlerBrawlStarsId.eq(brawlerBrawlStarsId))
-
-        return queryFactory
-            .selectFrom(stats)
-            .distinct()
-            .leftJoin(stats.brawlers, brawler)
-            .fetchJoin()
-            .where(
-                stats.id.`in`(statsIdsWithBrawler),
-                stats.eventBrawlStarsId.eq(eventBrawlStarsId),
-                stats.periodType.eq(periodType),
-                stats.tierRange.eq(tierRange),
-                stats.startBattleDate.eq(startBattleDate),
-            ).fetch()
-    }
-
     override fun findAllByConditionsAndBrawler(
+        eventBrawlStarsId: Long?,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
         startBattleDate: LocalDate,
         brawlerBrawlStarsId: Long,
+        teamSize: Int,
     ): List<BrawlerTeamBattleResultStatsEntity> {
         val stats = brawlerTeamBattleResultStatsEntity
         val brawler = brawlerTeamBattleResultStatsBrawlerEntity
@@ -67,9 +39,11 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
             .fetchJoin()
             .where(
                 stats.id.`in`(statsIdsWithBrawler),
+                eventBrawlStarsId?.let { stats.eventBrawlStarsId.eq(it) },
                 stats.periodType.eq(periodType),
                 stats.tierRange.eq(tierRange),
                 stats.startBattleDate.eq(startBattleDate),
+                stats.teamSize.eq(teamSize),
             ).fetch()
     }
 }

@@ -5,93 +5,98 @@ import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsRespons
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlersRankStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlersResultStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
-import com.imstargg.core.application.statistics.BattleEventStatisticsService
-import com.imstargg.core.application.statistics.BrawlerStatisticsService
+import com.imstargg.core.application.statistics.BattleRankStatisticsService
+import com.imstargg.core.application.statistics.BattleResultStatisticsService
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
-import com.imstargg.core.domain.statistics.BattleEventBrawlerStatisticsParam
-import com.imstargg.core.domain.statistics.BattleEventBrawlersStatisticsParam
-import com.imstargg.core.domain.statistics.BrawlerStatisticsParam
-import com.imstargg.core.domain.statistics.BrawlersStatisticsParam
+import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class StatisticsQueryComposer(
     private val brawlerService: BrawlerService,
-    private val battleEventStatisticsService: BattleEventStatisticsService,
-    private val brawlerStatisticsService: BrawlerStatisticsService,
+    private val battleResultStatisticsService: BattleResultStatisticsService,
+    private val battleRankStatisticsService: BattleRankStatisticsService,
 ) {
-    fun getBattleEventBrawlerResultStatistics(param: BattleEventBrawlerStatisticsParam): BrawlerResultStatisticsResponse {
+    fun getBrawlerResultStatistics(
+        eventId: BrawlStarsId?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): BrawlerResultStatisticsResponse {
         val brawlers = brawlers()
-        val statistics = battleEventStatisticsService.getBattleEventBrawlerResultStatistics(param)
-        return BrawlerResultStatisticsResponse.of(statistics, brawlers)
+        return BrawlerResultStatisticsResponse.of(
+            battleResultStatisticsService.getBrawlerResultStatistics(eventId, tierRange, startDate, endDate),
+            brawlers,
+        )
     }
 
-    fun getBattleEventBrawlerDuoResultStatistics(param: BattleEventBrawlersStatisticsParam): BrawlersResultStatisticsResponse {
+    fun getBrawlerTeamResultStatistics(
+        eventId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        teamSize: Int,
+    ): BrawlerTeamResultStatisticsResponse {
         val brawlers = brawlers()
-        val statistics = battleEventStatisticsService.getBattleEventBrawlerDuoResultStatistics(param)
-        return BrawlersResultStatisticsResponse.of(statistics, brawlers)
+        return BrawlerTeamResultStatisticsResponse.of(
+            battleResultStatisticsService.getBrawlerTeamResultStatistics(eventId, brawlerId, tierRange, startDate, teamSize),
+            brawlers,
+        )
     }
 
-    fun getBattleEventBrawlerTrioResultStatistics(param: BattleEventBrawlersStatisticsParam): BrawlersResultStatisticsResponse {
+    fun getEnemyResultStatistics(
+        eventId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+    ): BrawlerEnemyResultStatisticsResponse {
         val brawlers = brawlers()
-        val statistics = battleEventStatisticsService.getBattleEventBrawlerTrioResultStatistics(param)
-        return BrawlersResultStatisticsResponse.of(statistics, brawlers)
+        return BrawlerEnemyResultStatisticsResponse.of(
+            battleResultStatisticsService.getEnemyResultStatistics(eventId, brawlerId, tierRange, startDate),
+            brawlers,
+        )
     }
 
-    fun getBattleEventBrawlerEnemyResultStatistics(param: BattleEventBrawlersStatisticsParam): BrawlerEnemyResultStatisticsResponse {
+    fun getDailyResultStatistics(
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerResultDailyStatisticsResponse> {
         val brawlers = brawlers()
-        val statistics = battleEventStatisticsService.getBattleEventBrawlerEnemyResultStatistics(param)
-        return BrawlerEnemyResultStatisticsResponse.of(statistics, brawlers)
-    }
-
-    fun getBattleEventBrawlerRankStatistics(param: BattleEventBrawlerStatisticsParam): List<BrawlerRankStatisticsResponse> {
-        val brawlers = brawlers()
-        return battleEventStatisticsService
-            .getBattleEventBrawlerRankStatistics(param)
-            .map { BrawlerRankStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
-    }
-
-    fun getBattleEventBrawlerDuoRankStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersRankStatisticsResponse> {
-        val brawlers = brawlers()
-        return battleEventStatisticsService
-            .getBattleEventBrawlerDuoRankStatistics(param)
-            .map { BrawlersRankStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
-    }
-
-    fun getBattleEventBrawlerTrioRankStatistics(param: BattleEventBrawlersStatisticsParam): List<BrawlersRankStatisticsResponse> {
-        val brawlers = brawlers()
-        return battleEventStatisticsService
-            .getBattleEventBrawlerTrioRankStatistics(param)
-            .map { BrawlersRankStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
-    }
-
-    fun getBrawlerResultStatistics(param: BrawlerStatisticsParam): BrawlerResultStatisticsResponse {
-        val brawlers = brawlers()
-        val statistics = brawlerStatisticsService.getBrawlerResultStatistics(param)
-        return BrawlerResultStatisticsResponse.of(statistics, brawlers)
-    }
-
-    fun getBrawlerDailyResultStatistics(param: BrawlersStatisticsParam): List<BrawlerResultDailyStatisticsResponse> {
-        val brawlers = brawlers()
-        return brawlerStatisticsService
-            .getBrawlerDailyResultStatistics(param)
+        return battleResultStatisticsService
+            .getDailyResultStatistics(brawlerId, tierRange, startDate, endDate)
             .map { BrawlerResultDailyStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
-    fun getBrawlerDuoResultStatistics(param: BrawlersStatisticsParam): BrawlersResultStatisticsResponse {
+    fun getBrawlerRankStatistics(
+        eventId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerRankStatisticsResponse> {
         val brawlers = brawlers()
-        val statistics = brawlerStatisticsService.getBrawlerDuoResultStatistics(param)
-        return BrawlersResultStatisticsResponse.of(statistics, brawlers)
+        return battleRankStatisticsService
+            .getBrawlerRankStatistics(eventId, tierRange, startDate, endDate)
+            .map { BrawlerRankStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
-    fun getBrawlerTrioResultStatistics(param: BrawlersStatisticsParam): BrawlersResultStatisticsResponse {
+    fun getBrawlerTeamRankStatistics(
+        eventId: BrawlStarsId,
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        teamSize: Int,
+    ): List<BrawlerTeamRankStatisticsResponse> {
         val brawlers = brawlers()
-        val statistics = brawlerStatisticsService.getBrawlerTrioResultStatistics(param)
-        return BrawlersResultStatisticsResponse.of(statistics, brawlers)
+        return battleRankStatisticsService
+            .getBrawlerTeamRankStatistics(eventId, brawlerId, tierRange, startDate, teamSize)
+            .map { BrawlerTeamRankStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
     }
 
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())

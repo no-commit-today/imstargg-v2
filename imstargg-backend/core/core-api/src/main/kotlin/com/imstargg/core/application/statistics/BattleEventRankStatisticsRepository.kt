@@ -2,7 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.domain.statistics.BrawlersRankCount
+import com.imstargg.core.domain.statistics.BrawlerTeamRankCount
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
@@ -38,12 +38,13 @@ class BattleEventRankStatisticsRepository(
             }
     }
 
-    fun findBrawlerDuoRankCounts(
+    fun findBrawlerTeamRankCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-    ): List<BrawlersRankCount> {
+        teamSize: Int,
+    ): List<BrawlerTeamRankCount> {
         val entities =
             teamBattleRankJpaRepository
                 .findAllByEventAndConditionsAndBrawlerAndTeamSize(
@@ -52,36 +53,11 @@ class BattleEventRankStatisticsRepository(
                     tierRange,
                     startDate,
                     brawlerId.value,
-                    teamSize = 2,
+                    teamSize,
                 )
 
         return entities.map { entity ->
-            BrawlersRankCount(
-                brawlerIds = entity.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
-                rankCount = RankCount(entity.rankCounts.toMap()),
-            )
-        }
-    }
-
-    fun findBrawlerTrioRankCounts(
-        eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-    ): List<BrawlersRankCount> {
-        val entities =
-            teamBattleRankJpaRepository
-                .findAllByEventAndConditionsAndBrawlerAndTeamSize(
-                    eventId.value,
-                    StatsPeriodType.WEEKLY,
-                    tierRange,
-                    startDate,
-                    brawlerId.value,
-                    teamSize = 3,
-                )
-
-        return entities.map { entity ->
-            BrawlersRankCount(
+            BrawlerTeamRankCount(
                 brawlerIds = entity.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
                 rankCount = RankCount(entity.rankCounts.toMap()),
             )

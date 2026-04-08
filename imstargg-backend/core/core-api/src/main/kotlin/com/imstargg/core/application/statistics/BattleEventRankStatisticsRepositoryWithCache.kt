@@ -3,7 +3,7 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.domain.statistics.BrawlersRankCount
+import com.imstargg.core.domain.statistics.BrawlerTeamRankCount
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -26,23 +26,14 @@ class BattleEventRankStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerDuoRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate",
+        key = "'battleEventTeamRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
     )
-    fun findBrawlerDuoRankCounts(
+    fun findBrawlerTeamRankCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
-    ): List<BrawlersRankCount> = battleEventRankStatisticsRepository.findBrawlerDuoRankCounts(eventId, brawlerId, tierRange, startDate)
-
-    @Cacheable(
-        cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerTrioRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate",
-    )
-    fun findBrawlerTrioRankCounts(
-        eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-    ): List<BrawlersRankCount> = battleEventRankStatisticsRepository.findBrawlerTrioRankCounts(eventId, brawlerId, tierRange, startDate)
+        teamSize: Int,
+    ): List<BrawlerTeamRankCount> =
+        battleEventRankStatisticsRepository.findBrawlerTeamRankCounts(eventId, brawlerId, tierRange, startDate, teamSize)
 }

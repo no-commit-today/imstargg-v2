@@ -2,7 +2,7 @@ package com.imstargg.core.domain.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 
-data class BrawlersRankStatistics(
+data class BrawlerTeamRankStatistics(
     val brawlerIds: List<BrawlStarsId>,
     val totalBattleCount: Long,
     val averageRank: Double,

@@ -85,7 +85,8 @@ imstargg-backend/
 - **QueryDSL**: KSP 코드 생성 (`infrastructure/db-core`). Q-Class는 로컬 변수에 할당하지 않고 static import된 인스턴스를 직접 사용 (예: `statsResultBattleEntity.battleDate`)
 - **Application Layer Repository**: `core-api`의 Service는 JPA Repository를 직접 참조하지 않고, `application` 패키지의 Repository 클래스를 통해 접근. 캐시가 필요한 경우 `*WithCache` 래퍼 사용 (예: `EventRepository` → `EventRepositoryWithCache`)
 - **Domain ID Reference**: 도메인 클래스에서 다른 도메인의 객체는 직접 참조하지 않고 ID로 참조
-- **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 여러 서비스 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출
+- **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출
+- **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
 
 ### DB & Entity Conventions
 
