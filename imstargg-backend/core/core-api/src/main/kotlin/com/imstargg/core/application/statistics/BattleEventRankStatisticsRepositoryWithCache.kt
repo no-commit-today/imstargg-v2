@@ -16,7 +16,7 @@ class BattleEventRankStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerRank:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:battleEventBrawlerRank:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
     )
     fun findBrawlerRankCounts(
         eventId: BrawlStarsId,
@@ -27,7 +27,7 @@ class BattleEventRankStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventTeamRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
+        key = "'v1:battleEventTeamRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
     )
     fun findBrawlerTeamRankCounts(
         eventId: BrawlStarsId,

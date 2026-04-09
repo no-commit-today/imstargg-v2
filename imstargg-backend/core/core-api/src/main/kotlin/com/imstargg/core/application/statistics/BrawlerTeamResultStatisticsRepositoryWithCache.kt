@@ -15,7 +15,7 @@ class BrawlerTeamResultStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'teamResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
+        key = "'v1:teamResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
     )
     fun findBrawlerTeamResultCounts(
         eventId: BrawlStarsId?,

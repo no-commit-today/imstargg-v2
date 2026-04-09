@@ -10,13 +10,13 @@ import org.springframework.stereotype.Repository
 class BrawlerRepositoryWithCache(
     private val brawlerRepository: BrawlerRepository,
 ) {
-    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'brawlers'")
+    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'v1:brawlers'")
     fun findBrawlers(): Brawlers =
         Brawlers(
             brawlerRepository.findAll(),
         )
 
-    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'all'")
+    @Cacheable(cacheNames = [CacheNames.BRAWLER], key = "'v1:brawlerList'")
     fun findAllBrawlers(): List<Brawler> =
         brawlerRepository
             .findAll()

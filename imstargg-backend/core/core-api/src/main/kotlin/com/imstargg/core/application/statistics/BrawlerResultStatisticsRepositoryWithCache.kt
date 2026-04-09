@@ -16,7 +16,7 @@ class BrawlerResultStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerResult:' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:brawlerResult:' + #tierRange + ':' + #startDate + ':' + #endDate",
     )
     fun findBrawlerResultCounts(
         tierRange: StatsTierRange,
@@ -26,7 +26,7 @@ class BrawlerResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerDailyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:brawlerDailyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
     )
     fun findBrawlerDailyResultCounts(
         brawlerId: BrawlStarsId,
@@ -38,7 +38,7 @@ class BrawlerResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerEnemyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
+        key = "'v1:brawlerEnemyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate",
     )
     fun findBrawlerEnemyResultCounts(
         brawlerId: BrawlStarsId,

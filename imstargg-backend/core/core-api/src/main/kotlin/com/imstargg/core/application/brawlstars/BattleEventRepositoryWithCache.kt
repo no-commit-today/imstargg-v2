@@ -17,7 +17,7 @@ class BattleEventRepositoryWithCache(
     private val battleEventRotationItemJpaRepository: BattleEventRotationItemJpaRepository,
     private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
 ) {
-    @Cacheable(cacheNames = [CacheNames.BATTLE_EVENT], key = "#id")
+    @Cacheable(cacheNames = [CacheNames.BATTLE_EVENT], key = "'v1:' + #id")
     fun find(id: BrawlStarsId): BattleEvent? = battleEventRepository.find(id)
 
     fun findAllCurrentRotationEvents(): List<RotationBattleEvent> {

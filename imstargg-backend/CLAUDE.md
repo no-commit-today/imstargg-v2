@@ -88,6 +88,12 @@ imstargg-backend/
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
 
+### Cache Key Conventions
+
+- **Redis 키 컨벤션 준수**: 로컬 캐시(Caffeine)에서도 향후 Redis 전환을 고려하여 Redis 키 컨벤션(`:` 구분자) 사용
+- **버전 관리**: 캐시 키 앞에 버전 prefix 포함 (예: `v1:battleEventBrawlerResult:...`). 캐싱 객체의 형태가 변경되면 해당 키의 버전을 올려야 배포 시 역직렬화 오류 방지
+- **키 형식**: `cacheName::v{N}:keyPrefix:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+
 ### DB & Entity Conventions
 
 - **스키마 관리**: DB 변경사항 발생 시 `infrastructure/db-core/src/main/resources/schema.sql`에 반영
