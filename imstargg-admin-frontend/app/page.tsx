@@ -1,65 +1,91 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import { AdminLayout } from "./admin-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardSummary } from "@/lib/api";
+import type { DashboardSummary } from "@/lib/types";
+import Link from "next/link";
+
+function StatCard({
+  title,
+  href,
+  stats,
+}: {
+  title: string;
+  href: string;
+  stats: { label: string; value: number; total: number }[];
+}) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">
+          <Link href={href} className="hover:underline">
+            {title}
+          </Link>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-1 text-sm">
+        {stats.map((s) => (
+          <div key={s.label} className="flex justify-between">
+            <span className="text-muted-foreground">{s.label}</span>
+            <span>
+              {s.value} / {s.total}
+            </span>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function DashboardPage() {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+
+  useEffect(() => {
+    getDashboardSummary().then(setSummary);
+  }, []);
+
+  return (
+    <AdminLayout>
+      <h2 className="mb-4 text-2xl font-bold">대시보드</h2>
+      {summary ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="브롤러"
+            href="/brawlers"
+            stats={[
+              { label: "이름 등록", value: summary.brawlerWithName, total: summary.brawlerTotal },
+              { label: "이미지 등록", value: summary.brawlerWithImage, total: summary.brawlerTotal },
+            ]}
+          />
+          <StatCard
+            title="기어"
+            href="/gears"
+            stats={[
+              { label: "이름 등록", value: summary.gearWithName, total: summary.gearTotal },
+              { label: "이미지 등록", value: summary.gearWithImage, total: summary.gearTotal },
+            ]}
+          />
+          <StatCard
+            title="이벤트 모드"
+            href="/event-modes"
+            stats={[
+              { label: "이름 등록", value: summary.eventModeWithName, total: summary.eventModeTotal },
+              { label: "아이콘 등록", value: summary.eventModeWithIcon, total: summary.eventModeTotal },
+            ]}
+          />
+          <StatCard
+            title="이벤트 맵"
+            href="/events"
+            stats={[
+              { label: "이름 등록", value: summary.eventMapWithName, total: summary.eventMapTotal },
+            ]}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      ) : (
+        <p className="text-muted-foreground">로딩 중...</p>
+      )}
+    </AdminLayout>
   );
 }
