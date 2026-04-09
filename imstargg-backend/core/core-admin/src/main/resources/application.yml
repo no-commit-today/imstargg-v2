@@ -8,8 +8,10 @@ spring:
       - db
       - aws-s3
 
-vaadin:
-  launch-browser: false
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
 
 ---
 spring:
@@ -23,6 +25,16 @@ spring:
 spring:
   config.activate.on-profile: dev
 
+app:
+  cors:
+    allowed-origins:
+      - https://admin.imstargg.com
+
 ---
 spring:
   config.activate.on-profile: prod
+
+app:
+  cors:
+    allowed-origins:
+      - https://admin.imstargg.com
