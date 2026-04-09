@@ -7,12 +7,12 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultSta
 import java.time.LocalDate
 
 interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
-    fun findAllByConditionsAndBrawler(
+    fun findAllByConditions(
         eventBrawlStarsId: Long?,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
         startBattleDate: LocalDate,
-        brawlerBrawlStarsId: Long,
+        brawlerBrawlStarsId: Long?,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamBattleResultStatsEntity>
 }

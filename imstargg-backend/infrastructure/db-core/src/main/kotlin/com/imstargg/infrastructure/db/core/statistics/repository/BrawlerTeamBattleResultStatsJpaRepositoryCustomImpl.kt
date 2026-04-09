@@ -16,22 +16,26 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
 ) : BrawlerTeamBattleResultStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findAllByConditionsAndBrawler(
+    override fun findAllByConditions(
         eventBrawlStarsId: Long?,
         periodType: StatsPeriodType,
         tierRange: StatsTierRange,
         startBattleDate: LocalDate,
-        brawlerBrawlStarsId: Long,
+        brawlerBrawlStarsId: Long?,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamBattleResultStatsEntity> {
         val stats = brawlerTeamBattleResultStatsEntity
         val brawler = brawlerTeamBattleResultStatsBrawlerEntity
 
-        val statsIdsWithBrawler =
-            JPAExpressions
-                .select(brawler.stats.id)
-                .from(brawler)
-                .where(brawler.brawlerBrawlStarsId.eq(brawlerBrawlStarsId))
+        val brawlerFilter =
+            brawlerBrawlStarsId?.let {
+                val statsIdsWithBrawler =
+                    JPAExpressions
+                        .select(brawler.stats.id)
+                        .from(brawler)
+                        .where(brawler.brawlerBrawlStarsId.eq(it))
+                stats.id.`in`(statsIdsWithBrawler)
+            }
 
         return queryFactory
             .selectFrom(stats)
@@ -39,7 +43,7 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
             .leftJoin(stats.brawlers, brawler)
             .fetchJoin()
             .where(
-                stats.id.`in`(statsIdsWithBrawler),
+                brawlerFilter,
                 eventBrawlStarsId?.let { stats.eventBrawlStarsId.eq(it) },
                 stats.periodType.eq(periodType),
                 stats.tierRange.eq(tierRange),

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 
 @Repository
-class BattleEventRankStatisticsRepositoryWithCache(
-    private val battleEventRankStatisticsRepository: BattleEventRankStatisticsRepository,
+class BattleRankStatisticsRepositoryWithCache(
+    private val battleRankStatisticsRepository: BattleRankStatisticsRepository,
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
@@ -23,7 +23,7 @@ class BattleEventRankStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerRankCount> = battleEventRankStatisticsRepository.findBrawlerRankCounts(eventId, tierRange, startDate, endDate)
+    ): List<BrawlerRankCount> = battleRankStatisticsRepository.findBrawlerRankCounts(eventId, tierRange, startDate, endDate)
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
@@ -36,5 +36,5 @@ class BattleEventRankStatisticsRepositoryWithCache(
         startDate: LocalDate,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamRankCount> =
-        battleEventRankStatisticsRepository.findBrawlerTeamRankCounts(eventId, brawlerId, tierRange, startDate, teamSize)
+        battleRankStatisticsRepository.findBrawlerTeamRankCounts(eventId, brawlerId, tierRange, startDate, teamSize)
 }

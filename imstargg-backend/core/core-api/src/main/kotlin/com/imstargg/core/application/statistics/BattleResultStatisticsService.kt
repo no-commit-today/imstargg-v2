@@ -12,9 +12,7 @@ import java.time.LocalDate
 
 @Service
 class BattleResultStatisticsService(
-    private val eventResultRepository: BattleEventResultStatisticsRepositoryWithCache,
-    private val brawlerResultRepository: BrawlerResultStatisticsRepositoryWithCache,
-    private val brawlerTeamResultRepository: BrawlerTeamResultStatisticsRepositoryWithCache,
+    private val resultRepository: BattleResultStatisticsRepositoryWithCache,
 ) {
     fun getBrawlerResultStatistics(
         eventId: BrawlStarsId?,
@@ -23,43 +21,45 @@ class BattleResultStatisticsService(
         endDate: LocalDate,
     ): BrawlerResultStatistics {
         val counts =
-            if (eventId != null) {
-                eventResultRepository.findBrawlerResultCounts(eventId, tierRange, startDate, endDate)
-            } else {
-                brawlerResultRepository.findBrawlerResultCounts(tierRange, startDate, endDate)
-            }
+            resultRepository.findBrawlerResultCounts(
+                eventId = eventId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
         return BrawlerResultStatistics.create(counts)
     }
 
     fun getBrawlerTeamResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         teamSize: StatsTeamSize,
     ): BrawlerTeamResultStatistics =
         BrawlerTeamResultStatistics.create(
-            brawlerTeamResultRepository.findBrawlerTeamResultCounts(
-                eventId,
-                brawlerId,
-                tierRange,
-                startDate,
-                teamSize,
+            resultRepository.findBrawlerTeamResultCounts(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                teamSize = teamSize,
             ),
         )
 
     fun getEnemyResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
     ): BrawlerEnemyResultStatistics {
         val counts =
-            if (eventId != null) {
-                eventResultRepository.findBrawlerEnemyResultCounts(eventId, brawlerId, tierRange, startDate)
-            } else {
-                brawlerResultRepository.findBrawlerEnemyResultCounts(brawlerId, tierRange, startDate)
-            }
+            resultRepository.findBrawlerEnemyResultCounts(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+            )
         return BrawlerEnemyResultStatistics.create(counts)
     }
 
@@ -69,7 +69,11 @@ class BattleResultStatisticsService(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<BrawlerResultDailyStatistics> =
-        brawlerResultRepository
-            .findBrawlerDailyResultCounts(brawlerId, tierRange, startDate, endDate)
-            .map { BrawlerResultDailyStatistics.create(it) }
+        resultRepository
+            .findBrawlerDailyResultCounts(
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            ).map { BrawlerResultDailyStatistics.create(it) }
 }

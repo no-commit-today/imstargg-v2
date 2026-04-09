@@ -38,7 +38,7 @@ class StatisticsQueryComposer(
 
     fun getBrawlerTeamResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         teamSize: StatsTeamSize,
@@ -52,7 +52,7 @@ class StatisticsQueryComposer(
 
     fun getEnemyResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
     ): BrawlerEnemyResultStatisticsResponse {

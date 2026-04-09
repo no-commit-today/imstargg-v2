@@ -15,7 +15,7 @@ import java.time.LocalDate
 
 @Repository
 @Transactional(readOnly = true)
-class BattleEventRankStatisticsRepository(
+class BattleRankStatisticsRepository(
     private val soloBattleRankJpaRepository: BrawlerBattleRankStatsJpaRepository,
     private val teamBattleRankJpaRepository: BrawlerTeamBattleRankStatsJpaRepository,
 ) {

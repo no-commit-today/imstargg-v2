@@ -42,7 +42,7 @@ class StatisticsController(
     @GetMapping("/v1/statistics/brawler/result/team")
     fun getBrawlerTeamResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam brawlerId: Long,
+        @RequestParam brawlerId: Long?,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
@@ -51,7 +51,7 @@ class StatisticsController(
         val response =
             statisticsQueryComposer.getBrawlerTeamResultStatistics(
                 eventId?.let { BrawlStarsId(it) },
-                BrawlStarsId(brawlerId),
+                brawlerId?.let { BrawlStarsId(it) },
                 tierRange,
                 startDate,
                 teamSize,
@@ -62,7 +62,7 @@ class StatisticsController(
     @GetMapping("/v1/statistics/brawler/result/enemy")
     fun getEnemyResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam brawlerId: Long,
+        @RequestParam brawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
@@ -70,7 +70,7 @@ class StatisticsController(
         val response =
             statisticsQueryComposer.getEnemyResultStatistics(
                 eventId?.let { BrawlStarsId(it) },
-                BrawlStarsId(brawlerId),
+                brawlerId?.let { BrawlStarsId(it) },
                 tierRange,
                 startDate,
             )

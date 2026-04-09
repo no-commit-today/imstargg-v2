@@ -10,7 +10,7 @@ import java.time.LocalDate
 
 @Service
 class BattleRankStatisticsService(
-    private val rankRepository: BattleEventRankStatisticsRepositoryWithCache,
+    private val rankRepository: BattleRankStatisticsRepositoryWithCache,
 ) {
     fun getBrawlerRankStatistics(
         eventId: BrawlStarsId,
