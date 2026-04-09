@@ -46,7 +46,6 @@ storage:
           cacheServerConfiguration: true
           elideSetAutoCommits: true
           maintainTimeStats: false
-          serverTimezone: UTC
           connectionTimeZone: UTC
 
 ---

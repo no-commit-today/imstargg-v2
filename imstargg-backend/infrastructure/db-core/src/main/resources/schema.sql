@@ -20,8 +20,8 @@ create table if not exists player
     status                                varchar(25)  not null default 'ACTIVE',
     club_brawlstars_tag                   varchar(45)  null,
     club_name                             varchar(105) null,
-    created_at                            timestamp(6)  not null default current_timestamp(6),
-    updated_at                            timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                            datetime(6)  not null default current_timestamp(6),
+    updated_at                            datetime(6)  not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_player__brawlstarstag (brawlstars_tag)
 );
 
@@ -36,8 +36,8 @@ create table if not exists player_brawler
     trophies              int         not null,
     highest_trophies      int         not null,
     prestige_level        int         not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_playerbrawler__playerid_brawlerbrawlstarsid (player_id, brawler_brawlstars_id)
 );
 
@@ -47,8 +47,8 @@ create table if not exists player_brawler_gear
     player_brawler_gear_id bigint auto_increment primary key,
     player_brawler_id      bigint      not null,
     gear_brawlstars_id     bigint      not null,
-    created_at             timestamp(6) not null default current_timestamp(6),
-    updated_at             timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at             datetime(6) not null default current_timestamp(6),
+    updated_at             datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_playerbrawlergear__playerbrawlerid_gearbrawlstarsid (player_brawler_id, gear_brawlstars_id)
 );
 
@@ -58,8 +58,8 @@ create table if not exists player_brawler_star_power
     player_brawler_star_power_id bigint auto_increment primary key,
     player_brawler_id            bigint      not null,
     star_power_brawlstars_id     bigint      not null,
-    created_at                   timestamp(6) not null default current_timestamp(6),
-    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                   datetime(6) not null default current_timestamp(6),
+    updated_at                   datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_player_brawler_star_power__1 (player_brawler_id, star_power_brawlstars_id)
 );
 
@@ -69,8 +69,8 @@ create table if not exists player_brawler_hyper_charge
     player_brawler_hyper_charge_id bigint auto_increment primary key,
     player_brawler_id              bigint      not null,
     hyper_charge_brawlstars_id     bigint      not null,
-    created_at                     timestamp(6) not null default current_timestamp(6),
-    updated_at                     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                     datetime(6) not null default current_timestamp(6),
+    updated_at                     datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_player_brawler_hyper_charge__1 (player_brawler_id, hyper_charge_brawlstars_id)
 );
 
@@ -80,8 +80,8 @@ create table if not exists player_brawler_buffy
     player_brawler_buffy_id bigint auto_increment primary key,
     player_brawler_id       bigint      not null,
     buffy_type              varchar(25) not null,
-    created_at              timestamp(6) not null default current_timestamp(6),
-    updated_at              timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at              datetime(6) not null default current_timestamp(6),
+    updated_at              datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_playerbrawlerbuffy__playerbrawlerid_buffytype (player_brawler_id, buffy_type)
 );
 
@@ -91,8 +91,8 @@ create table if not exists player_brawler_gadget
     player_brawler_gadget_id bigint auto_increment primary key,
     player_brawler_id        bigint      not null,
     gadget_brawlstars_id     bigint      not null,
-    created_at               timestamp(6) not null default current_timestamp(6),
-    updated_at               timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at               datetime(6) not null default current_timestamp(6),
+    updated_at               datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid (player_brawler_id, gadget_brawlstars_id)
 );
 
@@ -108,8 +108,8 @@ create table if not exists club
     required_trophies    int          not null,
     trophies             int          not null,
     status               varchar(25)  not null default 'ACTIVE',
-    created_at           timestamp(6)  not null default current_timestamp(6),
-    updated_at           timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    created_at           datetime(6)  not null default current_timestamp(6),
+    updated_at           datetime(6)  not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_club__brawlstarstag (brawlstars_tag)
 );
 
@@ -124,8 +124,8 @@ create table if not exists club_member
     role                varchar(25) not null,
     trophies            int         not null,
     icon_brawlstars_id  bigint      not null,
-    created_at          timestamp(6) not null default current_timestamp(6),
-    updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at          datetime(6) not null default current_timestamp(6),
+    updated_at          datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_clubmember__clubid_brawlstarstag (club_id, brawlstars_tag)
 );
 
@@ -136,11 +136,11 @@ create table if not exists renewal
     brawlstars_tag varchar(45) not null,
     type           varchar(25) not null,
     status         varchar(25) not null,
-    requested_at   timestamp(6) not null,
-    executed_at    timestamp(6) null,
-    completed_at   timestamp(6) null,
-    created_at     timestamp(6) not null default current_timestamp(6),
-    updated_at     timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    requested_at   datetime(6) not null,
+    executed_at    datetime(6) null,
+    completed_at   datetime(6) null,
+    created_at     datetime(6) not null default current_timestamp(6),
+    updated_at     datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_renewal__brawlstarstag_type (brawlstars_tag, type)
 );
 
@@ -149,7 +149,7 @@ create table if not exists battle
 (
     battle_id                  bigint auto_increment primary key,
     battle_key                 varchar(255)  not null,
-    battle_at                timestamp(6)  not null,
+    battle_at                datetime(6)  not null,
     event_brawlstars_id        bigint        null,
     event_mode                 varchar(65)   null,
     event_mode_id              int           null,
@@ -162,8 +162,8 @@ create table if not exists battle
     player_id                  bigint        not null,
     battle_rank                int           null,
     trophy_change              int           null,
-    created_at                 timestamp(6)  not null default current_timestamp(6),
-    updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                 datetime(6)  not null default current_timestamp(6),
+    updated_at                 datetime(6)  not null default current_timestamp(6) on update current_timestamp(6),
     index ix_battle__playerid_battleat (player_id, battle_at desc)
 );
 
@@ -181,8 +181,8 @@ create table if not exists battle_team_player
     brawler_power           int           not null,
     brawler_trophies        int           not null,
     brawler_trophy_change   int           null,
-    created_at              timestamp(6)  not null default current_timestamp(6),
-    updated_at              timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    created_at              datetime(6)  not null default current_timestamp(6),
+    updated_at              datetime(6)  not null default current_timestamp(6) on update current_timestamp(6),
     index ix_battleteamplayer__battleid (battle_id)
 );
 
@@ -191,9 +191,9 @@ create table if not exists player_ranking
 (
     player_ranking_id bigint auto_increment primary key,
     country           varchar(25)  not null,
-    collected_at      timestamp(6) not null,
-    created_at        timestamp(6) not null default current_timestamp(6),
-    updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    collected_at      datetime(6) not null,
+    created_at        datetime(6) not null default current_timestamp(6),
+    updated_at        datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_player_ranking__country_collected_at (country, collected_at)
 );
 
@@ -209,8 +209,8 @@ create table if not exists player_ranking_item
     player_icon_brawlstars_id bigint       not null,
     player_club_name          varchar(105) not null,
     trophies                  int          not null,
-    created_at                timestamp(6) not null default current_timestamp(6),
-    updated_at                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                datetime(6) not null default current_timestamp(6),
+    updated_at                datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_player_ranking_item__1 (player_ranking_id, player_brawlstars_tag)
 );
 
@@ -220,9 +220,9 @@ create table if not exists brawler_ranking
     brawler_ranking_id    bigint auto_increment primary key,
     country               varchar(25)  not null,
     brawler_brawlstars_id bigint       not null,
-    collected_at          timestamp(6) not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    collected_at          datetime(6) not null,
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_ranking__country_brawler_collected_at (country, brawler_brawlstars_id, collected_at)
 );
 
@@ -238,8 +238,8 @@ create table if not exists brawler_ranking_item
     player_icon_brawlstars_id bigint       not null,
     player_club_name          varchar(105) not null,
     trophies                  int          not null,
-    created_at                timestamp(6) not null default current_timestamp(6),
-    updated_at                timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                datetime(6) not null default current_timestamp(6),
+    updated_at                datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawler_ranking_item__1 (brawler_ranking_id, player_brawlstars_tag)
 );
 
@@ -248,9 +248,9 @@ create table if not exists club_ranking
 (
     club_ranking_id bigint auto_increment primary key,
     country         varchar(25)  not null,
-    collected_at    timestamp(6) not null,
-    created_at      timestamp(6) not null default current_timestamp(6),
-    updated_at      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    collected_at    datetime(6) not null,
+    created_at      datetime(6) not null default current_timestamp(6),
+    updated_at      datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_club_ranking__country_collected_at (country, collected_at)
 );
 
@@ -265,8 +265,8 @@ create table if not exists club_ranking_item
     badge_brawlstars_id  bigint       not null,
     trophies             int          not null,
     member_count         int          not null,
-    created_at           timestamp(6) not null default current_timestamp(6),
-    updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at           datetime(6) not null default current_timestamp(6),
+    updated_at           datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_club_ranking_item__club_ranking_id_brawlstars_tag (club_ranking_id, brawlstars_tag)
 );
 
@@ -276,10 +276,10 @@ create table if not exists player_daily_ranking
     player_daily_ranking_id bigint auto_increment primary key,
     country                 varchar(25)  not null,
     date                    date         not null,
-    start_time              timestamp(6) not null,
-    end_time                timestamp(6) not null,
-    created_at              timestamp(6) not null default current_timestamp(6),
-    updated_at              timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    start_time              datetime(6) not null,
+    end_time                datetime(6) not null,
+    created_at              datetime(6) not null default current_timestamp(6),
+    updated_at              datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_player_daily_ranking__country_date (country, date)
 );
 
@@ -295,8 +295,8 @@ create table if not exists player_daily_ranking_item
     player_icon_brawlstars_id    bigint       not null,
     player_club_name             varchar(105) not null,
     trophies                     int          not null,
-    created_at                   timestamp(6) not null default current_timestamp(6),
-    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                   datetime(6) not null default current_timestamp(6),
+    updated_at                   datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_player_daily_ranking_item__ranking_id_player_tag (player_daily_ranking_id, player_brawlstars_tag)
 );
 
@@ -307,10 +307,10 @@ create table if not exists brawler_daily_ranking
     country                  varchar(25)  not null,
     brawler_brawlstars_id    bigint       not null,
     date                     date         not null,
-    start_time               timestamp(6) not null,
-    end_time                 timestamp(6) not null,
-    created_at               timestamp(6) not null default current_timestamp(6),
-    updated_at               timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    start_time               datetime(6) not null,
+    end_time                 datetime(6) not null,
+    created_at               datetime(6) not null default current_timestamp(6),
+    updated_at               datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawler_daily_ranking__country_brawler_date (country, brawler_brawlstars_id, date)
 );
 
@@ -326,8 +326,8 @@ create table if not exists brawler_daily_ranking_item
     player_icon_brawlstars_id     bigint       not null,
     player_club_name              varchar(105) not null,
     trophies                      int          not null,
-    created_at                    timestamp(6) not null default current_timestamp(6),
-    updated_at                    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                    datetime(6) not null default current_timestamp(6),
+    updated_at                    datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawler_daily_ranking_item__ranking_id_player_tag (brawler_daily_ranking_id, player_brawlstars_tag)
 );
 
@@ -337,10 +337,10 @@ create table if not exists club_daily_ranking
     club_daily_ranking_id bigint auto_increment primary key,
     country               varchar(25)  not null,
     date                  date         not null,
-    start_time            timestamp(6) not null,
-    end_time              timestamp(6) not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    start_time            datetime(6) not null,
+    end_time              datetime(6) not null,
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_club_daily_ranking__country_date (country, date)
 );
 
@@ -355,8 +355,8 @@ create table if not exists club_daily_ranking_item
     badge_brawlstars_id        bigint       not null,
     trophies                   int          not null,
     member_count               int          not null,
-    created_at                 timestamp(6) not null default current_timestamp(6),
-    updated_at                 timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                 datetime(6) not null default current_timestamp(6),
+    updated_at                 datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_club_daily_ranking_item__ranking_id_tag (club_daily_ranking_id, brawlstars_tag)
 );
 
@@ -367,7 +367,7 @@ create table if not exists stats_rank_battle
     stats_rank_battle_id       bigint auto_increment,
     battle_date                date          not null,
     battle_key                 varchar(255)  not null,
-    battle_at                  timestamp(6)  not null,
+    battle_at                  datetime(6)  not null,
     event_brawlstars_id        bigint        not null,
     event_mode_brawlstars_id   bigint        not null,
     event_map                  varchar(65)   not null,
@@ -377,8 +377,8 @@ create table if not exists stats_rank_battle
     player_brawlstars_tag      varchar(45)   not null,
     battle_rank                int           not null,
     teams                      json          not null,
-    created_at                 timestamp(6)  not null default current_timestamp(6),
-    updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                 datetime(6)  not null default current_timestamp(6),
+    updated_at                 datetime(6)  not null default current_timestamp(6) on update current_timestamp(6),
     primary key (stats_rank_battle_id, battle_date),
     unique index uk_stats_rank_battle__battle_date_battle_key_player
         (battle_date, battle_key, player_brawlstars_tag),
@@ -393,7 +393,7 @@ create table if not exists stats_result_battle
     stats_result_battle_id     bigint auto_increment,
     battle_date                date          not null,
     battle_key                 varchar(255)  not null,
-    battle_at                  timestamp(6)  not null,
+    battle_at                  datetime(6)  not null,
     event_brawlstars_id        bigint        not null,
     event_mode_brawlstars_id   bigint        not null,
     event_map                  varchar(65)   not null,
@@ -403,8 +403,8 @@ create table if not exists stats_result_battle
     star_player_brawlstars_tag varchar(45)   null,
     player_brawlstars_tag      varchar(45)   not null,
     teams                      json          not null,
-    created_at                 timestamp(6)  not null default current_timestamp(6),
-    updated_at                 timestamp(6)  not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                 datetime(6)  not null default current_timestamp(6),
+    updated_at                 datetime(6)  not null default current_timestamp(6) on update current_timestamp(6),
     primary key (stats_result_battle_id, battle_date),
     unique index uk_stats_result_battle__battle_date_battle_key (battle_date, battle_key),
     index ix_stats_result_battle__battle_date_event (battle_date, event_brawlstars_id)
@@ -417,8 +417,8 @@ create table if not exists stats_player
 (
     stats_player_id bigint auto_increment primary key,
     brawlstars_tag  varchar(45)  not null,
-    created_at      timestamp(6) not null default current_timestamp(6),
-    updated_at      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at      datetime(6) not null default current_timestamp(6),
+    updated_at      datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_stats_player__brawlstars_tag (brawlstars_tag)
 );
 
@@ -428,8 +428,8 @@ create table if not exists battle_event_mode
     battle_event_mode_id bigint auto_increment primary key,
     brawlstars_id        bigint       not null,
     brawlstars_name      varchar(255) not null,
-    created_at           timestamp(6) not null default current_timestamp(6),
-    updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at           datetime(6) not null default current_timestamp(6),
+    updated_at           datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event_mode__brawlstarsid (brawlstars_id)
 );
 
@@ -440,8 +440,8 @@ create table if not exists battle_event
     brawlstars_id        bigint       not null,
     battle_event_mode_id bigint       null,
     map_name             varchar(105) null,
-    created_at           timestamp(6) not null default current_timestamp(6),
-    updated_at           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at           datetime(6) not null default current_timestamp(6),
+    updated_at           datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event__brawlstarsid (brawlstars_id)
 );
 
@@ -458,8 +458,8 @@ create table if not exists brawler_battle_result_stats
     draw_count                    bigint       not null,
     total_count                   bigint       not null,
     star_player_count             bigint       not null,
-    created_at                    timestamp(6) not null default current_timestamp(6),
-    updated_at                    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                    datetime(6) not null default current_timestamp(6),
+    updated_at                    datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_battle_result_stats_1 (event_brawlstars_id, tier_range, battle_date),
     index ix_brawler_battle_result_stats_2 (brawler_brawlstars_id, tier_range, battle_date)
 );
@@ -474,8 +474,8 @@ create table if not exists brawler_battle_rank_stats
     brawler_brawlstars_id        bigint       not null,
     rank_counts                  json         not null,
     total_count                  bigint       not null,
-    created_at                   timestamp(6) not null default current_timestamp(6),
-    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                   datetime(6) not null default current_timestamp(6),
+    updated_at                   datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date)
 );
 
@@ -494,8 +494,8 @@ create table if not exists brawler_enemy_battle_result_stats
     defeat_count                         bigint       not null,
     draw_count                           bigint       not null,
     total_count                          bigint       not null,
-    created_at                           timestamp(6) not null default current_timestamp(6),
-    updated_at                           timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                           datetime(6) not null default current_timestamp(6),
+    updated_at                           datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_enemy_battle_result_stats_1 (event_brawlstars_id, tier_range, period_type, start_battle_date),
     index ix_brawler_enemy_battle_result_stats_2 (brawler_brawlstars_id, tier_range, period_type, start_battle_date)
 );
@@ -514,8 +514,8 @@ create table if not exists brawler_team_battle_result_stats
     defeat_count                        bigint       not null,
     draw_count                          bigint       not null,
     total_count                         bigint       not null,
-    created_at                          timestamp(6) not null default current_timestamp(6),
-    updated_at                          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                          datetime(6) not null default current_timestamp(6),
+    updated_at                          datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_result_stats_1 (event_brawlstars_id, tier_range, period_type, start_battle_date)
 );
 
@@ -524,8 +524,8 @@ create table if not exists brawler_team_battle_result_stats_brawler
     brawler_team_battle_result_stats_brawler_id bigint auto_increment primary key,
     brawler_team_battle_result_stats_id          bigint       not null,
     brawler_brawlstars_id                        bigint       not null,
-    created_at                                   timestamp(6) not null default current_timestamp(6),
-    updated_at                                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                                   datetime(6) not null default current_timestamp(6),
+    updated_at                                   datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_result_stats_brawler_1 (brawler_brawlstars_id, brawler_team_battle_result_stats_id)
 );
 
@@ -541,8 +541,8 @@ create table if not exists brawler_team_battle_rank_stats
     team_size                         int          not null,
     rank_counts                       json         not null,
     total_count                       bigint       not null,
-    created_at                        timestamp(6) not null default current_timestamp(6),
-    updated_at                        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                        datetime(6) not null default current_timestamp(6),
+    updated_at                        datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_rank_stats_1 (event_brawlstars_id, tier_range, period_type, start_battle_date)
 );
 
@@ -551,17 +551,17 @@ create table if not exists brawler_team_battle_rank_stats_brawler
     brawler_team_battle_rank_stats_brawler_id bigint auto_increment primary key,
     brawler_team_battle_rank_stats_id          bigint       not null,
     brawler_brawlstars_id                      bigint       not null,
-    created_at                                 timestamp(6) not null default current_timestamp(6),
-    updated_at                                 timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                                 datetime(6) not null default current_timestamp(6),
+    updated_at                                 datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_rank_stats_brawler_1 (brawler_brawlstars_id, brawler_team_battle_rank_stats_id)
 );
 
 create table if not exists battle_event_rotation
 (
     battle_event_rotation_id bigint auto_increment primary key,
-    collected_at             timestamp(6) not null,
-    created_at               timestamp(6) not null default current_timestamp(6),
-    updated_at               timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    collected_at             datetime(6) not null,
+    created_at               datetime(6) not null default current_timestamp(6),
+    updated_at               datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_battle_event_rotation__collected_at (collected_at)
 );
 
@@ -572,13 +572,13 @@ create table if not exists battle_event_rotation_item
     event_brawlstars_id          bigint       not null,
     modifiers                    json         not null,
     slot_id                      int          not null,
-    start_time                   timestamp(6) not null,
-    end_time                     timestamp(6) not null,
+    start_time                   datetime(6) not null,
+    end_time                     datetime(6) not null,
     event_mode_name              varchar(255) null,
     event_mode_brawlstars_id     bigint       null,
     event_map_name               varchar(255) null,
-    created_at                   timestamp(6) not null default current_timestamp(6),
-    updated_at                   timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                   datetime(6) not null default current_timestamp(6),
+    updated_at                   datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_battle_event_rotation_item__battle_event_rotation_id (battle_event_rotation_id)
 );
 
@@ -587,8 +587,8 @@ create table if not exists battle_event_solo_rank_event
     battle_event_solo_rank_event_id bigint auto_increment primary key,
     solo_rank_season_key            varchar(45)  not null,
     event_brawlstars_id             bigint       not null,
-    created_at                      timestamp(6) not null default current_timestamp(6),
-    updated_at                      timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at                      datetime(6) not null default current_timestamp(6),
+    updated_at                      datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_battle_event_solo_rank_event__1 (solo_rank_season_key, event_brawlstars_id)
 );
 
@@ -599,8 +599,8 @@ create table if not exists brawler
     brawlstars_id     bigint       not null,
     rarity            varchar(45)  not null,
     role              varchar(45)  not null,
-    created_at        timestamp(6) not null default current_timestamp(6),
-    updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at        datetime(6) not null default current_timestamp(6),
+    updated_at        datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawler__brawlstarsid (brawlstars_id)
 );
 
@@ -610,8 +610,8 @@ create table if not exists brawler_gear
     brawler_gear_id       bigint auto_increment primary key,
     brawler_brawlstars_id bigint       not null,
     gear_brawlstars_id    bigint       not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawlergear__brawlerbrawlstarsid_gearbrawlstarsid (brawler_brawlstars_id, gear_brawlstars_id)
 );
 
@@ -621,8 +621,8 @@ create table if not exists gadget
     gadget_id             bigint auto_increment primary key,
     brawlstars_id         bigint       not null,
     brawler_brawlstars_id bigint       not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_gadget__brawlstarsid (brawlstars_id)
 );
 
@@ -632,8 +632,8 @@ create table if not exists gear
     gear_id           bigint auto_increment primary key,
     brawlstars_id     bigint       not null,
     rarity            varchar(45)  not null,
-    created_at        timestamp(6) not null default current_timestamp(6),
-    updated_at        timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at        datetime(6) not null default current_timestamp(6),
+    updated_at        datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_gear__brawlstarsid (brawlstars_id)
 );
 
@@ -643,8 +643,8 @@ create table if not exists hyper_charge
     hyper_charge_id       bigint auto_increment primary key,
     brawlstars_id         bigint       not null,
     brawler_brawlstars_id bigint       not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_hypercharge__brawlstarsid (brawlstars_id)
 );
 
@@ -654,8 +654,8 @@ create table if not exists star_power
     star_power_id         bigint auto_increment primary key,
     brawlstars_id         bigint       not null,
     brawler_brawlstars_id bigint       not null,
-    created_at            timestamp(6) not null default current_timestamp(6),
-    updated_at            timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at            datetime(6) not null default current_timestamp(6),
+    updated_at            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_starpower__brawlstarsid (brawlstars_id)
 );
 
@@ -667,8 +667,8 @@ create table if not exists brawlstars_image
     brawlstars_id       bigint       not null,
     stored_name         varchar(255) not null,
     url                 varchar(512) not null,
-    created_at          timestamp(6) not null default current_timestamp(6),
-    updated_at          timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at          datetime(6) not null default current_timestamp(6),
+    updated_at          datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawlstars_image__type_brawlstarsid (type, brawlstars_id)
 );
 
@@ -680,8 +680,8 @@ create table if not exists message
     brawlstars_id bigint      not null,
     lang          varchar(25) not null,
     content       text        not null,
-    created_at    timestamp(6) not null default current_timestamp(6),
-    updated_at    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    created_at    datetime(6) not null default current_timestamp(6),
+    updated_at    datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_message__type_brawlstarsid_lang (type, brawlstars_id, lang)
 );
 
@@ -689,9 +689,9 @@ create table if not exists message
 create table if not exists brawlstars_api_maintenance
 (
     brawlstars_api_maintenance_id bigint auto_increment primary key,
-    start_time                    timestamp(6) not null,
-    end_time                      timestamp(6) not null,
-    created_at                    timestamp(6) not null default current_timestamp(6),
-    updated_at                    timestamp(6) not null default current_timestamp(6) on update current_timestamp(6),
+    start_time                    datetime(6) not null,
+    end_time                      datetime(6) not null,
+    created_at                    datetime(6) not null default current_timestamp(6),
+    updated_at                    datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawlstars_api_maintenance__end_time (end_time)
 );
