@@ -23,32 +23,31 @@
 core-admin/src/main/kotlin/com/imstargg/core/admin/
 ├── CoreAdminApplication.kt
 ├── controller/
-│   └── v1/
-│       ├── BrawlerAdminController.kt
-│       ├── GearAdminController.kt
-│       ├── BattleEventAdminController.kt
-│       ├── BattleEventModeAdminController.kt
-│       ├── MaintenanceAdminController.kt
-│       ├── DashboardAdminController.kt
-│       ├── request/
-│       │   ├── BrawlerCreateRequest.kt
-│       │   ├── MessagesUpdateRequest.kt
-│       │   ├── GearCreateRequest.kt
-│       │   ├── BattleEventCreateRequest.kt
-│       │   ├── BattleEventModeCreateRequest.kt
-│       │   ├── MaintenanceRegisterRequest.kt
-│       │   ├── BrawlerStarPowerCreateRequest.kt
-│       │   ├── BrawlerGadgetCreateRequest.kt
-│       │   ├── BrawlerHyperChargeCreateRequest.kt
-│       │   └── BrawlerGearsUpdateRequest.kt
-│       └── response/
-│           ├── BrawlerAdminResponse.kt
-│           ├── BrawlerDetailAdminResponse.kt
-│           ├── GearAdminResponse.kt
-│           ├── BattleEventAdminResponse.kt
-│           ├── BattleEventModeAdminResponse.kt
-│           ├── MaintenanceAdminResponse.kt
-│           └── DashboardSummaryAdminResponse.kt
+│   ├── BrawlerAdminController.kt
+│   ├── GearAdminController.kt
+│   ├── BattleEventAdminController.kt
+│   ├── BattleEventModeAdminController.kt
+│   ├── MaintenanceAdminController.kt
+│   ├── DashboardAdminController.kt
+│   ├── request/
+│   │   ├── BrawlerCreateRequest.kt
+│   │   ├── MessagesUpdateRequest.kt
+│   │   ├── GearCreateRequest.kt
+│   │   ├── BattleEventCreateRequest.kt
+│   │   ├── BattleEventModeCreateRequest.kt
+│   │   ├── MaintenanceRegisterRequest.kt
+│   │   ├── BrawlerStarPowerCreateRequest.kt
+│   │   ├── BrawlerGadgetCreateRequest.kt
+│   │   ├── BrawlerHyperChargeCreateRequest.kt
+│   │   └── BrawlerGearsUpdateRequest.kt
+│   └── response/
+│       ├── BrawlerAdminResponse.kt
+│       ├── BrawlerDetailAdminResponse.kt
+│       ├── GearAdminResponse.kt
+│       ├── BattleEventAdminResponse.kt
+│       ├── BattleEventModeAdminResponse.kt
+│       ├── MaintenanceAdminResponse.kt
+│       └── DashboardSummaryAdminResponse.kt
 ├── application/
 │   ├── BrawlerAdminService.kt
 │   ├── GearAdminService.kt
@@ -65,57 +64,57 @@ core-admin/src/main/kotlin/com/imstargg/core/admin/
 #### Dashboard
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/v1/dashboard/summary` | 대시보드 데이터 완성도 요약 |
+| GET | `/dashboard/summary` | 대시보드 데이터 완성도 요약 |
 
 #### Brawler
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/v1/brawlers` | 브롤러 목록 |
-| GET | `/v1/brawlers/{brawlStarsId}` | 브롤러 상세 (스타파워, 가젯, 하이퍼차지, 기어 포함) |
-| POST | `/v1/brawlers` | 브롤러 생성 |
-| PUT | `/v1/brawlers/{brawlStarsId}/messages` | 브롤러 이름 수정 (모든 언어 일괄) |
-| PUT | `/v1/brawlers/{brawlStarsId}/image` | 브롤러 메인 이미지 업로드 (multipart) |
-| PUT | `/v1/brawlers/{brawlStarsId}/buffy-image` | 버피 이미지 업로드 (multipart + buffyType param) |
-| PUT | `/v1/brawlers/{brawlStarsId}/gears` | 브롤러-기어 연결 수정 |
-| POST | `/v1/brawlers/{brawlStarsId}/star-powers` | 스타파워 추가 |
-| PUT | `/v1/brawlers/{brawlStarsId}/star-powers/{starPowerBrawlStarsId}/messages` | 스타파워 이름 수정 |
-| PUT | `/v1/brawlers/{brawlStarsId}/star-powers/{starPowerBrawlStarsId}/image` | 스타파워 이미지 업로드 |
-| POST | `/v1/brawlers/{brawlStarsId}/gadgets` | 가젯 추가 |
-| PUT | `/v1/brawlers/{brawlStarsId}/gadgets/{gadgetBrawlStarsId}/messages` | 가젯 이름 수정 |
-| PUT | `/v1/brawlers/{brawlStarsId}/gadgets/{gadgetBrawlStarsId}/image` | 가젯 이미지 업로드 |
-| POST | `/v1/brawlers/{brawlStarsId}/hyper-charges` | 하이퍼차지 추가 |
-| PUT | `/v1/brawlers/{brawlStarsId}/hyper-charges/{hyperChargeBrawlStarsId}/messages` | 하이퍼차지 이름 수정 |
-| PUT | `/v1/brawlers/{brawlStarsId}/hyper-charges/{hyperChargeBrawlStarsId}/image` | 하이퍼차지 이미지 업로드 |
+| GET | `/brawlers` | 브롤러 목록 |
+| GET | `/brawlers/{brawlStarsId}` | 브롤러 상세 (스타파워, 가젯, 하이퍼차지, 기어 포함) |
+| POST | `/brawlers` | 브롤러 생성 |
+| PUT | `/brawlers/{brawlStarsId}/messages` | 브롤러 이름 수정 (모든 언어 일괄) |
+| PUT | `/brawlers/{brawlStarsId}/image` | 브롤러 메인 이미지 업로드 (multipart) |
+| PUT | `/brawlers/{brawlStarsId}/buffy-image` | 버피 이미지 업로드 (multipart + buffyType param) |
+| PUT | `/brawlers/{brawlStarsId}/gears` | 브롤러-기어 연결 수정 |
+| POST | `/brawlers/{brawlStarsId}/star-powers` | 스타파워 추가 |
+| PUT | `/brawlers/{brawlStarsId}/star-powers/{starPowerBrawlStarsId}/messages` | 스타파워 이름 수정 |
+| PUT | `/brawlers/{brawlStarsId}/star-powers/{starPowerBrawlStarsId}/image` | 스타파워 이미지 업로드 |
+| POST | `/brawlers/{brawlStarsId}/gadgets` | 가젯 추가 |
+| PUT | `/brawlers/{brawlStarsId}/gadgets/{gadgetBrawlStarsId}/messages` | 가젯 이름 수정 |
+| PUT | `/brawlers/{brawlStarsId}/gadgets/{gadgetBrawlStarsId}/image` | 가젯 이미지 업로드 |
+| POST | `/brawlers/{brawlStarsId}/hyper-charges` | 하이퍼차지 추가 |
+| PUT | `/brawlers/{brawlStarsId}/hyper-charges/{hyperChargeBrawlStarsId}/messages` | 하이퍼차지 이름 수정 |
+| PUT | `/brawlers/{brawlStarsId}/hyper-charges/{hyperChargeBrawlStarsId}/image` | 하이퍼차지 이미지 업로드 |
 
 #### Gear
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/v1/gears` | 기어 목록 |
-| POST | `/v1/gears` | 기어 생성 |
-| PUT | `/v1/gears/{brawlStarsId}/messages` | 기어 이름 수정 |
-| PUT | `/v1/gears/{brawlStarsId}/image` | 기어 이미지 업로드 |
+| GET | `/gears` | 기어 목록 |
+| POST | `/gears` | 기어 생성 |
+| PUT | `/gears/{brawlStarsId}/messages` | 기어 이름 수정 |
+| PUT | `/gears/{brawlStarsId}/image` | 기어 이미지 업로드 |
 
 #### Event
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/v1/events` | 이벤트 목록 |
-| POST | `/v1/events` | 이벤트 생성 |
-| PUT | `/v1/events/{brawlStarsId}/messages` | 맵 이름 수정 |
+| GET | `/events` | 이벤트 목록 |
+| POST | `/events` | 이벤트 생성 |
+| PUT | `/events/{brawlStarsId}/messages` | 맵 이름 수정 |
 
 #### Event Mode
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/v1/event-modes` | 이벤트 모드 목록 |
-| POST | `/v1/event-modes` | 모드 생성 |
-| PUT | `/v1/event-modes/{brawlStarsId}/messages` | 모드 이름 수정 |
-| PUT | `/v1/event-modes/{brawlStarsId}/image` | 모드 아이콘 업로드 |
+| GET | `/event-modes` | 이벤트 모드 목록 |
+| POST | `/event-modes` | 모드 생성 |
+| PUT | `/event-modes/{brawlStarsId}/messages` | 모드 이름 수정 |
+| PUT | `/event-modes/{brawlStarsId}/image` | 모드 아이콘 업로드 |
 
 #### Maintenance
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/v1/maintenances` | 유지보수 목록 |
-| POST | `/v1/maintenances` | 유지보수 등록 |
-| DELETE | `/v1/maintenances/{id}` | 유지보수 삭제 |
+| GET | `/maintenances` | 유지보수 목록 |
+| POST | `/maintenances` | 유지보수 등록 |
+| DELETE | `/maintenances/{id}` | 유지보수 삭제 |
 
 ### 주요 변경사항
 
@@ -124,7 +123,7 @@ core-admin/src/main/kotlin/com/imstargg/core/admin/
 3. **서비스 레이어 재활용**: 기존 application/ 서비스 대부분 유지, 트랜잭션 경계 조정
 4. **Request DTO 추가**: 컨트롤러 입력용 request 클래스 신규 작성
 5. **Response DTO 조정**: 기존 response 클래스를 API 응답에 맞게 조정
-6. **CORS 설정**: admin frontend 개발 서버(localhost:3001) 허용
+6. **CORS 설정**: 허용 origin을 application.yml 프로퍼티로 관리
 7. **이미지 업로드**: MultipartFile 기반 엔드포인트
 
 ### 트랜잭션 개선
@@ -206,5 +205,5 @@ app/
 ## 배포/설정 고려사항
 
 - core-admin API: 기존 포트 유지 또는 별도 포트
-- admin frontend: 개발 시 localhost:3001 (imstargg-frontend와 포트 구분)
-- CORS: core-admin에서 admin frontend origin 허용
+- admin frontend: 기본 포트(3000) 사용 (imstargg-frontend와 동시 실행하지 않음)
+- CORS: core-admin에서 허용 origin을 application.yml 프로퍼티로 관리
