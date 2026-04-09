@@ -2,7 +2,6 @@ package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.Country
-import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
@@ -25,7 +24,6 @@ class BrawlerRankingCollectJobConfig(
     private val txManager: PlatformTransactionManager,
     private val clock: Clock,
     private val brawlStarsClient: BrawlStarsClient,
-    private val brawlerJpaRepository: BrawlerJpaRepository,
     private val brawlerRankingJpaRepository: BrawlerRankingJpaRepository,
     private val brawlerRankingItemJpaRepository: BrawlerRankingItemJpaRepository,
 ) {
@@ -45,16 +43,16 @@ class BrawlerRankingCollectJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
-                    val brawlers = brawlerJpaRepository.findAll()
+                    val brawlers = brawlStarsClient.getBrawlers().items
                     Country.entries.forEach { country ->
                         brawlers.forEach { brawler ->
                             val collectedAt = OffsetDateTime.now(clock)
-                            val response = brawlStarsClient.getBrawlerRanking(country.code, brawler.brawlStarsId)
+                            val response = brawlStarsClient.getBrawlerRanking(country.code, brawler.id)
                             val ranking =
                                 brawlerRankingJpaRepository.save(
                                     BrawlerRankingEntity(
                                         country = country,
-                                        brawlerBrawlStarsId = brawler.brawlStarsId,
+                                        brawlerBrawlStarsId = brawler.id,
                                         collectedAt = collectedAt,
                                     ),
                                 )
