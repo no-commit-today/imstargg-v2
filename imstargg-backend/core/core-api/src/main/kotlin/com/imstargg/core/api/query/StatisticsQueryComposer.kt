@@ -5,13 +5,17 @@ import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsRespons
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
 import com.imstargg.core.application.statistics.BattleRankStatisticsService
 import com.imstargg.core.application.statistics.BattleResultStatisticsService
+import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
+import com.imstargg.core.enums.RankStatsSortField
+import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Component
@@ -38,11 +42,14 @@ class StatisticsQueryComposer(
 
     fun getBrawlerTeamResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
+        sortField: ResultStatsSortField,
+        sortOrder: SortOrder,
+        offsetLimit: OffsetLimit,
     ): BrawlerTeamResultStatisticsResponse {
         val brawlers = brawlers()
         return BrawlerTeamResultStatisticsResponse.of(
@@ -53,6 +60,9 @@ class StatisticsQueryComposer(
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimit,
             ),
             brawlers,
         )
@@ -60,10 +70,13 @@ class StatisticsQueryComposer(
 
     fun getEnemyResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
+        sortField: ResultStatsSortField,
+        sortOrder: SortOrder,
+        offsetLimit: OffsetLimit,
     ): BrawlerEnemyResultStatisticsResponse {
         val brawlers = brawlers()
         return BrawlerEnemyResultStatisticsResponse.of(
@@ -73,6 +86,9 @@ class StatisticsQueryComposer(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimit,
             ),
             brawlers,
         )
@@ -109,17 +125,24 @@ class StatisticsQueryComposer(
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-    ): List<BrawlerTeamRankStatisticsResponse> {
+        sortField: RankStatsSortField,
+        sortOrder: SortOrder,
+        offsetLimit: OffsetLimit,
+    ): BrawlerTeamRankStatisticsListResponse {
         val brawlers = brawlers()
-        return battleRankStatisticsService
-            .getBrawlerTeamRankStatistics(
+        val statistics =
+            battleRankStatisticsService.getBrawlerTeamRankStatistics(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-            ).map { BrawlerTeamRankStatisticsResponse.of(it, it.brawlerIds.map { id -> brawlers.toBrawlerResponse(id) }) }
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimit,
+            )
+        return BrawlerTeamRankStatisticsListResponse.of(statistics, brawlers)
     }
 
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())

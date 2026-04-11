@@ -39,6 +39,8 @@ data class RankCountsEmbedded internal constructor(
 
     fun toMap(): Map<Int, Long> = counts.mapIndexed { index, value -> (index + 1) to value }.toMap()
 
+    fun weightedRankSum(): Long = counts.mapIndexed { index, count -> (index + 1).toLong() * count }.sum()
+
     operator fun plus(other: RankCountsEmbedded): RankCountsEmbedded {
         require(counts.size == other.counts.size) {
             "counts 크기가 다릅니다: ${counts.size} vs ${other.counts.size}"

@@ -1,5 +1,6 @@
 package com.imstargg.core.api.controller.v1.response
 
+import com.imstargg.core.api.controller.SliceResponse
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
 import com.imstargg.core.domain.statistics.BrawlerTeamResultStatistics
 
@@ -12,7 +13,7 @@ data class BrawlerTeamResultStatisticsItemResponse(
 
 data class BrawlerTeamResultStatisticsResponse(
     val totalBattleCount: Long,
-    val items: List<BrawlerTeamResultStatisticsItemResponse>,
+    val items: SliceResponse<BrawlerTeamResultStatisticsItemResponse>,
 ) {
     companion object {
         fun of(
@@ -21,17 +22,19 @@ data class BrawlerTeamResultStatisticsResponse(
         ) = BrawlerTeamResultStatisticsResponse(
             totalBattleCount = statistics.totalBattleCount,
             items =
-                statistics.items.map { item ->
-                    BrawlerTeamResultStatisticsItemResponse(
-                        brawlers =
-                            item.brawlerIds.map { id ->
-                                brawlers.find(id)?.let { BrawlerResponse.of(it) }
-                            },
-                        totalBattleCount = item.totalBattleCount,
-                        pickRate = item.pickRate,
-                        winRate = item.winRate,
-                    )
-                },
+                SliceResponse.from(
+                    statistics.items.map { item ->
+                        BrawlerTeamResultStatisticsItemResponse(
+                            brawlers =
+                                item.brawlerIds.map { id ->
+                                    brawlers.find(id)?.let { BrawlerResponse.of(it) }
+                                },
+                            totalBattleCount = item.totalBattleCount,
+                            pickRate = item.pickRate,
+                            winRate = item.winRate,
+                        )
+                    },
+                ),
         )
     }
 }

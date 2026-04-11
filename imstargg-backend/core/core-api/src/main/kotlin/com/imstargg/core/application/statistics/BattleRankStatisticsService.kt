@@ -1,8 +1,11 @@
 package com.imstargg.core.application.statistics
 
+import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
-import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
+import com.imstargg.core.domain.statistics.BrawlerTeamRankSliceStatistics
+import com.imstargg.core.enums.RankStatsSortField
+import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
@@ -29,14 +32,34 @@ class BattleRankStatisticsService(
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-    ): List<BrawlerTeamRankStatistics> =
-        rankRepository
-            .findBrawlerTeamRankCounts(
+        sortField: RankStatsSortField,
+        sortOrder: SortOrder,
+        offsetLimit: OffsetLimit,
+    ): BrawlerTeamRankSliceStatistics {
+        val totalBattleCount =
+            rankRepository.countTeamRankTotalBattleCount(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-            ).map { it.toStatistics() }
+            )
+        val items =
+            rankRepository.findBrawlerTeamRankCounts(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                teamSize = teamSize,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimit,
+            )
+        return BrawlerTeamRankSliceStatistics(
+            totalBattleCount = totalBattleCount,
+            items = items,
+        )
+    }
 }

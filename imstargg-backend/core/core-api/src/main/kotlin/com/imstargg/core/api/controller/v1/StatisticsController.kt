@@ -1,19 +1,23 @@
 package com.imstargg.core.api.controller.v1
 
 import com.imstargg.core.api.controller.ListResponse
+import com.imstargg.core.api.controller.OffsetLimitRequest
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsResponse
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.enums.RankStatsSortField
+import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
@@ -39,49 +43,61 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/v1/statistics/brawler/result/team")
+    @GetMapping("/v1/statistics/brawler/team/result")
     fun getBrawlerTeamResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam brawlerId: Long?,
+        @RequestParam brawlerId: Long,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
+        @RequestParam(defaultValue = "PICK_RATE") sortField: ResultStatsSortField,
+        @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
+        @ModelAttribute offsetLimitRequest: OffsetLimitRequest,
     ): ResponseEntity<BrawlerTeamResultStatisticsResponse> {
         val response =
             statisticsQueryComposer.getBrawlerTeamResultStatistics(
                 eventId = eventId?.let { BrawlStarsId(it) },
-                brawlerId = brawlerId?.let { BrawlStarsId(it) },
+                brawlerId = BrawlStarsId(brawlerId),
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimitRequest.toOffsetLimit(),
             )
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/v1/statistics/brawler/result/enemy")
+    @GetMapping("/v1/statistics/brawler/enemy/result")
     fun getEnemyResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam brawlerId: Long?,
+        @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
+        @RequestParam(defaultValue = "PICK_RATE") sortField: ResultStatsSortField,
+        @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
+        @ModelAttribute offsetLimitRequest: OffsetLimitRequest,
     ): ResponseEntity<BrawlerEnemyResultStatisticsResponse> {
         val response =
             statisticsQueryComposer.getEnemyResultStatistics(
                 eventId = eventId?.let { BrawlStarsId(it) },
-                brawlerId = brawlerId?.let { BrawlStarsId(it) },
+                brawlerId = BrawlStarsId(brawlerId),
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimitRequest.toOffsetLimit(),
             )
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/v1/statistics/events/{eventId}/brawler/rank")
+    @GetMapping("/v1/statistics/brawler/rank")
     fun getBrawlerRankStatistics(
-        @PathVariable eventId: Long,
+        @RequestParam eventId: Long,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
@@ -96,16 +112,19 @@ class StatisticsController(
         return ResponseEntity.ok(ListResponse(responses))
     }
 
-    @GetMapping("/v1/statistics/events/{eventId}/brawler/rank/team")
+    @GetMapping("/v1/statistics/brawler/team/rank")
     fun getBrawlerTeamRankStatistics(
-        @PathVariable eventId: Long,
+        @RequestParam eventId: Long,
         @RequestParam brawlerId: Long,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-    ): ResponseEntity<ListResponse<BrawlerTeamRankStatisticsResponse>> {
-        val responses =
+        @RequestParam(defaultValue = "PICK_RATE") sortField: RankStatsSortField,
+        @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
+        @ModelAttribute offsetLimitRequest: OffsetLimitRequest,
+    ): ResponseEntity<BrawlerTeamRankStatisticsListResponse> {
+        val response =
             statisticsQueryComposer.getBrawlerTeamRankStatistics(
                 eventId = BrawlStarsId(eventId),
                 brawlerId = BrawlStarsId(brawlerId),
@@ -113,13 +132,16 @@ class StatisticsController(
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimitRequest.toOffsetLimit(),
             )
-        return ResponseEntity.ok(ListResponse(responses))
+        return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/v1/statistics/brawlers/{brawlerId}/result/daily")
+    @GetMapping("/v1/statistics/brawler/result/daily")
     fun getDailyResultStatistics(
-        @PathVariable brawlerId: Long,
+        @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,

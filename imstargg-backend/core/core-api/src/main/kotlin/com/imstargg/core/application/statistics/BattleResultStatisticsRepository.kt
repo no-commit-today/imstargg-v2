@@ -1,12 +1,15 @@
 package com.imstargg.core.application.statistics
 
+import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.domain.statistics.BrawlerTeamResultCount
 import com.imstargg.core.domain.statistics.ResultCount
-import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
@@ -65,100 +68,122 @@ class BattleResultStatisticsRepository(
 
     fun findBrawlerEnemyResultCounts(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerEnemyResultCount> {
-        val allPeriodTypes = StatsPeriodType.entries
-        val entities =
-            when {
-                eventId != null && brawlerId != null ->
-                    enemyBattleResultJpaRepository
-                        .findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
-                            eventBrawlStarsId = eventId.value,
-                            brawlerBrawlStarsId = brawlerId.value,
-                            tierRange = tierRange,
-                            periodTypes = allPeriodTypes,
-                            startDate = startDate,
-                            endDate = endDate,
-                        )
-                eventId != null ->
-                    enemyBattleResultJpaRepository
-                        .findAllByEventBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
-                            eventBrawlStarsId = eventId.value,
-                            tierRange = tierRange,
-                            periodTypes = allPeriodTypes,
-                            startDate = startDate,
-                            endDate = endDate,
-                        )
-                brawlerId != null ->
-                    enemyBattleResultJpaRepository
-                        .findAllByBrawlerBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
-                            brawlerBrawlStarsId = brawlerId.value,
-                            tierRange = tierRange,
-                            periodTypes = allPeriodTypes,
-                            startDate = startDate,
-                            endDate = endDate,
-                        )
-                else ->
-                    enemyBattleResultJpaRepository
-                        .findAllByTierRangeAndPeriodTypeInAndBattleDateBetween(
-                            tierRange = tierRange,
-                            periodTypes = allPeriodTypes,
-                            startDate = startDate,
-                            endDate = endDate,
-                        )
-            }
+        sortField: ResultStatsSortField,
+        sortOrder: SortOrder,
+        offsetLimit: OffsetLimit,
+    ): Slice<BrawlerEnemyResultCount> {
+        val tuples =
+            enemyBattleResultJpaRepository.findPagedByConditions(
+                eventBrawlStarsId = eventId?.value,
+                brawlerBrawlStarsId = brawlerId.value,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offset = offsetLimit.offset.toLong(),
+                limit = (offsetLimit.limit + 1).toLong(),
+            )
 
-        return entities
-            .groupBy { Pair(it.brawlerBrawlStarsId, it.enemyBrawlerBrawlStarsId) }
-            .map { (key, grouped) ->
+        val hasNext = tuples.size > offsetLimit.limit
+        val content =
+            tuples.take(offsetLimit.limit).map { tuple ->
                 BrawlerEnemyResultCount(
-                    brawlerId = BrawlStarsId(key.first),
-                    enemyBrawlerId = BrawlStarsId(key.second),
+                    brawlerId = BrawlStarsId(tuple.get(0, Long::class.javaObjectType)!!),
+                    enemyBrawlerId = BrawlStarsId(tuple.get(1, Long::class.javaObjectType)!!),
                     resultCount =
                         ResultCount(
-                            grouped.sumOf { it.resultCount.victoryCount },
-                            grouped.sumOf { it.resultCount.defeatCount },
-                            grouped.sumOf { it.resultCount.drawCount },
+                            victoryCount = tuple.get(2, Long::class.javaObjectType)!!,
+                            defeatCount = tuple.get(3, Long::class.javaObjectType)!!,
+                            drawCount = tuple.get(4, Long::class.javaObjectType)!!,
                         ),
                 )
             }
+
+        return Slice(content = content, hasNext = hasNext)
     }
+
+    fun countEnemyResultTotalBattleCount(
+        eventId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): Long =
+        enemyBattleResultJpaRepository.countTotalBattleCount(
+            eventBrawlStarsId = eventId?.value,
+            brawlerBrawlStarsId = brawlerId.value,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
 
     fun findBrawlerTeamResultCounts(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-    ): List<BrawlerTeamResultCount> {
-        val entities =
-            teamBattleResultJpaRepository.findAllByConditions(
+        sortField: ResultStatsSortField,
+        sortOrder: SortOrder,
+        offsetLimit: OffsetLimit,
+    ): Slice<BrawlerTeamResultCount> {
+        val tuples =
+            teamBattleResultJpaRepository.findPagedByConditions(
                 eventBrawlStarsId = eventId?.value,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                brawlerBrawlStarsId = brawlerId?.value,
+                brawlerBrawlStarsId = brawlerId.value,
                 teamSize = teamSize,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offset = offsetLimit.offset.toLong(),
+                limit = (offsetLimit.limit + 1).toLong(),
             )
 
-        return entities
-            .groupBy { it.brawlerBrawlStarsIds }
-            .map { (brawlerBrawlStarsIds, grouped) ->
+        val hasNext = tuples.size > offsetLimit.limit
+        val content =
+            tuples.take(offsetLimit.limit).map { tuple ->
                 BrawlerTeamResultCount(
-                    brawlerIds = brawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                    brawlerIds =
+                        tuple
+                            .get(0, String::class.java)!!
+                            .split("_")
+                            .map { BrawlStarsId(it.toLong()) },
                     resultCount =
                         ResultCount(
-                            grouped.sumOf { it.resultCount.victoryCount },
-                            grouped.sumOf { it.resultCount.defeatCount },
-                            grouped.sumOf { it.resultCount.drawCount },
+                            victoryCount = tuple.get(1, Long::class.javaObjectType)!!,
+                            defeatCount = tuple.get(2, Long::class.javaObjectType)!!,
+                            drawCount = tuple.get(3, Long::class.javaObjectType)!!,
                         ),
                 )
             }
+
+        return Slice(content = content, hasNext = hasNext)
     }
+
+    fun countTeamResultTotalBattleCount(
+        eventId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        teamSize: StatsTeamSize,
+    ): Long =
+        teamBattleResultJpaRepository.countTotalBattleCount(
+            eventBrawlStarsId = eventId?.value,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+            brawlerBrawlStarsId = brawlerId.value,
+            teamSize = teamSize,
+        )
 
     fun findBrawlerDailyResultCounts(
         brawlerId: BrawlStarsId,

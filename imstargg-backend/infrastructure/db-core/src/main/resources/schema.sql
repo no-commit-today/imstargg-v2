@@ -508,6 +508,7 @@ create table if not exists brawler_team_battle_result_stats
     tier_range                          varchar(45)  not null,
     battle_date                         date         not null,
     team_size                           int          not null,
+    team_key                            varchar(100) not null,
     victory_count                       bigint       not null,
     defeat_count                        bigint       not null,
     draw_count                          bigint       not null,
@@ -536,8 +537,10 @@ create table if not exists brawler_team_battle_rank_stats
     tier_range                        varchar(45)  not null,
     battle_date                       date         not null,
     team_size                         int          not null,
+    team_key                          varchar(100) not null,
     rank_counts                       json         not null,
     total_count                       bigint       not null,
+    weighted_rank_sum                 bigint       not null,
     created_at                        datetime(6) not null default current_timestamp(6),
     updated_at                        datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawler_team_battle_rank_stats_1 (event_brawlstars_id, tier_range, period_type, battle_date)

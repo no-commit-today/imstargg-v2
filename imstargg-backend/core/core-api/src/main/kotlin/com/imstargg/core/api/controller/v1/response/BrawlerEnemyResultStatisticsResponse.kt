@@ -1,5 +1,6 @@
 package com.imstargg.core.api.controller.v1.response
 
+import com.imstargg.core.api.controller.SliceResponse
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 
@@ -13,7 +14,7 @@ data class BrawlerEnemyResultStatisticsItemResponse(
 
 data class BrawlerEnemyResultStatisticsResponse(
     val totalBattleCount: Long,
-    val items: List<BrawlerEnemyResultStatisticsItemResponse>,
+    val items: SliceResponse<BrawlerEnemyResultStatisticsItemResponse>,
 ) {
     companion object {
         fun of(
@@ -22,15 +23,17 @@ data class BrawlerEnemyResultStatisticsResponse(
         ) = BrawlerEnemyResultStatisticsResponse(
             totalBattleCount = statistics.totalBattleCount,
             items =
-                statistics.items.map { item ->
-                    BrawlerEnemyResultStatisticsItemResponse(
-                        brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
-                        enemyBrawler = brawlers.find(item.enemyBrawlerId)?.let { BrawlerResponse.of(it) },
-                        totalBattleCount = item.totalBattleCount,
-                        pickRate = item.pickRate,
-                        winRate = item.winRate,
-                    )
-                },
+                SliceResponse.from(
+                    statistics.items.map { item ->
+                        BrawlerEnemyResultStatisticsItemResponse(
+                            brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
+                            enemyBrawler = brawlers.find(item.enemyBrawlerId)?.let { BrawlerResponse.of(it) },
+                            totalBattleCount = item.totalBattleCount,
+                            pickRate = item.pickRate,
+                            winRate = item.winRate,
+                        )
+                    },
+                ),
         )
     }
 }

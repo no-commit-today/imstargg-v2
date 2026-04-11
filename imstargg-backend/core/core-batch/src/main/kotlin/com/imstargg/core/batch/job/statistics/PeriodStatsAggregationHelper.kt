@@ -1,7 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.enums.StatsPeriodType
-import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
@@ -84,7 +83,6 @@ class PeriodStatsAggregationHelper(
                             periodType = targetPeriodType,
                             tierRange = key.first,
                             battleDate = startDate,
-                            teamSize = StatsTeamSize.fromValue(key.second.size),
                             resultCount = totalResult,
                             initialBrawlerBrawlStarsIds = key.second,
                         )
@@ -198,7 +196,6 @@ class PeriodStatsAggregationHelper(
                             periodType = targetPeriodType,
                             tierRange = key.first,
                             battleDate = startDate,
-                            teamSize = StatsTeamSize.fromValue(key.second.size),
                             rankCounts = combinedRanks,
                             initialBrawlerBrawlStarsIds = key.second,
                         )
