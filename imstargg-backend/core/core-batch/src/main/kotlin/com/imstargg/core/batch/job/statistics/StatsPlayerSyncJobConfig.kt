@@ -2,6 +2,10 @@ package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity
@@ -19,12 +23,15 @@ import org.springframework.batch.core.job.parameters.DefaultJobParametersValidat
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
+import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.infrastructure.item.Chunk
 import org.springframework.batch.infrastructure.item.ItemProcessor
 import org.springframework.batch.infrastructure.item.ItemWriter
+import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
+import java.time.ZoneOffset
 
 @Configuration
 class StatsPlayerSyncJobConfig(
@@ -32,12 +39,17 @@ class StatsPlayerSyncJobConfig(
     private val txManager: PlatformTransactionManager,
     private val entityManagerFactory: EntityManagerFactory,
     private val statsPlayerJpaRepository: StatsPlayerJpaRepository,
+    private val playerRankingJpaRepository: PlayerRankingJpaRepository,
+    private val playerRankingItemJpaRepository: PlayerRankingItemJpaRepository,
+    private val brawlerRankingJpaRepository: BrawlerRankingJpaRepository,
+    private val brawlerRankingItemJpaRepository: BrawlerRankingItemJpaRepository,
 ) {
     companion object {
         const val JOB_NAME = "statsPlayerSyncJob"
         const val DATE_PARAMETER_NAME = "statsPlayerSyncJobDateJobParameter"
-        const val STEP_1_NAME = "statsPlayerSyncFromRankBattleStep"
-        const val STEP_2_NAME = "statsPlayerSyncFromResultBattleStep"
+        const val RANKING_STEP_NAME = "statsPlayerSyncFromRankingStep"
+        const val RANK_BATTLE_STEP_NAME = "statsPlayerSyncFromRankBattleStep"
+        const val RESULT_BATTLE_STEP_NAME = "statsPlayerSyncFromResultBattleStep"
         private const val CHUNK_SIZE = 1000
     }
 
@@ -49,25 +61,87 @@ class StatsPlayerSyncJobConfig(
     fun statsPlayerSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(statsPlayerSyncFromRankBattleStep())
+            .start(statsPlayerSyncFromRankingStep())
+            .next(statsPlayerSyncFromRankBattleStep())
             .next(statsPlayerSyncFromResultBattleStep())
             .build()
 
-    @Bean(STEP_1_NAME)
+    @Bean(RANKING_STEP_NAME)
+    @JobScope
+    fun statsPlayerSyncFromRankingStep(): Step =
+        StepBuilder(RANKING_STEP_NAME, jobRepository)
+            .tasklet({ _, _ ->
+                val date = dateJobParameter().date!!
+                val from = date.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime()
+                val to = date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime()
+
+                val playerRankingIds =
+                    playerRankingJpaRepository
+                        .findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(from, to)
+                        .mapNotNull { it.id }
+                val brawlerRankingIds =
+                    brawlerRankingJpaRepository
+                        .findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(from, to)
+                        .mapNotNull { it.id }
+
+                val allTags =
+                    buildList {
+                        if (playerRankingIds.isNotEmpty()) {
+                            addAll(
+                                playerRankingItemJpaRepository
+                                    .findAllByPlayerRankingIdIn(playerRankingIds)
+                                    .map { it.player.brawlStarsTag },
+                            )
+                        }
+                        if (brawlerRankingIds.isNotEmpty()) {
+                            addAll(
+                                brawlerRankingItemJpaRepository
+                                    .findAllByBrawlerRankingIdIn(brawlerRankingIds)
+                                    .map { it.player.brawlStarsTag },
+                            )
+                        }
+                    }.distinct()
+
+                allTags.chunked(CHUNK_SIZE).forEach { batch ->
+                    val existingTags =
+                        statsPlayerJpaRepository
+                            .findAllByBrawlStarsTagIn(batch)
+                            .map { it.brawlStarsTag }
+                            .toSet()
+                    val newPlayers =
+                        batch
+                            .filter { it !in existingTags }
+                            .map { StatsPlayerEntity(brawlStarsTag = it) }
+                    if (newPlayers.isNotEmpty()) {
+                        statsPlayerJpaRepository.saveAll(newPlayers)
+                    }
+                }
+
+                RepeatStatus.FINISHED
+            }, txManager)
+            .build()
+
+    @Bean(RANK_BATTLE_STEP_NAME)
     @JobScope
     fun statsPlayerSyncFromRankBattleStep(): Step =
-        ChunkOrientedStepBuilder<StatsRankBattleEntity, List<StatsBattleEntityTeamPlayer>>(STEP_1_NAME, jobRepository, CHUNK_SIZE)
-            .transactionManager(txManager)
+        ChunkOrientedStepBuilder<StatsRankBattleEntity, List<StatsBattleEntityTeamPlayer>>(
+            RANK_BATTLE_STEP_NAME,
+            jobRepository,
+            CHUNK_SIZE,
+        ).transactionManager(txManager)
             .reader(statsRankBattleReader())
             .processor(teamPlayerProcessor())
             .writer(statsPlayerSyncJobItemWriter())
             .build()
 
-    @Bean(STEP_2_NAME)
+    @Bean(RESULT_BATTLE_STEP_NAME)
     @JobScope
     fun statsPlayerSyncFromResultBattleStep(): Step =
-        ChunkOrientedStepBuilder<StatsResultBattleEntity, List<StatsBattleEntityTeamPlayer>>(STEP_2_NAME, jobRepository, CHUNK_SIZE)
-            .transactionManager(txManager)
+        ChunkOrientedStepBuilder<StatsResultBattleEntity, List<StatsBattleEntityTeamPlayer>>(
+            RESULT_BATTLE_STEP_NAME,
+            jobRepository,
+            CHUNK_SIZE,
+        ).transactionManager(txManager)
             .reader(statsResultBattleReader())
             .processor(teamPlayerProcessor())
             .writer(statsPlayerSyncJobItemWriter())
