@@ -35,6 +35,7 @@ class BattleResultStatisticsService(
         brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
         teamSize: StatsTeamSize,
     ): BrawlerTeamResultStatistics =
         BrawlerTeamResultStatistics.create(
@@ -43,6 +44,7 @@ class BattleResultStatisticsService(
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
+                endDate = endDate,
                 teamSize = teamSize,
             ),
         )
@@ -52,6 +54,7 @@ class BattleResultStatisticsService(
         brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
     ): BrawlerEnemyResultStatistics {
         val counts =
             resultRepository.findBrawlerEnemyResultCounts(
@@ -59,6 +62,7 @@ class BattleResultStatisticsService(
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
+                endDate = endDate,
             )
         return BrawlerEnemyResultStatistics.create(counts)
     }

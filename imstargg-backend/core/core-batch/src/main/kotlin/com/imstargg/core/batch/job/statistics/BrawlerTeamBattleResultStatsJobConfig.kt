@@ -85,7 +85,7 @@ class BrawlerTeamBattleResultStatsJobConfig(
                                         .where(
                                             brawlerTeamBattleResultStatsEntity.periodType
                                                 .eq(StatsPeriodType.DAILY),
-                                            brawlerTeamBattleResultStatsEntity.startBattleDate
+                                            brawlerTeamBattleResultStatsEntity.battleDate
                                                 .eq(date),
                                             brawlerTeamBattleResultStatsEntity.eventBrawlStarsId
                                                 .eq(eventBrawlStarsId),
@@ -97,7 +97,7 @@ class BrawlerTeamBattleResultStatsJobConfig(
                             .where(
                                 brawlerTeamBattleResultStatsEntity.periodType
                                     .eq(StatsPeriodType.DAILY),
-                                brawlerTeamBattleResultStatsEntity.startBattleDate.eq(date),
+                                brawlerTeamBattleResultStatsEntity.battleDate.eq(date),
                                 brawlerTeamBattleResultStatsEntity.eventBrawlStarsId
                                     .eq(eventBrawlStarsId),
                             ).execute()

@@ -18,9 +18,9 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
 
     override fun findAllByEventAndConditionsAndBrawlerAndTeamSize(
         eventBrawlStarsId: Long,
-        periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
+        startDate: LocalDate,
+        endDate: LocalDate,
         brawlerBrawlStarsId: Long,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamBattleRankStatsEntity> {
@@ -41,9 +41,9 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
             .where(
                 stats.id.`in`(statsIdsWithBrawler),
                 stats.eventBrawlStarsId.eq(eventBrawlStarsId),
-                stats.periodType.eq(periodType),
+                stats.periodType.`in`(StatsPeriodType.entries),
                 stats.tierRange.eq(tierRange),
-                stats.startBattleDate.eq(startBattleDate),
+                stats.battleDate.between(startDate, endDate),
                 stats.teamSize.eq(teamSize),
             ).fetch()
     }

@@ -25,7 +25,7 @@ import java.time.LocalDate
     indexes = [
         Index(
             name = "ix_brawler_team_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, period_type, start_battle_date",
+            columnList = "event_brawlstars_id, tier_range, period_type, battle_date",
         ),
     ],
 )
@@ -38,10 +38,8 @@ class BrawlerTeamBattleResultStatsEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
-    @Column(name = "start_battle_date", updatable = false, nullable = false)
-    val startBattleDate: LocalDate,
-    @Column(name = "end_battle_date", updatable = false, nullable = false)
-    val endBattleDate: LocalDate,
+    @Column(name = "battle_date", updatable = false, nullable = false)
+    val battleDate: LocalDate,
     @Convert(converter = StatsTeamSizeConverter::class)
     @Column(name = "team_size", updatable = false, nullable = false)
     val teamSize: StatsTeamSize,
@@ -49,12 +47,6 @@ class BrawlerTeamBattleResultStatsEntity(
     val resultCount: ResultCountEmbedded,
     initialBrawlerBrawlStarsIds: List<Long>,
 ) : BaseTimeEntity() {
-    init {
-        require(startBattleDate <= endBattleDate) {
-            "startBattleDate($startBattleDate)는 endBattleDate($endBattleDate) 이전이어야 합니다."
-        }
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_team_battle_result_stats_id", nullable = false)

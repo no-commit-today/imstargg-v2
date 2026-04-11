@@ -27,9 +27,16 @@ class BattleRankStatisticsService(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamRankStatistics> =
         rankRepository
-            .findBrawlerTeamRankCounts(eventId, brawlerId, tierRange, startDate, teamSize)
-            .map { it.toStatistics() }
+            .findBrawlerTeamRankCounts(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                teamSize = teamSize,
+            ).map { it.toStatistics() }
 }

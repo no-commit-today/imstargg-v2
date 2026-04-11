@@ -35,30 +35,33 @@ class BattleResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'v1:brawlerEnemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate",
+        key = "'v1:brawlerEnemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
     )
     fun findBrawlerEnemyResultCounts(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerEnemyResultCount> =
         battleResultStatisticsRepository.findBrawlerEnemyResultCounts(
             eventId = eventId,
             brawlerId = brawlerId,
             tierRange = tierRange,
             startDate = startDate,
+            endDate = endDate,
         )
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'v1:teamResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
+        key = "'v1:teamResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
     )
     fun findBrawlerTeamResultCounts(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamResultCount> =
         battleResultStatisticsRepository.findBrawlerTeamResultCounts(
@@ -66,6 +69,7 @@ class BattleResultStatisticsRepositoryWithCache(
             brawlerId = brawlerId,
             tierRange = tierRange,
             startDate = startDate,
+            endDate = endDate,
             teamSize = teamSize,
         )
 

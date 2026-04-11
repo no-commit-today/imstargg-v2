@@ -7,31 +7,35 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
 interface BrawlerEnemyBattleResultStatsJpaRepository : JpaRepository<BrawlerEnemyBattleResultStatsEntity, Long> {
-    fun findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
+    fun findAllByEventBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
         eventBrawlStarsId: Long,
-        periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
+        periodTypes: Collection<StatsPeriodType>,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerEnemyBattleResultStatsEntity>
 
-    fun findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
+    fun findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
         eventBrawlStarsId: Long,
         brawlerBrawlStarsId: Long,
-        periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
+        periodTypes: Collection<StatsPeriodType>,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerEnemyBattleResultStatsEntity>
 
-    fun findAllByBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
+    fun findAllByBrawlerBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
         brawlerBrawlStarsId: Long,
-        periodType: StatsPeriodType,
         tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
+        periodTypes: Collection<StatsPeriodType>,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerEnemyBattleResultStatsEntity>
 
-    fun findAllByPeriodTypeAndTierRangeAndStartBattleDate(
-        periodType: StatsPeriodType,
+    fun findAllByTierRangeAndPeriodTypeInAndBattleDateBetween(
         tierRange: StatsTierRange,
-        startBattleDate: LocalDate,
+        periodTypes: Collection<StatsPeriodType>,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerEnemyBattleResultStatsEntity>
 }

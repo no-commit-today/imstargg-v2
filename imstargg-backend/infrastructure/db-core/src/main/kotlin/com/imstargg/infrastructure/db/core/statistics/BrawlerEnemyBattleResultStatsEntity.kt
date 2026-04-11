@@ -21,11 +21,11 @@ import java.time.LocalDate
     indexes = [
         Index(
             name = "ix_brawler_enemy_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, period_type, start_battle_date",
+            columnList = "event_brawlstars_id, tier_range, period_type, battle_date",
         ),
         Index(
             name = "ix_brawler_enemy_battle_result_stats_2",
-            columnList = "brawler_brawlstars_id, tier_range, period_type, start_battle_date",
+            columnList = "brawler_brawlstars_id, tier_range, period_type, battle_date",
         ),
     ],
 )
@@ -38,10 +38,8 @@ class BrawlerEnemyBattleResultStatsEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
-    @Column(name = "start_battle_date", updatable = false, nullable = false)
-    val startBattleDate: LocalDate,
-    @Column(name = "end_battle_date", updatable = false, nullable = false)
-    val endBattleDate: LocalDate,
+    @Column(name = "battle_date", updatable = false, nullable = false)
+    val battleDate: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     @Column(name = "enemy_brawler_brawlstars_id", updatable = false, nullable = false)
@@ -52,9 +50,6 @@ class BrawlerEnemyBattleResultStatsEntity(
     init {
         require(brawlerBrawlStarsId != enemyBrawlerBrawlStarsId) {
             "brawlerBrawlStarsId($brawlerBrawlStarsId)와 enemyBrawlerBrawlStarsId($enemyBrawlerBrawlStarsId)는 달라야 합니다."
-        }
-        require(startBattleDate <= endBattleDate) {
-            "startBattleDate($startBattleDate)는 endBattleDate($endBattleDate) 이전이어야 합니다."
         }
     }
 

@@ -68,7 +68,7 @@ class BrawlerEnemyBattleResultStatsJobConfig(
                             .where(
                                 brawlerEnemyBattleResultStatsEntity.periodType
                                     .eq(StatsPeriodType.DAILY),
-                                brawlerEnemyBattleResultStatsEntity.startBattleDate.eq(date),
+                                brawlerEnemyBattleResultStatsEntity.battleDate.eq(date),
                             ).execute()
                     },
                 ),

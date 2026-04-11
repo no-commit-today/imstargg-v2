@@ -68,40 +68,46 @@ class BattleResultStatisticsRepository(
         brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
     ): List<BrawlerEnemyResultCount> {
+        val allPeriodTypes = StatsPeriodType.entries
         val entities =
             when {
                 eventId != null && brawlerId != null ->
                     enemyBattleResultJpaRepository
-                        .findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
+                        .findAllByEventBrawlStarsIdAndBrawlerBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
                             eventBrawlStarsId = eventId.value,
                             brawlerBrawlStarsId = brawlerId.value,
-                            periodType = StatsPeriodType.WEEKLY,
                             tierRange = tierRange,
-                            startBattleDate = startDate,
+                            periodTypes = allPeriodTypes,
+                            startDate = startDate,
+                            endDate = endDate,
                         )
                 eventId != null ->
                     enemyBattleResultJpaRepository
-                        .findAllByEventBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
+                        .findAllByEventBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
                             eventBrawlStarsId = eventId.value,
-                            periodType = StatsPeriodType.WEEKLY,
                             tierRange = tierRange,
-                            startBattleDate = startDate,
+                            periodTypes = allPeriodTypes,
+                            startDate = startDate,
+                            endDate = endDate,
                         )
                 brawlerId != null ->
                     enemyBattleResultJpaRepository
-                        .findAllByBrawlerBrawlStarsIdAndPeriodTypeAndTierRangeAndStartBattleDate(
+                        .findAllByBrawlerBrawlStarsIdAndTierRangeAndPeriodTypeInAndBattleDateBetween(
                             brawlerBrawlStarsId = brawlerId.value,
-                            periodType = StatsPeriodType.WEEKLY,
                             tierRange = tierRange,
-                            startBattleDate = startDate,
+                            periodTypes = allPeriodTypes,
+                            startDate = startDate,
+                            endDate = endDate,
                         )
                 else ->
                     enemyBattleResultJpaRepository
-                        .findAllByPeriodTypeAndTierRangeAndStartBattleDate(
-                            periodType = StatsPeriodType.WEEKLY,
+                        .findAllByTierRangeAndPeriodTypeInAndBattleDateBetween(
                             tierRange = tierRange,
-                            startBattleDate = startDate,
+                            periodTypes = allPeriodTypes,
+                            startDate = startDate,
+                            endDate = endDate,
                         )
             }
 
@@ -126,14 +132,15 @@ class BattleResultStatisticsRepository(
         brawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamResultCount> {
         val entities =
             teamBattleResultJpaRepository.findAllByConditions(
                 eventBrawlStarsId = eventId?.value,
-                periodType = StatsPeriodType.WEEKLY,
                 tierRange = tierRange,
-                startBattleDate = startDate,
+                startDate = startDate,
+                endDate = endDate,
                 brawlerBrawlStarsId = brawlerId?.value,
                 teamSize = teamSize,
             )

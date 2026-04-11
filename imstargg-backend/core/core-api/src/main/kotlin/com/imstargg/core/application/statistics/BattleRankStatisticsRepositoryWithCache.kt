@@ -27,14 +27,24 @@ class BattleRankStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'v1:battleEventTeamRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #teamSize",
+        key =
+            "'v1:battleEventTeamRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
     )
     fun findBrawlerTeamRankCounts(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
+        endDate: LocalDate,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamRankCount> =
-        battleRankStatisticsRepository.findBrawlerTeamRankCounts(eventId, brawlerId, tierRange, startDate, teamSize)
+        battleRankStatisticsRepository.findBrawlerTeamRankCounts(
+            eventId = eventId,
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+            teamSize = teamSize,
+        )
 }

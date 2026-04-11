@@ -50,11 +50,12 @@ class StatisticsController(
     ): ResponseEntity<BrawlerTeamResultStatisticsResponse> {
         val response =
             statisticsQueryComposer.getBrawlerTeamResultStatistics(
-                eventId?.let { BrawlStarsId(it) },
-                brawlerId?.let { BrawlStarsId(it) },
-                tierRange,
-                startDate,
-                teamSize,
+                eventId = eventId?.let { BrawlStarsId(it) },
+                brawlerId = brawlerId?.let { BrawlStarsId(it) },
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                teamSize = teamSize,
             )
         return ResponseEntity.ok(response)
     }
@@ -69,10 +70,11 @@ class StatisticsController(
     ): ResponseEntity<BrawlerEnemyResultStatisticsResponse> {
         val response =
             statisticsQueryComposer.getEnemyResultStatistics(
-                eventId?.let { BrawlStarsId(it) },
-                brawlerId?.let { BrawlStarsId(it) },
-                tierRange,
-                startDate,
+                eventId = eventId?.let { BrawlStarsId(it) },
+                brawlerId = brawlerId?.let { BrawlStarsId(it) },
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
             )
         return ResponseEntity.ok(response)
     }
@@ -105,11 +107,12 @@ class StatisticsController(
     ): ResponseEntity<ListResponse<BrawlerTeamRankStatisticsResponse>> {
         val responses =
             statisticsQueryComposer.getBrawlerTeamRankStatistics(
-                BrawlStarsId(eventId),
-                BrawlStarsId(brawlerId),
-                tierRange,
-                startDate,
-                teamSize,
+                eventId = BrawlStarsId(eventId),
+                brawlerId = BrawlStarsId(brawlerId),
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                teamSize = teamSize,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }

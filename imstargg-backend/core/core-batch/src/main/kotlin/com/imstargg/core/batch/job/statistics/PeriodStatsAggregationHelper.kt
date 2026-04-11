@@ -46,7 +46,7 @@ class PeriodStatsAggregationHelper(
                     .from(brawlerTeamBattleResultStatsEntity)
                     .where(
                         brawlerTeamBattleResultStatsEntity.periodType.eq(sourcePeriodType),
-                        brawlerTeamBattleResultStatsEntity.startBattleDate
+                        brawlerTeamBattleResultStatsEntity.battleDate
                             .between(startDate, endDate),
                     ).fetch()
                     .toList()
@@ -65,7 +65,7 @@ class PeriodStatsAggregationHelper(
                         ).fetchJoin()
                         .where(
                             brawlerTeamBattleResultStatsEntity.periodType.eq(sourcePeriodType),
-                            brawlerTeamBattleResultStatsEntity.startBattleDate
+                            brawlerTeamBattleResultStatsEntity.battleDate
                                 .between(startDate, endDate),
                             brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(eventId),
                         ).fetch()
@@ -83,8 +83,7 @@ class PeriodStatsAggregationHelper(
                             eventBrawlStarsId = eventId,
                             periodType = targetPeriodType,
                             tierRange = key.first,
-                            startBattleDate = startDate,
-                            endBattleDate = endDate,
+                            battleDate = startDate,
                             teamSize = StatsTeamSize.fromValue(key.second.size),
                             resultCount = totalResult,
                             initialBrawlerBrawlStarsIds = key.second,
@@ -110,7 +109,7 @@ class PeriodStatsAggregationHelper(
                                 .where(
                                     brawlerTeamBattleResultStatsEntity.periodType
                                         .eq(sourcePeriodType),
-                                    brawlerTeamBattleResultStatsEntity.startBattleDate
+                                    brawlerTeamBattleResultStatsEntity.battleDate
                                         .between(startDate, endDate),
                                     brawlerTeamBattleResultStatsEntity.eventBrawlStarsId
                                         .eq(eventId),
@@ -122,7 +121,7 @@ class PeriodStatsAggregationHelper(
                         .delete(brawlerTeamBattleResultStatsEntity)
                         .where(
                             brawlerTeamBattleResultStatsEntity.periodType.eq(sourcePeriodType),
-                            brawlerTeamBattleResultStatsEntity.startBattleDate
+                            brawlerTeamBattleResultStatsEntity.battleDate
                                 .between(startDate, endDate),
                             brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(eventId),
                         ).execute()
@@ -160,7 +159,7 @@ class PeriodStatsAggregationHelper(
                     .from(brawlerTeamBattleRankStatsEntity)
                     .where(
                         brawlerTeamBattleRankStatsEntity.periodType.eq(sourcePeriodType),
-                        brawlerTeamBattleRankStatsEntity.startBattleDate
+                        brawlerTeamBattleRankStatsEntity.battleDate
                             .between(startDate, endDate),
                     ).fetch()
                     .toList()
@@ -179,7 +178,7 @@ class PeriodStatsAggregationHelper(
                         ).fetchJoin()
                         .where(
                             brawlerTeamBattleRankStatsEntity.periodType.eq(sourcePeriodType),
-                            brawlerTeamBattleRankStatsEntity.startBattleDate
+                            brawlerTeamBattleRankStatsEntity.battleDate
                                 .between(startDate, endDate),
                             brawlerTeamBattleRankStatsEntity.eventBrawlStarsId.eq(eventId),
                         ).fetch()
@@ -198,8 +197,7 @@ class PeriodStatsAggregationHelper(
                             eventBrawlStarsId = eventId,
                             periodType = targetPeriodType,
                             tierRange = key.first,
-                            startBattleDate = startDate,
-                            endBattleDate = endDate,
+                            battleDate = startDate,
                             teamSize = StatsTeamSize.fromValue(key.second.size),
                             rankCounts = combinedRanks,
                             initialBrawlerBrawlStarsIds = key.second,
@@ -225,7 +223,7 @@ class PeriodStatsAggregationHelper(
                                 .where(
                                     brawlerTeamBattleRankStatsEntity.periodType
                                         .eq(sourcePeriodType),
-                                    brawlerTeamBattleRankStatsEntity.startBattleDate
+                                    brawlerTeamBattleRankStatsEntity.battleDate
                                         .between(startDate, endDate),
                                     brawlerTeamBattleRankStatsEntity.eventBrawlStarsId
                                         .eq(eventId),
@@ -237,7 +235,7 @@ class PeriodStatsAggregationHelper(
                         .delete(brawlerTeamBattleRankStatsEntity)
                         .where(
                             brawlerTeamBattleRankStatsEntity.periodType.eq(sourcePeriodType),
-                            brawlerTeamBattleRankStatsEntity.startBattleDate
+                            brawlerTeamBattleRankStatsEntity.battleDate
                                 .between(startDate, endDate),
                             brawlerTeamBattleRankStatsEntity.eventBrawlStarsId.eq(eventId),
                         ).execute()
@@ -275,7 +273,7 @@ class PeriodStatsAggregationHelper(
                     .from(brawlerEnemyBattleResultStatsEntity)
                     .where(
                         brawlerEnemyBattleResultStatsEntity.periodType.eq(sourcePeriodType),
-                        brawlerEnemyBattleResultStatsEntity.startBattleDate
+                        brawlerEnemyBattleResultStatsEntity.battleDate
                             .between(startDate, endDate),
                     ).fetch()
                     .toList()
@@ -289,7 +287,7 @@ class PeriodStatsAggregationHelper(
                         .selectFrom(brawlerEnemyBattleResultStatsEntity)
                         .where(
                             brawlerEnemyBattleResultStatsEntity.periodType.eq(sourcePeriodType),
-                            brawlerEnemyBattleResultStatsEntity.startBattleDate
+                            brawlerEnemyBattleResultStatsEntity.battleDate
                                 .between(startDate, endDate),
                             brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(eventId),
                         ).fetch()
@@ -311,8 +309,7 @@ class PeriodStatsAggregationHelper(
                             eventBrawlStarsId = eventId,
                             periodType = targetPeriodType,
                             tierRange = key.first,
-                            startBattleDate = startDate,
-                            endBattleDate = endDate,
+                            battleDate = startDate,
                             brawlerBrawlStarsId = key.second,
                             enemyBrawlerBrawlStarsId = key.third,
                             resultCount = totalResult,
@@ -333,7 +330,7 @@ class PeriodStatsAggregationHelper(
                         .delete(brawlerEnemyBattleResultStatsEntity)
                         .where(
                             brawlerEnemyBattleResultStatsEntity.periodType.eq(sourcePeriodType),
-                            brawlerEnemyBattleResultStatsEntity.startBattleDate
+                            brawlerEnemyBattleResultStatsEntity.battleDate
                                 .between(startDate, endDate),
                             brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(eventId),
                         ).execute()
