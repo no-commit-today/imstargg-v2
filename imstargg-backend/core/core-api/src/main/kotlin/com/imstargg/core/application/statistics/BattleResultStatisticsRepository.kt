@@ -9,7 +9,6 @@ import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTeamBattleResultStatsJpaRepository
@@ -139,14 +138,19 @@ class BattleResultStatisticsRepository(
                 teamSize = teamSize,
             )
 
-        if (brawlerId == null) {
-            return entities.map { toTeamResultCount(it) }
-        }
-
-        return when (teamSize) {
-            StatsTeamSize.SIZE_2 -> extractDuoResultCounts(entities, brawlerId)
-            StatsTeamSize.SIZE_3 -> entities.map { toTeamResultCount(it) }
-        }
+        return entities
+            .groupBy { it.brawlerBrawlStarsIds }
+            .map { (brawlerBrawlStarsIds, grouped) ->
+                BrawlerTeamResultCount(
+                    brawlerIds = brawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                    resultCount =
+                        ResultCount(
+                            grouped.sumOf { it.resultCount.victoryCount },
+                            grouped.sumOf { it.resultCount.defeatCount },
+                            grouped.sumOf { it.resultCount.drawCount },
+                        ),
+                )
+            }
     }
 
     fun findBrawlerDailyResultCounts(
@@ -182,46 +186,5 @@ class BattleResultStatisticsRepository(
                         ),
                 )
             }.sortedBy { it.date }
-    }
-
-    private fun toTeamResultCount(entity: BrawlerTeamBattleResultStatsEntity): BrawlerTeamResultCount =
-        BrawlerTeamResultCount(
-            brawlerIds = entity.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
-            resultCount =
-                ResultCount(
-                    entity.resultCount.victoryCount,
-                    entity.resultCount.defeatCount,
-                    entity.resultCount.drawCount,
-                ),
-        )
-
-    private fun extractDuoResultCounts(
-        entities: List<BrawlerTeamBattleResultStatsEntity>,
-        brawlerId: BrawlStarsId,
-    ): List<BrawlerTeamResultCount> {
-        val otherBrawlerIdToResultCount = mutableMapOf<BrawlStarsId, ResultCount>()
-
-        for (entity in entities) {
-            val resultCount =
-                ResultCount(
-                    entity.resultCount.victoryCount,
-                    entity.resultCount.defeatCount,
-                    entity.resultCount.drawCount,
-                )
-
-            for (otherId in entity.brawlerBrawlStarsIds.filter { it != brawlerId.value }) {
-                val otherBrawlerId = BrawlStarsId(otherId)
-                otherBrawlerIdToResultCount.merge(otherBrawlerId, resultCount) { existing, new ->
-                    existing.merge(new)
-                }
-            }
-        }
-
-        return otherBrawlerIdToResultCount.map { (otherBrawlerId, resultCount) ->
-            BrawlerTeamResultCount(
-                brawlerIds = listOf(brawlerId, otherBrawlerId),
-                resultCount = resultCount,
-            )
-        }
     }
 }

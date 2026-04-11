@@ -24,31 +24,29 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         brawlerBrawlStarsId: Long?,
         teamSize: StatsTeamSize,
     ): List<BrawlerTeamBattleResultStatsEntity> {
-        val stats = brawlerTeamBattleResultStatsEntity
-        val brawler = brawlerTeamBattleResultStatsBrawlerEntity
 
         val brawlerFilter =
             brawlerBrawlStarsId?.let {
                 val statsIdsWithBrawler =
                     JPAExpressions
-                        .select(brawler.stats.id)
-                        .from(brawler)
-                        .where(brawler.brawlerBrawlStarsId.eq(it))
-                stats.id.`in`(statsIdsWithBrawler)
+                        .select(brawlerTeamBattleResultStatsBrawlerEntity.stats.id)
+                        .from(brawlerTeamBattleResultStatsBrawlerEntity)
+                        .where(brawlerTeamBattleResultStatsBrawlerEntity.brawlerBrawlStarsId.eq(it))
+                brawlerTeamBattleResultStatsEntity.id.`in`(statsIdsWithBrawler)
             }
 
         return queryFactory
-            .selectFrom(stats)
+            .selectFrom(brawlerTeamBattleResultStatsEntity)
             .distinct()
-            .leftJoin(stats.brawlers, brawler)
+            .leftJoin(brawlerTeamBattleResultStatsEntity.brawlers, brawlerTeamBattleResultStatsBrawlerEntity)
             .fetchJoin()
             .where(
                 brawlerFilter,
-                eventBrawlStarsId?.let { stats.eventBrawlStarsId.eq(it) },
-                stats.periodType.eq(periodType),
-                stats.tierRange.eq(tierRange),
-                stats.startBattleDate.eq(startBattleDate),
-                stats.teamSize.eq(teamSize),
+                eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
+                brawlerTeamBattleResultStatsEntity.periodType.eq(periodType),
+                brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
+                brawlerTeamBattleResultStatsEntity.startBattleDate.eq(startBattleDate),
+                brawlerTeamBattleResultStatsEntity.teamSize.eq(teamSize),
             ).fetch()
     }
 }
