@@ -1,10 +1,11 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Page
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
-import com.imstargg.core.domain.statistics.BrawlerTeamRankSliceStatistics
-import com.imstargg.core.enums.RankStatsSortField
+import com.imstargg.core.domain.statistics.BrawlerTeamRankPageStatistics
+import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -27,39 +28,49 @@ class BattleRankStatisticsService(
 
     fun getBrawlerTeamRankStatistics(
         eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-        sortField: RankStatsSortField,
+        sortBy: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): BrawlerTeamRankSliceStatistics {
+    ): BrawlerTeamRankPageStatistics {
         val totalBattleCount =
             rankRepository.countTeamRankTotalBattleCount(
                 eventId = eventId,
-                brawlerId = brawlerId,
+                brawlerIds = brawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
             )
-        val items =
-            rankRepository.findBrawlerTeamRankCounts(
+        val totalCount =
+            rankRepository.countTeamRankBy(
                 eventId = eventId,
-                brawlerId = brawlerId,
+                brawlerIds = brawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-                sortField = sortField,
+            )
+        val counts =
+            rankRepository.findBrawlerTeamRankCounts(
+                eventId = eventId,
+                brawlerIds = brawlerIds,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                teamSize = teamSize,
+                sortField = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        return BrawlerTeamRankSliceStatistics(
+        val page = Page(content = counts, totalElementCount = totalCount)
+        return BrawlerTeamRankPageStatistics(
             totalBattleCount = totalBattleCount,
-            items = items,
+            items = page,
         )
     }
 }

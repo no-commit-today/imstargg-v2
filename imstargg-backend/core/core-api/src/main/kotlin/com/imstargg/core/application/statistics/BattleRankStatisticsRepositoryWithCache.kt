@@ -2,11 +2,10 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.OffsetLimit
-import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
-import com.imstargg.core.enums.RankStatsSortField
+import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -31,11 +30,13 @@ class BattleRankStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'v1:teamRankTotal:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
+        key =
+            "'v1:teamRankTotal:' + #eventId + ':' + #brawlerIds + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
     )
     fun countTeamRankTotalBattleCount(
         eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -43,7 +44,7 @@ class BattleRankStatisticsRepositoryWithCache(
     ): Long =
         battleRankStatisticsRepository.countTeamRankTotalBattleCount(
             eventId = eventId,
-            brawlerId = brawlerId,
+            brawlerIds = brawlerIds,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
@@ -53,23 +54,46 @@ class BattleRankStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'v1:teamRank:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #teamSize + ':' + #sortField + ':' + #sortOrder + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+            "'v1:teamRankCount:' + #eventId + ':' + #brawlerIds + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
     )
-    fun findBrawlerTeamRankCounts(
+    fun countTeamRankBy(
         eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-        sortField: RankStatsSortField,
+    ): Long =
+        battleRankStatisticsRepository.countTeamRankBy(
+            eventId = eventId,
+            brawlerIds = brawlerIds,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+            teamSize = teamSize,
+        )
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key =
+            "'v1:teamRank:' + #eventId + ':' + #brawlerIds + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
+                " + ':' + #teamSize + ':' + #sortField + ':' + #sortOrder + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+    )
+    fun findBrawlerTeamRankCounts(
+        eventId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        teamSize: StatsTeamSize,
+        sortField: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): Slice<BrawlerTeamRankStatistics> =
+    ): List<BrawlerTeamRankStatistics> =
         battleRankStatisticsRepository.findBrawlerTeamRankCounts(
             eventId = eventId,
-            brawlerId = brawlerId,
+            brawlerIds = brawlerIds,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,

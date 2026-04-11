@@ -10,8 +10,8 @@ import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsLis
 import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsResponse
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.enums.RankStatsSortField
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.RankStatsSortBy
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -46,24 +46,24 @@ class StatisticsController(
     @GetMapping("/v1/statistics/brawler/team/result")
     fun getBrawlerTeamResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam brawlerId: Long,
+        @RequestParam brawlerIds: List<Long>,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        @RequestParam(defaultValue = "PICK_RATE") sortField: ResultStatsSortField,
+        @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
         @ModelAttribute offsetLimitRequest: OffsetLimitRequest,
     ): ResponseEntity<BrawlerTeamResultStatisticsResponse> {
         val response =
             statisticsQueryComposer.getBrawlerTeamResultStatistics(
                 eventId = eventId?.let { BrawlStarsId(it) },
-                brawlerId = BrawlStarsId(brawlerId),
+                brawlerIds = brawlerIds.map { BrawlStarsId(it) },
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimitRequest.toOffsetLimit(),
             )
@@ -77,7 +77,7 @@ class StatisticsController(
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        @RequestParam(defaultValue = "PICK_RATE") sortField: ResultStatsSortField,
+        @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
         @ModelAttribute offsetLimitRequest: OffsetLimitRequest,
     ): ResponseEntity<BrawlerEnemyResultStatisticsResponse> {
@@ -88,7 +88,7 @@ class StatisticsController(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimitRequest.toOffsetLimit(),
             )
@@ -115,24 +115,24 @@ class StatisticsController(
     @GetMapping("/v1/statistics/brawler/team/rank")
     fun getBrawlerTeamRankStatistics(
         @RequestParam eventId: Long,
-        @RequestParam brawlerId: Long,
+        @RequestParam brawlerIds: List<Long>,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam startDate: LocalDate,
         @RequestParam endDate: LocalDate,
-        @RequestParam(defaultValue = "PICK_RATE") sortField: RankStatsSortField,
+        @RequestParam(defaultValue = "PICK_RATE") sortBy: RankStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
         @ModelAttribute offsetLimitRequest: OffsetLimitRequest,
     ): ResponseEntity<BrawlerTeamRankStatisticsListResponse> {
         val response =
             statisticsQueryComposer.getBrawlerTeamRankStatistics(
                 eventId = BrawlStarsId(eventId),
-                brawlerId = BrawlStarsId(brawlerId),
+                brawlerIds = brawlerIds.map { BrawlStarsId(it) },
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimitRequest.toOffsetLimit(),
             )

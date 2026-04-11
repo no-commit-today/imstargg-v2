@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTeamSize
@@ -8,8 +8,10 @@ import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsBrawlerEntity.Companion.brawlerTeamBattleResultStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsEntity.Companion.brawlerTeamBattleResultStatsEntity
+import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.Predicate
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.dsl.NumberExpression
 import com.querydsl.jpa.JPAExpressions
@@ -60,9 +62,9 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        brawlerBrawlStarsId: Long,
+        brawlerBrawlStarsIds: List<Long>,
         teamSize: StatsTeamSize,
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
@@ -73,15 +75,9 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         val drawSum = sumOf(brawlerTeamBattleResultStatsEntity.resultCount.drawCount)
         val totalCountSum = sumOf(brawlerTeamBattleResultStatsEntity.resultCount.totalCount)
 
-        val statsIdsWithBrawler =
-            JPAExpressions
-                .select(brawlerTeamBattleResultStatsBrawlerEntity.stats.id)
-                .from(brawlerTeamBattleResultStatsBrawlerEntity)
-                .where(brawlerTeamBattleResultStatsBrawlerEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId))
-
         val orderSpecifier =
             resultStatsOrderSpecifier(
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 victorySum = victorySum,
                 totalCountSum = totalCountSum,
@@ -91,7 +87,7 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
             .select(teamKey, victorySum, defeatSum, drawSum, totalCountSum)
             .from(brawlerTeamBattleResultStatsEntity)
             .where(
-                brawlerTeamBattleResultStatsEntity.id.`in`(statsIdsWithBrawler),
+                brawlerIdFilters(brawlerBrawlStarsIds),
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
                 brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
@@ -109,38 +105,66 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        brawlerBrawlStarsId: Long,
+        brawlerBrawlStarsIds: List<Long>,
         teamSize: StatsTeamSize,
-    ): Long {
-        val statsIdsWithBrawler =
-            JPAExpressions
-                .select(brawlerTeamBattleResultStatsBrawlerEntity.stats.id)
-                .from(brawlerTeamBattleResultStatsBrawlerEntity)
-                .where(brawlerTeamBattleResultStatsBrawlerEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId))
-
-        return queryFactory
+    ): Long =
+        queryFactory
             .select(sumOf(brawlerTeamBattleResultStatsEntity.resultCount.totalCount))
             .from(brawlerTeamBattleResultStatsEntity)
             .where(
-                brawlerTeamBattleResultStatsEntity.id.`in`(statsIdsWithBrawler),
+                brawlerIdFilters(brawlerBrawlStarsIds),
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
                 brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
                 brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
                 brawlerTeamBattleResultStatsEntity.brawlerTeam.teamSize.eq(teamSize),
             ).fetchOne() ?: 0L
+
+    override fun countDistinctTeamKeys(
+        eventBrawlStarsId: Long?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        brawlerBrawlStarsIds: List<Long>,
+        teamSize: StatsTeamSize,
+    ): Long =
+        queryFactory
+            .select(brawlerTeamBattleResultStatsEntity.brawlerTeam.teamKey.countDistinct())
+            .from(brawlerTeamBattleResultStatsEntity)
+            .where(
+                brawlerIdFilters(brawlerBrawlStarsIds),
+                eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
+                brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
+                brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
+                brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerTeamBattleResultStatsEntity.brawlerTeam.teamSize.eq(teamSize),
+            ).fetchOne() ?: 0L
+
+    private fun brawlerIdFilters(brawlerBrawlStarsIds: List<Long>): Predicate {
+        val builder = BooleanBuilder()
+        brawlerBrawlStarsIds.forEach { id ->
+            builder.and(
+                brawlerTeamBattleResultStatsEntity.id.`in`(
+                    JPAExpressions
+                        .select(brawlerTeamBattleResultStatsBrawlerEntity.stats.id)
+                        .from(brawlerTeamBattleResultStatsBrawlerEntity)
+                        .where(brawlerTeamBattleResultStatsBrawlerEntity.brawlerBrawlStarsId.eq(id)),
+                ),
+            )
+        }
+        return builder
     }
 
     private fun resultStatsOrderSpecifier(
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         victorySum: NumberExpression<Long>,
         totalCountSum: NumberExpression<Long>,
     ): OrderSpecifier<*> {
         val expression =
-            when (sortField) {
-                ResultStatsSortField.PICK_RATE -> totalCountSum
-                ResultStatsSortField.WIN_RATE ->
+            when (sortBy) {
+                ResultStatsSortBy.PICK_RATE -> totalCountSum
+                ResultStatsSortBy.WIN_RATE ->
                     Expressions.numberTemplate(
                         Double::class.java,
                         "cast({0} as double) / cast({1} as double)",

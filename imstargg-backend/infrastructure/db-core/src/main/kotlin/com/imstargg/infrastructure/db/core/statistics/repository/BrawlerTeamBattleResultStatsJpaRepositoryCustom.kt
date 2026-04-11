@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -23,9 +23,9 @@ interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        brawlerBrawlStarsId: Long,
+        brawlerBrawlStarsIds: List<Long>,
         teamSize: StatsTeamSize,
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
@@ -36,7 +36,16 @@ interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        brawlerBrawlStarsId: Long,
+        brawlerBrawlStarsIds: List<Long>,
+        teamSize: StatsTeamSize,
+    ): Long
+
+    fun countDistinctTeamKeys(
+        eventBrawlStarsId: Long?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        brawlerBrawlStarsIds: List<Long>,
         teamSize: StatsTeamSize,
     ): Long
 }

@@ -1,21 +1,21 @@
 package com.imstargg.core.api.controller.v1.response
 
-import com.imstargg.core.api.controller.SliceResponse
+import com.imstargg.core.api.controller.PageResponse
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
-import com.imstargg.core.domain.statistics.BrawlerTeamRankSliceStatistics
+import com.imstargg.core.domain.statistics.BrawlerTeamRankPageStatistics
 
 data class BrawlerTeamRankStatisticsListResponse(
     val totalBattleCount: Long,
-    val items: SliceResponse<BrawlerTeamRankStatisticsResponse>,
+    val items: PageResponse<BrawlerTeamRankStatisticsResponse>,
 ) {
     companion object {
         fun of(
-            statistics: BrawlerTeamRankSliceStatistics,
+            statistics: BrawlerTeamRankPageStatistics,
             brawlers: Brawlers,
         ) = BrawlerTeamRankStatisticsListResponse(
             totalBattleCount = statistics.totalBattleCount,
             items =
-                SliceResponse.from(
+                PageResponse.from(
                     statistics.items.map { item ->
                         BrawlerTeamRankStatisticsResponse(
                             brawlers =

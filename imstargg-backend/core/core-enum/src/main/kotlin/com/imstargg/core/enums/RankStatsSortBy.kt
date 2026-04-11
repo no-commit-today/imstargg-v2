@@ -1,6 +1,6 @@
 package com.imstargg.core.enums
 
-enum class ResultStatsSortField {
+enum class RankStatsSortBy {
     PICK_RATE,
-    WIN_RATE,
+    AVERAGE_RANK,
 }

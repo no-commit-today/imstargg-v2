@@ -1,6 +1,6 @@
 package com.imstargg.core.domain.statistics
 
-import com.imstargg.core.domain.Slice
+import com.imstargg.core.domain.Page
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 
 data class BrawlerEnemyResultStatisticsItem(
@@ -13,12 +13,12 @@ data class BrawlerEnemyResultStatisticsItem(
 
 data class BrawlerEnemyResultStatistics(
     val totalBattleCount: Long,
-    val items: Slice<BrawlerEnemyResultStatisticsItem>,
+    val items: Page<BrawlerEnemyResultStatisticsItem>,
 ) {
     companion object {
         fun create(
             totalBattleCount: Long,
-            counts: Slice<BrawlerEnemyResultCount>,
+            counts: Page<BrawlerEnemyResultCount>,
         ): BrawlerEnemyResultStatistics {
             val items =
                 counts.map { count ->

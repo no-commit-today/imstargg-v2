@@ -13,8 +13,8 @@ import com.imstargg.core.application.statistics.BattleResultStatisticsService
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
-import com.imstargg.core.enums.RankStatsSortField
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.RankStatsSortBy
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -42,12 +42,12 @@ class StatisticsQueryComposer(
 
     fun getBrawlerTeamResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerTeamResultStatisticsResponse {
@@ -55,12 +55,12 @@ class StatisticsQueryComposer(
         return BrawlerTeamResultStatisticsResponse.of(
             battleResultStatisticsService.getBrawlerTeamResultStatistics(
                 eventId = eventId,
-                brawlerId = brawlerId,
+                brawlerIds = brawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             ),
@@ -74,7 +74,7 @@ class StatisticsQueryComposer(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerEnemyResultStatisticsResponse {
@@ -86,7 +86,7 @@ class StatisticsQueryComposer(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             ),
@@ -120,12 +120,12 @@ class StatisticsQueryComposer(
 
     fun getBrawlerTeamRankStatistics(
         eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-        sortField: RankStatsSortField,
+        sortBy: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerTeamRankStatisticsListResponse {
@@ -133,12 +133,12 @@ class StatisticsQueryComposer(
         val statistics =
             battleRankStatisticsService.getBrawlerTeamRankStatistics(
                 eventId = eventId,
-                brawlerId = brawlerId,
+                brawlerIds = brawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-                sortField = sortField,
+                sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )

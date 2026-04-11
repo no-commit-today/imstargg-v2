@@ -1,12 +1,13 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Page
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerTeamResultStatistics
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -35,19 +36,28 @@ class BattleResultStatisticsService(
 
     fun getBrawlerTeamResultStatistics(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerTeamResultStatistics {
         val totalBattleCount =
             resultRepository.countTeamResultTotalBattleCount(
                 eventId = eventId,
-                brawlerId = brawlerId,
+                brawlerIds = brawlerIds,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                teamSize = teamSize,
+            )
+        val totalCount =
+            resultRepository.countTeamResultBy(
+                eventId = eventId,
+                brawlerIds = brawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
@@ -56,16 +66,17 @@ class BattleResultStatisticsService(
         val counts =
             resultRepository.findBrawlerTeamResultCounts(
                 eventId = eventId,
-                brawlerId = brawlerId,
+                brawlerIds = brawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
                 teamSize = teamSize,
-                sortField = sortField,
+                sortField = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        return BrawlerTeamResultStatistics.create(totalBattleCount, counts)
+        val page = Page(content = counts, totalElementCount = totalCount)
+        return BrawlerTeamResultStatistics.create(totalBattleCount, page)
     }
 
     fun getEnemyResultStatistics(
@@ -74,12 +85,20 @@ class BattleResultStatisticsService(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortField,
+        sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerEnemyResultStatistics {
         val totalBattleCount =
             resultRepository.countEnemyResultTotalBattleCount(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        val totalCount =
+            resultRepository.countEnemyResultBy(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
@@ -93,11 +112,12 @@ class BattleResultStatisticsService(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
+                sortField = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        return BrawlerEnemyResultStatistics.create(totalBattleCount, counts)
+        val page = Page(content = counts, totalElementCount = totalCount)
+        return BrawlerEnemyResultStatistics.create(totalBattleCount, page)
     }
 
     fun getDailyResultStatistics(

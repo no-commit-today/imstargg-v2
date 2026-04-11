@@ -1,6 +1,6 @@
 package com.imstargg.core.api.controller.v1.response
 
-import com.imstargg.core.api.controller.SliceResponse
+import com.imstargg.core.api.controller.PageResponse
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
 import com.imstargg.core.domain.statistics.BrawlerTeamResultStatistics
 
@@ -13,7 +13,7 @@ data class BrawlerTeamResultStatisticsItemResponse(
 
 data class BrawlerTeamResultStatisticsResponse(
     val totalBattleCount: Long,
-    val items: SliceResponse<BrawlerTeamResultStatisticsItemResponse>,
+    val items: PageResponse<BrawlerTeamResultStatisticsItemResponse>,
 ) {
     companion object {
         fun of(
@@ -22,7 +22,7 @@ data class BrawlerTeamResultStatisticsResponse(
         ) = BrawlerTeamResultStatisticsResponse(
             totalBattleCount = statistics.totalBattleCount,
             items =
-                SliceResponse.from(
+                PageResponse.from(
                     statistics.items.map { item ->
                         BrawlerTeamResultStatisticsItemResponse(
                             brawlers =

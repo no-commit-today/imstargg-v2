@@ -2,13 +2,12 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.OffsetLimit
-import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.domain.statistics.BrawlerTeamResultCount
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
@@ -39,7 +38,9 @@ class BattleResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'v1:enemyResultTotal:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key =
+            "'v1:enemyResultTotal:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate",
     )
     fun countEnemyResultTotalBattleCount(
         eventId: BrawlStarsId?,
@@ -59,6 +60,27 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
+            "'v1:enemyResultCount:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate",
+    )
+    fun countEnemyResultBy(
+        eventId: BrawlStarsId?,
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): Long =
+        battleResultStatisticsRepository.countEnemyResultBy(
+            eventId = eventId,
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key =
             "'v1:enemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
                 " + ':' + #sortField + ':' + #sortOrder + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
     )
@@ -68,10 +90,10 @@ class BattleResultStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortField,
+        sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): Slice<BrawlerEnemyResultCount> =
+    ): List<BrawlerEnemyResultCount> =
         battleResultStatisticsRepository.findBrawlerEnemyResultCounts(
             eventId = eventId,
             brawlerId = brawlerId,
@@ -86,12 +108,12 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'v1:teamResultTotal:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+            "'v1:teamResultTotal:' + #eventId + ':' + #brawlerIds + ':' + #tierRange" +
                 " + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
     )
     fun countTeamResultTotalBattleCount(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -99,7 +121,7 @@ class BattleResultStatisticsRepositoryWithCache(
     ): Long =
         battleResultStatisticsRepository.countTeamResultTotalBattleCount(
             eventId = eventId,
-            brawlerId = brawlerId,
+            brawlerIds = brawlerIds,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
@@ -109,23 +131,46 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'v1:teamResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #teamSize + ':' + #sortField + ':' + #sortOrder + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+            "'v1:teamResultCount:' + #eventId + ':' + #brawlerIds + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate + ':' + #teamSize",
     )
-    fun findBrawlerTeamResultCounts(
+    fun countTeamResultBy(
         eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
+        brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
         teamSize: StatsTeamSize,
-        sortField: ResultStatsSortField,
+    ): Long =
+        battleResultStatisticsRepository.countTeamResultBy(
+            eventId = eventId,
+            brawlerIds = brawlerIds,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+            teamSize = teamSize,
+        )
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key =
+            "'v1:teamResult:' + #eventId + ':' + #brawlerIds + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
+                " + ':' + #teamSize + ':' + #sortField + ':' + #sortOrder + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+    )
+    fun findBrawlerTeamResultCounts(
+        eventId: BrawlStarsId?,
+        brawlerIds: List<BrawlStarsId>,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        teamSize: StatsTeamSize,
+        sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): Slice<BrawlerTeamResultCount> =
+    ): List<BrawlerTeamResultCount> =
         battleResultStatisticsRepository.findBrawlerTeamResultCounts(
             eventId = eventId,
-            brawlerId = brawlerId,
+            brawlerIds = brawlerIds,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,

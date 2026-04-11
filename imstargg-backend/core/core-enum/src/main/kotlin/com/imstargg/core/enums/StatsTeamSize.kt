@@ -8,6 +8,8 @@ enum class StatsTeamSize(
     ;
 
     companion object {
+        val MAX = entries.maxOf { it.value }
+
         fun fromValue(value: Int): StatsTeamSize =
             entries.find { it.value == value }
                 ?: throw IllegalArgumentException("Invalid team size: $value")

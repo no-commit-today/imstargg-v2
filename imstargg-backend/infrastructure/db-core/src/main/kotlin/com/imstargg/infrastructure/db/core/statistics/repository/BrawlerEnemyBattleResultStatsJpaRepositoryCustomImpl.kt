@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
-import com.imstargg.core.enums.ResultStatsSortField
+import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
@@ -24,7 +24,7 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortField,
+        sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
@@ -78,16 +78,34 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
                 brawlerEnemyBattleResultStatsEntity.battleDate.between(startDate, endDate),
             ).fetchOne() ?: 0L
 
+    override fun countDistinctEnemyBrawlers(
+        eventBrawlStarsId: Long?,
+        brawlerBrawlStarsId: Long,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): Long =
+        queryFactory
+            .select(brawlerEnemyBattleResultStatsEntity.enemyBrawlerBrawlStarsId.countDistinct())
+            .from(brawlerEnemyBattleResultStatsEntity)
+            .where(
+                eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
+                brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
+                brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
+                brawlerEnemyBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
+                brawlerEnemyBattleResultStatsEntity.battleDate.between(startDate, endDate),
+            ).fetchOne() ?: 0L
+
     private fun resultStatsOrderSpecifier(
-        sortField: ResultStatsSortField,
+        sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         victorySum: NumberExpression<Long>,
         totalCountSum: NumberExpression<Long>,
     ): OrderSpecifier<*> {
         val expression =
             when (sortField) {
-                ResultStatsSortField.PICK_RATE -> totalCountSum
-                ResultStatsSortField.WIN_RATE ->
+                ResultStatsSortBy.PICK_RATE -> totalCountSum
+                ResultStatsSortBy.WIN_RATE ->
                     Expressions.numberTemplate(
                         Double::class.java,
                         "cast({0} as double) / cast({1} as double)",
