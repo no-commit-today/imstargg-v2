@@ -1,12 +1,12 @@
 package com.imstargg.core.api.query
 
-import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsListResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsItemResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
 import com.imstargg.core.application.statistics.BattleRankStatisticsService
 import com.imstargg.core.application.statistics.BattleResultStatisticsService
@@ -49,10 +49,9 @@ class StatisticsQueryComposer(
         teamSize: StatsTeamSize,
         sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
-    ): BrawlerTeamResultStatisticsResponse {
+    ): List<BrawlerTeamResultStatisticsItemResponse> {
         val brawlers = brawlers()
-        return BrawlerTeamResultStatisticsResponse.of(
+        val statistics =
             battleResultStatisticsService.getBrawlerTeamResultStatistics(
                 eventId = eventId,
                 brawlerIds = brawlerIds,
@@ -62,10 +61,16 @@ class StatisticsQueryComposer(
                 teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
-            ),
-            brawlers,
-        )
+                offsetLimit = DEFAULT_OFFSET_LIMIT,
+            )
+        return statistics.items.content.map { item ->
+            BrawlerTeamResultStatisticsItemResponse(
+                brawlers = item.brawlerIds.map { id -> brawlers.find(id)?.let { BrawlerResponse.of(it) } },
+                totalBattleCount = item.totalBattleCount,
+                pickRate = item.pickRate,
+                winRate = item.winRate,
+            )
+        }
     }
 
     fun getEnemyResultStatistics(
@@ -76,10 +81,9 @@ class StatisticsQueryComposer(
         endDate: LocalDate,
         sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
-    ): BrawlerEnemyResultStatisticsResponse {
+    ): List<BrawlerEnemyResultStatisticsItemResponse> {
         val brawlers = brawlers()
-        return BrawlerEnemyResultStatisticsResponse.of(
+        val statistics =
             battleResultStatisticsService.getEnemyResultStatistics(
                 eventId = eventId,
                 brawlerId = brawlerId,
@@ -88,10 +92,17 @@ class StatisticsQueryComposer(
                 endDate = endDate,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
-            ),
-            brawlers,
-        )
+                offsetLimit = DEFAULT_OFFSET_LIMIT,
+            )
+        return statistics.items.content.map { item ->
+            BrawlerEnemyResultStatisticsItemResponse(
+                brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
+                enemyBrawler = brawlers.find(item.enemyBrawlerId)?.let { BrawlerResponse.of(it) },
+                totalBattleCount = item.totalBattleCount,
+                pickRate = item.pickRate,
+                winRate = item.winRate,
+            )
+        }
     }
 
     fun getDailyResultStatistics(
@@ -127,8 +138,7 @@ class StatisticsQueryComposer(
         teamSize: StatsTeamSize,
         sortBy: RankStatsSortBy,
         sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
-    ): BrawlerTeamRankStatisticsListResponse {
+    ): List<BrawlerTeamRankStatisticsResponse> {
         val brawlers = brawlers()
         val statistics =
             battleRankStatisticsService.getBrawlerTeamRankStatistics(
@@ -140,12 +150,22 @@ class StatisticsQueryComposer(
                 teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
+                offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
-        return BrawlerTeamRankStatisticsListResponse.of(statistics, brawlers)
+        return statistics.items.content.map { item ->
+            BrawlerTeamRankStatisticsResponse(
+                brawlers = item.brawlerIds.map { id -> brawlers.find(id)?.let { BrawlerResponse.of(it) } },
+                totalBattleCount = item.totalBattleCount,
+                averageRank = item.averageRank,
+            )
+        }
     }
 
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())
 
     private fun Brawlers.toBrawlerResponse(id: BrawlStarsId): BrawlerResponse? = find(id)?.let { BrawlerResponse.of(it) }
+
+    companion object {
+        private val DEFAULT_OFFSET_LIMIT = OffsetLimit(offset = 0, limit = 50)
+    }
 }
