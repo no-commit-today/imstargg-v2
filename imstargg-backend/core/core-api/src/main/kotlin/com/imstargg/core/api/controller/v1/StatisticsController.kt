@@ -12,13 +12,13 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
+import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDate
 
 @RestController
 class StatisticsController(
@@ -28,15 +28,13 @@ class StatisticsController(
     fun getBrawlerResultStatistics(
         @RequestParam eventId: Long?,
         @RequestParam tierRange: StatsTierRange,
-        @RequestParam startDate: LocalDate,
-        @RequestParam endDate: LocalDate,
+        @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<BrawlerResultStatisticsResponse> {
         val response =
             statisticsQueryComposer.getBrawlerResultStatistics(
                 eventId?.let { BrawlStarsId(it) },
                 tierRange,
-                startDate,
-                endDate,
+                dateRange,
             )
         return ResponseEntity.ok(response)
     }
@@ -47,8 +45,7 @@ class StatisticsController(
         @RequestParam(required = false, defaultValue = "") brawlerIds: List<Long>,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
-        @RequestParam startDate: LocalDate,
-        @RequestParam endDate: LocalDate,
+        @RequestParam dateRange: StatsDateRange,
         @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
     ): ResponseEntity<ListResponse<BrawlerTeamResultStatisticsItemResponse>> {
@@ -57,8 +54,7 @@ class StatisticsController(
                 eventId = eventId?.let { BrawlStarsId(it) },
                 brawlerIds = brawlerIds.map { BrawlStarsId(it) },
                 tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+                dateRange = dateRange,
                 teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
@@ -71,8 +67,7 @@ class StatisticsController(
         @RequestParam eventId: Long?,
         @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
-        @RequestParam startDate: LocalDate,
-        @RequestParam endDate: LocalDate,
+        @RequestParam dateRange: StatsDateRange,
         @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
     ): ResponseEntity<ListResponse<BrawlerEnemyResultStatisticsItemResponse>> {
@@ -81,8 +76,7 @@ class StatisticsController(
                 eventId = eventId?.let { BrawlStarsId(it) },
                 brawlerId = BrawlStarsId(brawlerId),
                 tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+                dateRange = dateRange,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
             )
@@ -93,15 +87,13 @@ class StatisticsController(
     fun getBrawlerRankStatistics(
         @RequestParam eventId: Long,
         @RequestParam tierRange: StatsTierRange,
-        @RequestParam startDate: LocalDate,
-        @RequestParam endDate: LocalDate,
+        @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<ListResponse<BrawlerRankStatisticsResponse>> {
         val responses =
             statisticsQueryComposer.getBrawlerRankStatistics(
                 BrawlStarsId(eventId),
                 tierRange,
-                startDate,
-                endDate,
+                dateRange,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }
@@ -112,8 +104,7 @@ class StatisticsController(
         @RequestParam(required = false, defaultValue = "") brawlerIds: List<Long>,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
-        @RequestParam startDate: LocalDate,
-        @RequestParam endDate: LocalDate,
+        @RequestParam dateRange: StatsDateRange,
         @RequestParam(defaultValue = "PICK_RATE") sortBy: RankStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
     ): ResponseEntity<ListResponse<BrawlerTeamRankStatisticsResponse>> {
@@ -122,8 +113,7 @@ class StatisticsController(
                 eventId = BrawlStarsId(eventId),
                 brawlerIds = brawlerIds.map { BrawlStarsId(it) },
                 tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+                dateRange = dateRange,
                 teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
@@ -135,15 +125,13 @@ class StatisticsController(
     fun getDailyResultStatistics(
         @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
-        @RequestParam startDate: LocalDate,
-        @RequestParam endDate: LocalDate,
+        @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<ListResponse<BrawlerResultDailyStatisticsResponse>> {
         val responses =
             statisticsQueryComposer.getDailyResultStatistics(
                 BrawlStarsId(brawlerId),
                 tierRange,
-                startDate,
-                endDate,
+                dateRange,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }

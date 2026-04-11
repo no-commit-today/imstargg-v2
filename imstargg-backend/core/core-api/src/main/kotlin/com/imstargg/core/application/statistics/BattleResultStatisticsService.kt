@@ -8,21 +8,23 @@ import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerTeamResultStatistics
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
+import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
-import java.time.LocalDate
+import java.time.Clock
 
 @Service
 class BattleResultStatisticsService(
+    private val clock: Clock,
     private val resultRepository: BattleResultStatisticsRepositoryWithCache,
 ) {
     fun getBrawlerResultStatistics(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
     ): BrawlerResultStatistics {
+        val (startDate, endDate) = dateRange.dateRange(clock)
         val counts =
             resultRepository.findBrawlerResultCounts(
                 eventId = eventId,
@@ -37,13 +39,13 @@ class BattleResultStatisticsService(
         eventId: BrawlStarsId?,
         brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
         teamSize: StatsTeamSize,
         sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerTeamResultStatistics {
+        val (startDate, endDate) = dateRange.dateRange(clock)
         val totalBattleCount =
             resultRepository.countTeamResultTotalBattleCount(
                 eventId = eventId,
@@ -81,12 +83,12 @@ class BattleResultStatisticsService(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
         sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerEnemyResultStatistics {
+        val (startDate, endDate) = dateRange.dateRange(clock)
         val totalBattleCount =
             resultRepository.countEnemyResultTotalBattleCount(
                 eventId = eventId,
@@ -120,14 +122,15 @@ class BattleResultStatisticsService(
     fun getDailyResultStatistics(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): List<BrawlerResultDailyStatistics> =
-        resultRepository
+        dateRange: StatsDateRange,
+    ): List<BrawlerResultDailyStatistics> {
+        val (startDate, endDate) = dateRange.dateRange(clock)
+        return resultRepository
             .findBrawlerDailyResultCounts(
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
             ).map { BrawlerResultDailyStatistics.create(it) }
+    }
 }

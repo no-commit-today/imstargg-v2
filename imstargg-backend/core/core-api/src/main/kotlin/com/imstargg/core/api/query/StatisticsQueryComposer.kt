@@ -16,10 +16,10 @@ import com.imstargg.core.domain.brawlstars.brawler.Brawlers
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
+import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class StatisticsQueryComposer(
@@ -30,12 +30,11 @@ class StatisticsQueryComposer(
     fun getBrawlerResultStatistics(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
     ): BrawlerResultStatisticsResponse {
         val brawlers = brawlers()
         return BrawlerResultStatisticsResponse.of(
-            battleResultStatisticsService.getBrawlerResultStatistics(eventId, tierRange, startDate, endDate),
+            battleResultStatisticsService.getBrawlerResultStatistics(eventId, tierRange, dateRange),
             brawlers,
         )
     }
@@ -44,8 +43,7 @@ class StatisticsQueryComposer(
         eventId: BrawlStarsId?,
         brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
         teamSize: StatsTeamSize,
         sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
@@ -56,8 +54,7 @@ class StatisticsQueryComposer(
                 eventId = eventId,
                 brawlerIds = brawlerIds,
                 tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+                dateRange = dateRange,
                 teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
@@ -77,8 +74,7 @@ class StatisticsQueryComposer(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
         sortBy: ResultStatsSortBy,
         sortOrder: SortOrder,
     ): List<BrawlerEnemyResultStatisticsItemResponse> {
@@ -88,8 +84,7 @@ class StatisticsQueryComposer(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+                dateRange = dateRange,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = DEFAULT_OFFSET_LIMIT,
@@ -108,24 +103,22 @@ class StatisticsQueryComposer(
     fun getDailyResultStatistics(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
     ): List<BrawlerResultDailyStatisticsResponse> {
         val brawlers = brawlers()
         return battleResultStatisticsService
-            .getDailyResultStatistics(brawlerId, tierRange, startDate, endDate)
+            .getDailyResultStatistics(brawlerId, tierRange, dateRange)
             .map { BrawlerResultDailyStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
     fun getBrawlerRankStatistics(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
     ): List<BrawlerRankStatisticsResponse> {
         val brawlers = brawlers()
         return battleRankStatisticsService
-            .getBrawlerRankStatistics(eventId, tierRange, startDate, endDate)
+            .getBrawlerRankStatistics(eventId, tierRange, dateRange)
             .map { BrawlerRankStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 
@@ -133,8 +126,7 @@ class StatisticsQueryComposer(
         eventId: BrawlStarsId,
         brawlerIds: List<BrawlStarsId>,
         tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
+        dateRange: StatsDateRange,
         teamSize: StatsTeamSize,
         sortBy: RankStatsSortBy,
         sortOrder: SortOrder,
@@ -145,8 +137,7 @@ class StatisticsQueryComposer(
                 eventId = eventId,
                 brawlerIds = brawlerIds,
                 tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+                dateRange = dateRange,
                 teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
