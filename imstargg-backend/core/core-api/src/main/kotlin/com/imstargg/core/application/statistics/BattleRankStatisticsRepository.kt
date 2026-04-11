@@ -3,7 +3,7 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
+import com.imstargg.core.domain.statistics.BrawlerTeamRankStatisticsItem
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
@@ -51,7 +51,7 @@ class BattleRankStatisticsRepository(
         sortField: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerTeamRankStatistics> {
+    ): List<BrawlerTeamRankStatisticsItem> {
         val tuples =
             teamBattleRankJpaRepository.findPagedByConditions(
                 eventBrawlStarsId = eventId.value,
@@ -69,7 +69,7 @@ class BattleRankStatisticsRepository(
         return tuples.map { tuple ->
             val totalCount = tuple.get(1, Long::class.javaObjectType)!!
             val weightedRankSum = tuple.get(2, Long::class.javaObjectType)!!
-            BrawlerTeamRankStatistics(
+            BrawlerTeamRankStatisticsItem(
                 brawlerIds =
                     tuple
                         .get(0, String::class.java)!!

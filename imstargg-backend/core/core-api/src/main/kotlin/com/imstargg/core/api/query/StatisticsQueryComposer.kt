@@ -63,7 +63,7 @@ class StatisticsQueryComposer(
                 sortOrder = sortOrder,
                 offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
-        return statistics.items.content.map { item ->
+        return statistics.items.map { item ->
             BrawlerTeamResultStatisticsItemResponse(
                 brawlers = item.brawlerIds.map { id -> brawlers.find(id)?.let { BrawlerResponse.of(it) } },
                 totalBattleCount = item.totalBattleCount,
@@ -94,7 +94,7 @@ class StatisticsQueryComposer(
                 sortOrder = sortOrder,
                 offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
-        return statistics.items.content.map { item ->
+        return statistics.items.map { item ->
             BrawlerEnemyResultStatisticsItemResponse(
                 brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
                 enemyBrawler = brawlers.find(item.enemyBrawlerId)?.let { BrawlerResponse.of(it) },
@@ -152,7 +152,7 @@ class StatisticsQueryComposer(
                 sortOrder = sortOrder,
                 offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
-        return statistics.items.content.map { item ->
+        return statistics.items.map { item ->
             BrawlerTeamRankStatisticsResponse(
                 brawlers = item.brawlerIds.map { id -> brawlers.find(id)?.let { BrawlerResponse.of(it) } },
                 totalBattleCount = item.totalBattleCount,

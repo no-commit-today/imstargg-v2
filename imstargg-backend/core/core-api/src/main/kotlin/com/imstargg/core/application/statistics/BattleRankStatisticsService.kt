@@ -1,10 +1,9 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
-import com.imstargg.core.domain.Page
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
-import com.imstargg.core.domain.statistics.BrawlerTeamRankPageStatistics
+import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
@@ -36,7 +35,7 @@ class BattleRankStatisticsService(
         sortBy: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): BrawlerTeamRankPageStatistics {
+    ): BrawlerTeamRankStatistics {
         val totalBattleCount =
             rankRepository.countTeamRankTotalBattleCount(
                 eventId = eventId,
@@ -67,10 +66,10 @@ class BattleRankStatisticsService(
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        val page = Page(content = counts, totalElementCount = totalCount)
-        return BrawlerTeamRankPageStatistics(
+        return BrawlerTeamRankStatistics(
             totalBattleCount = totalBattleCount,
-            items = page,
+            totalElementCount = totalCount,
+            items = counts,
         )
     }
 }

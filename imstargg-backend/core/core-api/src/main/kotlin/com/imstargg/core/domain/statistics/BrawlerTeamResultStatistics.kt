@@ -1,6 +1,5 @@
 package com.imstargg.core.domain.statistics
 
-import com.imstargg.core.domain.Page
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 
 data class BrawlerTeamResultStatisticsItem(
@@ -12,12 +11,14 @@ data class BrawlerTeamResultStatisticsItem(
 
 data class BrawlerTeamResultStatistics(
     val totalBattleCount: Long,
-    val items: Page<BrawlerTeamResultStatisticsItem>,
+    val totalElementCount: Long,
+    val items: List<BrawlerTeamResultStatisticsItem>,
 ) {
     companion object {
         fun create(
             totalBattleCount: Long,
-            counts: Page<BrawlerTeamResultCount>,
+            totalElementCount: Long,
+            counts: List<BrawlerTeamResultCount>,
         ): BrawlerTeamResultStatistics {
             val items =
                 counts.map { count ->
@@ -28,7 +29,11 @@ data class BrawlerTeamResultStatistics(
                         winRate = count.resultCount.winRate,
                     )
                 }
-            return BrawlerTeamResultStatistics(totalBattleCount = totalBattleCount, items = items)
+            return BrawlerTeamResultStatistics(
+                totalBattleCount = totalBattleCount,
+                totalElementCount = totalElementCount,
+                items = items,
+            )
         }
     }
 }

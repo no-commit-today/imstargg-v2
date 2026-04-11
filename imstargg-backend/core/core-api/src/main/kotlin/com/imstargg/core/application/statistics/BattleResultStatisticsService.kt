@@ -1,7 +1,6 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
-import com.imstargg.core.domain.Page
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
@@ -75,8 +74,7 @@ class BattleResultStatisticsService(
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        val page = Page(content = counts, totalElementCount = totalCount)
-        return BrawlerTeamResultStatistics.create(totalBattleCount, page)
+        return BrawlerTeamResultStatistics.create(totalBattleCount, totalCount, counts)
     }
 
     fun getEnemyResultStatistics(
@@ -116,8 +114,7 @@ class BattleResultStatisticsService(
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        val page = Page(content = counts, totalElementCount = totalCount)
-        return BrawlerEnemyResultStatistics.create(totalBattleCount, page)
+        return BrawlerEnemyResultStatistics.create(totalBattleCount, totalCount, counts)
     }
 
     fun getDailyResultStatistics(

@@ -4,7 +4,7 @@ import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
+import com.imstargg.core.domain.statistics.BrawlerTeamRankStatisticsItem
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
@@ -90,7 +90,7 @@ class BattleRankStatisticsRepositoryWithCache(
         sortField: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerTeamRankStatistics> =
+    ): List<BrawlerTeamRankStatisticsItem> =
         battleRankStatisticsRepository.findBrawlerTeamRankCounts(
             eventId = eventId,
             brawlerIds = brawlerIds,
