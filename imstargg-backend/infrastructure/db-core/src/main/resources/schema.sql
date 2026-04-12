@@ -695,3 +695,59 @@ create table if not exists brawlstars_api_maintenance
     updated_at                    datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     index ix_brawlstars_api_maintenance__end_time (end_time)
 );
+
+-- brawler_gear_ownership_stats table
+create table if not exists brawler_gear_ownership_stats
+(
+    brawler_gear_ownership_stats_id bigint auto_increment primary key,
+    brawler_brawlstars_id           bigint      not null,
+    trophy_range                    varchar(45) not null,
+    gear_brawlstars_id              bigint      not null,
+    owner_count                     bigint      not null,
+    total_count                     bigint      not null,
+    created_at                      datetime(6) not null default current_timestamp(6),
+    updated_at                      datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawler_gear_ownership_stats_1 (brawler_brawlstars_id, trophy_range, gear_brawlstars_id)
+);
+
+-- brawler_gadget_ownership_stats table
+create table if not exists brawler_gadget_ownership_stats
+(
+    brawler_gadget_ownership_stats_id bigint auto_increment primary key,
+    brawler_brawlstars_id             bigint      not null,
+    trophy_range                      varchar(45) not null,
+    gadget_brawlstars_id              bigint      not null,
+    owner_count                       bigint      not null,
+    total_count                       bigint      not null,
+    created_at                        datetime(6) not null default current_timestamp(6),
+    updated_at                        datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawler_gadget_ownership_stats_1 (brawler_brawlstars_id, trophy_range, gadget_brawlstars_id)
+);
+
+-- brawler_star_power_ownership_stats table
+create table if not exists brawler_star_power_ownership_stats
+(
+    brawler_star_power_ownership_stats_id bigint auto_increment primary key,
+    brawler_brawlstars_id                 bigint      not null,
+    trophy_range                          varchar(45) not null,
+    star_power_brawlstars_id              bigint      not null,
+    owner_count                           bigint      not null,
+    total_count                           bigint      not null,
+    created_at                            datetime(6) not null default current_timestamp(6),
+    updated_at                            datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawler_star_power_ownership_stats_1 (brawler_brawlstars_id, trophy_range, star_power_brawlstars_id)
+);
+
+-- brawler_hyper_charge_ownership_stats table
+create table if not exists brawler_hyper_charge_ownership_stats
+(
+    brawler_hyper_charge_ownership_stats_id bigint auto_increment primary key,
+    brawler_brawlstars_id                   bigint      not null,
+    trophy_range                            varchar(45) not null,
+    hyper_charge_brawlstars_id              bigint      not null,
+    owner_count                             bigint      not null,
+    total_count                             bigint      not null,
+    created_at                              datetime(6) not null default current_timestamp(6),
+    updated_at                              datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawler_hyper_charge_ownership_stats_1 (brawler_brawlstars_id, trophy_range, hyper_charge_brawlstars_id)
+);

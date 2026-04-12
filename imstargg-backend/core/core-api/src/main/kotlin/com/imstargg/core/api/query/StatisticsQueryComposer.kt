@@ -1,6 +1,8 @@
 package com.imstargg.core.api.query
 
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsItemResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
@@ -10,9 +12,11 @@ import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsI
 import com.imstargg.core.application.brawlstars.BrawlerService
 import com.imstargg.core.application.statistics.BattleRankStatisticsService
 import com.imstargg.core.application.statistics.BattleResultStatisticsService
+import com.imstargg.core.application.statistics.BrawlerItemOwnershipStatisticsService
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
+import com.imstargg.core.enums.BrawlerTrophyRange
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
@@ -26,6 +30,7 @@ class StatisticsQueryComposer(
     private val brawlerService: BrawlerService,
     private val battleResultStatisticsService: BattleResultStatisticsService,
     private val battleRankStatisticsService: BattleRankStatisticsService,
+    private val brawlerItemOwnershipStatisticsService: BrawlerItemOwnershipStatisticsService,
 ) {
     fun getBrawlerResultStatistics(
         eventId: BrawlStarsId?,
@@ -150,6 +155,23 @@ class StatisticsQueryComposer(
                 averageRank = item.averageRank,
             )
         }
+    }
+
+    fun getBrawlerItemOwnershipStatistics(
+        brawlerId: BrawlStarsId,
+        trophyRange: BrawlerTrophyRange,
+    ): BrawlerItemOwnershipStatisticsResponse {
+        val gears = brawlerItemOwnershipStatisticsService.getGearOwnership(brawlerId, trophyRange)
+        val gadgets = brawlerItemOwnershipStatisticsService.getGadgetOwnership(brawlerId, trophyRange)
+        val starPowers = brawlerItemOwnershipStatisticsService.getStarPowerOwnership(brawlerId, trophyRange)
+        val hyperCharges = brawlerItemOwnershipStatisticsService.getHyperChargeOwnership(brawlerId, trophyRange)
+
+        return BrawlerItemOwnershipStatisticsResponse(
+            gears = gears.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
+            gadgets = gadgets.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
+            starPowers = starPowers.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
+            hyperCharges = hyperCharges.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
+        )
     }
 
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())

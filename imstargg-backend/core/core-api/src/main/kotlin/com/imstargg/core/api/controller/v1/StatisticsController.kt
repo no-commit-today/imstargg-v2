@@ -2,6 +2,7 @@ package com.imstargg.core.api.controller.v1
 
 import com.imstargg.core.api.controller.ListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
@@ -9,6 +10,7 @@ import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsRes
 import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsItemResponse
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.enums.BrawlerTrophyRange
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
@@ -134,5 +136,18 @@ class StatisticsController(
                 dateRange,
             )
         return ResponseEntity.ok(ListResponse(responses))
+    }
+
+    @GetMapping("/v1/statistics/brawler/item/ownership")
+    fun getBrawlerItemOwnershipStatistics(
+        @RequestParam brawlerId: Long,
+        @RequestParam trophyRange: BrawlerTrophyRange,
+    ): ResponseEntity<BrawlerItemOwnershipStatisticsResponse> {
+        val response =
+            statisticsQueryComposer.getBrawlerItemOwnershipStatistics(
+                brawlerId = BrawlStarsId(brawlerId),
+                trophyRange = trophyRange,
+            )
+        return ResponseEntity.ok(response)
     }
 }
