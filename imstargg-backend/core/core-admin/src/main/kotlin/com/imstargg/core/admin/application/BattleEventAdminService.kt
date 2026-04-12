@@ -90,6 +90,7 @@ class BattleEventAdminService(
         langMap: Map<Language, String>,
     ) {
         messageJpaRepository.deleteAllByTypeAndBrawlStarsId(type, brawlStarsId)
+        messageJpaRepository.flush()
         langMap.filter { it.value.isNotBlank() }.forEach { (lang, content) ->
             messageJpaRepository.save(MessageEntity(type, brawlStarsId, lang, content))
         }
@@ -105,6 +106,7 @@ class BattleEventAdminService(
         val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
         val url = imageStorageService.upload(storedName, inputStream, contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
+        imageJpaRepository.flush()
         imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
     }
 }
