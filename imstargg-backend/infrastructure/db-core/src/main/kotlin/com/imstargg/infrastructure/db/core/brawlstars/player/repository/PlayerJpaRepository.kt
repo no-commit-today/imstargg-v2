@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.player.repository
 
+import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Pageable
@@ -12,9 +13,10 @@ interface PlayerJpaRepository : JpaRepository<PlayerEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findWithLockByBrawlStarsTag(brawlStarsTag: String): PlayerEntity?
 
-    fun findTopByDeletedFalseOrderByIdDesc(): PlayerEntity?
+    fun findTopByStatusOrderByIdDesc(status: PlayerStatus): PlayerEntity?
 
-    fun findAllByDeletedFalseAndIdGreaterThanEqual(
+    fun findAllByStatusAndIdGreaterThanEqual(
+        status: PlayerStatus,
         id: Long,
         pageable: Pageable,
     ): List<PlayerEntity>

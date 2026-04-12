@@ -3,6 +3,7 @@ package com.imstargg.core.worker.application
 import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.core.worker.config.PlayerRefreshScheduleProperties
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
@@ -59,11 +60,12 @@ class PlayerRefreshService(
     }
 
     private fun findRandomPlayers(): List<PlayerEntity> {
-        val maxId = playerRepository.findTopByDeletedFalseOrderByIdDesc()?.id ?: return emptyList()
+        val maxId = playerRepository.findTopByStatusOrderByIdDesc(PlayerStatus.ACTIVE)?.id ?: return emptyList()
         val randomId = Random.nextLong(1, maxId + 1)
-        return playerRepository.findAllByDeletedFalseAndIdGreaterThanEqual(
-            randomId,
-            PageRequest.of(0, properties.playerCount),
+        return playerRepository.findAllByStatusAndIdGreaterThanEqual(
+            status = PlayerStatus.ACTIVE,
+            id = randomId,
+            pageable = PageRequest.of(0, properties.playerCount),
         )
     }
 }
