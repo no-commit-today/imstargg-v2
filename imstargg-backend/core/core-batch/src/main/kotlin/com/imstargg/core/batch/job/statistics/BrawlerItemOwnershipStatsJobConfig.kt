@@ -1,6 +1,8 @@
 package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.enums.BrawlerTrophyRange
+import com.imstargg.core.enums.BuffyType
+import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerBuffyEntity.Companion.playerBrawlerBuffyEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerEntity.Companion.playerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerGadgetEntity.Companion.playerBrawlerGadgetEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerGearEntity.Companion.playerBrawlerGearEntity
@@ -8,10 +10,12 @@ import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerHyper
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerStarPowerEntity.Companion.playerBrawlerStarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerEntity.Companion.playerEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsPlayerEntity.Companion.statsPlayerEntity
+import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerBuffyOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGadgetOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGearOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerHyperChargeOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerStarPowerOwnershipStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.brawler.QBrawlerBuffyOwnershipStatsEntity.Companion.brawlerBuffyOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.QBrawlerGadgetOwnershipStatsEntity.Companion.brawlerGadgetOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.QBrawlerGearOwnershipStatsEntity.Companion.brawlerGearOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.QBrawlerHyperChargeOwnershipStatsEntity.Companion.brawlerHyperChargeOwnershipStatsEntity
@@ -66,6 +70,7 @@ class BrawlerItemOwnershipStatsJobConfig(
                     val gadgetCounts = mutableMapOf<BrawlerTrophyItemKey, Long>()
                     val starPowerCounts = mutableMapOf<BrawlerTrophyItemKey, Long>()
                     val hyperChargeCounts = mutableMapOf<BrawlerTrophyItemKey, Long>()
+                    val buffyCounts = mutableMapOf<BrawlerTrophyBuffyKey, Long>()
 
                     var lastId = 0L
                     var totalRead = 0L
@@ -134,6 +139,12 @@ class BrawlerItemOwnershipStatsJobConfig(
                                 .where(playerBrawlerHyperChargeEntity.playerBrawler.id.`in`(playerBrawlerIds))
                                 .fetch()
 
+                        val buffies =
+                            queryFactory
+                                .selectFrom(playerBrawlerBuffyEntity)
+                                .where(playerBrawlerBuffyEntity.playerBrawler.id.`in`(playerBrawlerIds))
+                                .fetch()
+
                         val playerBrawlerById = playerBrawlers.associateBy { it.id }
 
                         for (gear in gears) {
@@ -192,6 +203,20 @@ class BrawlerItemOwnershipStatsJobConfig(
                             }
                         }
 
+                        for (buffy in buffies) {
+                            val pb = playerBrawlerById[buffy.playerBrawler.id] ?: continue
+                            val trophyRanges = BrawlerTrophyRange.resolveAll(pb.trophies)
+                            for (trophyRange in trophyRanges) {
+                                val key =
+                                    BrawlerTrophyBuffyKey(
+                                        brawlerBrawlStarsId = pb.brawlerBrawlStarsId,
+                                        trophyRange = trophyRange,
+                                        buffyType = buffy.buffyType,
+                                    )
+                                buffyCounts.merge(key, 1L) { a, b -> a + b }
+                            }
+                        }
+
                         log.debug("[{}] 읽기 진행 - 누적: {}건", JOB_NAME, totalRead)
                     }
 
@@ -200,6 +225,7 @@ class BrawlerItemOwnershipStatsJobConfig(
                     queryFactory.delete(brawlerGadgetOwnershipStatsEntity).execute()
                     queryFactory.delete(brawlerStarPowerOwnershipStatsEntity).execute()
                     queryFactory.delete(brawlerHyperChargeOwnershipStatsEntity).execute()
+                    queryFactory.delete(brawlerBuffyOwnershipStatsEntity).execute()
                     em.transaction.commit()
 
                     val gearEntities =
@@ -246,7 +272,18 @@ class BrawlerItemOwnershipStatsJobConfig(
                             )
                         }
 
-                    val allEntities = gearEntities + gadgetEntities + starPowerEntities + hyperChargeEntities
+                    val buffyEntities =
+                        buffyCounts.map { (key, ownerCount) ->
+                            BrawlerBuffyOwnershipStatsEntity(
+                                brawlerBrawlStarsId = key.brawlerBrawlStarsId,
+                                trophyRange = key.trophyRange,
+                                buffyType = key.buffyType,
+                                ownerCount = ownerCount,
+                                totalCount = totalCounts[key.toBrawlerTrophyKey()] ?: 0L,
+                            )
+                        }
+
+                    val allEntities = gearEntities + gadgetEntities + starPowerEntities + hyperChargeEntities + buffyEntities
                     allEntities.chunked(BATCH_SIZE).forEach { batch ->
                         em.transaction.begin()
                         batch.forEach { em.persist(it) }
@@ -255,7 +292,7 @@ class BrawlerItemOwnershipStatsJobConfig(
                     }
 
                     log.info(
-                        "[{}] 완료 - 플레이어: {}건, 집계: {}건 (기어: {}, 가젯: {}, 스타파워: {}, 하이퍼차지: {})",
+                        "[{}] 완료 - 플레이어: {}건, 집계: {}건 (기어: {}, 가젯: {}, 스타파워: {}, 하이퍼차지: {}, 버피: {})",
                         JOB_NAME,
                         totalRead,
                         allEntities.size,
@@ -263,6 +300,7 @@ class BrawlerItemOwnershipStatsJobConfig(
                         gadgetEntities.size,
                         starPowerEntities.size,
                         hyperChargeEntities.size,
+                        buffyEntities.size,
                     )
                 }
                 RepeatStatus.FINISHED
@@ -273,6 +311,18 @@ class BrawlerItemOwnershipStatsJobConfig(
         val brawlerBrawlStarsId: Long,
         val trophyRange: BrawlerTrophyRange,
     )
+
+    private data class BrawlerTrophyBuffyKey(
+        val brawlerBrawlStarsId: Long,
+        val trophyRange: BrawlerTrophyRange,
+        val buffyType: BuffyType,
+    ) {
+        fun toBrawlerTrophyKey() =
+            BrawlerTrophyKey(
+                brawlerBrawlStarsId = brawlerBrawlStarsId,
+                trophyRange = trophyRange,
+            )
+    }
 
     private data class BrawlerTrophyItemKey(
         val brawlerBrawlStarsId: Long,

@@ -1,6 +1,7 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.BrawlerBuffyOwnershipRate
 import com.imstargg.core.domain.statistics.BrawlerItemOwnershipRate
 import com.imstargg.core.enums.BrawlerTrophyRange
 import org.springframework.stereotype.Service
@@ -41,6 +42,15 @@ class BrawlerItemOwnershipStatisticsService(
         trophyRange: BrawlerTrophyRange,
     ): List<BrawlerItemOwnershipRate> =
         repository.findHyperChargeOwnership(
+            brawlerId = brawlerId,
+            trophyRange = trophyRange,
+        )
+
+    fun getBuffyOwnership(
+        brawlerId: BrawlStarsId,
+        trophyRange: BrawlerTrophyRange,
+    ): List<BrawlerBuffyOwnershipRate> =
+        repository.findBuffyOwnership(
             brawlerId = brawlerId,
             trophyRange = trophyRange,
         )

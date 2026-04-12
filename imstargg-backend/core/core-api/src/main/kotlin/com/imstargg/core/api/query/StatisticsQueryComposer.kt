@@ -1,5 +1,6 @@
 package com.imstargg.core.api.query
 
+import com.imstargg.core.api.controller.v1.response.BrawlerBuffyOwnershipStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
@@ -165,12 +166,14 @@ class StatisticsQueryComposer(
         val gadgets = brawlerItemOwnershipStatisticsService.getGadgetOwnership(brawlerId, trophyRange)
         val starPowers = brawlerItemOwnershipStatisticsService.getStarPowerOwnership(brawlerId, trophyRange)
         val hyperCharges = brawlerItemOwnershipStatisticsService.getHyperChargeOwnership(brawlerId, trophyRange)
+        val buffies = brawlerItemOwnershipStatisticsService.getBuffyOwnership(brawlerId, trophyRange)
 
         return BrawlerItemOwnershipStatisticsResponse(
             gears = gears.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
             gadgets = gadgets.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
             starPowers = starPowers.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
             hyperCharges = hyperCharges.map { BrawlerItemOwnershipStatisticsItemResponse.of(it) },
+            buffies = buffies.map { BrawlerBuffyOwnershipStatisticsItemResponse.of(it) },
         )
     }
 

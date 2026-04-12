@@ -1,8 +1,10 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.BrawlerBuffyOwnershipRate
 import com.imstargg.core.domain.statistics.BrawlerItemOwnershipRate
 import com.imstargg.core.enums.BrawlerTrophyRange
+import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerBuffyOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGadgetOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGearOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerHyperChargeOwnershipStatsJpaRepository
@@ -17,6 +19,7 @@ class BrawlerItemOwnershipStatisticsRepository(
     private val gadgetRepository: BrawlerGadgetOwnershipStatsJpaRepository,
     private val starPowerRepository: BrawlerStarPowerOwnershipStatsJpaRepository,
     private val hyperChargeRepository: BrawlerHyperChargeOwnershipStatsJpaRepository,
+    private val buffyRepository: BrawlerBuffyOwnershipStatsJpaRepository,
 ) {
     fun findGearOwnership(
         brawlerId: BrawlStarsId,
@@ -77,6 +80,22 @@ class BrawlerItemOwnershipStatisticsRepository(
             ).map {
                 BrawlerItemOwnershipRate(
                     itemId = BrawlStarsId(it.hyperChargeBrawlStarsId),
+                    ownerCount = it.ownerCount,
+                    totalCount = it.totalCount,
+                )
+            }
+
+    fun findBuffyOwnership(
+        brawlerId: BrawlStarsId,
+        trophyRange: BrawlerTrophyRange,
+    ): List<BrawlerBuffyOwnershipRate> =
+        buffyRepository
+            .findAllByBrawlerBrawlStarsIdAndTrophyRange(
+                brawlerBrawlStarsId = brawlerId.value,
+                trophyRange = trophyRange,
+            ).map {
+                BrawlerBuffyOwnershipRate(
+                    buffyType = it.buffyType,
                     ownerCount = it.ownerCount,
                     totalCount = it.totalCount,
                 )

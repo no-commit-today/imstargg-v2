@@ -751,3 +751,17 @@ create table if not exists brawler_hyper_charge_ownership_stats
     updated_at                              datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
     unique index uk_brawler_hyper_charge_ownership_stats_1 (brawler_brawlstars_id, trophy_range, hyper_charge_brawlstars_id)
 );
+
+-- brawler_buffy_ownership_stats table
+create table if not exists brawler_buffy_ownership_stats
+(
+    brawler_buffy_ownership_stats_id bigint auto_increment primary key,
+    brawler_brawlstars_id            bigint      not null,
+    trophy_range                     varchar(45) not null,
+    buffy_type                       varchar(25) not null,
+    owner_count                      bigint      not null,
+    total_count                      bigint      not null,
+    created_at                       datetime(6) not null default current_timestamp(6),
+    updated_at                       datetime(6) not null default current_timestamp(6) on update current_timestamp(6),
+    unique index uk_brawler_buffy_ownership_stats_1 (brawler_brawlstars_id, trophy_range, buffy_type)
+);
