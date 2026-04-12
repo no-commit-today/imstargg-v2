@@ -19,8 +19,12 @@ spring:
 app:
   schedule:
     stats-battle:
-      enabled: false
+      enabled: true
       interval: 1s
+      player-count: 1
+    player-refresh:
+      enabled: true
+      interval: 60s
       player-count: 1
 
 ---
@@ -29,30 +33,36 @@ spring:
     activate:
       on-profile: local
 
+app:
+  schedule:
+    stats-battle:
+      enabled: false
+      interval: 1s
+      player-count: 1
+    player-refresh:
+      enabled: false
+      interval: 60s
+      player-count: 1
 ---
 spring:
   config:
     activate:
       on-profile: local-dev
 
+app:
+  schedule:
+    stats-battle:
+      enabled: false
+    player-refresh:
+      enabled: false
 ---
 spring:
   config:
     activate:
       on-profile: dev
 
-app:
-  schedule:
-    stats-battle:
-      enabled: true
-
 ---
 spring:
   config:
     activate:
       on-profile: prod
-
-app:
-  schedule:
-    stats-battle:
-      enabled: true
