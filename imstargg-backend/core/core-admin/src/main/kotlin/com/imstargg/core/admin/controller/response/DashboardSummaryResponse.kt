@@ -1,4 +1,4 @@
-package com.imstargg.core.admin.response
+package com.imstargg.core.admin.controller.response
 
 data class DashboardSummaryResponse(
     val brawlerTotal: Int,

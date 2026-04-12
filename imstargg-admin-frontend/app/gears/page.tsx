@@ -28,14 +28,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getGears, createGear } from "@/lib/api";
-import type { GearListItem } from "@/lib/types";
+import type { Gear } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
 
 const GEAR_RARITIES = ["SUPER_RARE", "EPIC", "MYTHIC"];
 
 export default function GearListPage() {
-  const [gears, setGears] = useState<GearListItem[]>([]);
+  const [gears, setGears] = useState<Gear[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ brawlStarsId: "", rarity: "" });
 

@@ -8,13 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getGears, updateGearMessages, uploadGearImage } from "@/lib/api";
-import type { GearListItem } from "@/lib/types";
+import type { Gear } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function GearEditPage() {
   const params = useParams();
   const brawlStarsId = Number(params.brawlStarsId);
-  const [gear, setGear] = useState<GearListItem | null>(null);
+  const [gear, setGear] = useState<Gear | null>(null);
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
 

@@ -30,4 +30,5 @@ services:
     ports:
       - "4566:4566"
     volumes:
-      - ./docker/floci/data:/app/data
+      - ./docker/floci/app/data:/app/data
+      - ./docker/floci/data:/data

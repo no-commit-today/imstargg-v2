@@ -1,8 +1,9 @@
 package com.imstargg.core.admin.application
 
-import com.imstargg.core.admin.response.BattleEventModeResponse
-import com.imstargg.core.admin.response.BattleEventResponse
-import com.imstargg.core.admin.response.toNameMap
+import com.imstargg.core.admin.controller.request.BattleEventCreateRequest
+import com.imstargg.core.admin.controller.request.BattleEventModeCreateRequest
+import com.imstargg.core.admin.controller.response.BattleEventModeResponse
+import com.imstargg.core.admin.controller.response.BattleEventResponse
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -20,7 +21,7 @@ import java.io.InputStream
 
 @Service
 @Transactional(readOnly = true)
-class BattleEventAdminService(
+class BattleEventService(
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
@@ -28,7 +29,7 @@ class BattleEventAdminService(
     private val imageStorageService: ImageStorageService,
 ) {
     fun findAllEvents(): List<BattleEventResponse> {
-        val events = battleEventJpaRepository.findAll()
+        val events = battleEventJpaRepository.findAll().toList()
         val eventIds = events.filter { it.mapName != null }.map { it.brawlStarsId }
         val messagesByBrawlStarsId =
             messageJpaRepository
@@ -37,14 +38,16 @@ class BattleEventAdminService(
 
         return events.map { event ->
             BattleEventResponse(
-                event = event,
+                brawlStarsId = event.brawlStarsId,
+                modeBrawlStarsName = event.mode?.brawlStarsName,
+                mapName = event.mapName,
                 mapNames = if (event.mapName != null) toNameMap(messagesByBrawlStarsId[event.brawlStarsId]) else emptyMap(),
             )
         }
     }
 
     fun findAllModes(): List<BattleEventModeResponse> {
-        val modes = battleEventModeJpaRepository.findAll()
+        val modes = battleEventModeJpaRepository.findAll().toList()
         val modeIds = modes.map { it.brawlStarsId }
 
         val messagesByBrawlStarsId =
@@ -58,33 +61,53 @@ class BattleEventAdminService(
 
         return modes.map { mode ->
             BattleEventModeResponse(
-                mode = mode,
+                brawlStarsId = mode.brawlStarsId,
+                brawlStarsName = mode.brawlStarsName,
                 names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
-                icon = imagesByBrawlStarsId[mode.brawlStarsId],
+                hasIcon = imagesByBrawlStarsId[mode.brawlStarsId] != null,
             )
         }
     }
 
     @Transactional
-    fun createMode(
-        brawlStarsId: Long,
-        brawlStarsName: String,
-    ) {
-        battleEventModeJpaRepository.save(BattleEventModeEntity(brawlStarsId, brawlStarsName))
+    fun createMode(request: BattleEventModeCreateRequest) {
+        battleEventModeJpaRepository.save(
+            BattleEventModeEntity(request.brawlStarsId, request.brawlStarsName),
+        )
     }
 
     @Transactional
-    fun createEvent(
-        brawlStarsId: Long,
-        modeId: Long?,
-        mapName: String?,
-    ) {
-        val mode = modeId?.let { battleEventModeJpaRepository.findByBrawlStarsId(it) }
-        battleEventJpaRepository.save(BattleEventEntity(brawlStarsId, mode, mapName))
+    fun createEvent(request: BattleEventCreateRequest) {
+        val mode = request.modeId?.let { battleEventModeJpaRepository.findByBrawlStarsId(it) }
+        battleEventJpaRepository.save(BattleEventEntity(request.brawlStarsId, mode, request.mapName))
     }
 
     @Transactional
-    fun updateMessages(
+    fun updateModeMessages(
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        doUpdateMessages(MessageType.BATTLE_EVENT_MODE_NAME, brawlStarsId, langMap)
+    }
+
+    @Transactional
+    fun updateEventMessages(
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        doUpdateMessages(MessageType.BATTLE_EVENT_NAME, brawlStarsId, langMap)
+    }
+
+    @Transactional
+    fun updateModeImage(
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        doUpdateImage(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, brawlStarsId, inputStream, contentType)
+    }
+
+    private fun doUpdateMessages(
         type: MessageType,
         brawlStarsId: Long,
         langMap: Map<Language, String>,
@@ -96,8 +119,7 @@ class BattleEventAdminService(
         }
     }
 
-    @Transactional
-    fun updateImage(
+    private fun doUpdateImage(
         type: BrawlStarsImageType,
         brawlStarsId: Long,
         inputStream: InputStream,

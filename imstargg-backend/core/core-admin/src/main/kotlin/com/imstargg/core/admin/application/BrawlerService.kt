@@ -1,13 +1,13 @@
 package com.imstargg.core.admin.application
 
-import com.imstargg.core.admin.response.BrawlerResponse
-import com.imstargg.core.admin.response.GadgetResponse
-import com.imstargg.core.admin.response.GearResponse
-import com.imstargg.core.admin.response.HyperChargeResponse
-import com.imstargg.core.admin.response.StarPowerResponse
-import com.imstargg.core.admin.response.toNameMap
-import com.imstargg.core.enums.BrawlerRarity
-import com.imstargg.core.enums.BrawlerRole
+import com.imstargg.core.admin.controller.request.BrawlerCreateRequest
+import com.imstargg.core.admin.controller.request.BrawlerSubItemCreateRequest
+import com.imstargg.core.admin.controller.response.BrawlerDetailResponse
+import com.imstargg.core.admin.controller.response.BrawlerResponse
+import com.imstargg.core.admin.controller.response.GadgetResponse
+import com.imstargg.core.admin.controller.response.GearResponse
+import com.imstargg.core.admin.controller.response.HyperChargeResponse
+import com.imstargg.core.admin.controller.response.StarPowerResponse
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -32,7 +32,7 @@ import java.io.InputStream
 
 @Service
 @Transactional(readOnly = true)
-class BrawlerAdminService(
+class BrawlerService(
     private val brawlerJpaRepository: BrawlerJpaRepository,
     private val gadgetJpaRepository: GadgetJpaRepository,
     private val starPowerJpaRepository: StarPowerJpaRepository,
@@ -44,7 +44,7 @@ class BrawlerAdminService(
     private val imageStorageService: ImageStorageService,
 ) {
     fun findAll(): List<BrawlerResponse> {
-        val brawlers = brawlerJpaRepository.findAll()
+        val brawlers = brawlerJpaRepository.findAll().toList()
         val brawlerIds = brawlers.map { it.brawlStarsId }
         val messagesByBrawlStarsId =
             messageJpaRepository
@@ -57,14 +57,16 @@ class BrawlerAdminService(
 
         return brawlers.map { brawler ->
             BrawlerResponse(
-                brawler = brawler,
+                brawlStarsId = brawler.brawlStarsId,
                 names = toNameMap(messagesByBrawlStarsId[brawler.brawlStarsId]),
-                image = imagesByBrawlStarsId[brawler.brawlStarsId],
+                rarity = brawler.rarity,
+                role = brawler.role,
+                hasImage = imagesByBrawlStarsId[brawler.brawlStarsId] != null,
             )
         }
     }
 
-    fun findDetail(brawlStarsId: Long): BrawlerResponse? {
+    fun findDetail(brawlStarsId: Long): BrawlerDetailResponse? {
         val brawler = brawlerJpaRepository.findByBrawlStarsId(brawlStarsId) ?: return null
 
         val starPowers = starPowerJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
@@ -113,110 +115,160 @@ class BrawlerAdminService(
                 .findAllByTypeInAndBrawlStarsIdIn(relevantTypes, relevantIds)
                 .associateBy { it.type to it.brawlStarsId }
 
-        return BrawlerResponse(
-            brawler = brawler,
+        return BrawlerDetailResponse(
+            brawlStarsId = brawler.brawlStarsId,
             names = toNameMap(brawlerNameMessages[brawlStarsId]),
-            image = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlStarsId],
+            rarity = brawler.rarity,
+            role = brawler.role,
+            imageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlStarsId]?.url,
+            buffyImages =
+                mapOf(
+                    BrawlStarsImageType.BUFFY_GADGET to imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId]?.url,
+                    BrawlStarsImageType.BUFFY_STAR_POWER to imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlStarsId]?.url,
+                    BrawlStarsImageType.BUFFY_HYPER_CHARGE to imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlStarsId]?.url,
+                ),
             starPowers =
                 starPowers.map { sp ->
                     StarPowerResponse(
-                        starPower = sp,
+                        brawlStarsId = sp.brawlStarsId,
                         names = toNameMap(starPowerNameMessages[sp.brawlStarsId]),
-                        image = imagesByKey[BrawlStarsImageType.STARPOWER to sp.brawlStarsId],
+                        imageUrl = imagesByKey[BrawlStarsImageType.STARPOWER to sp.brawlStarsId]?.url,
                     )
                 },
             gadgets =
                 gadgets.map { gd ->
                     GadgetResponse(
-                        gadget = gd,
+                        brawlStarsId = gd.brawlStarsId,
                         names = toNameMap(gadgetNameMessages[gd.brawlStarsId]),
-                        image = imagesByKey[BrawlStarsImageType.GADGET to gd.brawlStarsId],
+                        imageUrl = imagesByKey[BrawlStarsImageType.GADGET to gd.brawlStarsId]?.url,
                     )
                 },
             hyperCharges =
                 hyperCharges.map { hc ->
                     HyperChargeResponse(
-                        hyperCharge = hc,
+                        brawlStarsId = hc.brawlStarsId,
                         names = toNameMap(hyperChargeNameMessages[hc.brawlStarsId]),
-                        image = imagesByKey[BrawlStarsImageType.HYPERCHARGE to hc.brawlStarsId],
+                        imageUrl = imagesByKey[BrawlStarsImageType.HYPERCHARGE to hc.brawlStarsId]?.url,
                     )
                 },
-            linkedGearIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
+            linkedGearBrawlStarsIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
             allGears =
-                allGears.map {
+                allGears.map { gear ->
                     GearResponse(
-                        gear = it,
-                        names = toNameMap(gearNameMessages[it.brawlStarsId]),
-                        image = null,
+                        brawlStarsId = gear.brawlStarsId,
+                        names = toNameMap(gearNameMessages[gear.brawlStarsId]),
+                        rarity = gear.rarity,
+                        hasImage = false,
                     )
                 },
-            buffyImages =
-                mapOf(
-                    BrawlStarsImageType.BUFFY_GADGET to imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId],
-                    BrawlStarsImageType.BUFFY_STAR_POWER to imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlStarsId],
-                    BrawlStarsImageType.BUFFY_HYPER_CHARGE to imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlStarsId],
-                ),
         )
     }
 
     @Transactional
-    fun createBrawler(
-        brawlStarsId: Long,
-        rarity: BrawlerRarity,
-        role: BrawlerRole,
-    ) {
-        brawlerJpaRepository.save(BrawlerEntity(brawlStarsId, rarity, role))
+    fun createBrawler(request: BrawlerCreateRequest) {
+        brawlerJpaRepository.save(BrawlerEntity(request.brawlStarsId, request.rarity, request.role))
     }
 
     @Transactional
     fun createStarPower(
-        brawlStarsId: Long,
         brawlerBrawlStarsId: Long,
+        request: BrawlerSubItemCreateRequest,
     ) {
-        starPowerJpaRepository.save(StarPowerEntity(brawlStarsId, brawlerBrawlStarsId))
+        starPowerJpaRepository.save(StarPowerEntity(request.brawlStarsId, brawlerBrawlStarsId))
     }
 
     @Transactional
     fun createGadget(
-        brawlStarsId: Long,
         brawlerBrawlStarsId: Long,
+        request: BrawlerSubItemCreateRequest,
     ) {
-        gadgetJpaRepository.save(GadgetEntity(brawlStarsId, brawlerBrawlStarsId))
+        gadgetJpaRepository.save(GadgetEntity(request.brawlStarsId, brawlerBrawlStarsId))
     }
 
     @Transactional
     fun createHyperCharge(
-        brawlStarsId: Long,
         brawlerBrawlStarsId: Long,
+        request: BrawlerSubItemCreateRequest,
     ) {
-        hyperChargeJpaRepository.save(HyperChargeEntity(brawlStarsId, brawlerBrawlStarsId))
+        hyperChargeJpaRepository.save(HyperChargeEntity(request.brawlStarsId, brawlerBrawlStarsId))
     }
 
     @Transactional
-    fun updateMessages(
-        type: MessageType,
+    fun updateBrawlerMessages(
         brawlStarsId: Long,
         langMap: Map<Language, String>,
     ) {
-        messageJpaRepository.deleteAllByTypeAndBrawlStarsId(type, brawlStarsId)
-        messageJpaRepository.flush()
-        langMap.filter { it.value.isNotBlank() }.forEach { (lang, content) ->
-            messageJpaRepository.save(MessageEntity(type, brawlStarsId, lang, content))
-        }
+        doUpdateMessages(MessageType.BRAWLER_NAME, brawlStarsId, langMap)
     }
 
     @Transactional
-    fun updateImage(
-        type: BrawlStarsImageType,
+    fun updateStarPowerMessages(
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        doUpdateMessages(MessageType.STARPOWER_NAME, brawlStarsId, langMap)
+    }
+
+    @Transactional
+    fun updateGadgetMessages(
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        doUpdateMessages(MessageType.GADGET_NAME, brawlStarsId, langMap)
+    }
+
+    @Transactional
+    fun updateHyperChargeMessages(
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        doUpdateMessages(MessageType.HYPERCHARGE_NAME, brawlStarsId, langMap)
+    }
+
+    @Transactional
+    fun updateBrawlerImage(
         brawlStarsId: Long,
         inputStream: InputStream,
         contentType: String,
     ) {
-        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        val url = imageStorageService.upload(storedName, inputStream, contentType)
-        imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
-        imageJpaRepository.flush()
-        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
+        doUpdateImage(BrawlStarsImageType.BRAWLER_PORTRAIT, brawlStarsId, inputStream, contentType)
+    }
+
+    @Transactional
+    fun updateBuffyImage(
+        buffyType: BrawlStarsImageType,
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        doUpdateImage(buffyType, brawlStarsId, inputStream, contentType)
+    }
+
+    @Transactional
+    fun updateStarPowerImage(
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        doUpdateImage(BrawlStarsImageType.STARPOWER, brawlStarsId, inputStream, contentType)
+    }
+
+    @Transactional
+    fun updateGadgetImage(
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        doUpdateImage(BrawlStarsImageType.GADGET, brawlStarsId, inputStream, contentType)
+    }
+
+    @Transactional
+    fun updateHyperChargeImage(
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        doUpdateImage(BrawlStarsImageType.HYPERCHARGE, brawlStarsId, inputStream, contentType)
     }
 
     @Transactional
@@ -229,5 +281,30 @@ class BrawlerAdminService(
         gearBrawlStarsIds.forEach { gearId ->
             brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId, gearId))
         }
+    }
+
+    private fun doUpdateMessages(
+        type: MessageType,
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        messageJpaRepository.deleteAllByTypeAndBrawlStarsId(type, brawlStarsId)
+        messageJpaRepository.flush()
+        langMap.filter { it.value.isNotBlank() }.forEach { (lang, content) ->
+            messageJpaRepository.save(MessageEntity(type, brawlStarsId, lang, content))
+        }
+    }
+
+    private fun doUpdateImage(
+        type: BrawlStarsImageType,
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
+        val url = imageStorageService.upload(storedName, inputStream, contentType)
+        imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
+        imageJpaRepository.flush()
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
     }
 }

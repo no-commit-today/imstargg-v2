@@ -1,8 +1,7 @@
 package com.imstargg.core.admin.application
 
-import com.imstargg.core.admin.response.GearResponse
-import com.imstargg.core.admin.response.toNameMap
-import com.imstargg.core.enums.GearRarity
+import com.imstargg.core.admin.controller.request.GearCreateRequest
+import com.imstargg.core.admin.controller.response.GearResponse
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -18,7 +17,7 @@ import java.io.InputStream
 
 @Service
 @Transactional(readOnly = true)
-class GearAdminService(
+class GearService(
     private val gearJpaRepository: GearJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val imageJpaRepository: BrawlStarsImageJpaRepository,
@@ -39,23 +38,37 @@ class GearAdminService(
 
         return gears.map { gear ->
             GearResponse(
-                gear = gear,
+                brawlStarsId = gear.brawlStarsId,
                 names = toNameMap(messagesByBrawlStarsId[gear.brawlStarsId]),
-                image = imagesByBrawlStarsId[gear.brawlStarsId],
+                rarity = gear.rarity,
+                hasImage = imagesByBrawlStarsId[gear.brawlStarsId] != null,
             )
         }
     }
 
     @Transactional
-    fun create(
-        brawlStarsId: Long,
-        rarity: GearRarity,
-    ) {
-        gearJpaRepository.save(GearEntity(brawlStarsId, rarity))
+    fun create(request: GearCreateRequest) {
+        gearJpaRepository.save(GearEntity(request.brawlStarsId, request.rarity))
     }
 
     @Transactional
-    fun updateMessages(
+    fun updateGearMessages(
+        brawlStarsId: Long,
+        langMap: Map<Language, String>,
+    ) {
+        doUpdateMessages(MessageType.GEAR_NAME, brawlStarsId, langMap)
+    }
+
+    @Transactional
+    fun updateGearImage(
+        brawlStarsId: Long,
+        inputStream: InputStream,
+        contentType: String,
+    ) {
+        doUpdateImage(BrawlStarsImageType.GEAR, brawlStarsId, inputStream, contentType)
+    }
+
+    private fun doUpdateMessages(
         type: MessageType,
         brawlStarsId: Long,
         langMap: Map<Language, String>,
@@ -67,8 +80,7 @@ class GearAdminService(
         }
     }
 
-    @Transactional
-    fun updateImage(
+    private fun doUpdateImage(
         type: BrawlStarsImageType,
         brawlStarsId: Long,
         inputStream: InputStream,

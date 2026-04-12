@@ -1,4 +1,4 @@
-package com.imstargg.core.admin.response
+package com.imstargg.core.admin.application
 
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity

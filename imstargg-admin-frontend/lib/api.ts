@@ -2,7 +2,7 @@ import type {
   DashboardSummary,
   BrawlerListItem,
   BrawlerDetail,
-  GearListItem,
+  Gear,
   BattleEvent,
   BattleEventMode,
   Maintenance,
@@ -153,7 +153,7 @@ export const uploadHyperChargeImage = (
 };
 
 // Gear
-export const getGears = () => request<GearListItem[]>("/gears");
+export const getGears = () => request<Gear[]>("/gears");
 
 export const createGear = (data: { brawlStarsId: number; rarity: string }) =>
   request<void>("/gears", { method: "POST", body: JSON.stringify(data) });

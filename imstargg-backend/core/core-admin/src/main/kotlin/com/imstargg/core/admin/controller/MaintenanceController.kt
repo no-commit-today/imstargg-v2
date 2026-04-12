@@ -1,8 +1,8 @@
 package com.imstargg.core.admin.controller
 
-import com.imstargg.core.admin.application.BrawlStarsApiMaintenanceAdminService
+import com.imstargg.core.admin.application.BrawlStarsApiMaintenanceService
 import com.imstargg.core.admin.controller.request.MaintenanceRegisterRequest
-import com.imstargg.core.admin.controller.response.MaintenanceAdminResponse
+import com.imstargg.core.admin.controller.response.MaintenanceResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,28 +12,22 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class MaintenanceAdminController(
-    private val maintenanceAdminService: BrawlStarsApiMaintenanceAdminService,
+class MaintenanceController(
+    private val maintenanceService: BrawlStarsApiMaintenanceService,
 ) {
     @GetMapping("/maintenances")
-    fun getAll(): ResponseEntity<List<MaintenanceAdminResponse>> {
-        val maintenances = maintenanceAdminService.findAll()
-        return ResponseEntity.ok(maintenances.map { MaintenanceAdminResponse.from(it) })
-    }
+    fun getAll(): ResponseEntity<List<MaintenanceResponse>> = ResponseEntity.ok(maintenanceService.findAll())
 
     @PostMapping("/maintenances")
     fun register(
         @RequestBody request: MaintenanceRegisterRequest,
-    ): ResponseEntity<MaintenanceAdminResponse> {
-        val maintenance = maintenanceAdminService.register(request.startTime, request.endTime)
-        return ResponseEntity.ok(MaintenanceAdminResponse.from(maintenance))
-    }
+    ): ResponseEntity<MaintenanceResponse> = ResponseEntity.ok(maintenanceService.register(request))
 
     @DeleteMapping("/maintenances/{id}")
     fun delete(
         @PathVariable id: Long,
-    ): ResponseEntity<Void> {
-        maintenanceAdminService.delete(id)
+    ): ResponseEntity<Unit> {
+        maintenanceService.delete(id)
         return ResponseEntity.noContent().build()
     }
 }

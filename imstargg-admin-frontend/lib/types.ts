@@ -40,10 +40,11 @@ export interface HyperCharge {
   imageUrl: string | null;
 }
 
-export interface GearSummary {
+export interface Gear {
   brawlStarsId: number;
   names: Record<Language, string>;
   rarity: string;
+  hasImage: boolean;
 }
 
 export interface BrawlerDetail {
@@ -57,14 +58,7 @@ export interface BrawlerDetail {
   gadgets: Gadget[];
   hyperCharges: HyperCharge[];
   linkedGearBrawlStarsIds: number[];
-  allGears: GearSummary[];
-}
-
-export interface GearListItem {
-  brawlStarsId: number;
-  names: Record<Language, string>;
-  rarity: string;
-  hasImage: boolean;
+  allGears: Gear[];
 }
 
 export interface BattleEvent {
