@@ -21,11 +21,6 @@ class DailyBattleStatsTasklet<TBattle, TEntity>(
 ) : Tasklet {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object {
-        private const val READ_PAGE_SIZE = 5000L
-        private const val BATCH_SIZE = 1000
-    }
-
     override fun execute(
         contribution: StepContribution,
         chunkContext: ChunkContext,
@@ -56,7 +51,7 @@ class DailyBattleStatsTasklet<TBattle, TEntity>(
 
             log.debug("[{}] 집계 완료, 저장 시작 - date: {}", jobName, date)
             val entities = aggregator.toEntities()
-            entities.chunked(BATCH_SIZE).forEach { batch ->
+            entities.chunked(BattleStatsConstants.BATCH_SIZE).forEach { batch ->
                 em.transaction.begin()
                 batch.forEach { em.persist(it) }
                 em.transaction.commit()

@@ -24,9 +24,7 @@ import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.infrastructure.item.Chunk
 import org.springframework.batch.infrastructure.item.ItemProcessor
-import org.springframework.batch.infrastructure.item.ItemWriter
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -179,33 +177,4 @@ class StatsPlayerSyncJobConfig(
     @Bean
     @StepScope
     fun statsPlayerSyncJobItemWriter() = StatsPlayerSyncJobItemWriter(statsPlayerJpaRepository)
-
-    open class StatsPlayerSyncJobItemWriter(
-        private val statsPlayerJpaRepository: StatsPlayerJpaRepository,
-    ) : ItemWriter<List<StatsBattleEntityTeamPlayer>> {
-        override fun write(chunk: Chunk<out List<StatsBattleEntityTeamPlayer>>) {
-            val allTags =
-                chunk.items
-                    .flatten()
-                    .map { it.brawlStarsTag }
-                    .distinct()
-
-            if (allTags.isEmpty()) return
-
-            val existingTags =
-                statsPlayerJpaRepository
-                    .findAllByBrawlStarsTagIn(allTags)
-                    .map { it.brawlStarsTag }
-                    .toSet()
-
-            val newPlayers =
-                allTags
-                    .filter { it !in existingTags }
-                    .map { StatsPlayerEntity(brawlStarsTag = it) }
-
-            if (newPlayers.isNotEmpty()) {
-                statsPlayerJpaRepository.saveAll(newPlayers)
-            }
-        }
-    }
 }

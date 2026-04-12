@@ -24,8 +24,8 @@ class MonthlyStatsAggregationJobConfig(
         const val JOB_NAME = "monthlyStatsAggregationJob"
         const val YEAR_MONTH_PARAMETER_NAME = "monthlyStatsAggregationJobYearMonthJobParameter"
         private const val STEP_TEAM_RESULT = "monthlyStatsAggregationTeamResultStep"
-        private const val STEP_ENEMY_RESULT = "monthlyStatsAggregationEnemyResultStep"
         private const val STEP_TEAM_RANK = "monthlyStatsAggregationTeamRankStep"
+        private const val STEP_ENEMY_RESULT = "monthlyStatsAggregationEnemyResultStep"
     }
 
     @Bean(YEAR_MONTH_PARAMETER_NAME)
@@ -38,8 +38,8 @@ class MonthlyStatsAggregationJobConfig(
             .validator(
                 DefaultJobParametersValidator(arrayOf(YearMonthJobParameter.KEY), arrayOf()),
             ).start(monthlyStatsAggregationTeamResultStep())
-            .next(monthlyStatsAggregationEnemyResultStep())
             .next(monthlyStatsAggregationTeamRankStep())
+            .next(monthlyStatsAggregationEnemyResultStep())
             .build()
 
     @Bean(STEP_TEAM_RESULT)
@@ -59,13 +59,13 @@ class MonthlyStatsAggregationJobConfig(
             }, txManager)
             .build()
 
-    @Bean(STEP_ENEMY_RESULT)
+    @Bean(STEP_TEAM_RANK)
     @JobScope
-    fun monthlyStatsAggregationEnemyResultStep(): Step =
-        StepBuilder(STEP_ENEMY_RESULT, jobRepository)
+    fun monthlyStatsAggregationTeamRankStep(): Step =
+        StepBuilder(STEP_TEAM_RANK, jobRepository)
             .tasklet({ _, _ ->
                 val yearMonth = yearMonthJobParameter().yearMonth!!
-                periodStatsAggregationHelper.aggregateEnemyResult(
+                periodStatsAggregationHelper.aggregateTeamRank(
                     sourcePeriodType = StatsPeriodType.WEEKLY,
                     targetPeriodType = StatsPeriodType.MONTHLY,
                     startDate = yearMonth.atDay(1),
@@ -76,13 +76,13 @@ class MonthlyStatsAggregationJobConfig(
             }, txManager)
             .build()
 
-    @Bean(STEP_TEAM_RANK)
+    @Bean(STEP_ENEMY_RESULT)
     @JobScope
-    fun monthlyStatsAggregationTeamRankStep(): Step =
-        StepBuilder(STEP_TEAM_RANK, jobRepository)
+    fun monthlyStatsAggregationEnemyResultStep(): Step =
+        StepBuilder(STEP_ENEMY_RESULT, jobRepository)
             .tasklet({ _, _ ->
                 val yearMonth = yearMonthJobParameter().yearMonth!!
-                periodStatsAggregationHelper.aggregateTeamRank(
+                periodStatsAggregationHelper.aggregateEnemyResult(
                     sourcePeriodType = StatsPeriodType.WEEKLY,
                     targetPeriodType = StatsPeriodType.MONTHLY,
                     startDate = yearMonth.atDay(1),

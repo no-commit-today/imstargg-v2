@@ -55,7 +55,7 @@ class BrawlerBattleRankStatsJobConfig(
                                 statsRankBattleEntity.battleDate.eq(date),
                                 statsRankBattleEntity.id.gt(lastId),
                             ).orderBy(statsRankBattleEntity.id.asc())
-                            .limit(5000)
+                            .limit(BattleStatsConstants.READ_PAGE_SIZE)
                             .fetch()
                             .toList()
                     },
