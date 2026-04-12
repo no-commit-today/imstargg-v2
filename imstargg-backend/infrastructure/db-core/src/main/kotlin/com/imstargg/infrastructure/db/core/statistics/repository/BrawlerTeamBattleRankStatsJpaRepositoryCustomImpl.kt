@@ -6,10 +6,10 @@ import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamEmbedded
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsBrawlerEntity.Companion.brawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
 import com.querydsl.core.BooleanBuilder
-import com.querydsl.core.Tuple
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.Predicate
 import com.querydsl.core.types.dsl.Expressions
@@ -67,10 +67,10 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
-    ): List<Tuple> {
+    ): List<BrawlerTeamRankProjection> {
         val teamKeyExpr = brawlerTeamBattleRankStatsEntity.brawlerTeam.teamKey
-        val totalCountSum = sumOf(brawlerTeamBattleRankStatsEntity.rankCounts.totalCount)
-        val weightedRankSumExpr = sumOf(brawlerTeamBattleRankStatsEntity.weightedRankSum)
+        val totalCountSum = brawlerTeamBattleRankStatsEntity.rankCounts.totalCount.sumLong()
+        val weightedRankSumExpr = brawlerTeamBattleRankStatsEntity.weightedRankSum.sumLong()
 
         val orderSpecifier =
             rankStatsOrderSpecifier(
@@ -95,6 +95,17 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
             .offset(offset)
             .limit(limit)
             .fetch()
+            .map { tuple ->
+                BrawlerTeamRankProjection(
+                    brawlerTeam =
+                        BrawlerTeamEmbedded(
+                            teamKey = tuple[teamKeyExpr]!!,
+                            teamSize = teamSize,
+                        ),
+                    totalCount = tuple[totalCountSum]!!,
+                    weightedRankSum = tuple[weightedRankSumExpr]!!,
+                )
+            }
     }
 
     override fun countTotalBattleCount(
@@ -106,7 +117,7 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
         teamSize: StatsTeamSize,
     ): Long =
         queryFactory
-            .select(sumOf(brawlerTeamBattleRankStatsEntity.rankCounts.totalCount))
+            .select(brawlerTeamBattleRankStatsEntity.rankCounts.totalCount.sumLong())
             .from(brawlerTeamBattleRankStatsEntity)
             .where(
                 brawlerIdFilters(brawlerBrawlStarsIds),
@@ -174,7 +185,4 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
             SortOrder.DESC -> expression.desc()
         }
     }
-
-    private fun sumOf(path: com.querydsl.core.types.dsl.NumberPath<Long>): NumberExpression<Long> =
-        Expressions.numberTemplate(Long::class.javaObjectType, "sum({0})", path)
 }

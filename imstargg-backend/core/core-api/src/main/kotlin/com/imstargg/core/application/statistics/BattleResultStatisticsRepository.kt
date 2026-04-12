@@ -54,12 +54,7 @@ class BattleResultStatisticsRepository(
             .map { (brawlerBrawlStarsId, grouped) ->
                 BrawlerResultCount(
                     brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                    resultCount =
-                        ResultCount(
-                            grouped.sumOf { it.resultCount.victoryCount },
-                            grouped.sumOf { it.resultCount.defeatCount },
-                            grouped.sumOf { it.resultCount.drawCount },
-                        ),
+                    resultCount = grouped.map { it.resultCount }.reduce { acc, r -> acc + r }.toResultCount(),
                     starPlayerCount = grouped.sumOf { it.starPlayerCount },
                 )
             }
@@ -74,9 +69,9 @@ class BattleResultStatisticsRepository(
         sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerEnemyResultCount> {
-        val tuples =
-            enemyBattleResultJpaRepository.findPagedByConditions(
+    ): List<BrawlerEnemyResultCount> =
+        enemyBattleResultJpaRepository
+            .findPagedByConditions(
                 eventBrawlStarsId = eventId?.value,
                 brawlerBrawlStarsId = brawlerId.value,
                 tierRange = tierRange,
@@ -86,21 +81,18 @@ class BattleResultStatisticsRepository(
                 sortOrder = sortOrder,
                 offset = offsetLimit.offset.toLong(),
                 limit = offsetLimit.limit.toLong(),
-            )
-
-        return tuples.map { tuple ->
-            BrawlerEnemyResultCount(
-                brawlerId = BrawlStarsId(tuple.get(0, Long::class.javaObjectType)!!),
-                enemyBrawlerId = BrawlStarsId(tuple.get(1, Long::class.javaObjectType)!!),
-                resultCount =
-                    ResultCount(
-                        victoryCount = tuple.get(2, Long::class.javaObjectType)!!,
-                        defeatCount = tuple.get(3, Long::class.javaObjectType)!!,
-                        drawCount = tuple.get(4, Long::class.javaObjectType)!!,
-                    ),
-            )
-        }
-    }
+            ).map { projection ->
+                BrawlerEnemyResultCount(
+                    brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
+                    enemyBrawlerId = BrawlStarsId(projection.enemyBrawlerBrawlStarsId),
+                    resultCount =
+                        ResultCount(
+                            victoryCount = projection.victoryCount,
+                            defeatCount = projection.defeatCount,
+                            drawCount = projection.drawCount,
+                        ),
+                )
+            }
 
     fun countEnemyResultTotalBattleCount(
         eventId: BrawlStarsId?,
@@ -142,9 +134,9 @@ class BattleResultStatisticsRepository(
         sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerTeamResultCount> {
-        val tuples =
-            teamBattleResultJpaRepository.findPagedByConditions(
+    ): List<BrawlerTeamResultCount> =
+        teamBattleResultJpaRepository
+            .findPagedByConditions(
                 eventBrawlStarsId = eventId?.value,
                 tierRange = tierRange,
                 startDate = startDate,
@@ -155,24 +147,17 @@ class BattleResultStatisticsRepository(
                 sortOrder = sortOrder,
                 offset = offsetLimit.offset.toLong(),
                 limit = offsetLimit.limit.toLong(),
-            )
-
-        return tuples.map { tuple ->
-            BrawlerTeamResultCount(
-                brawlerIds =
-                    tuple
-                        .get(0, String::class.java)!!
-                        .split("_")
-                        .map { BrawlStarsId(it.toLong()) },
-                resultCount =
-                    ResultCount(
-                        victoryCount = tuple.get(1, Long::class.javaObjectType)!!,
-                        defeatCount = tuple.get(2, Long::class.javaObjectType)!!,
-                        drawCount = tuple.get(3, Long::class.javaObjectType)!!,
-                    ),
-            )
-        }
-    }
+            ).map { projection ->
+                BrawlerTeamResultCount(
+                    brawlerIds = projection.brawlerTeam.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                    resultCount =
+                        ResultCount(
+                            victoryCount = projection.victoryCount,
+                            defeatCount = projection.defeatCount,
+                            drawCount = projection.drawCount,
+                        ),
+                )
+            }
 
     fun countTeamResultTotalBattleCount(
         eventId: BrawlStarsId?,
@@ -231,12 +216,7 @@ class BattleResultStatisticsRepository(
                     brawlerResultCount =
                         BrawlerResultCount(
                             brawlerId = brawlerId,
-                            resultCount =
-                                ResultCount(
-                                    grouped.sumOf { it.resultCount.victoryCount },
-                                    grouped.sumOf { it.resultCount.defeatCount },
-                                    grouped.sumOf { it.resultCount.drawCount },
-                                ),
+                            resultCount = grouped.map { it.resultCount }.reduce { acc, r -> acc + r }.toResultCount(),
                             starPlayerCount = grouped.sumOf { it.starPlayerCount },
                         ),
                 )

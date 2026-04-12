@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Clock
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -24,7 +23,7 @@ class StatsDateRangeTest {
     private val mondayClock = clockOf("2026-04-13")
 
     @Nested
-    inner class TODAY {
+    inner class Today {
         @Test
         fun `오늘 날짜만 반환한다`() {
             // when
@@ -37,7 +36,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class RECENT_3_DAYS {
+    inner class Recent3Days {
         @Test
         fun `오늘 포함 3일 반환한다`() {
             // when
@@ -50,7 +49,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class THIS_WEEK {
+    inner class ThisWeek {
         @Test
         fun `이번주 월요일부터 오늘까지 반환한다`() {
             // when
@@ -73,7 +72,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class SINCE_LAST_WEEK {
+    inner class SinceLastWeek {
         @Test
         fun `지난주 월요일부터 오늘까지 반환한다`() {
             // when
@@ -86,7 +85,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class LAST_WEEK {
+    inner class LastWeek {
         @Test
         fun `지난주 월요일부터 일요일까지 반환한다`() {
             // when
@@ -99,7 +98,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class SINCE_TWO_WEEKS_AGO {
+    inner class SinceTwoWeeksAgo {
         @Test
         fun `지지난주 월요일부터 오늘까지 반환한다`() {
             // when
@@ -112,7 +111,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class TWO_WEEKS_AGO {
+    inner class TwoWeeksAgo {
         @Test
         fun `지지난주 월요일부터 일요일까지 반환한다`() {
             // when
@@ -125,7 +124,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class THIS_MONTH {
+    inner class ThisMonth {
         @Test
         fun `이번달 1일부터 오늘까지 반환한다`() {
             // when
@@ -138,7 +137,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class SINCE_LAST_MONTH {
+    inner class SinceLastMonth {
         @Test
         fun `지난달 1일부터 오늘까지 반환한다`() {
             // when
@@ -151,7 +150,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class LAST_MONTH {
+    inner class LastMonth {
         @Test
         fun `지난달 1일부터 마지막날까지 반환한다`() {
             // when
@@ -177,7 +176,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class SINCE_TWO_MONTHS_AGO {
+    inner class SinceTwoMonthsAgo {
         @Test
         fun `지지난달 1일부터 오늘까지 반환한다`() {
             // when
@@ -190,7 +189,7 @@ class StatsDateRangeTest {
     }
 
     @Nested
-    inner class TWO_MONTHS_AGO {
+    inner class TwoMonthsAgo {
         @Test
         fun `지지난달 1일부터 마지막날까지 반환한다`() {
             // when

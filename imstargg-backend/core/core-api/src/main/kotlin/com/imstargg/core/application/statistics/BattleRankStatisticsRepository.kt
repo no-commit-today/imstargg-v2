@@ -4,7 +4,6 @@ import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerTeamRankStatisticsItem
-import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
@@ -36,7 +35,7 @@ class BattleRankStatisticsRepository(
             .map { (brawlerBrawlStarsId, grouped) ->
                 BrawlerRankCount(
                     brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                    rankCount = RankCount(grouped.map { it.rankCounts }.reduce { acc, r -> acc + r }.toMap()),
+                    rankCount = grouped.map { it.rankCounts }.reduce { acc, r -> acc + r }.toRankCount(),
                 )
             }
     }
@@ -51,9 +50,9 @@ class BattleRankStatisticsRepository(
         sortField: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerTeamRankStatisticsItem> {
-        val tuples =
-            teamBattleRankJpaRepository.findPagedByConditions(
+    ): List<BrawlerTeamRankStatisticsItem> =
+        teamBattleRankJpaRepository
+            .findPagedByConditions(
                 eventBrawlStarsId = eventId.value,
                 tierRange = tierRange,
                 startDate = startDate,
@@ -64,22 +63,18 @@ class BattleRankStatisticsRepository(
                 sortOrder = sortOrder,
                 offset = offsetLimit.offset.toLong(),
                 limit = offsetLimit.limit.toLong(),
-            )
-
-        return tuples.map { tuple ->
-            val totalCount = tuple.get(1, Long::class.javaObjectType)!!
-            val weightedRankSum = tuple.get(2, Long::class.javaObjectType)!!
-            BrawlerTeamRankStatisticsItem(
-                brawlerIds =
-                    tuple
-                        .get(0, String::class.java)!!
-                        .split("_")
-                        .map { BrawlStarsId(it.toLong()) },
-                totalBattleCount = totalCount,
-                averageRank = if (totalCount > 0) weightedRankSum.toDouble() / totalCount else 0.0,
-            )
-        }
-    }
+            ).map { projection ->
+                BrawlerTeamRankStatisticsItem(
+                    brawlerIds = projection.brawlerTeam.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                    totalBattleCount = projection.totalCount,
+                    averageRank =
+                        if (projection.totalCount > 0) {
+                            projection.weightedRankSum.toDouble() / projection.totalCount
+                        } else {
+                            0.0
+                        },
+                )
+            }
 
     fun countTeamRankTotalBattleCount(
         eventId: BrawlStarsId,

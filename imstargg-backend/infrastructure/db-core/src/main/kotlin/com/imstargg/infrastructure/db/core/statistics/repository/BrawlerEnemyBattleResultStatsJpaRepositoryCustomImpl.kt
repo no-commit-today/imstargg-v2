@@ -5,9 +5,7 @@ import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
-import com.querydsl.core.Tuple
 import com.querydsl.core.types.OrderSpecifier
-import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.dsl.NumberExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -28,13 +26,13 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
-    ): List<Tuple> {
+    ): List<BrawlerEnemyResultProjection> {
         val brawlerId = brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId
         val enemyBrawlerId = brawlerEnemyBattleResultStatsEntity.enemyBrawlerBrawlStarsId
-        val victorySum = sumOf(brawlerEnemyBattleResultStatsEntity.resultCount.victoryCount)
-        val defeatSum = sumOf(brawlerEnemyBattleResultStatsEntity.resultCount.defeatCount)
-        val drawSum = sumOf(brawlerEnemyBattleResultStatsEntity.resultCount.drawCount)
-        val totalCountSum = sumOf(brawlerEnemyBattleResultStatsEntity.resultCount.totalCount)
+        val victorySum = brawlerEnemyBattleResultStatsEntity.resultCount.victoryCount.sumLong()
+        val defeatSum = brawlerEnemyBattleResultStatsEntity.resultCount.defeatCount.sumLong()
+        val drawSum = brawlerEnemyBattleResultStatsEntity.resultCount.drawCount.sumLong()
+        val totalCountSum = brawlerEnemyBattleResultStatsEntity.resultCount.totalCount.sumLong()
 
         val orderSpecifier =
             resultStatsOrderSpecifier(
@@ -58,6 +56,15 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
             .offset(offset)
             .limit(limit)
             .fetch()
+            .map { tuple ->
+                BrawlerEnemyResultProjection(
+                    brawlerBrawlStarsId = tuple[brawlerId]!!,
+                    enemyBrawlerBrawlStarsId = tuple[enemyBrawlerId]!!,
+                    victoryCount = tuple[victorySum]!!,
+                    defeatCount = tuple[defeatSum]!!,
+                    drawCount = tuple[drawSum]!!,
+                )
+            }
     }
 
     override fun countTotalBattleCount(
@@ -68,7 +75,7 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         endDate: LocalDate,
     ): Long =
         queryFactory
-            .select(sumOf(brawlerEnemyBattleResultStatsEntity.resultCount.totalCount))
+            .select(brawlerEnemyBattleResultStatsEntity.resultCount.totalCount.sumLong())
             .from(brawlerEnemyBattleResultStatsEntity)
             .where(
                 eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
@@ -105,20 +112,11 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         val expression =
             when (sortField) {
                 ResultStatsSortBy.PICK_RATE -> totalCountSum
-                ResultStatsSortBy.WIN_RATE ->
-                    Expressions.numberTemplate(
-                        Double::class.java,
-                        "cast({0} as double) / cast({1} as double)",
-                        victorySum,
-                        totalCountSum,
-                    )
+                ResultStatsSortBy.WIN_RATE -> victorySum
             }
         return when (sortOrder) {
             SortOrder.ASC -> expression.asc()
             SortOrder.DESC -> expression.desc()
         }
     }
-
-    private fun sumOf(path: com.querydsl.core.types.dsl.NumberPath<Long>): NumberExpression<Long> =
-        Expressions.numberTemplate(Long::class.javaObjectType, "sum({0})", path)
 }

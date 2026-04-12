@@ -13,7 +13,7 @@ internal class StatsRankBattleJpaRepositoryCustomImpl(
 
     override fun findAllBattleKeyAndPlayerTagByStatsRankBattles(
         statsRankBattles: Collection<StatsRankBattleEntity>,
-    ): Set<Pair<String, String>> {
+    ): Set<BattleKeyPlayerTagProjection> {
         if (statsRankBattles.isEmpty()) return emptySet()
 
         val battleKeys = statsRankBattles.map { it.battleKey }
@@ -27,9 +27,9 @@ internal class StatsRankBattleJpaRepositoryCustomImpl(
                 statsRankBattleEntity.battleKey.`in`(battleKeys),
             ).fetch()
             .map { tuple ->
-                Pair(
-                    tuple.get(statsRankBattleEntity.battleKey)!!,
-                    tuple.get(statsRankBattleEntity.playerBrawlStarsTag)!!,
+                BattleKeyPlayerTagProjection(
+                    battleKey = tuple[statsRankBattleEntity.battleKey]!!,
+                    playerBrawlStarsTag = tuple[statsRankBattleEntity.playerBrawlStarsTag]!!,
                 )
             }.toSet()
     }

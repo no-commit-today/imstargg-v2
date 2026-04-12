@@ -5,7 +5,6 @@ import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
-import com.querydsl.core.Tuple
 import java.time.LocalDate
 
 interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
@@ -29,7 +28,7 @@ interface BrawlerTeamBattleResultStatsJpaRepositoryCustom {
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
-    ): List<Tuple>
+    ): List<BrawlerTeamResultProjection>
 
     fun countTotalBattleCount(
         eventBrawlStarsId: Long?,

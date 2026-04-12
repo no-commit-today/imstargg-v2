@@ -6,13 +6,12 @@ import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamEmbedded
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsBrawlerEntity.Companion.brawlerTeamBattleResultStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsEntity.Companion.brawlerTeamBattleResultStatsEntity
 import com.querydsl.core.BooleanBuilder
-import com.querydsl.core.Tuple
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.Predicate
-import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.dsl.NumberExpression
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
@@ -68,12 +67,12 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         sortOrder: SortOrder,
         offset: Long,
         limit: Long,
-    ): List<Tuple> {
+    ): List<BrawlerTeamResultProjection> {
         val teamKey = brawlerTeamBattleResultStatsEntity.brawlerTeam.teamKey
-        val victorySum = sumOf(brawlerTeamBattleResultStatsEntity.resultCount.victoryCount)
-        val defeatSum = sumOf(brawlerTeamBattleResultStatsEntity.resultCount.defeatCount)
-        val drawSum = sumOf(brawlerTeamBattleResultStatsEntity.resultCount.drawCount)
-        val totalCountSum = sumOf(brawlerTeamBattleResultStatsEntity.resultCount.totalCount)
+        val victorySum = brawlerTeamBattleResultStatsEntity.resultCount.victoryCount.sumLong()
+        val defeatSum = brawlerTeamBattleResultStatsEntity.resultCount.defeatCount.sumLong()
+        val drawSum = brawlerTeamBattleResultStatsEntity.resultCount.drawCount.sumLong()
+        val totalCountSum = brawlerTeamBattleResultStatsEntity.resultCount.totalCount.sumLong()
 
         val orderSpecifier =
             resultStatsOrderSpecifier(
@@ -98,6 +97,18 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
             .offset(offset)
             .limit(limit)
             .fetch()
+            .map { tuple ->
+                BrawlerTeamResultProjection(
+                    brawlerTeam =
+                        BrawlerTeamEmbedded(
+                            teamKey = tuple[teamKey]!!,
+                            teamSize = teamSize,
+                        ),
+                    victoryCount = tuple[victorySum]!!,
+                    defeatCount = tuple[defeatSum]!!,
+                    drawCount = tuple[drawSum]!!,
+                )
+            }
     }
 
     override fun countTotalBattleCount(
@@ -109,7 +120,7 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         teamSize: StatsTeamSize,
     ): Long =
         queryFactory
-            .select(sumOf(brawlerTeamBattleResultStatsEntity.resultCount.totalCount))
+            .select(brawlerTeamBattleResultStatsEntity.resultCount.totalCount.sumLong())
             .from(brawlerTeamBattleResultStatsEntity)
             .where(
                 brawlerIdFilters(brawlerBrawlStarsIds),
@@ -160,24 +171,15 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
         sortOrder: SortOrder,
         victorySum: NumberExpression<Long>,
         totalCountSum: NumberExpression<Long>,
-    ): OrderSpecifier<*> {
+    ): OrderSpecifier<Long> {
         val expression =
             when (sortBy) {
                 ResultStatsSortBy.PICK_RATE -> totalCountSum
-                ResultStatsSortBy.WIN_RATE ->
-                    Expressions.numberTemplate(
-                        Double::class.java,
-                        "cast({0} as double) / cast({1} as double)",
-                        victorySum,
-                        totalCountSum,
-                    )
+                ResultStatsSortBy.WIN_RATE -> victorySum
             }
         return when (sortOrder) {
             SortOrder.ASC -> expression.asc()
             SortOrder.DESC -> expression.desc()
         }
     }
-
-    private fun sumOf(path: com.querydsl.core.types.dsl.NumberPath<Long>): NumberExpression<Long> =
-        Expressions.numberTemplate(Long::class.javaObjectType, "sum({0})", path)
 }

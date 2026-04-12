@@ -8,6 +8,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTe
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.BattleKeyPlayerTagProjection
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRankBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import org.springframework.stereotype.Component
@@ -41,7 +42,7 @@ class StatsBattleAggregateApplier(
 
         val newRankBattles =
             statsRankBattles.filter { battle ->
-                Pair(battle.battleKey, battle.playerBrawlStarsTag) !in existingRankBattleKeys
+                BattleKeyPlayerTagProjection(battle.battleKey, battle.playerBrawlStarsTag) !in existingRankBattleKeys
             }
         val newResultBattles =
             statsResultBattles.filter { battle ->
