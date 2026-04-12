@@ -42,6 +42,7 @@ export interface HyperCharge {
 
 export interface GearSummary {
   brawlStarsId: number;
+  names: Record<Language, string>;
   rarity: string;
 }
 

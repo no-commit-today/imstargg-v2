@@ -427,7 +427,7 @@ export default function BrawlerDetailPage() {
                     size="sm"
                     onClick={() => toggleGear(gear.brawlStarsId)}
                   >
-                    {gear.brawlStarsId} ({gear.rarity})
+                    {gear.names?.KOREAN || gear.brawlStarsId} ({gear.rarity})
                   </Button>
                 ))}
               </div>

@@ -89,6 +89,10 @@ class BrawlerAdminService(
             messageJpaRepository
                 .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperCharges.map { it.brawlStarsId })
                 .groupBy { it.brawlStarsId }
+        val gearNameMessages =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.GEAR_NAME, allGears.map { it.brawlStarsId })
+                .groupBy { it.brawlStarsId }
         val relevantTypes =
             listOf(
                 BrawlStarsImageType.BRAWLER_PORTRAIT,
@@ -138,7 +142,14 @@ class BrawlerAdminService(
                     )
                 },
             linkedGearIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
-            allGears = allGears.map { GearResponse(gear = it, names = emptyMap(), image = null) },
+            allGears =
+                allGears.map {
+                    GearResponse(
+                        gear = it,
+                        names = toNameMap(gearNameMessages[it.brawlStarsId]),
+                        image = null,
+                    )
+                },
             buffyImages =
                 mapOf(
                     BrawlStarsImageType.BUFFY_GADGET to imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId],

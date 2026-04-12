@@ -89,12 +89,14 @@ data class HyperChargeAdminResponse(
 
 data class GearSummaryAdminResponse(
     val brawlStarsId: Long,
+    val names: Map<Language, String>,
     val rarity: GearRarity,
 ) {
     companion object {
         fun from(response: GearResponse) =
             GearSummaryAdminResponse(
                 brawlStarsId = response.gear.brawlStarsId,
+                names = response.names,
                 rarity = response.gear.rarity,
             )
     }
