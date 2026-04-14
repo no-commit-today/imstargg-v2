@@ -4,11 +4,11 @@ import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 
-class BattleResultBuilder(
+class BattleBuilder(
     private val brawlStarsTag: String,
     private val battleResponse: BattleResponse,
 ) {
-    fun build(): BattleResult {
+    fun build(): Battle {
         val teams = getBattleTeamList()
         val battleKey = createBattleKey(teams)
         return buildBattleResult(battleKey, teams)
@@ -28,14 +28,14 @@ class BattleResultBuilder(
     private fun buildBattleResult(
         battleKey: String,
         teams: List<List<BattleResultPlayerResponse>>,
-    ): BattleResult {
+    ): Battle {
         val battle = battleResponse.battle
         val event = battleResponse.event
-        return BattleResult(
+        return Battle(
             battleKey = battleKey,
             battleAt = battleResponse.battleTime,
             event =
-                BattleResultEvent(
+                BattleEvent(
                     brawlStarsId = event.id,
                     modeBrawlStarsName = event.mode,
                     modeBrawlStarsId = event.modeId,
@@ -53,15 +53,15 @@ class BattleResultBuilder(
         )
     }
 
-    private fun buildTeams(teams: List<List<BattleResultPlayerResponse>>): List<List<BattleResultTeamPlayer>> =
+    private fun buildTeams(teams: List<List<BattleResultPlayerResponse>>): List<List<BattleTeamPlayer>> =
         teams.map { team ->
             team.flatMap { player ->
                 getPlayerBrawlers(player).map { brawler ->
-                    BattleResultTeamPlayer(
+                    BattleTeamPlayer(
                         brawlStarsTag = player.tag,
                         name = player.name,
                         brawler =
-                            BattleResultTeamPlayerBrawler(
+                            BattleTeamPlayerBrawler(
                                 brawlStarsId = brawler.id,
                                 name = brawler.name,
                                 power = brawler.power,

@@ -4,6 +4,7 @@ import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
+import com.imstargg.core.worker.domain.BattleBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -13,6 +14,7 @@ class PlayerRenewalService(
     private val playerRenewalFinder: PlayerRenewalFinder,
     private val playerRenewalProcessor: PlayerRenewalProcessor,
     private val playerUpdater: PlayerUpdater,
+    private val statsBattleAggregator: StatsBattleAggregator,
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
     private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
 ) {
@@ -37,10 +39,12 @@ class PlayerRenewalService(
         try {
             val playerResponse = brawlStarsClient.getPlayerInformation(brawlStarsTag)
             val battleResponses = brawlStarsClient.getPlayerRecentBattles(brawlStarsTag).items
+            val battles = battleResponses.map { BattleBuilder(playerResponse.tag, it).build() }
 
-            playerUpdater.update(playerResponse, battleResponses)
+            val savedBattles = playerUpdater.update(playerResponse, battles)
 
             playerRenewalProcessor.complete(renewal)
+            statsBattleAggregator.asyncAggregate(savedBattles)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
             playerRenewalProcessor.notFound(renewal)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {

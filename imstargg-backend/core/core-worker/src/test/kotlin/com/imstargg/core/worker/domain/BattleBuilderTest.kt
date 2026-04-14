@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class BattleResultBuilderTest {
+class BattleBuilderTest {
     private data class BattleEvent(
         val brawlStarsId: Long,
         val mode: String,
@@ -162,7 +162,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -230,7 +230,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -322,7 +322,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -405,7 +405,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -459,7 +459,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -525,7 +525,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val result = sut.build()
 
         // then
@@ -555,7 +555,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
 
         // then
@@ -595,7 +595,7 @@ class BattleResultBuilderTest {
             )
 
         // when
-        val sut = BattleResultBuilder(playerBrawlStarsTag, battleResponse)
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
         val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
 
         // then
@@ -604,7 +604,7 @@ class BattleResultBuilderTest {
     }
 
     private fun assertBattle(
-        actual: BattleResult,
+        actual: Battle,
         expected: BattleResponse,
     ) {
         assertThat(actual.battleAt).isEqualTo(expected.battleTime)
@@ -624,7 +624,7 @@ class BattleResultBuilderTest {
     }
 
     private fun assertBattleTeams(
-        actuals: List<List<BattleResultTeamPlayer>>,
+        actuals: List<List<BattleTeamPlayer>>,
         expecteds: List<List<BattleResultPlayerResponse>>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -655,7 +655,7 @@ class BattleResultBuilderTest {
     }
 
     private fun assertBattlePlayers(
-        actuals: List<List<BattleResultTeamPlayer>>,
+        actuals: List<List<BattleTeamPlayer>>,
         expecteds: List<BattleResultPlayerResponse>,
     ) {
         assertThat(actuals).hasSize(expecteds.size)
@@ -677,7 +677,7 @@ class BattleResultBuilderTest {
     }
 
     private fun assertBattlePlayerWithABrawler(
-        actual: BattleResultTeamPlayer,
+        actual: BattleTeamPlayer,
         expected: BattleResultPlayerResponse,
     ) {
         val expectedBrawler = expected.brawler!!
@@ -691,7 +691,7 @@ class BattleResultBuilderTest {
     }
 
     private fun assertBattlePlayerWithBrawlers(
-        actual: BattleResultTeamPlayer,
+        actual: BattleTeamPlayer,
         expected: BattleResultPlayerResponse,
         brawlerIdx: Int,
     ) {

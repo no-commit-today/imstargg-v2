@@ -2,10 +2,10 @@ package com.imstargg.core.worker.domain
 
 import java.time.OffsetDateTime
 
-class BattleResult(
+class Battle(
     val battleKey: String,
     val battleAt: OffsetDateTime,
-    val event: BattleResultEvent?,
+    val event: BattleEvent?,
     val mode: String?,
     val type: String?,
     val result: String?,
@@ -14,23 +14,23 @@ class BattleResult(
     val playerBrawlStarsTag: String,
     val battleRank: Int?,
     val trophyChange: Int?,
-    val teams: List<List<BattleResultTeamPlayer>>,
+    val teams: List<List<BattleTeamPlayer>>,
 )
 
-class BattleResultEvent(
+class BattleEvent(
     val brawlStarsId: Long?,
     val modeBrawlStarsName: String?,
     val modeBrawlStarsId: Int?,
     val map: String?,
 )
 
-class BattleResultTeamPlayer(
+class BattleTeamPlayer(
     val brawlStarsTag: String,
     val name: String,
-    val brawler: BattleResultTeamPlayerBrawler,
+    val brawler: BattleTeamPlayerBrawler,
 )
 
-class BattleResultTeamPlayerBrawler(
+class BattleTeamPlayerBrawler(
     val brawlStarsId: Long,
     val name: String,
     val power: Int,

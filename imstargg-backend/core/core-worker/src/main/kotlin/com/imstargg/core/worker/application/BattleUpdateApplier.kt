@@ -1,6 +1,6 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.core.worker.domain.BattleResult
+import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
@@ -19,8 +19,8 @@ class BattleUpdateApplier(
     @Transactional
     fun apply(
         player: PlayerEntity,
-        battles: List<BattleResult>,
-    ): List<BattleResult> {
+        battles: List<Battle>,
+    ): List<Battle> {
         val latestBattle = battleRepository.findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
         val latestBattleTime = latestBattle?.battleAt
 

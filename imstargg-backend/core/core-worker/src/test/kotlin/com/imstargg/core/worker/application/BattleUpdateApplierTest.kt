@@ -1,8 +1,8 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.CoreWorkerContextTest
-import com.imstargg.core.worker.domain.BattleResult
-import com.imstargg.core.worker.domain.BattleResultEvent
+import com.imstargg.core.worker.domain.Battle
+import com.imstargg.core.worker.domain.BattleEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.test.TestDataManager
@@ -117,11 +117,11 @@ class BattleUpdateApplierTest(
     private fun createBattle(
         playerBrawlStarsTag: String,
         battleTime: OffsetDateTime,
-    ) = BattleResult(
+    ) = Battle(
         battleKey = "battle_key_${battleTime.toEpochSecond()}",
         battleAt = battleTime,
         event =
-            BattleResultEvent(
+            BattleEvent(
                 brawlStarsId = 1L,
                 modeBrawlStarsName = "knockout",
                 modeBrawlStarsId = 1,

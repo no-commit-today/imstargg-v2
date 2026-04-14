@@ -4,7 +4,7 @@ import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
-import com.imstargg.core.worker.domain.BattleResultBuilder
+import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import org.slf4j.LoggerFactory
@@ -36,7 +36,7 @@ class StatsBattleAccumulationService(
         for (statsPlayer in statsPlayers) {
             try {
                 val battleResponses = brawlStarsClient.getPlayerRecentBattles(statsPlayer.brawlStarsTag).items
-                val battles = battleResponses.map { BattleResultBuilder(statsPlayer.brawlStarsTag, it).build() }
+                val battles = battleResponses.map { BattleBuilder(statsPlayer.brawlStarsTag, it).build() }
                 statsBattleAggregator.aggregate(battles)
             } catch (ex: BrawlStarsApiClientException.NotFound) {
                 log.warn("[배틀 통계 축적] 플레이어 삭제됨 tag={}", statsPlayer.brawlStarsTag)

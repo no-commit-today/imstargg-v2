@@ -1,47 +1,39 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
-import com.imstargg.core.worker.domain.BattleResultBuilder
+import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
-import com.imstargg.infrastructure.db.core.lock.LockName
-import com.imstargg.infrastructure.db.core.lock.LockTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class PlayerUpdater(
-    private val lockTemplate: LockTemplate,
     private val playerRepository: PlayerJpaRepository,
     private val playerUpdateApplier: PlayerUpdateApplier,
     private val battleUpdateApplier: BattleUpdateApplier,
-    private val statsBattleAggregator: StatsBattleAggregator,
 ) {
-    companion object {
-        private const val LOCK_TIMEOUT_SECONDS = 3
-    }
-
+    @Transactional
     fun update(
         playerResponse: PlayerResponse,
-        battleResponses: List<BattleResponse>,
-    ) {
-        val savedBattles =
-            lockTemplate.execute(
-                LockName.createPlayerLockName(playerResponse.tag),
-                LOCK_TIMEOUT_SECONDS,
-            ) {
-                val player =
-                    playerRepository.findByBrawlStarsTag(playerResponse.tag)
-                        ?: createPlayer(playerResponse)
+        battles: List<Battle>,
+    ): List<Battle> {
+        val player =
+            playerRepository.findWithLockByBrawlStarsTag(playerResponse.tag)
+                ?: createPlayer(playerResponse)
 
-                playerUpdateApplier.apply(player, playerResponse)
+        playerUpdateApplier.apply(player, playerResponse)
+        return battleUpdateApplier.apply(player, battles)
+    }
 
-                val battles = battleResponses.map { BattleResultBuilder(player.brawlStarsTag, it).build() }
-                battleUpdateApplier.apply(player, battles)
-            }
+    @Transactional
+    fun updatePlayer(response: PlayerResponse) {
+        val player =
+            playerRepository.findWithLockByBrawlStarsTag(response.tag)
+                ?: createPlayer(response)
 
-        statsBattleAggregator.asyncAggregate(savedBattles)
+        playerUpdateApplier.apply(player = player, response = response)
     }
 
     private fun createPlayer(response: PlayerResponse): PlayerEntity =

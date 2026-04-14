@@ -3,7 +3,7 @@ package com.imstargg.core.worker.application
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.core.worker.domain.BattleResult
+import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
@@ -23,7 +23,7 @@ class StatsBattleAggregateApplier(
     private val statsResultBattleRepository: StatsResultBattleJpaRepository,
 ) {
     @Transactional
-    fun apply(battles: List<BattleResult>) {
+    fun apply(battles: List<Battle>) {
         val aggregatableBattles = battles.filter { canAggregate(it) }
         val statsRankBattles =
             aggregatableBattles
@@ -53,12 +53,12 @@ class StatsBattleAggregateApplier(
         statsResultBattleRepository.saveAll(newResultBattles)
     }
 
-    private fun canAggregate(battle: BattleResult): Boolean {
+    private fun canAggregate(battle: Battle): Boolean {
         val now = OffsetDateTime.now(clock)
         return battle.battleAt.isAfter(now.minusDays(BATTLE_MAX_AGE_DAYS))
     }
 
-    private fun canCreateStatsBattle(battle: BattleResult): Boolean {
+    private fun canCreateStatsBattle(battle: Battle): Boolean {
         val event = battle.event ?: return false
         if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return false
         if (battle.mode == null || battle.type == null) return false
@@ -79,17 +79,17 @@ class StatsBattleAggregateApplier(
         return true
     }
 
-    private fun canCreateRankBattle(battle: BattleResult): Boolean {
+    private fun canCreateRankBattle(battle: Battle): Boolean {
         if (battle.battleRank == null) return false
         return canCreateStatsBattle(battle)
     }
 
-    private fun canCreateResultBattle(battle: BattleResult): Boolean {
+    private fun canCreateResultBattle(battle: Battle): Boolean {
         if (battle.result == null) return false
         return canCreateStatsBattle(battle)
     }
 
-    private fun toStatsRankBattle(battle: BattleResult) =
+    private fun toStatsRankBattle(battle: Battle) =
         StatsRankBattleEntity(
             battleKey = battle.battleKey,
             battleAt = battle.battleAt,
@@ -104,7 +104,7 @@ class StatsBattleAggregateApplier(
             teams = convertTeams(battle),
         )
 
-    private fun toStatsResultBattle(battle: BattleResult) =
+    private fun toStatsResultBattle(battle: Battle) =
         StatsResultBattleEntity(
             battleKey = battle.battleKey,
             battleAt = battle.battleAt,
@@ -119,7 +119,7 @@ class StatsBattleAggregateApplier(
             teams = convertTeams(battle),
         )
 
-    private fun convertTeams(battle: BattleResult): List<List<StatsBattleEntityTeamPlayer>> =
+    private fun convertTeams(battle: Battle): List<List<StatsBattleEntityTeamPlayer>> =
         battle.teams.map { team ->
             team.map { player ->
                 StatsBattleEntityTeamPlayer(

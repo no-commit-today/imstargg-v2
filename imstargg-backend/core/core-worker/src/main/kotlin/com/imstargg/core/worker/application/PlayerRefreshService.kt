@@ -17,7 +17,7 @@ class PlayerRefreshService(
     private val properties: PlayerRefreshScheduleProperties,
     private val playerRepository: PlayerJpaRepository,
     private val brawlStarsClient: BrawlStarsClient,
-    private val playerUpdateApplier: PlayerUpdateApplier,
+    private val playerUpdater: PlayerUpdater,
     private val playerDeactivator: PlayerDeactivator,
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
     private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
@@ -36,10 +36,7 @@ class PlayerRefreshService(
         for (player in players) {
             try {
                 val playerResponse = brawlStarsClient.getPlayerInformation(player.brawlStarsTag)
-                playerUpdateApplier.apply(
-                    player = player,
-                    response = playerResponse,
-                )
+                playerUpdater.updatePlayer(playerResponse)
             } catch (ex: BrawlStarsApiClientException.NotFound) {
                 log.warn("[플레이어 갱신] 플레이어 삭제됨 tag={}", player.brawlStarsTag)
                 playerDeactivator.deactivate(player.brawlStarsTag)
