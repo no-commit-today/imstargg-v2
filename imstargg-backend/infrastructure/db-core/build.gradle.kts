@@ -19,7 +19,7 @@ dependencies {
     annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:${property("querydslVersion")}:jakarta")
 
     // DB
-    runtimeOnly("com.mysql:mysql-connector-j")
+    runtimeOnly("org.postgresql:postgresql")
 
     // Test Fixtures
     testFixturesImplementation(project(":core:core-enum"))

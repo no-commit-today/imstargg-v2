@@ -1,20 +1,17 @@
 services:
-  mysql:
-    image: mysql:8.4.7
-    container_name: imstargg-mysql
+  postgresql:
+    image: postgres:18.3
+    container_name: imstargg-postgresql
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      MYSQL_DATABASE: imstargg
-      TZ: Asia/Seoul
-      MYSQL_ROOT_PASSWORD: secret
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
+      POSTGRES_DB: imstargg
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      TZ: UTC
     volumes:
-      - ./docker/mysql/var/lib/mysql:/var/lib/mysql # data
-      - ./docker/mysql/etc/mysql/conf.d:/etc/mysql/conf.d # config
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d # init
+      - ./docker/postgresql/var/lib/postgresql/data:/var/lib/postgresql/data # data
+      - ./docker/postgresql/init:/docker-entrypoint-initdb.d # init
   valkey:
     image: valkey/valkey:9.0.3
     container_name: imstargg-valkey

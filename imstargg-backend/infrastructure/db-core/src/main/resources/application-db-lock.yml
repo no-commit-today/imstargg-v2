@@ -1,7 +1,7 @@
 storage:
   datasource:
     lock:
-      driver-class-name: com.mysql.cj.jdbc.Driver
+      driver-class-name: org.postgresql.Driver
       jdbc-url: ${DATABASE_URL}
       username: ${DATABASE_USERNAME}
       password: ${DATABASE_PASSWORD}
@@ -14,9 +14,7 @@ storage:
         keepalive-time: 30000
         max-lifetime: 1800000
         data-source-properties:
-          socketTimeout: 3000
-          serverTimezone: UTC
-          connectionTimeZone: UTC
+          socketTimeout: 3
 
 ---
 spring:
@@ -27,8 +25,8 @@ spring:
 storage:
   datasource:
     lock:
-      jdbc-url: jdbc:mysql://localhost:3306/imstargg
-      username: root
+      jdbc-url: jdbc:postgresql://localhost:5432/imstargg
+      username: postgres
       password: secret
 
 ---

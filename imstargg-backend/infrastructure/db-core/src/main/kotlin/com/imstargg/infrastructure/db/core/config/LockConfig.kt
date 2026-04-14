@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.config
 
-import com.imstargg.infrastructure.db.core.lock.MySqlUserLevelLockTemplate
+import com.imstargg.infrastructure.db.core.lock.PostgresAdvisoryLockTemplate
 import com.zaxxer.hikari.HikariDataSource
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.jdbc.DataSourceBuilder
@@ -16,5 +16,5 @@ class LockConfig {
     fun lockDataSource(): HikariDataSource = DataSourceBuilder.create().type(HikariDataSource::class.java).build()!!
 
     @Bean
-    fun lockTemplate() = MySqlUserLevelLockTemplate(lockDataSource())
+    fun lockTemplate() = PostgresAdvisoryLockTemplate(lockDataSource())
 }

@@ -32,12 +32,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Local Development
 
 ```bash
-# 로컬 인프라 실행 (MySQL, Redis)
+# 로컬 인프라 실행 (PostgreSQL, Redis)
 docker-compose up -d
 
 # 로컬 DB 접속
-# URL: jdbc:mysql://localhost:3306/imstargg
-# User: root / Password: secret
+# URL: jdbc:postgresql://localhost:5432/imstargg
+# User: postgres / Password: secret
 ```
 
 ## Project Architecture
@@ -53,7 +53,7 @@ imstargg-backend/
 │   ├── core-batch/           # 배치 작업 (bootJar 실행 가능)
 │   └── core-enum/            # 공유 Enum (외부 모듈에서 참조)
 ├── infrastructure/
-│   ├── db-core/              # JPA + QueryDSL (MySQL)
+│   ├── db-core/              # JPA + QueryDSL (PostgreSQL)
 │   └── redis-core/           # Redis 캐시/세션
 ├── client/
 │   └── brawlstars-client/    # BrawlStars API 클라이언트 (OpenFeign)
