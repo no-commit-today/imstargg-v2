@@ -6,12 +6,11 @@
 
 Worker는 같은 플레이어/클럽에 대해 여러 Job이 동시에 실행될 수 있습니다. 동시 실행 시 PlayerBrawler, Battle 등의 중복 저장을 방지하기 위해 동시성 제어가 필요합니다.
 
-현재 두 가지 방식이 혼용됩니다.
-
-| 대상 | 방식 |
-|------|------|
-| `PlayerUpdater` | Pessimistic Lock (`SELECT FOR UPDATE`) |
-| `ClubUpdater` | Advisory Lock (`pg_advisory_lock`) |
+| 대상             | 방식                                      |
+| ---------------- | ----------------------------------------- |
+| `PlayerUpdater`  | Pessimistic Lock (`SELECT FOR UPDATE`)    |
+| `ClubUpdater`    | Pessimistic Lock (`SELECT FOR UPDATE`)    |
+| `RenewalEntity`  | Optimistic Lock (`@Version`)              |
 
 ---
 
@@ -44,16 +43,7 @@ Worker B: SELECT → null → INSERT player (race!)
 
 이 상황은 신규 플레이어가 처음 등록될 때만 발생하며 빈도가 낮아 수용 가능한 트레이드오프로 판단했습니다.
 
-### 2.3 Advisory Lock 대신 Pessimistic Lock을 선택한 이유
-
-Advisory Lock은 row가 없어도 lock을 획득할 수 있고 전용 커넥션 풀을 사용하는 장점이 있지만, PlayerUpdater의 경우 아래 이유로 Pessimistic Lock이 더 적합합니다.
-
-- **단순성**: Advisory Lock은 별도 `lockDataSource`, `LockTemplate`, SHA-256 해시 키 변환 등 인프라 복잡도가 높습니다. Pessimistic Lock은 JPA 쿼리 하나(`SELECT FOR UPDATE`)로 대체됩니다.
-- **트랜잭션 범위 일치**: 기존 구조에서 Advisory Lock 아래에 별도 트랜잭션 2개(`PlayerUpdateApplier`, `BattleUpdateApplier`)가 있었습니다. Pessimistic Lock은 단일 `@Transactional` 안에서 모두 처리되어 원자성이 보장됩니다.
-- **Worker 특성**: core-worker는 API 서버와 달리 대규모 동시 요청이 없으므로, 트랜잭션이 길어져 main 커넥션 풀을 점유하더라도 풀 고갈 위험이 낮습니다.
-- **데드락 위험 수용 가능**: Player 업데이트는 `player → player_brawler → gear/gadget/... → battle → battle_team_player` 순서로 항상 동일한 순서로 write하므로, 데드락 발생 가능성이 낮습니다.
-
-### 2.4 관련 코드
+### 2.3 관련 코드
 
 - `PlayerUpdater`: `@Transactional` + `findWithLockByBrawlStarsTag()`
 - `PlayerUpdateApplier`: player 정보 및 brawler 동기화 (`@Transactional`)
@@ -62,29 +52,54 @@ Advisory Lock은 row가 없어도 lock을 획득할 수 있고 전용 커넥션 
 
 ---
 
-## 3. ClubUpdater — Advisory Lock
+## 3. ClubUpdater — Pessimistic Lock
 
 ### 3.1 동작 구조
 
 ```
-Advisory Lock 획득 (별도 lock 커넥션)
-├─ find or create ClubEntity
-└─ clubUpdateApplier.apply()    ← @Transactional
-Advisory Lock 해제
+@Transactional 시작
+├─ findWithLockByBrawlStarsTag()    ← SELECT FOR UPDATE
+│   └─ row 없으면 createClub()
+└─ clubUpdateApplier.apply()        ← 트랜잭션 합류 (REQUIRED)
+@Transactional 커밋
 ```
 
-### 3.2 Advisory Lock을 유지하는 이유
+PlayerUpdater와 동일한 Pessimistic Lock 패턴을 사용합니다.
 
-Club 업데이트의 경우 Pessimistic Lock으로 전환하지 않았습니다. 현재 구조상 `ClubUpdateApplier`가 별도 트랜잭션으로 동작하며, 전환 시 트랜잭션 구조 재설계가 필요합니다. 또한 Club 업데이트 빈도가 상대적으로 낮아 현행 유지가 적절합니다.
+### 3.2 Pessimistic Lock 선택 이유
+
+기존에는 Advisory Lock(`pg_advisory_lock`)을 사용했으나, 다음 이유로 Pessimistic Lock으로 전환했습니다.
+
+- **단순성**: Advisory Lock은 별도 `lockDataSource`, `LockTemplate`, SHA-256 해시 키 변환 등 인프라 복잡도가 높습니다. Pessimistic Lock은 JPA 쿼리 하나(`SELECT FOR UPDATE`)로 대체됩니다.
+- **트랜잭션 범위 일치**: Pessimistic Lock은 단일 `@Transactional` 안에서 모두 처리되어 원자성이 보장됩니다.
+- **PlayerUpdater와 일관성**: 두 Updater가 동일한 패턴을 사용하여 코드 이해와 유지보수가 용이합니다.
 
 ### 3.3 관련 코드
 
-- `PostgresAdvisoryLockTemplate`: lock 획득/해제 구현
-- `LockConfig`: 전용 `lockDataSource` 및 bean 설정 (`@Profile("db-lock")`)
-- `LockName`: lock 키 생성 (`club:{tag}` → SHA-256 → 64비트 정수)
-- `ClubUpdater`: lock 사용처
+- `ClubUpdater`: `@Transactional` + `findWithLockByBrawlStarsTag()`
+- `ClubUpdateApplier`: club 정보 및 member 동기화 (`@Transactional`)
 
-### 3.4 구현 상세
+---
 
-- Lock 키: `club:{tag}`를 SHA-256 해시하여 64비트 정수로 변환
-- 타임아웃: `SET lock_timeout`으로 3초 설정. 초과 시 `SQLException` → `IllegalStateException` 변환
+## 4. RenewalEntity — Optimistic Lock
+
+### 4.1 배경
+
+SQS Standard Queue는 at-least-once 전달을 보장하므로, 동일 tag에 대한 중복 메시지가 도착할 수 있습니다. 두 Worker가 동시에 같은 renewal의 PENDING → EXECUTING 전환을 시도하면 BrawlStars API를 불필요하게 중복 호출합니다.
+
+### 4.2 동작 구조
+
+RenewalEntity에 JPA `@Version` 필드를 추가하여 낙관적 락을 적용합니다.
+
+```text
+Worker A: SELECT renewal (version=0) → toExecuting() → UPDATE (version=0→1) ✅
+Worker B: SELECT renewal (version=0) → toExecuting() → UPDATE (version=0→?) ← ObjectOptimisticLockingFailureException
+```
+
+Worker B는 `ObjectOptimisticLockingFailureException`을 catch하고, WARN 로깅 후 처리를 건너뜁니다.
+
+### 4.3 관련 코드
+
+- `RenewalEntity`: `@Version` 필드
+- `PlayerRenewalService.renew()`: `executing()` 호출 시 `ObjectOptimisticLockingFailureException` catch
+- `ClubRenewalService.renew()`: 동일 패턴
