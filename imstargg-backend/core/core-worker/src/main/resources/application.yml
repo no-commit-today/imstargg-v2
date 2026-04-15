@@ -7,7 +7,6 @@ spring:
     active: local
     include:
       - db
-      - db-lock
       - aws-sqs
 
   config:
