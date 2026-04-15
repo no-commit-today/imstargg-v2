@@ -132,29 +132,36 @@ class PlayerUpdateApplier(
 
         val brawlerMap = brawlers.associateBy { it.brawlerBrawlStarsId }
 
+        val newGears = mutableListOf<PlayerBrawlerGearEntity>()
+        val newStarPowers = mutableListOf<PlayerBrawlerStarPowerEntity>()
+        val newGadgets = mutableListOf<PlayerBrawlerGadgetEntity>()
+        val newHyperCharges = mutableListOf<PlayerBrawlerHyperChargeEntity>()
+        val newBuffies = mutableListOf<PlayerBrawlerBuffyEntity>()
+        val buffyBrawlersToDelete = mutableListOf<PlayerBrawlerEntity>()
+
         for (response in responses) {
             val brawler = brawlerMap[response.id] ?: continue
             val brawlerId = brawler.id!!
 
             val existingGearIds = existingGears[brawlerId]?.toSet() ?: emptySet()
-            response.gears.filter { it.id !in existingGearIds }.forEach {
-                playerBrawlerGearRepository.save(PlayerBrawlerGearEntity(brawler, it.id))
-            }
+            response.gears
+                .filter { it.id !in existingGearIds }
+                .mapTo(newGears) { PlayerBrawlerGearEntity(brawler, it.id) }
 
             val existingStarPowerIds = existingStarPowers[brawlerId]?.toSet() ?: emptySet()
-            response.starPowers.filter { it.id !in existingStarPowerIds }.forEach {
-                playerBrawlerStarPowerRepository.save(PlayerBrawlerStarPowerEntity(brawler, it.id))
-            }
+            response.starPowers
+                .filter { it.id !in existingStarPowerIds }
+                .mapTo(newStarPowers) { PlayerBrawlerStarPowerEntity(brawler, it.id) }
 
             val existingGadgetIds = existingGadgets[brawlerId]?.toSet() ?: emptySet()
-            response.gadgets.filter { it.id !in existingGadgetIds }.forEach {
-                playerBrawlerGadgetRepository.save(PlayerBrawlerGadgetEntity(brawler, it.id))
-            }
+            response.gadgets
+                .filter { it.id !in existingGadgetIds }
+                .mapTo(newGadgets) { PlayerBrawlerGadgetEntity(brawler, it.id) }
 
             val existingHyperChargeIds = existingHyperCharges[brawlerId]?.toSet() ?: emptySet()
-            response.hyperCharges.filter { it.id !in existingHyperChargeIds }.forEach {
-                playerBrawlerHyperChargeRepository.save(PlayerBrawlerHyperChargeEntity(brawler, it.id))
-            }
+            response.hyperCharges
+                .filter { it.id !in existingHyperChargeIds }
+                .mapTo(newHyperCharges) { PlayerBrawlerHyperChargeEntity(brawler, it.id) }
 
             val activeBuffies =
                 buildSet {
@@ -164,11 +171,16 @@ class PlayerUpdateApplier(
                 }
             val existingBuffyTypes = existingBuffies[brawlerId]?.toSet() ?: emptySet()
             if (activeBuffies != existingBuffyTypes) {
-                playerBrawlerBuffyRepository.deleteAllByPlayerBrawler(brawler)
-                activeBuffies.forEach { type ->
-                    playerBrawlerBuffyRepository.save(PlayerBrawlerBuffyEntity(brawler, type))
-                }
+                buffyBrawlersToDelete.add(brawler)
+                activeBuffies.mapTo(newBuffies) { PlayerBrawlerBuffyEntity(brawler, it) }
             }
         }
+
+        playerBrawlerGearRepository.saveAll(newGears)
+        playerBrawlerStarPowerRepository.saveAll(newStarPowers)
+        playerBrawlerGadgetRepository.saveAll(newGadgets)
+        playerBrawlerHyperChargeRepository.saveAll(newHyperCharges)
+        buffyBrawlersToDelete.forEach { playerBrawlerBuffyRepository.deleteAllByPlayerBrawler(it) }
+        playerBrawlerBuffyRepository.saveAll(newBuffies)
     }
 }
