@@ -5,7 +5,9 @@ import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.worker.domain.BattleBuilder
+import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import org.slf4j.LoggerFactory
+import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
 
 @Service
@@ -29,12 +31,17 @@ class PlayerRenewalService(
         }
 
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
-            playerRenewalProcessor.fail(renewal)
+            updateRenewalStatus(renewal) { playerRenewalProcessor.fail(it) }
             log.info("[플레이어 갱신] API 점검 중 tag={}", brawlStarsTag)
             return
         }
 
-        renewal = playerRenewalProcessor.executing(renewal)
+        try {
+            renewal = playerRenewalProcessor.executing(renewal)
+        } catch (ex: ObjectOptimisticLockingFailureException) {
+            log.warn("[플레이어 갱신] 중복 처리 감지 tag={}", brawlStarsTag, ex)
+            return
+        }
 
         try {
             val playerResponse = brawlStarsClient.getPlayerInformation(brawlStarsTag)
@@ -43,17 +50,27 @@ class PlayerRenewalService(
 
             val savedBattles = playerUpdater.update(playerResponse, battles)
 
-            playerRenewalProcessor.complete(renewal)
-            statsBattleAggregator.asyncAggregate(savedBattles)
+            if (updateRenewalStatus(renewal) { playerRenewalProcessor.complete(it) }) {
+                statsBattleAggregator.asyncAggregate(savedBattles)
+            }
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            playerRenewalProcessor.notFound(renewal)
+            updateRenewalStatus(renewal) { playerRenewalProcessor.notFound(it) }
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[플레이어 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
             brawlStarsApiMaintenanceAutoRegistrar.register()
-            playerRenewalProcessor.fail(renewal)
+            updateRenewalStatus(renewal) { playerRenewalProcessor.fail(it) }
         } catch (ex: Exception) {
             log.error("[플레이어 갱신] 실패 tag={}", brawlStarsTag, ex)
-            playerRenewalProcessor.fail(renewal)
+            updateRenewalStatus(renewal) { playerRenewalProcessor.fail(it) }
         }
     }
+
+    private fun updateRenewalStatus(renewal: RenewalEntity, action: (RenewalEntity) -> Unit): Boolean =
+        try {
+            action(renewal)
+            true
+        } catch (ex: ObjectOptimisticLockingFailureException) {
+            log.warn("[플레이어 갱신] 갱신 상태 업데이트 중 버전 충돌 tag={}", renewal.brawlStarsTag, ex)
+            false
+        }
 }

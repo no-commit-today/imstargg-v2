@@ -4,7 +4,9 @@ import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
+import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import org.slf4j.LoggerFactory
+import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
 
 @Service
@@ -27,26 +29,40 @@ class ClubRenewalService(
         }
 
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
-            clubRenewalProcessor.fail(renewal)
+            updateRenewalStatus(renewal) { clubRenewalProcessor.fail(it) }
             log.info("[클럽 갱신] API 점검 중 tag={}", brawlStarsTag)
             return
         }
 
-        renewal = clubRenewalProcessor.executing(renewal)
+        try {
+            renewal = clubRenewalProcessor.executing(renewal)
+        } catch (ex: ObjectOptimisticLockingFailureException) {
+            log.warn("[클럽 갱신] 중복 처리 감지 tag={}", brawlStarsTag, ex)
+            return
+        }
 
         try {
             val clubResponse = brawlStarsClient.getClub(brawlStarsTag)
             clubUpdater.update(clubResponse)
-            clubRenewalProcessor.complete(renewal)
+            updateRenewalStatus(renewal) { clubRenewalProcessor.complete(it) }
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            clubRenewalProcessor.notFound(renewal)
+            updateRenewalStatus(renewal) { clubRenewalProcessor.notFound(it) }
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             log.warn("[클럽 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
             brawlStarsApiMaintenanceAutoRegistrar.register()
-            clubRenewalProcessor.fail(renewal)
+            updateRenewalStatus(renewal) { clubRenewalProcessor.fail(it) }
         } catch (ex: Exception) {
             log.error("[클럽 갱신] 실패 tag={}", brawlStarsTag, ex)
-            clubRenewalProcessor.fail(renewal)
+            updateRenewalStatus(renewal) { clubRenewalProcessor.fail(it) }
         }
     }
+
+    private fun updateRenewalStatus(renewal: RenewalEntity, action: (RenewalEntity) -> Unit): Boolean =
+        try {
+            action(renewal)
+            true
+        } catch (ex: ObjectOptimisticLockingFailureException) {
+            log.warn("[클럽 갱신] 갱신 상태 업데이트 중 버전 충돌 tag={}", renewal.brawlStarsTag, ex)
+            false
+        }
 }

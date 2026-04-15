@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -52,10 +53,11 @@ class RenewalEntity(
     var completedAt: OffsetDateTime? = null
         protected set
 
+    @Version
+    @Column(name = "version", nullable = false)
+    val version: Long = 0
+
     fun reRequest(requestedAt: OffsetDateTime) {
-        check(status != RenewalStatus.PENDING && status != RenewalStatus.EXECUTING) {
-            "Cannot re-request from $status"
-        }
         this.requestedAt = requestedAt
         this.status = RenewalStatus.REQUESTED
         this.executedAt = null

@@ -139,6 +139,7 @@ create table if not exists renewal
     requested_at   timestamptz not null,
     executed_at    timestamptz null,
     completed_at   timestamptz null,
+    version        bigint      not null default 0,
     created_at     timestamptz not null default now(),
     updated_at     timestamptz not null default now()
 );

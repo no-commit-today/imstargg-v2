@@ -83,36 +83,36 @@ class RenewalEntityTest {
         }
 
         @Test
-        fun `PENDING 상태에서 호출하면 IllegalStateException이 발생한다`() {
+        fun `PENDING 상태에서 호출하면 REQUESTED로 변경된다`() {
             // given
             val sut = aRenewalEntity().build()
             sut.toPending()
+            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
 
             // when
-            val exception =
-                catchThrowableOfType(IllegalStateException::class.java) {
-                    sut.reRequest(OffsetDateTime.now())
-                }
+            sut.reRequest(newRequestedAt)
 
             // then
-            assertThat(exception.message).contains("Cannot re-request from PENDING")
+            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
+            assertThat(sut.requestedAt).isEqualTo(newRequestedAt)
         }
 
         @Test
-        fun `EXECUTING 상태에서 호출하면 IllegalStateException이 발생한다`() {
+        fun `EXECUTING 상태에서 호출하면 REQUESTED로 변경되고 executedAt이 null이 된다`() {
             // given
             val sut = aRenewalEntity().build()
             sut.toPending()
             sut.toExecuting(fixedClock)
+            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
 
             // when
-            val exception =
-                catchThrowableOfType(IllegalStateException::class.java) {
-                    sut.reRequest(OffsetDateTime.now())
-                }
+            sut.reRequest(newRequestedAt)
 
             // then
-            assertThat(exception.message).contains("Cannot re-request from EXECUTING")
+            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
+            assertThat(sut.requestedAt).isEqualTo(newRequestedAt)
+            assertThat(sut.executedAt).isNull()
+            assertThat(sut.completedAt).isNull()
         }
     }
 

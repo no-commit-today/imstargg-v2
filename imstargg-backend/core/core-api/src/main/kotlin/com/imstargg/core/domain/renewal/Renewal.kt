@@ -15,16 +15,12 @@ data class Renewal(
     val completedAt: OffsetDateTime?,
 ) {
     companion object {
-        private val STALE_REQUESTED_THRESHOLD = Duration.ofMinutes(1)
+        private val STALE_THRESHOLD = Duration.ofSeconds(10)
     }
 
-    fun canRenew(now: OffsetDateTime): Boolean =
-        when (status) {
-            RenewalStatus.PENDING, RenewalStatus.EXECUTING -> false
-            RenewalStatus.REQUESTED, RenewalStatus.NOT_FOUND -> {
-                val elapsed = Duration.between(requestedAt, now)
-                elapsed > STALE_REQUESTED_THRESHOLD
-            }
-            else -> true
-        }
+    fun canRenew(now: OffsetDateTime): Boolean {
+        if (status.isCompleted()) return true
+        val elapsed = Duration.between(requestedAt, now)
+        return elapsed > STALE_THRESHOLD
+    }
 }

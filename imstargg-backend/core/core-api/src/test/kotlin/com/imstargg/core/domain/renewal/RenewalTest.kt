@@ -14,31 +14,7 @@ class RenewalTest {
     @Nested
     inner class CanRenew {
         @Test
-        fun `PENDING 상태이면 갱신할 수 없다`() {
-            // given
-            val sut = aRenewal().withStatus(RenewalStatus.PENDING).build()
-
-            // when
-            val result = sut.canRenew(baseTime)
-
-            // then
-            assertThat(result).isFalse()
-        }
-
-        @Test
-        fun `EXECUTING 상태이면 갱신할 수 없다`() {
-            // given
-            val sut = aRenewal().withStatus(RenewalStatus.EXECUTING).build()
-
-            // when
-            val result = sut.canRenew(baseTime)
-
-            // then
-            assertThat(result).isFalse()
-        }
-
-        @Test
-        fun `REQUESTED 상태에서 1분 이하면 갱신할 수 없다`() {
+        fun `REQUESTED 상태에서 10초 이하면 갱신할 수 없다`() {
             // given
             val sut =
                 aRenewal()
@@ -47,14 +23,14 @@ class RenewalTest {
                     .build()
 
             // when
-            val result = sut.canRenew(baseTime.plusSeconds(60))
+            val result = sut.canRenew(baseTime.plusSeconds(10))
 
             // then
             assertThat(result).isFalse()
         }
 
         @Test
-        fun `REQUESTED 상태에서 1분 초과하면 갱신할 수 있다`() {
+        fun `REQUESTED 상태에서 10초 초과하면 갱신할 수 있다`() {
             // given
             val sut =
                 aRenewal()
@@ -63,7 +39,71 @@ class RenewalTest {
                     .build()
 
             // when
-            val result = sut.canRenew(baseTime.plusSeconds(61))
+            val result = sut.canRenew(baseTime.plusSeconds(11))
+
+            // then
+            assertThat(result).isTrue()
+        }
+
+        @Test
+        fun `PENDING 상태에서 10초 이하면 갱신할 수 없다`() {
+            // given
+            val sut =
+                aRenewal()
+                    .withStatus(RenewalStatus.PENDING)
+                    .withRequestedAt(baseTime)
+                    .build()
+
+            // when
+            val result = sut.canRenew(baseTime.plusSeconds(10))
+
+            // then
+            assertThat(result).isFalse()
+        }
+
+        @Test
+        fun `PENDING 상태에서 10초 초과하면 갱신할 수 있다`() {
+            // given
+            val sut =
+                aRenewal()
+                    .withStatus(RenewalStatus.PENDING)
+                    .withRequestedAt(baseTime)
+                    .build()
+
+            // when
+            val result = sut.canRenew(baseTime.plusSeconds(11))
+
+            // then
+            assertThat(result).isTrue()
+        }
+
+        @Test
+        fun `EXECUTING 상태에서 10초 이하면 갱신할 수 없다`() {
+            // given
+            val sut =
+                aRenewal()
+                    .withStatus(RenewalStatus.EXECUTING)
+                    .withRequestedAt(baseTime)
+                    .build()
+
+            // when
+            val result = sut.canRenew(baseTime.plusSeconds(10))
+
+            // then
+            assertThat(result).isFalse()
+        }
+
+        @Test
+        fun `EXECUTING 상태에서 10초 초과하면 갱신할 수 있다`() {
+            // given
+            val sut =
+                aRenewal()
+                    .withStatus(RenewalStatus.EXECUTING)
+                    .withRequestedAt(baseTime)
+                    .build()
+
+            // when
+            val result = sut.canRenew(baseTime.plusSeconds(11))
 
             // then
             assertThat(result).isTrue()
@@ -82,32 +122,12 @@ class RenewalTest {
         }
 
         @Test
-        fun `NOT_FOUND 상태에서 1분 이하면 갱신할 수 없다`() {
+        fun `NOT_FOUND 상태이면 갱신할 수 있다`() {
             // given
-            val sut =
-                aRenewal()
-                    .withStatus(RenewalStatus.NOT_FOUND)
-                    .withRequestedAt(baseTime)
-                    .build()
+            val sut = aRenewal().withStatus(RenewalStatus.NOT_FOUND).build()
 
             // when
-            val result = sut.canRenew(baseTime.plusSeconds(60))
-
-            // then
-            assertThat(result).isFalse()
-        }
-
-        @Test
-        fun `NOT_FOUND 상태에서 1분 초과하면 갱신할 수 있다`() {
-            // given
-            val sut =
-                aRenewal()
-                    .withStatus(RenewalStatus.NOT_FOUND)
-                    .withRequestedAt(baseTime)
-                    .build()
-
-            // when
-            val result = sut.canRenew(baseTime.plusSeconds(61))
+            val result = sut.canRenew(baseTime)
 
             // then
             assertThat(result).isTrue()

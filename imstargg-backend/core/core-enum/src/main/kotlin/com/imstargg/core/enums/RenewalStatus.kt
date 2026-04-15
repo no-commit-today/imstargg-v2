@@ -9,5 +9,7 @@ enum class RenewalStatus {
     FAILED,
     ;
 
-    fun isProgressing(): Boolean = this == REQUESTED || this == PENDING || this == EXECUTING
+    fun isCompleted(): Boolean = this == COMPLETED || this == NOT_FOUND || this == FAILED
+
+    fun isProgressing(): Boolean = !isCompleted()
 }
