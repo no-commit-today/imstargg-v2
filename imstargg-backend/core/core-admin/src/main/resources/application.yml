@@ -30,7 +30,7 @@ spring:
 app:
   cors:
     allowed-origins:
-      - https://admin.imstargg.com
+      - http://localhost:3000
 
 ---
 spring:
@@ -39,4 +39,4 @@ spring:
 app:
   cors:
     allowed-origins:
-      - https://admin.imstargg.com
+      - http://localhost:3000
