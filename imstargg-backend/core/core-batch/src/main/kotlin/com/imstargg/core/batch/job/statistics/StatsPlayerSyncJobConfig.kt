@@ -2,6 +2,7 @@ package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
+import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
@@ -20,6 +21,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
+import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
@@ -29,7 +31,6 @@ import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
-import java.time.ZoneOffset
 
 @Configuration
 class StatsPlayerSyncJobConfig(
@@ -44,6 +45,7 @@ class StatsPlayerSyncJobConfig(
 ) {
     companion object {
         const val JOB_NAME = "statsPlayerSyncJob"
+        const val RANKING_JOB_NAME = "statsPlayerSyncFromRankingJob"
         const val DATE_PARAMETER_NAME = "statsPlayerSyncJobDateJobParameter"
         const val RANKING_STEP_NAME = "statsPlayerSyncFromRankingStep"
         const val RANK_BATTLE_STEP_NAME = "statsPlayerSyncFromRankBattleStep"
@@ -59,27 +61,30 @@ class StatsPlayerSyncJobConfig(
     fun statsPlayerSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(statsPlayerSyncFromRankingStep())
-            .next(statsPlayerSyncFromRankBattleStep())
+            .start(statsPlayerSyncFromRankBattleStep())
             .next(statsPlayerSyncFromResultBattleStep())
             .build()
 
+    @Bean(RANKING_JOB_NAME)
+    fun statsPlayerSyncFromRankingJob(): Job =
+        JobBuilder(RANKING_JOB_NAME, jobRepository)
+            .incrementer(RunIdIncrementer())
+            .start(statsPlayerSyncFromRankingStep())
+            .build()
+
     @Bean(RANKING_STEP_NAME)
-    @JobScope
     fun statsPlayerSyncFromRankingStep(): Step =
         StepBuilder(RANKING_STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
-                val date = dateJobParameter().date!!
-                val from = date.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime()
-                val to = date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime()
-
                 val playerRankingIds =
-                    playerRankingJpaRepository
-                        .findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(from, to)
-                        .mapNotNull { it.id }
+                    Country.entries.mapNotNull { country ->
+                        playerRankingJpaRepository
+                            .findTopByCountryOrderByCollectedAtDesc(country)
+                            ?.id
+                    }
                 val brawlerRankingIds =
                     brawlerRankingJpaRepository
-                        .findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(from, to)
+                        .findAllLatestPerCountryAndBrawler()
                         .mapNotNull { it.id }
 
                 val allTags =

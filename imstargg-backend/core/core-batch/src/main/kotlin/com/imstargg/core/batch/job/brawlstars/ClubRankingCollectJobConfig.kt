@@ -29,6 +29,7 @@ class ClubRankingCollectJobConfig(
     companion object {
         const val JOB_NAME = "clubRankingCollectJob"
         private const val STEP_NAME = "clubRankingCollectStep"
+        private const val SNAPSHOT_RETENTION_COUNT = 2
     }
 
     @Bean(JOB_NAME)
@@ -62,6 +63,18 @@ class ClubRankingCollectJobConfig(
                                 )
                             }
                         clubRankingItemJpaRepository.saveAll(items)
+
+                        val outdated =
+                            clubRankingJpaRepository
+                                .findAllByCountryOrderByCollectedAtDesc(country)
+                                .drop(SNAPSHOT_RETENTION_COUNT)
+                        if (outdated.isNotEmpty()) {
+                            val outdatedIds = outdated.mapNotNull { it.id }
+                            val outdatedItems =
+                                clubRankingItemJpaRepository.findAllByClubRankingIdIn(outdatedIds)
+                            clubRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
+                            clubRankingJpaRepository.deleteAllInBatch(outdated)
+                        }
                     }
                 },
                 txManager,

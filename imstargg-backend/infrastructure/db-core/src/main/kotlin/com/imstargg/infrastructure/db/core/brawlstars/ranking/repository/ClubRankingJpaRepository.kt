@@ -13,14 +13,5 @@ interface ClubRankingJpaRepository : JpaRepository<ClubRankingEntity, Long> {
         collectedAt: OffsetDateTime,
     ): ClubRankingEntity?
 
-    fun findAllByCollectedAtGreaterThanEqualAndCollectedAtLessThan(
-        from: OffsetDateTime,
-        to: OffsetDateTime,
-    ): List<ClubRankingEntity>
-
-    fun findAllByCountryAndCollectedAtGreaterThanEqualAndCollectedAtLessThan(
-        country: Country,
-        from: OffsetDateTime,
-        to: OffsetDateTime,
-    ): List<ClubRankingEntity>
+    fun findAllByCountryOrderByCollectedAtDesc(country: Country): List<ClubRankingEntity>
 }

@@ -30,6 +30,7 @@ class BrawlerRankingCollectJobConfig(
     companion object {
         const val JOB_NAME = "brawlerRankingCollectJob"
         private const val STEP_NAME = "brawlerRankingCollectStep"
+        private const val SNAPSHOT_RETENTION_COUNT = 2
     }
 
     @Bean(JOB_NAME)
@@ -73,6 +74,20 @@ class BrawlerRankingCollectJobConfig(
                                     )
                                 }
                             brawlerRankingItemJpaRepository.saveAll(items)
+
+                            val outdated =
+                                brawlerRankingJpaRepository
+                                    .findAllByCountryAndBrawlerBrawlStarsIdOrderByCollectedAtDesc(
+                                        country,
+                                        brawler.id,
+                                    ).drop(SNAPSHOT_RETENTION_COUNT)
+                            if (outdated.isNotEmpty()) {
+                                val outdatedIds = outdated.mapNotNull { it.id }
+                                val outdatedItems =
+                                    brawlerRankingItemJpaRepository.findAllByBrawlerRankingIdIn(outdatedIds)
+                                brawlerRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
+                                brawlerRankingJpaRepository.deleteAllInBatch(outdated)
+                            }
                         }
                     }
                 },
