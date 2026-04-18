@@ -26,7 +26,13 @@ app:
         club-queue-name: imstargg-club-renewal-local
 
 ---
-spring.config.activate.on-profile: dev
+spring:
+  config.activate.on-profile: dev
+  cloud:
+    aws:
+      sqs:
+        listener:
+          queue-not-found-strategy: fail
 
 app:
   aws:
@@ -36,7 +42,13 @@ app:
         club-queue-name: imstargg-club-renewal-dev
 
 ---
-spring.config.activate.on-profile: prod
+spring:
+  config.activate.on-profile: prod
+  cloud:
+    aws:
+      sqs:
+        listener:
+          queue-not-found-strategy: fail
 
 app:
   aws:
