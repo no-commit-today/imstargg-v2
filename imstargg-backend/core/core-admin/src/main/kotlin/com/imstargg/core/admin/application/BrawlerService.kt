@@ -29,7 +29,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImage
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.io.InputStream
 
 @Service
 @Transactional(readOnly = true)
@@ -235,47 +234,42 @@ class BrawlerService(
     @Transactional
     fun updateBrawlerImage(
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        doUpdateImage(BrawlStarsImageType.BRAWLER_PORTRAIT, brawlStarsId, inputStream, contentType)
+        doUpdateImage(BrawlStarsImageType.BRAWLER_PORTRAIT, brawlStarsId, update)
     }
 
     @Transactional
     fun updateBuffyImage(
         buffyType: BrawlStarsImageType,
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        doUpdateImage(buffyType, brawlStarsId, inputStream, contentType)
+        doUpdateImage(buffyType, brawlStarsId, update)
     }
 
     @Transactional
     fun updateStarPowerImage(
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        doUpdateImage(BrawlStarsImageType.STARPOWER, brawlStarsId, inputStream, contentType)
+        doUpdateImage(BrawlStarsImageType.STARPOWER, brawlStarsId, update)
     }
 
     @Transactional
     fun updateGadgetImage(
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        doUpdateImage(BrawlStarsImageType.GADGET, brawlStarsId, inputStream, contentType)
+        doUpdateImage(BrawlStarsImageType.GADGET, brawlStarsId, update)
     }
 
     @Transactional
     fun updateHyperChargeImage(
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        doUpdateImage(BrawlStarsImageType.HYPERCHARGE, brawlStarsId, inputStream, contentType)
+        doUpdateImage(BrawlStarsImageType.HYPERCHARGE, brawlStarsId, update)
     }
 
     @Transactional
@@ -305,13 +299,16 @@ class BrawlerService(
     private fun doUpdateImage(
         type: BrawlStarsImageType,
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        imageStorageService.upload(storedName, inputStream, contentType)
+        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId, update.ext)
+        val existing = imageJpaRepository.findByTypeAndBrawlStarsId(type, brawlStarsId)
+        imageStorageService.upload(storedName, update.inputStream, update.contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
         imageJpaRepository.flush()
         imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
+        if (existing != null && existing.storedName != storedName) {
+            imageStorageService.deleteAfterCommit(existing.storedName)
+        }
     }
 }

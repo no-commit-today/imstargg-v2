@@ -18,7 +18,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImage
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.io.InputStream
 
 @Service
 @Transactional(readOnly = true)
@@ -103,10 +102,9 @@ class BattleEventService(
     @Transactional
     fun updateModeImage(
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        doUpdateImage(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, brawlStarsId, inputStream, contentType)
+        doUpdateImage(BrawlStarsImageType.BATTLE_EVENT_MODE_ICON, brawlStarsId, update)
     }
 
     private fun doUpdateMessages(
@@ -124,13 +122,16 @@ class BattleEventService(
     private fun doUpdateImage(
         type: BrawlStarsImageType,
         brawlStarsId: Long,
-        inputStream: InputStream,
-        contentType: String,
+        update: ImageUpdate,
     ) {
-        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        imageStorageService.upload(storedName, inputStream, contentType)
+        val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId, update.ext)
+        val existing = imageJpaRepository.findByTypeAndBrawlStarsId(type, brawlStarsId)
+        imageStorageService.upload(storedName, update.inputStream, update.contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
         imageJpaRepository.flush()
         imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
+        if (existing != null && existing.storedName != storedName) {
+            imageStorageService.deleteAfterCommit(existing.storedName)
+        }
     }
 }

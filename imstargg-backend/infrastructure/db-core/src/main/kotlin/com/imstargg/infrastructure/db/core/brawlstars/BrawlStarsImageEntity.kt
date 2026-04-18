@@ -36,17 +36,18 @@ class BrawlStarsImageEntity(
         fun storedName(
             type: BrawlStarsImageType,
             brawlStarsId: Long,
+            ext: String,
         ): String =
             when (type) {
-                BrawlStarsImageType.BRAWLER_PORTRAIT -> "brawler/portrait/$brawlStarsId"
-                BrawlStarsImageType.STARPOWER -> "starpower/$brawlStarsId"
-                BrawlStarsImageType.GADGET -> "gadget/$brawlStarsId"
-                BrawlStarsImageType.GEAR -> "gear/$brawlStarsId"
-                BrawlStarsImageType.HYPERCHARGE -> "hypercharge/$brawlStarsId"
-                BrawlStarsImageType.BATTLE_EVENT_MODE_ICON -> "event/mode/icon/$brawlStarsId"
-                BrawlStarsImageType.BUFFY_GADGET -> "brawler/buffy_gadget/$brawlStarsId"
-                BrawlStarsImageType.BUFFY_STAR_POWER -> "brawler/buffy_starpower/$brawlStarsId"
-                BrawlStarsImageType.BUFFY_HYPER_CHARGE -> "brawler/buffy_hypercharge/$brawlStarsId"
+                BrawlStarsImageType.BRAWLER_PORTRAIT -> "brawler/portrait/$brawlStarsId.$ext"
+                BrawlStarsImageType.STARPOWER -> "starpower/$brawlStarsId.$ext"
+                BrawlStarsImageType.GADGET -> "gadget/$brawlStarsId.$ext"
+                BrawlStarsImageType.GEAR -> "gear/$brawlStarsId.$ext"
+                BrawlStarsImageType.HYPERCHARGE -> "hypercharge/$brawlStarsId.$ext"
+                BrawlStarsImageType.BATTLE_EVENT_MODE_ICON -> "event/mode/icon/$brawlStarsId.$ext"
+                BrawlStarsImageType.BUFFY_GADGET -> "brawler/buffy_gadget/$brawlStarsId.$ext"
+                BrawlStarsImageType.BUFFY_STAR_POWER -> "brawler/buffy_starpower/$brawlStarsId.$ext"
+                BrawlStarsImageType.BUFFY_HYPER_CHARGE -> "brawler/buffy_hypercharge/$brawlStarsId.$ext"
             }
     }
 }

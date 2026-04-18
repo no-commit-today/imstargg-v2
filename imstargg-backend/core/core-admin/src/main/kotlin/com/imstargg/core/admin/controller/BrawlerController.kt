@@ -7,6 +7,7 @@ import com.imstargg.core.admin.controller.request.BrawlerSubItemCreateRequest
 import com.imstargg.core.admin.controller.request.MessagesUpdateRequest
 import com.imstargg.core.admin.controller.response.BrawlerDetailResponse
 import com.imstargg.core.admin.controller.response.BrawlerResponse
+import com.imstargg.core.admin.controller.support.toImageUpdate
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -58,11 +59,7 @@ class BrawlerController(
         @PathVariable brawlStarsId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        brawlerService.updateBrawlerImage(
-            brawlStarsId,
-            file.inputStream,
-            file.contentType ?: "image/png",
-        )
+        brawlerService.updateBrawlerImage(brawlStarsId, file.toImageUpdate())
         return ResponseEntity.ok().build()
     }
 
@@ -72,12 +69,7 @@ class BrawlerController(
         @RequestParam buffyType: BrawlStarsImageType,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        brawlerService.updateBuffyImage(
-            buffyType,
-            brawlStarsId,
-            file.inputStream,
-            file.contentType ?: "image/png",
-        )
+        brawlerService.updateBuffyImage(buffyType, brawlStarsId, file.toImageUpdate())
         return ResponseEntity.ok().build()
     }
 
@@ -115,11 +107,7 @@ class BrawlerController(
         @PathVariable starPowerBrawlStarsId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        brawlerService.updateStarPowerImage(
-            starPowerBrawlStarsId,
-            file.inputStream,
-            file.contentType ?: "image/png",
-        )
+        brawlerService.updateStarPowerImage(starPowerBrawlStarsId, file.toImageUpdate())
         return ResponseEntity.ok().build()
     }
 
@@ -148,11 +136,7 @@ class BrawlerController(
         @PathVariable gadgetBrawlStarsId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        brawlerService.updateGadgetImage(
-            gadgetBrawlStarsId,
-            file.inputStream,
-            file.contentType ?: "image/png",
-        )
+        brawlerService.updateGadgetImage(gadgetBrawlStarsId, file.toImageUpdate())
         return ResponseEntity.ok().build()
     }
 
@@ -181,11 +165,7 @@ class BrawlerController(
         @PathVariable hyperChargeBrawlStarsId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        brawlerService.updateHyperChargeImage(
-            hyperChargeBrawlStarsId,
-            file.inputStream,
-            file.contentType ?: "image/png",
-        )
+        brawlerService.updateHyperChargeImage(hyperChargeBrawlStarsId, file.toImageUpdate())
         return ResponseEntity.ok().build()
     }
 }

@@ -4,6 +4,7 @@ import com.imstargg.core.admin.application.BattleEventService
 import com.imstargg.core.admin.controller.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.controller.request.MessagesUpdateRequest
 import com.imstargg.core.admin.controller.response.BattleEventModeResponse
+import com.imstargg.core.admin.controller.support.toImageUpdate
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -43,11 +44,7 @@ class BattleEventModeController(
         @PathVariable brawlStarsId: Long,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        battleEventService.updateModeImage(
-            brawlStarsId,
-            file.inputStream,
-            file.contentType ?: "image/png",
-        )
+        battleEventService.updateModeImage(brawlStarsId, file.toImageUpdate())
         return ResponseEntity.ok().build()
     }
 }
