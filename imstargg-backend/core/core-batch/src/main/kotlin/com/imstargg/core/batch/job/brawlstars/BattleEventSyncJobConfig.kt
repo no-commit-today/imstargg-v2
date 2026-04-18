@@ -21,6 +21,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
+import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
@@ -58,6 +59,7 @@ class BattleEventSyncJobConfig(
             .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
             .start(battleEventSyncFromRankBattleStep())
             .next(battleEventSyncFromResultBattleStep())
+            .incrementer(RunIdIncrementer())
             .build()
 
     @Bean(STEP_1_NAME)

@@ -14,7 +14,6 @@ class AlertConfig {
     @Bean
     @ConditionalOnProperty(prefix = "app.alert", name = ["type"], havingValue = "DISCORD")
     fun discordAlertManager(
-        discordAlertProperties: DiscordAlertProperties,
-        restClientBuilder: RestClient.Builder,
-    ): AlertManager = DiscordAlertManager(restClientBuilder, discordAlertProperties.webhookUrl!!)
+        discordAlertProperties: DiscordAlertProperties
+    ): AlertManager = DiscordAlertManager(RestClient.builder(), discordAlertProperties.webhookUrl!!)
 }

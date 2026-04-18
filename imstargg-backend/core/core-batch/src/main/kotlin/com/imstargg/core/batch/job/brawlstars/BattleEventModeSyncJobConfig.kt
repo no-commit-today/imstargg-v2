@@ -7,6 +7,7 @@ import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
@@ -31,6 +32,7 @@ class BattleEventModeSyncJobConfig(
     fun battleEventModeSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .start(battleEventModeSyncStep())
+            .incrementer(RunIdIncrementer())
             .build()
 
     @Bean(STEP_NAME)
