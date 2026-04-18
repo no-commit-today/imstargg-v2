@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { AdminLayout } from "../../admin-layout";
 import { Button } from "@/components/ui/button";
+import { ImageThumbnail } from "@/components/image-thumbnail";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -183,7 +184,7 @@ function SubItemSection({
               <TableCell>{item.brawlStarsId}</TableCell>
               <TableCell>{item.names.KOREAN || "-"}</TableCell>
               <TableCell>{item.names.ENGLISH || "-"}</TableCell>
-              <TableCell>{item.imageUrl ? "O" : "X"}</TableCell>
+              <TableCell><ImageThumbnail url={item.imageUrl} alt={item.names.KOREAN || String(item.brawlStarsId)} /></TableCell>
               <TableCell>
                 <Dialog
                   open={editItem?.brawlStarsId === item.brawlStarsId}

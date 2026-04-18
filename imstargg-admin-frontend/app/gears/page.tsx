@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getGears, createGear } from "@/lib/api";
+import { ImageThumbnail } from "@/components/image-thumbnail";
 import type { Gear } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -116,7 +117,7 @@ export default function GearListPage() {
               <TableCell>{g.names.KOREAN || "-"}</TableCell>
               <TableCell>{g.names.ENGLISH || "-"}</TableCell>
               <TableCell>{g.rarity}</TableCell>
-              <TableCell>{g.imageUrl ? "O" : "X"}</TableCell>
+              <TableCell><ImageThumbnail url={g.imageUrl} alt={g.names.KOREAN || String(g.brawlStarsId)} /></TableCell>
               <TableCell>
                 <Link href={`/gears/${g.brawlStarsId}/edit`}>
                   <Button variant="outline" size="sm">편집</Button>

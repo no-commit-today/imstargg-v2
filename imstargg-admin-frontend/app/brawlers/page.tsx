@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getBrawlers, createBrawler } from "@/lib/api";
+import { ImageThumbnail } from "@/components/image-thumbnail";
 import type { BrawlerListItem } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -147,7 +148,7 @@ export default function BrawlerListPage() {
               <TableCell>{b.names.ENGLISH || "-"}</TableCell>
               <TableCell>{b.rarity}</TableCell>
               <TableCell>{b.role}</TableCell>
-              <TableCell>{b.imageUrl ? "O" : "X"}</TableCell>
+              <TableCell><ImageThumbnail url={b.imageUrl} alt={b.names.KOREAN || String(b.brawlStarsId)} /></TableCell>
               <TableCell>
                 <Link href={`/brawlers/${b.brawlStarsId}`}>
                   <Button variant="outline" size="sm">상세</Button>

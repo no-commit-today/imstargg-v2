@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getEventModes, createEventMode } from "@/lib/api";
+import { ImageThumbnail } from "@/components/image-thumbnail";
 import type { BattleEventMode } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -103,7 +104,7 @@ export default function EventModeListPage() {
               <TableCell>{m.brawlStarsName}</TableCell>
               <TableCell>{m.names.KOREAN || "-"}</TableCell>
               <TableCell>{m.names.ENGLISH || "-"}</TableCell>
-              <TableCell>{m.iconImageUrl ? "O" : "X"}</TableCell>
+              <TableCell><ImageThumbnail url={m.iconImageUrl} alt={m.names.KOREAN || m.brawlStarsName} /></TableCell>
               <TableCell>
                 <Link href={`/event-modes/${m.brawlStarsId}/edit`}>
                   <Button variant="outline" size="sm">편집</Button>
