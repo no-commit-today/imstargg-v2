@@ -1,5 +1,7 @@
 package com.imstargg.infrastructure.db.core.statistics.battle
 
+import com.imstargg.core.enums.BattleType
+import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import jakarta.persistence.Column
@@ -35,6 +37,18 @@ abstract class BaseStatsBattleEntity(
 ) : BaseTimeEntity() {
     @Column(name = "battle_date", updatable = false, nullable = false)
     val battleDate: LocalDate = battleAt.toKoreaLocalDate()
+
+    init {
+        val battleType = EnumCodeType.findByCode<BattleType>(type)
+        require(battleType != BattleType.FRIENDLY) {
+            "FRIENDLY 전투는 통계 대상이 아닙니다. battleKey=$battleKey, type=$type"
+        }
+
+        val brawlerIds = teams.flatten().map { it.brawler.brawlStarsId }
+        require(brawlerIds.size == brawlerIds.distinct().size) {
+            "중복된 브롤러가 포함될 수 없습니다. battleKey=$battleKey, brawlerIds=$brawlerIds"
+        }
+    }
 
     /**
      * 일반적으로 player team 은 1개일 것.
