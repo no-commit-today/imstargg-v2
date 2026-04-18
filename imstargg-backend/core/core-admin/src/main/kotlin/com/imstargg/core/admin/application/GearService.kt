@@ -1,8 +1,8 @@
 package com.imstargg.core.admin.application
 
 import com.imstargg.core.admin.config.CloudFrontProperties
-import com.imstargg.core.admin.controller.request.GearCreateRequest
-import com.imstargg.core.admin.controller.response.GearResponse
+import com.imstargg.core.admin.request.GearCreateRequest
+import com.imstargg.core.admin.response.GearResponse
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType

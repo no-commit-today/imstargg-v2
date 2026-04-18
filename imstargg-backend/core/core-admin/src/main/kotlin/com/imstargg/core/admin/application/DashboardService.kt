@@ -1,6 +1,6 @@
 package com.imstargg.core.admin.application
 
-import com.imstargg.core.admin.controller.response.DashboardSummaryResponse
+import com.imstargg.core.admin.response.DashboardSummaryResponse
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository

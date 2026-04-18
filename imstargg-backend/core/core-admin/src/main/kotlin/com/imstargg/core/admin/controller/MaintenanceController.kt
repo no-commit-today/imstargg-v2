@@ -1,8 +1,8 @@
 package com.imstargg.core.admin.controller
 
 import com.imstargg.core.admin.application.BrawlStarsApiMaintenanceService
-import com.imstargg.core.admin.controller.request.MaintenanceRegisterRequest
-import com.imstargg.core.admin.controller.response.MaintenanceResponse
+import com.imstargg.core.admin.request.MaintenanceRegisterRequest
+import com.imstargg.core.admin.response.MaintenanceResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping

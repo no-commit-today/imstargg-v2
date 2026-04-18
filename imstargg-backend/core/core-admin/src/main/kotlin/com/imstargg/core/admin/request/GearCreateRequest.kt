@@ -1,4 +1,4 @@
-package com.imstargg.core.admin.controller.request
+package com.imstargg.core.admin.request
 
 import com.imstargg.core.enums.GearRarity
 

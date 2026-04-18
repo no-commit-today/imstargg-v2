@@ -1,4 +1,4 @@
-package com.imstargg.core.admin.controller.response
+package com.imstargg.core.admin.response
 
 import com.imstargg.core.enums.GearRarity
 import com.imstargg.core.enums.Language

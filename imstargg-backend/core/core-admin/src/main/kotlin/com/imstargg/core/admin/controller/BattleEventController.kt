@@ -1,9 +1,9 @@
 package com.imstargg.core.admin.controller
 
 import com.imstargg.core.admin.application.BattleEventService
-import com.imstargg.core.admin.controller.request.BattleEventCreateRequest
-import com.imstargg.core.admin.controller.request.MessagesUpdateRequest
-import com.imstargg.core.admin.controller.response.BattleEventResponse
+import com.imstargg.core.admin.request.BattleEventCreateRequest
+import com.imstargg.core.admin.request.MessagesUpdateRequest
+import com.imstargg.core.admin.response.BattleEventResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

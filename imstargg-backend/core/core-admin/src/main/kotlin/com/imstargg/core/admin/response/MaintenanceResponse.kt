@@ -1,4 +1,4 @@
-package com.imstargg.core.admin.controller.response
+package com.imstargg.core.admin.response
 
 import java.time.Instant
 import java.time.OffsetDateTime

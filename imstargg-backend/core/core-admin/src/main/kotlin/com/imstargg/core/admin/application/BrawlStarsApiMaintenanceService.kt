@@ -1,7 +1,7 @@
 package com.imstargg.core.admin.application
 
-import com.imstargg.core.admin.controller.request.MaintenanceRegisterRequest
-import com.imstargg.core.admin.controller.response.MaintenanceResponse
+import com.imstargg.core.admin.request.MaintenanceRegisterRequest
+import com.imstargg.core.admin.response.MaintenanceResponse
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
 import org.springframework.stereotype.Service

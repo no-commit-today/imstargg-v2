@@ -1,4 +1,4 @@
-package com.imstargg.core.admin.controller.request
+package com.imstargg.core.admin.request
 
 data class BattleEventModeCreateRequest(
     val brawlStarsId: Long,
