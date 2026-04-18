@@ -5,7 +5,8 @@ import com.imstargg.core.worker.domain.Battle
 import com.imstargg.core.worker.domain.BattleEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
-import com.imstargg.infrastructure.db.core.test.TestDataManager
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
+import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.BattleEntityFixture.Companion.aBattleEntity
 import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -16,19 +17,20 @@ import java.time.ZoneOffset
 
 class BattleUpdateApplierTest(
     private val sut: BattleUpdateApplier,
-    private val testDataManager: TestDataManager,
+    private val cleanUp: CleanUp,
+    private val playerRepository: PlayerJpaRepository,
     private val battleRepository: BattleJpaRepository,
 ) : CoreWorkerContextTest() {
     @AfterEach
     fun tearDown() {
-        testDataManager.cleanUp()
+        cleanUp.all()
     }
 
     @Test
     fun `기존_배틀이_없으면_모든_배틀을_저장한다`() {
         // given
         val player = createPlayer("#PLAYER1")
-        testDataManager.add(player)
+        playerRepository.save(player)
 
         val battles =
             listOf(
@@ -48,11 +50,11 @@ class BattleUpdateApplierTest(
     fun `기존_배틀이_있으면_최신_배틀_이후만_저장한다`() {
         // given
         val player = createPlayer("#PLAYER2")
-        testDataManager.add(player)
+        playerRepository.save(player)
 
         val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)
         val existingBattle = createBattleEntity(player, existingBattleTime)
-        testDataManager.add(existingBattle)
+        battleRepository.save(existingBattle)
 
         val battles =
             listOf(
@@ -78,11 +80,11 @@ class BattleUpdateApplierTest(
     fun `저장할_새_배틀이_없으면_빈_리스트를_반환한다`() {
         // given
         val player = createPlayer("#PLAYER3")
-        testDataManager.add(player)
+        playerRepository.save(player)
 
         val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)
         val existingBattle = createBattleEntity(player, existingBattleTime)
-        testDataManager.add(existingBattle)
+        battleRepository.save(existingBattle)
 
         val battles =
             listOf(

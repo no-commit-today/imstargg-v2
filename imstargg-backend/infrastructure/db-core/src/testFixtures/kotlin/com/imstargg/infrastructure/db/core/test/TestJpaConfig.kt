@@ -15,10 +15,10 @@ import java.util.concurrent.locks.ReentrantLock
 @EnableJpaAuditing
 class TestJpaConfig {
     @Bean
-    fun testDataManager(
+    fun cleanUp(
         jdbcTemplate: JdbcTemplate,
         entityManagerFactory: EntityManagerFactory,
-    ): TestDataManager = TestDataManager(jdbcTemplate, entityManagerFactory)
+    ): CleanUp = CleanUp(jdbcTemplate, entityManagerFactory)
 
     @Bean
     fun lockTemplate(): LockTemplate = LocalLockTemplate()

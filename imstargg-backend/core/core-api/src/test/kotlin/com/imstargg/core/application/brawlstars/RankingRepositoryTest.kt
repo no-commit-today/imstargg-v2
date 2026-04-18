@@ -4,7 +4,13 @@ import com.imstargg.CoreApiContextTest
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
-import com.imstargg.infrastructure.db.core.test.TestDataManager
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
+import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.BrawlerRankingEntityFixture.Companion.aBrawlerRankingEntity
 import com.imstargg.infrastructure.db.core.test.fixture.BrawlerRankingItemEntityFixture.Companion.aBrawlerRankingItemEntity
 import com.imstargg.infrastructure.db.core.test.fixture.ClubRankingEntityFixture.Companion.aClubRankingEntity
@@ -19,11 +25,17 @@ import java.time.OffsetDateTime
 
 class RankingRepositoryTest(
     private val sut: RankingRepository,
-    private val testDataManager: TestDataManager,
+    private val cleanUp: CleanUp,
+    private val playerRankingRepository: PlayerRankingJpaRepository,
+    private val playerRankingItemRepository: PlayerRankingItemJpaRepository,
+    private val brawlerRankingRepository: BrawlerRankingJpaRepository,
+    private val brawlerRankingItemRepository: BrawlerRankingItemJpaRepository,
+    private val clubRankingRepository: ClubRankingJpaRepository,
+    private val clubRankingItemRepository: ClubRankingItemJpaRepository,
 ) : CoreApiContextTest() {
     @BeforeEach
     fun setUp() {
-        testDataManager.cleanUp()
+        cleanUp.all()
     }
 
     @Nested
@@ -48,7 +60,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(OffsetDateTime.now())
                     .build()
-            testDataManager.add(ranking)
+            playerRankingRepository.save(ranking)
 
             val item =
                 aPlayerRankingItemEntity()
@@ -56,7 +68,7 @@ class RankingRepositoryTest(
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(item)
+            playerRankingItemRepository.save(item)
 
             // when
             val result = sut.findPlayerRankings(Country.GLOBAL)
@@ -75,7 +87,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            playerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aPlayerRankingItemEntity()
@@ -83,14 +95,14 @@ class RankingRepositoryTest(
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            playerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            playerRankingRepository.save(latestRanking)
 
             val newPlayerItem =
                 aPlayerRankingItemEntity()
@@ -98,7 +110,7 @@ class RankingRepositoryTest(
                     .withRank(2)
                     .withPlayer(createPlayer("#NEWPLAYER"))
                     .build()
-            testDataManager.add(newPlayerItem)
+            playerRankingItemRepository.save(newPlayerItem)
 
             // when
             val result = sut.findPlayerRankings(Country.GLOBAL)
@@ -117,7 +129,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            playerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aPlayerRankingItemEntity()
@@ -125,14 +137,14 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            playerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            playerRankingRepository.save(latestRanking)
 
             val latestItem =
                 aPlayerRankingItemEntity()
@@ -140,7 +152,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(latestItem)
+            playerRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findPlayerRankings(Country.GLOBAL)
@@ -159,7 +171,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            playerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aPlayerRankingItemEntity()
@@ -167,14 +179,14 @@ class RankingRepositoryTest(
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            playerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            playerRankingRepository.save(latestRanking)
 
             val latestItem =
                 aPlayerRankingItemEntity()
@@ -182,7 +194,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(latestItem)
+            playerRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findPlayerRankings(Country.GLOBAL)
@@ -201,7 +213,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            playerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aPlayerRankingItemEntity()
@@ -209,14 +221,14 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            playerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            playerRankingRepository.save(latestRanking)
 
             val latestItem =
                 aPlayerRankingItemEntity()
@@ -224,7 +236,7 @@ class RankingRepositoryTest(
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(latestItem)
+            playerRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findPlayerRankings(Country.GLOBAL)
@@ -260,7 +272,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(OffsetDateTime.now())
                     .build()
-            testDataManager.add(ranking)
+            brawlerRankingRepository.save(ranking)
 
             val item =
                 aBrawlerRankingItemEntity()
@@ -268,7 +280,7 @@ class RankingRepositoryTest(
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(item)
+            brawlerRankingItemRepository.save(item)
 
             // when
             val result = sut.findBrawlerRankings(Country.GLOBAL, brawlerId)
@@ -288,7 +300,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            brawlerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aBrawlerRankingItemEntity()
@@ -296,7 +308,7 @@ class RankingRepositoryTest(
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            brawlerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aBrawlerRankingEntity()
@@ -304,7 +316,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            brawlerRankingRepository.save(latestRanking)
 
             val newPlayerItem =
                 aBrawlerRankingItemEntity()
@@ -312,7 +324,7 @@ class RankingRepositoryTest(
                     .withRank(2)
                     .withPlayer(createPlayer("#NEWPLAYER"))
                     .build()
-            testDataManager.add(newPlayerItem)
+            brawlerRankingItemRepository.save(newPlayerItem)
 
             // when
             val result = sut.findBrawlerRankings(Country.GLOBAL, brawlerId)
@@ -332,7 +344,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            brawlerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aBrawlerRankingItemEntity()
@@ -340,7 +352,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            brawlerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aBrawlerRankingEntity()
@@ -348,7 +360,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            brawlerRankingRepository.save(latestRanking)
 
             val latestItem =
                 aBrawlerRankingItemEntity()
@@ -356,7 +368,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(latestItem)
+            brawlerRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findBrawlerRankings(Country.GLOBAL, brawlerId)
@@ -376,7 +388,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            brawlerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aBrawlerRankingItemEntity()
@@ -384,7 +396,7 @@ class RankingRepositoryTest(
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            brawlerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aBrawlerRankingEntity()
@@ -392,7 +404,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            brawlerRankingRepository.save(latestRanking)
 
             val latestItem =
                 aBrawlerRankingItemEntity()
@@ -400,7 +412,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(latestItem)
+            brawlerRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findBrawlerRankings(Country.GLOBAL, brawlerId)
@@ -420,7 +432,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            brawlerRankingRepository.save(previousRanking)
 
             val previousItem =
                 aBrawlerRankingItemEntity()
@@ -428,7 +440,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(previousItem)
+            brawlerRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aBrawlerRankingEntity()
@@ -436,7 +448,7 @@ class RankingRepositoryTest(
                     .withBrawlerBrawlStarsId(brawlerId.value)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            brawlerRankingRepository.save(latestRanking)
 
             val latestItem =
                 aBrawlerRankingItemEntity()
@@ -444,7 +456,7 @@ class RankingRepositoryTest(
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
-            testDataManager.add(latestItem)
+            brawlerRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findBrawlerRankings(Country.GLOBAL, brawlerId)
@@ -477,7 +489,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(OffsetDateTime.now())
                     .build()
-            testDataManager.add(ranking)
+            clubRankingRepository.save(ranking)
 
             val item =
                 aClubRankingItemEntity()
@@ -485,7 +497,7 @@ class RankingRepositoryTest(
                     .withRank(1)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(item)
+            clubRankingItemRepository.save(item)
 
             // when
             val result = sut.findClubRankings(Country.GLOBAL)
@@ -504,7 +516,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            clubRankingRepository.save(previousRanking)
 
             val previousItem =
                 aClubRankingItemEntity()
@@ -512,14 +524,14 @@ class RankingRepositoryTest(
                     .withRank(1)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(previousItem)
+            clubRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            clubRankingRepository.save(latestRanking)
 
             val newClubItem =
                 aClubRankingItemEntity()
@@ -527,7 +539,7 @@ class RankingRepositoryTest(
                     .withRank(2)
                     .withBrawlStarsTag("#NEWCLUB")
                     .build()
-            testDataManager.add(newClubItem)
+            clubRankingItemRepository.save(newClubItem)
 
             // when
             val result = sut.findClubRankings(Country.GLOBAL)
@@ -546,7 +558,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            clubRankingRepository.save(previousRanking)
 
             val previousItem =
                 aClubRankingItemEntity()
@@ -554,14 +566,14 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(previousItem)
+            clubRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            clubRankingRepository.save(latestRanking)
 
             val latestItem =
                 aClubRankingItemEntity()
@@ -569,7 +581,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(latestItem)
+            clubRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findClubRankings(Country.GLOBAL)
@@ -588,7 +600,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            clubRankingRepository.save(previousRanking)
 
             val previousItem =
                 aClubRankingItemEntity()
@@ -596,14 +608,14 @@ class RankingRepositoryTest(
                     .withRank(5)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(previousItem)
+            clubRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            clubRankingRepository.save(latestRanking)
 
             val latestItem =
                 aClubRankingItemEntity()
@@ -611,7 +623,7 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(latestItem)
+            clubRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findClubRankings(Country.GLOBAL)
@@ -630,7 +642,7 @@ class RankingRepositoryTest(
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now.minusHours(1))
                     .build()
-            testDataManager.add(previousRanking)
+            clubRankingRepository.save(previousRanking)
 
             val previousItem =
                 aClubRankingItemEntity()
@@ -638,14 +650,14 @@ class RankingRepositoryTest(
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(previousItem)
+            clubRankingItemRepository.save(previousItem)
 
             val latestRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withCollectedAt(now)
                     .build()
-            testDataManager.add(latestRanking)
+            clubRankingRepository.save(latestRanking)
 
             val latestItem =
                 aClubRankingItemEntity()
@@ -653,7 +665,7 @@ class RankingRepositoryTest(
                     .withRank(5)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
-            testDataManager.add(latestItem)
+            clubRankingItemRepository.save(latestItem)
 
             // when
             val result = sut.findClubRankings(Country.GLOBAL)

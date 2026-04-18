@@ -6,7 +6,7 @@ import com.imstargg.client.brawlstars.response.ClubResponse
 import com.imstargg.client.brawlstars.response.PlayerIconResponse
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubMemberJpaRepository
-import com.imstargg.infrastructure.db.core.test.TestDataManager
+import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.ClubEntityFixture.Companion.aClubEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -19,11 +19,11 @@ class ClubUpdaterConcurrencyTest(
     private val sut: ClubUpdater,
     private val clubRepository: ClubJpaRepository,
     private val clubMemberRepository: ClubMemberJpaRepository,
-    private val testDataManager: TestDataManager,
+    private val cleanUp: CleanUp,
 ) : CoreWorkerContextTest() {
     @AfterEach
     fun tearDown() {
-        testDataManager.cleanUp()
+        cleanUp.all()
     }
 
     @Test
@@ -58,7 +58,7 @@ class ClubUpdaterConcurrencyTest(
     fun `동시에 같은 클럽을 update하면 모두 성공한다`() {
         // given
         val tag = "#CLUB2"
-        testDataManager.add(aClubEntity().withBrawlStarsTag(tag).build())
+        clubRepository.save(aClubEntity().withBrawlStarsTag(tag).build())
         val barrier = CyclicBarrier(2)
         val executor = Executors.newFixedThreadPool(2)
 
@@ -87,7 +87,7 @@ class ClubUpdaterConcurrencyTest(
     fun `동시에 같은 클럽멤버를 update하면 중복 저장되지_않는다`() {
         // given
         val tag = "#CLUB3"
-        testDataManager.add(aClubEntity().withBrawlStarsTag(tag).build())
+        clubRepository.save(aClubEntity().withBrawlStarsTag(tag).build())
         val members =
             listOf(
                 createClubMemberResponse("#MEMBER1"),

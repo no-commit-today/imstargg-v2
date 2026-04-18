@@ -158,7 +158,7 @@ assertThat(result).isEqualTo(expected)
 ### 테스트 베이스 클래스
 - Repository: `DbCoreContextTest` (`@DataJpaTest`)
 - Service/Component: `CoreApiContextTest` 등 (`@SpringBootTest`)
-- 통합 테스트 데이터 관리: `TestDataManager` 클래스 참고
+- 통합 테스트 정리: `CleanUp.all()` 호출로 전체 테이블 TRUNCATE (데이터 삽입은 `JpaRepository.save()` 사용)
 
 ### 예외 검증
 - `catchThrowableOfType(Class, ThrowingCallable)` 사용 (Class가 첫 번째 파라미터)

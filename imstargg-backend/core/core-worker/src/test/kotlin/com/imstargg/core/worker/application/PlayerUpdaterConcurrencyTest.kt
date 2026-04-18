@@ -14,7 +14,7 @@ import com.imstargg.core.worker.domain.BattleEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
-import com.imstargg.infrastructure.db.core.test.TestDataManager
+import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -30,12 +30,11 @@ class PlayerUpdaterConcurrencyTest(
     private val playerRepository: PlayerJpaRepository,
     private val playerBrawlerRepository: PlayerBrawlerJpaRepository,
     private val battleRepository: BattleJpaRepository,
-    private val testDataManager: TestDataManager,
+    private val cleanUp: CleanUp,
 ) : CoreWorkerContextTest() {
-
     @AfterEach
     fun tearDown() {
-        testDataManager.cleanUp()
+        cleanUp.all()
     }
 
     @Test
@@ -46,17 +45,18 @@ class PlayerUpdaterConcurrencyTest(
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(createPlayerResponse(tag), emptyList())
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(createPlayerResponse(tag), emptyList())
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -69,22 +69,23 @@ class PlayerUpdaterConcurrencyTest(
     fun `동시에 같은 플레이어를 update하면 모두 성공한다`() {
         // given
         val tag = "#PLAYER2"
-        testDataManager.add(aPlayerEntity().withBrawlStarsTag(tag).build())
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
         val barrier = CyclicBarrier(2)
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(createPlayerResponse(tag), emptyList())
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(createPlayerResponse(tag), emptyList())
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -97,26 +98,28 @@ class PlayerUpdaterConcurrencyTest(
     fun `동시에 같은 배틀을 update하면 중복 저장되지 않는다`() {
         // given
         val tag = "#PLAYER3"
-        testDataManager.add(aPlayerEntity().withBrawlStarsTag(tag).build())
-        val battles = listOf(
-            createBattle(tag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
-            createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
-        )
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+        val battles =
+            listOf(
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+            )
         val barrier = CyclicBarrier(2)
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(createPlayerResponse(tag), battles)
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(createPlayerResponse(tag), battles)
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -129,26 +132,28 @@ class PlayerUpdaterConcurrencyTest(
     fun `동시에 같은 브롤러를 update하면 중복 저장되지 않는다`() {
         // given
         val tag = "#PLAYER4"
-        testDataManager.add(aPlayerEntity().withBrawlStarsTag(tag).build())
-        val playerResponse = createPlayerResponse(
-            tag = tag,
-            brawlers = listOf(createBrawlerStatResponse(brawlerId = 1L)),
-        )
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+        val playerResponse =
+            createPlayerResponse(
+                tag = tag,
+                brawlers = listOf(createBrawlerStatResponse(brawlerId = 1L)),
+            )
         val barrier = CyclicBarrier(2)
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(playerResponse, emptyList())
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(playerResponse, emptyList())
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -180,23 +185,24 @@ class PlayerUpdaterConcurrencyTest(
         brawlers = brawlers,
     )
 
-    private fun createBrawlerStatResponse(brawlerId: Long) = BrawlerStatResponse(
-        id = brawlerId,
-        name = "Test Brawler",
-        power = 11,
-        rank = 20,
-        trophies = 500,
-        highestTrophies = 600,
-        prestigeLevel = 0,
-        maxWinStreak = 5,
-        currentWinStreak = 0,
-        buffies = BrawlerBuffiesResponse(hyperCharge = false, gadget = false, starPower = false),
-        skin = SkinResponse(id = 1L, name = "Default"),
-        gears = emptyList<GearStatResponse>(),
-        starPowers = emptyList<AccessoryResponse>(),
-        gadgets = emptyList<AccessoryResponse>(),
-        hyperCharges = emptyList<AccessoryResponse>(),
-    )
+    private fun createBrawlerStatResponse(brawlerId: Long) =
+        BrawlerStatResponse(
+            id = brawlerId,
+            name = "Test Brawler",
+            power = 11,
+            rank = 20,
+            trophies = 500,
+            highestTrophies = 600,
+            prestigeLevel = 0,
+            maxWinStreak = 5,
+            currentWinStreak = 0,
+            buffies = BrawlerBuffiesResponse(hyperCharge = false, gadget = false, starPower = false),
+            skin = SkinResponse(id = 1L, name = "Default"),
+            gears = emptyList<GearStatResponse>(),
+            starPowers = emptyList<AccessoryResponse>(),
+            gadgets = emptyList<AccessoryResponse>(),
+            hyperCharges = emptyList<AccessoryResponse>(),
+        )
 
     private fun createBattle(
         playerBrawlStarsTag: String,
@@ -204,12 +210,13 @@ class PlayerUpdaterConcurrencyTest(
     ) = Battle(
         battleKey = "battle_key_${battleAt.toEpochSecond()}",
         battleAt = battleAt,
-        event = BattleEvent(
-            brawlStarsId = 1L,
-            modeBrawlStarsName = "knockout",
-            modeBrawlStarsId = 1,
-            map = "Test Map",
-        ),
+        event =
+            BattleEvent(
+                brawlStarsId = 1L,
+                modeBrawlStarsName = "knockout",
+                modeBrawlStarsId = 1,
+                map = "Test Map",
+            ),
         mode = "knockout",
         type = "ranked",
         result = "victory",

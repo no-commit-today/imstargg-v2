@@ -4,7 +4,7 @@ import com.imstargg.CoreWorkerContextTest
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
-import com.imstargg.infrastructure.db.core.test.TestDataManager
+import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.RenewalEntityFixture.Companion.aRenewalEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -17,11 +17,11 @@ import java.util.concurrent.TimeUnit
 class PlayerRenewalProcessorConcurrencyTest(
     private val sut: PlayerRenewalProcessor,
     private val renewalRepository: RenewalJpaRepository,
-    private val testDataManager: TestDataManager,
+    private val cleanUp: CleanUp,
 ) : CoreWorkerContextTest() {
     @AfterEach
     fun tearDown() {
-        testDataManager.cleanUp()
+        cleanUp.all()
     }
 
     @Test
@@ -30,7 +30,7 @@ class PlayerRenewalProcessorConcurrencyTest(
         val tag = "#PLAYER_CONC"
         val entity = aRenewalEntity().withBrawlStarsTag(tag).build()
         entity.toPending()
-        testDataManager.add(entity)
+        renewalRepository.save(entity)
 
         val readBarrier = CyclicBarrier(3)
         val executeBarrier = CyclicBarrier(3)
