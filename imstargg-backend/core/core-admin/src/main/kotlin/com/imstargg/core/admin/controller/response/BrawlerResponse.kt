@@ -9,5 +9,5 @@ data class BrawlerResponse(
     val names: Map<Language, String>,
     val rarity: BrawlerRarity,
     val role: BrawlerRole,
-    val hasImage: Boolean,
+    val imageUrl: String?,
 )

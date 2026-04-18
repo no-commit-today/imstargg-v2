@@ -1,5 +1,6 @@
 package com.imstargg.core.admin.application
 
+import com.imstargg.core.admin.config.CloudFrontProperties
 import com.imstargg.core.admin.controller.request.GearCreateRequest
 import com.imstargg.core.admin.controller.response.GearResponse
 import com.imstargg.core.enums.Language
@@ -22,6 +23,7 @@ class GearService(
     private val messageJpaRepository: MessageJpaRepository,
     private val imageJpaRepository: BrawlStarsImageJpaRepository,
     private val imageStorageService: ImageStorageService,
+    private val cloudFrontProperties: CloudFrontProperties,
 ) {
     fun findAll(): List<GearResponse> {
         val gears = gearJpaRepository.findAll()
@@ -41,7 +43,7 @@ class GearService(
                 brawlStarsId = gear.brawlStarsId,
                 names = toNameMap(messagesByBrawlStarsId[gear.brawlStarsId]),
                 rarity = gear.rarity,
-                hasImage = imagesByBrawlStarsId[gear.brawlStarsId] != null,
+                imageUrl = imagesByBrawlStarsId[gear.brawlStarsId]?.let { "${cloudFrontProperties.baseUrl}/${it.storedName}" },
             )
         }
     }
@@ -87,9 +89,9 @@ class GearService(
         contentType: String,
     ) {
         val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        val url = imageStorageService.upload(storedName, inputStream, contentType)
+        imageStorageService.upload(storedName, inputStream, contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
         imageJpaRepository.flush()
-        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
     }
 }

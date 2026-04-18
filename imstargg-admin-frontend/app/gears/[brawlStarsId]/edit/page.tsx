@@ -88,8 +88,8 @@ export default function GearEditPage() {
         <Card>
           <CardHeader><CardTitle>이미지</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {gear.hasImage ? (
-              <p className="text-sm text-muted-foreground">이미지 있음</p>
+            {gear.imageUrl ? (
+              <img src={gear.imageUrl} alt="" className="max-h-32" />
             ) : (
               <p className="text-sm text-muted-foreground">이미지 없음</p>
             )}

@@ -17,7 +17,7 @@ class S3ImageStorageService(
         key: String,
         inputStream: InputStream,
         contentType: String,
-    ): String {
+    ) {
         val bytes = inputStream.readAllBytes()
         val request =
             PutObjectRequest
@@ -27,8 +27,6 @@ class S3ImageStorageService(
                 .contentType(contentType)
                 .build()
         s3Client.putObject(request, RequestBody.fromBytes(bytes))
-        val url = s3Client.utilities().getUrl { it.bucket(properties.bucket).key(key) }
-        return url.toString()
     }
 
     override fun delete(key: String) {

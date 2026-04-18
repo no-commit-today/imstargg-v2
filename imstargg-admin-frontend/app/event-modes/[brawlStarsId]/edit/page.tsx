@@ -88,8 +88,8 @@ export default function EventModeEditPage() {
         <Card>
           <CardHeader><CardTitle>아이콘</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {eventMode.hasIcon ? (
-              <p className="text-sm text-muted-foreground">아이콘 있음</p>
+            {eventMode.iconImageUrl ? (
+              <img src={eventMode.iconImageUrl} alt="" className="max-h-32" />
             ) : (
               <p className="text-sm text-muted-foreground">아이콘 없음</p>
             )}

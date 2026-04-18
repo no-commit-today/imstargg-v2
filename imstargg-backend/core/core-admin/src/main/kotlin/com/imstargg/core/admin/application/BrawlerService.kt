@@ -1,5 +1,6 @@
 package com.imstargg.core.admin.application
 
+import com.imstargg.core.admin.config.CloudFrontProperties
 import com.imstargg.core.admin.controller.request.BrawlerCreateRequest
 import com.imstargg.core.admin.controller.request.BrawlerSubItemCreateRequest
 import com.imstargg.core.admin.controller.response.BrawlerDetailResponse
@@ -42,6 +43,7 @@ class BrawlerService(
     private val messageJpaRepository: MessageJpaRepository,
     private val imageJpaRepository: BrawlStarsImageJpaRepository,
     private val imageStorageService: ImageStorageService,
+    private val cloudFrontProperties: CloudFrontProperties,
 ) {
     fun findAll(): List<BrawlerResponse> {
         val brawlers = brawlerJpaRepository.findAll().toList()
@@ -61,10 +63,12 @@ class BrawlerService(
                 names = toNameMap(messagesByBrawlStarsId[brawler.brawlStarsId]),
                 rarity = brawler.rarity,
                 role = brawler.role,
-                hasImage = imagesByBrawlStarsId[brawler.brawlStarsId] != null,
+                imageUrl = imagesByBrawlStarsId[brawler.brawlStarsId]?.toImageUrl(),
             )
         }
     }
+
+    private fun BrawlStarsImageEntity.toImageUrl(): String = "${cloudFrontProperties.baseUrl}/$storedName"
 
     fun findDetail(brawlStarsId: Long): BrawlerDetailResponse? {
         val brawler = brawlerJpaRepository.findByBrawlStarsId(brawlStarsId) ?: return null
@@ -120,19 +124,22 @@ class BrawlerService(
             names = toNameMap(brawlerNameMessages[brawlStarsId]),
             rarity = brawler.rarity,
             role = brawler.role,
-            imageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlStarsId]?.url,
+            imageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlStarsId]?.toImageUrl(),
             buffyImages =
                 mapOf(
-                    BrawlStarsImageType.BUFFY_GADGET to imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId]?.url,
-                    BrawlStarsImageType.BUFFY_STAR_POWER to imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlStarsId]?.url,
-                    BrawlStarsImageType.BUFFY_HYPER_CHARGE to imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlStarsId]?.url,
+                    BrawlStarsImageType.BUFFY_GADGET to
+                        imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId]?.toImageUrl(),
+                    BrawlStarsImageType.BUFFY_STAR_POWER to
+                        imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlStarsId]?.toImageUrl(),
+                    BrawlStarsImageType.BUFFY_HYPER_CHARGE to
+                        imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlStarsId]?.toImageUrl(),
                 ),
             starPowers =
                 starPowers.map { sp ->
                     StarPowerResponse(
                         brawlStarsId = sp.brawlStarsId,
                         names = toNameMap(starPowerNameMessages[sp.brawlStarsId]),
-                        imageUrl = imagesByKey[BrawlStarsImageType.STARPOWER to sp.brawlStarsId]?.url,
+                        imageUrl = imagesByKey[BrawlStarsImageType.STARPOWER to sp.brawlStarsId]?.toImageUrl(),
                     )
                 },
             gadgets =
@@ -140,7 +147,7 @@ class BrawlerService(
                     GadgetResponse(
                         brawlStarsId = gd.brawlStarsId,
                         names = toNameMap(gadgetNameMessages[gd.brawlStarsId]),
-                        imageUrl = imagesByKey[BrawlStarsImageType.GADGET to gd.brawlStarsId]?.url,
+                        imageUrl = imagesByKey[BrawlStarsImageType.GADGET to gd.brawlStarsId]?.toImageUrl(),
                     )
                 },
             hyperCharges =
@@ -148,7 +155,7 @@ class BrawlerService(
                     HyperChargeResponse(
                         brawlStarsId = hc.brawlStarsId,
                         names = toNameMap(hyperChargeNameMessages[hc.brawlStarsId]),
-                        imageUrl = imagesByKey[BrawlStarsImageType.HYPERCHARGE to hc.brawlStarsId]?.url,
+                        imageUrl = imagesByKey[BrawlStarsImageType.HYPERCHARGE to hc.brawlStarsId]?.toImageUrl(),
                     )
                 },
             linkedGearBrawlStarsIds = brawlerGears.map { it.gearBrawlStarsId }.toSet(),
@@ -158,7 +165,7 @@ class BrawlerService(
                         brawlStarsId = gear.brawlStarsId,
                         names = toNameMap(gearNameMessages[gear.brawlStarsId]),
                         rarity = gear.rarity,
-                        hasImage = false,
+                        imageUrl = null,
                     )
                 },
         )
@@ -302,9 +309,9 @@ class BrawlerService(
         contentType: String,
     ) {
         val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        val url = imageStorageService.upload(storedName, inputStream, contentType)
+        imageStorageService.upload(storedName, inputStream, contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
         imageJpaRepository.flush()
-        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
     }
 }

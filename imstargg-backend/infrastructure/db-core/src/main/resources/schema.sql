@@ -669,7 +669,6 @@ create table if not exists brawlstars_image
     type                varchar(45)  not null,
     brawlstars_id       bigint       not null,
     stored_name         varchar(255) not null,
-    url                 varchar(512) not null,
     created_at          timestamptz  not null default now(),
     updated_at          timestamptz  not null default now()
 );

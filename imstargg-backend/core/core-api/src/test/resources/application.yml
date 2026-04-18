@@ -27,3 +27,5 @@ app:
       renewal:
         player-queue-name: test-player-renewal
         club-queue-name: test-club-renewal
+    cloudfront:
+      baseUrl: http://localhost:4566/imstargg-images-local

@@ -7,5 +7,5 @@ data class GearResponse(
     val brawlStarsId: Long,
     val names: Map<Language, String>,
     val rarity: GearRarity,
-    val hasImage: Boolean,
+    val imageUrl: String?,
 )

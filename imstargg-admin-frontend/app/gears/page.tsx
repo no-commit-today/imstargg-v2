@@ -116,7 +116,7 @@ export default function GearListPage() {
               <TableCell>{g.names.KOREAN || "-"}</TableCell>
               <TableCell>{g.names.ENGLISH || "-"}</TableCell>
               <TableCell>{g.rarity}</TableCell>
-              <TableCell>{g.hasImage ? "O" : "X"}</TableCell>
+              <TableCell>{g.imageUrl ? "O" : "X"}</TableCell>
               <TableCell>
                 <Link href={`/gears/${g.brawlStarsId}/edit`}>
                   <Button variant="outline" size="sm">편집</Button>

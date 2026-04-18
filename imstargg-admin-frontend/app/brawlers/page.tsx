@@ -147,7 +147,7 @@ export default function BrawlerListPage() {
               <TableCell>{b.names.ENGLISH || "-"}</TableCell>
               <TableCell>{b.rarity}</TableCell>
               <TableCell>{b.role}</TableCell>
-              <TableCell>{b.hasImage ? "O" : "X"}</TableCell>
+              <TableCell>{b.imageUrl ? "O" : "X"}</TableCell>
               <TableCell>
                 <Link href={`/brawlers/${b.brawlStarsId}`}>
                   <Button variant="outline" size="sm">상세</Button>

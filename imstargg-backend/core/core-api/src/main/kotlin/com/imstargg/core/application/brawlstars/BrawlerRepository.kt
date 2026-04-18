@@ -1,5 +1,6 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.config.CloudFrontProperties
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
@@ -40,6 +41,7 @@ class BrawlerRepository(
     private val brawlerGearJpaRepository: BrawlerGearJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
+    private val cloudFrontProperties: CloudFrontProperties,
 ) {
     fun findAll(): List<Brawler> {
         val brawlerEntities = brawlerJpaRepository.findAll().toList()
@@ -101,12 +103,12 @@ class BrawlerRepository(
                         .map { toGear(it, gearNames, imagesByKey) },
                 starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
                 hyperCharges = (hyperChargesByBrawlerId[brawlerId] ?: emptyList()).map { toHyperCharge(it, hyperChargeNames, imagesByKey) },
-                portraitImageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.url,
+                portraitImageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.toImageUrl(),
                 buffies =
                     listOf(
-                        Buffy(BuffyType.GADGET, imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlerId]?.url),
-                        Buffy(BuffyType.STAR_POWER, imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlerId]?.url),
-                        Buffy(BuffyType.HYPER_CHARGE, imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlerId]?.url),
+                        Buffy(BuffyType.GADGET, imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlerId]?.toImageUrl()),
+                        Buffy(BuffyType.STAR_POWER, imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlerId]?.toImageUrl()),
+                        Buffy(BuffyType.HYPER_CHARGE, imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlerId]?.toImageUrl()),
                     ),
             )
         }
@@ -125,7 +127,7 @@ class BrawlerRepository(
         Gadget(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
-            imageUrl = images[BrawlStarsImageType.GADGET to entity.brawlStarsId]?.url,
+            imageUrl = images[BrawlStarsImageType.GADGET to entity.brawlStarsId]?.toImageUrl(),
         )
 
     private fun toGear(
@@ -137,7 +139,7 @@ class BrawlerRepository(
             id = BrawlStarsId(entity.brawlStarsId),
             rarity = entity.rarity,
             name = toMessages(names[entity.brawlStarsId]),
-            imageUrl = images[BrawlStarsImageType.GEAR to entity.brawlStarsId]?.url,
+            imageUrl = images[BrawlStarsImageType.GEAR to entity.brawlStarsId]?.toImageUrl(),
         )
 
     private fun toStarPower(
@@ -148,7 +150,7 @@ class BrawlerRepository(
         StarPower(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
-            imageUrl = images[BrawlStarsImageType.STARPOWER to entity.brawlStarsId]?.url,
+            imageUrl = images[BrawlStarsImageType.STARPOWER to entity.brawlStarsId]?.toImageUrl(),
         )
 
     private fun toHyperCharge(
@@ -159,6 +161,8 @@ class BrawlerRepository(
         HyperCharge(
             id = BrawlStarsId(entity.brawlStarsId),
             name = toMessages(names[entity.brawlStarsId]),
-            imageUrl = images[BrawlStarsImageType.HYPERCHARGE to entity.brawlStarsId]?.url,
+            imageUrl = images[BrawlStarsImageType.HYPERCHARGE to entity.brawlStarsId]?.toImageUrl(),
         )
+
+    private fun BrawlStarsImageEntity.toImageUrl(): String = "${cloudFrontProperties.baseUrl}/$storedName"
 }

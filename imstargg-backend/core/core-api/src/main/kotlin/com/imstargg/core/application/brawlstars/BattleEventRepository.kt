@@ -1,5 +1,6 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.config.CloudFrontProperties
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
@@ -22,6 +23,7 @@ class BattleEventRepository(
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
+    private val cloudFrontProperties: CloudFrontProperties,
 ) {
     fun searchByMapName(name: String): List<BattleEvent> {
         val matchingEventIds =
@@ -83,7 +85,7 @@ class BattleEventRepository(
                 BattleEventMode(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages),
-                    iconImageUrl = modeIconImage?.url,
+                    iconImageUrl = modeIconImage?.toImageUrl(),
                 )
             }
 
@@ -105,7 +107,7 @@ class BattleEventRepository(
                 BattleEventMode(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
-                    iconImageUrl = modeIconImages[modeEntity.brawlStarsId]?.url,
+                    iconImageUrl = modeIconImages[modeEntity.brawlStarsId]?.toImageUrl(),
                 )
             }
         return BattleEvent(
@@ -124,4 +126,6 @@ class BattleEventRepository(
         if (entities.isNullOrEmpty()) return Messages(emptyMap())
         return Messages.create(entities.map { Message(it.lang, it.content) })
     }
+
+    private fun BrawlStarsImageEntity.toImageUrl(): String = "${cloudFrontProperties.baseUrl}/$storedName"
 }

@@ -19,7 +19,7 @@ export interface BrawlerListItem {
   names: Record<Language, string>;
   rarity: string;
   role: string;
-  hasImage: boolean;
+  imageUrl: string | null;
 }
 
 export interface StarPower {
@@ -44,7 +44,7 @@ export interface Gear {
   brawlStarsId: number;
   names: Record<Language, string>;
   rarity: string;
-  hasImage: boolean;
+  imageUrl: string | null;
 }
 
 export interface BrawlerDetail {
@@ -72,7 +72,7 @@ export interface BattleEventMode {
   brawlStarsId: number;
   brawlStarsName: string;
   names: Record<Language, string>;
-  hasIcon: boolean;
+  iconImageUrl: string | null;
 }
 
 export interface Maintenance {

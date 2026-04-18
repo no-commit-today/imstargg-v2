@@ -23,6 +23,11 @@ spring:
 logging:
   level:
     org.apache.coyote.http11: trace
+
+app:
+  aws:
+    cloudfront:
+      baseUrl: http://localhost:4566/imstargg-images-local
 ---
 spring:
   config.activate.on-profile: local-dev
@@ -30,6 +35,11 @@ spring:
 logging:
   level:
     org.apache.coyote.http11: trace
+
+app:
+  aws:
+    cloudfront:
+      baseUrl: http://localhost:4566/imstargg-images-local
 
 ---
 spring:
@@ -40,3 +50,8 @@ spring:
   config.activate.on-profile: prod
 
   web.resources.add-mappings: false
+
+app:
+  aws:
+    cloudfront:
+      baseUrl: https://cdn.imstargg.com

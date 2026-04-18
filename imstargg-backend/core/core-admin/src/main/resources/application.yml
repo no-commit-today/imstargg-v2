@@ -19,9 +19,19 @@ app:
 spring:
   config.activate.on-profile: local
 
+app:
+  aws:
+    cloudfront:
+      baseUrl: http://localhost:4566/imstargg-images-local
+
 ---
 spring:
   config.activate.on-profile: local-dev
+
+app:
+  aws:
+    cloudfront:
+      baseUrl: http://localhost:4566/imstargg-images-local
 
 ---
 spring:
@@ -40,3 +50,6 @@ app:
   cors:
     allowed-origins:
       - http://localhost:3000
+  aws:
+    cloudfront:
+      baseUrl: https://cdn.imstargg.com

@@ -7,7 +7,7 @@ interface ImageStorageService {
         key: String,
         inputStream: InputStream,
         contentType: String,
-    ): String
+    )
 
     fun delete(key: String)
 }

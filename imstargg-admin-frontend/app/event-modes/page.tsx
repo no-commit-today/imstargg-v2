@@ -103,7 +103,7 @@ export default function EventModeListPage() {
               <TableCell>{m.brawlStarsName}</TableCell>
               <TableCell>{m.names.KOREAN || "-"}</TableCell>
               <TableCell>{m.names.ENGLISH || "-"}</TableCell>
-              <TableCell>{m.hasIcon ? "O" : "X"}</TableCell>
+              <TableCell>{m.iconImageUrl ? "O" : "X"}</TableCell>
               <TableCell>
                 <Link href={`/event-modes/${m.brawlStarsId}/edit`}>
                   <Button variant="outline" size="sm">편집</Button>

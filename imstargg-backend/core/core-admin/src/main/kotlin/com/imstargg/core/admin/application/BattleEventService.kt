@@ -1,5 +1,6 @@
 package com.imstargg.core.admin.application
 
+import com.imstargg.core.admin.config.CloudFrontProperties
 import com.imstargg.core.admin.controller.request.BattleEventCreateRequest
 import com.imstargg.core.admin.controller.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.controller.response.BattleEventModeResponse
@@ -27,6 +28,7 @@ class BattleEventService(
     private val messageJpaRepository: MessageJpaRepository,
     private val imageJpaRepository: BrawlStarsImageJpaRepository,
     private val imageStorageService: ImageStorageService,
+    private val cloudFrontProperties: CloudFrontProperties,
 ) {
     fun findAllEvents(): List<BattleEventResponse> {
         val events = battleEventJpaRepository.findAll().toList()
@@ -64,7 +66,7 @@ class BattleEventService(
                 brawlStarsId = mode.brawlStarsId,
                 brawlStarsName = mode.brawlStarsName,
                 names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
-                hasIcon = imagesByBrawlStarsId[mode.brawlStarsId] != null,
+                iconImageUrl = imagesByBrawlStarsId[mode.brawlStarsId]?.let { "${cloudFrontProperties.baseUrl}/${it.storedName}" },
             )
         }
     }
@@ -126,9 +128,9 @@ class BattleEventService(
         contentType: String,
     ) {
         val storedName = BrawlStarsImageEntity.storedName(type, brawlStarsId)
-        val url = imageStorageService.upload(storedName, inputStream, contentType)
+        imageStorageService.upload(storedName, inputStream, contentType)
         imageJpaRepository.deleteByTypeAndBrawlStarsId(type, brawlStarsId)
         imageJpaRepository.flush()
-        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName, url))
+        imageJpaRepository.save(BrawlStarsImageEntity(type, brawlStarsId, storedName))
     }
 }
