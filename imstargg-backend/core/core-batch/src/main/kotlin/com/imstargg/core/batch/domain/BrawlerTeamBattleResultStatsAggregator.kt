@@ -6,6 +6,7 @@ import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamEmbedded
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 
@@ -72,7 +73,7 @@ class BrawlerTeamBattleResultStatsAggregator : BattleStatsAggregator<StatsResult
                 tierRange = key.tierRange,
                 battleDate = key.battleDate,
                 resultCount = resultCount,
-                initialBrawlerBrawlStarsIds = key.brawlerBrawlStarsIds,
+                brawlerTeam = BrawlerTeamEmbedded.of(key.brawlerBrawlStarsIds),
             )
         }
 }

@@ -3,7 +3,6 @@ package com.imstargg.core.worker.application
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
-import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import com.imstargg.infrastructure.db.core.test.TestDataManager
 import com.imstargg.infrastructure.db.core.test.fixture.RenewalEntityFixture.Companion.aRenewalEntity
@@ -38,22 +37,23 @@ class PlayerRenewalProcessorConcurrencyTest(
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                // 두 스레드 모두 같은 version의 엔티티를 조회
-                val renewal = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
-                readBarrier.await(10, TimeUnit.SECONDS)
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    // 두 스레드 모두 같은 version의 엔티티를 조회
+                    val renewal = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
+                    readBarrier.await(10, TimeUnit.SECONDS)
 
-                // 두 스레드 모두 조회 완료 후 동시에 executing 호출
-                executeBarrier.await(10, TimeUnit.SECONDS)
-                try {
-                    sut.executing(renewal)
-                    null
-                } catch (e: Exception) {
-                    e
+                    // 두 스레드 모두 조회 완료 후 동시에 executing 호출
+                    executeBarrier.await(10, TimeUnit.SECONDS)
+                    try {
+                        sut.executing(renewal)
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
 
         // 메인 스레드도 barrier에 참여하여 동기화 제어
         readBarrier.await(10, TimeUnit.SECONDS)

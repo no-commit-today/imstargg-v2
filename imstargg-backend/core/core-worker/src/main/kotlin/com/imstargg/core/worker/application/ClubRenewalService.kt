@@ -57,7 +57,10 @@ class ClubRenewalService(
         }
     }
 
-    private fun updateRenewalStatus(renewal: RenewalEntity, action: (RenewalEntity) -> Unit): Boolean =
+    private fun updateRenewalStatus(
+        renewal: RenewalEntity,
+        action: (RenewalEntity) -> Unit,
+    ): Boolean =
         try {
             action(renewal)
             true

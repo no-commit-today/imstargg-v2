@@ -3,6 +3,7 @@ package com.imstargg.core.batch.job.statistics
 import com.imstargg.core.batch.domain.BrawlerTeamBattleRankStatsAggregator
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsBrawlerEntity.Companion.brawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity.Companion.statsRankBattleEntity
@@ -101,6 +102,16 @@ class BrawlerTeamBattleRankStatsJobConfig(
                                 brawlerTeamBattleRankStatsEntity.eventBrawlStarsId
                                     .eq(eventBrawlStarsId),
                             ).execute()
+                    },
+                    persistAdditional = { em, parent ->
+                        parent.brawlerTeam.brawlerBrawlStarsIds.forEach { brawlerId ->
+                            em.persist(
+                                BrawlerTeamBattleRankStatsBrawlerEntity(
+                                    stats = parent,
+                                    brawlerBrawlStarsId = brawlerId,
+                                ),
+                            )
+                        }
                     },
                 ),
                 txManager,

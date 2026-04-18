@@ -3,8 +3,11 @@ package com.imstargg.core.batch.job.statistics
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamEmbedded
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsBrawlerEntity.Companion.brawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
@@ -12,6 +15,7 @@ import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultSt
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsEntity.Companion.brawlerTeamBattleResultStatsEntity
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
+import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -62,11 +66,6 @@ class PeriodStatsAggregationHelper(
             querySourceEntities = { qf, eventId ->
                 qf
                     .selectFrom(brawlerTeamBattleResultStatsEntity)
-                    .distinct()
-                    .leftJoin(
-                        brawlerTeamBattleResultStatsEntity.brawlers,
-                        brawlerTeamBattleResultStatsBrawlerEntity,
-                    ).fetchJoin()
                     .where(
                         brawlerTeamBattleResultStatsEntity.periodType.eq(sourcePeriodType),
                         brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
@@ -74,7 +73,7 @@ class PeriodStatsAggregationHelper(
                     ).fetch()
                     .toList()
             },
-            groupBy = { TeamGroupKey(it.tierRange, it.brawlerBrawlStarsIds) },
+            groupBy = { TeamGroupKey(it.tierRange, it.brawlerTeam.brawlerBrawlStarsIds) },
             buildTarget = { eventId, key, group ->
                 BrawlerTeamBattleResultStatsEntity(
                     eventBrawlStarsId = eventId,
@@ -82,8 +81,18 @@ class PeriodStatsAggregationHelper(
                     tierRange = key.tierRange,
                     battleDate = startDate,
                     resultCount = group.map { it.resultCount }.reduce { acc, r -> acc + r },
-                    initialBrawlerBrawlStarsIds = key.brawlerBrawlStarsIds,
+                    brawlerTeam = BrawlerTeamEmbedded.of(key.brawlerBrawlStarsIds),
                 )
+            },
+            persistAdditional = { em, parent ->
+                parent.brawlerTeam.brawlerBrawlStarsIds.forEach { brawlerId ->
+                    em.persist(
+                        BrawlerTeamBattleResultStatsBrawlerEntity(
+                            stats = parent,
+                            brawlerBrawlStarsId = brawlerId,
+                        ),
+                    )
+                }
             },
             deleteExistingTarget = { qf, eventId ->
                 qf
@@ -167,11 +176,6 @@ class PeriodStatsAggregationHelper(
             querySourceEntities = { qf, eventId ->
                 qf
                     .selectFrom(brawlerTeamBattleRankStatsEntity)
-                    .distinct()
-                    .leftJoin(
-                        brawlerTeamBattleRankStatsEntity.brawlers,
-                        brawlerTeamBattleRankStatsBrawlerEntity,
-                    ).fetchJoin()
                     .where(
                         brawlerTeamBattleRankStatsEntity.periodType.eq(sourcePeriodType),
                         brawlerTeamBattleRankStatsEntity.battleDate.between(startDate, endDate),
@@ -179,7 +183,7 @@ class PeriodStatsAggregationHelper(
                     ).fetch()
                     .toList()
             },
-            groupBy = { TeamGroupKey(it.tierRange, it.brawlerBrawlStarsIds) },
+            groupBy = { TeamGroupKey(it.tierRange, it.brawlerTeam.brawlerBrawlStarsIds) },
             buildTarget = { eventId, key, group ->
                 BrawlerTeamBattleRankStatsEntity(
                     eventBrawlStarsId = eventId,
@@ -187,8 +191,18 @@ class PeriodStatsAggregationHelper(
                     tierRange = key.tierRange,
                     battleDate = startDate,
                     rankCounts = group.map { it.rankCounts }.reduce { acc, r -> acc + r },
-                    initialBrawlerBrawlStarsIds = key.brawlerBrawlStarsIds,
+                    brawlerTeam = BrawlerTeamEmbedded.of(key.brawlerBrawlStarsIds),
                 )
+            },
+            persistAdditional = { em, parent ->
+                parent.brawlerTeam.brawlerBrawlStarsIds.forEach { brawlerId ->
+                    em.persist(
+                        BrawlerTeamBattleRankStatsBrawlerEntity(
+                            stats = parent,
+                            brawlerBrawlStarsId = brawlerId,
+                        ),
+                    )
+                }
             },
             deleteExistingTarget = { qf, eventId ->
                 qf
@@ -334,6 +348,7 @@ class PeriodStatsAggregationHelper(
         buildTarget: (Long, TKey, List<TSource>) -> TTarget,
         deleteExistingTarget: (JPAQueryFactory, Long) -> Unit,
         deleteSource: (JPAQueryFactory, Long) -> Unit,
+        persistAdditional: (EntityManager, TTarget) -> Unit = { _, _ -> },
     ) {
         entityManagerFactory.createEntityManager().use { entityManager ->
             val queryFactory = JPAQueryFactory(entityManager)
@@ -355,7 +370,10 @@ class PeriodStatsAggregationHelper(
 
                 targetEntities.chunked(BattleStatsConstants.BATCH_SIZE).forEach { batch ->
                     entityManager.transaction.begin()
-                    batch.forEach { entityManager.persist(it) }
+                    batch.forEach {
+                        entityManager.persist(it)
+                        persistAdditional(entityManager, it)
+                    }
                     entityManager.transaction.commit()
                     entityManager.clear()
                 }

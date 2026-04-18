@@ -21,7 +21,6 @@ class ClubUpdaterConcurrencyTest(
     private val clubMemberRepository: ClubMemberJpaRepository,
     private val testDataManager: TestDataManager,
 ) : CoreWorkerContextTest() {
-
     @AfterEach
     fun tearDown() {
         testDataManager.cleanUp()
@@ -35,17 +34,18 @@ class ClubUpdaterConcurrencyTest(
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(createClubResponse(tag))
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(createClubResponse(tag))
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -63,17 +63,18 @@ class ClubUpdaterConcurrencyTest(
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(createClubResponse(tag))
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(createClubResponse(tag))
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -87,25 +88,27 @@ class ClubUpdaterConcurrencyTest(
         // given
         val tag = "#CLUB3"
         testDataManager.add(aClubEntity().withBrawlStarsTag(tag).build())
-        val members = listOf(
-            createClubMemberResponse("#MEMBER1"),
-            createClubMemberResponse("#MEMBER2"),
-        )
+        val members =
+            listOf(
+                createClubMemberResponse("#MEMBER1"),
+                createClubMemberResponse("#MEMBER2"),
+            )
         val barrier = CyclicBarrier(2)
         val executor = Executors.newFixedThreadPool(2)
 
         // when
-        val futures = (1..2).map {
-            executor.submit<Exception?> {
-                barrier.await()
-                try {
-                    sut.update(createClubResponse(tag, members))
-                    null
-                } catch (e: Exception) {
-                    e
+        val futures =
+            (1..2).map {
+                executor.submit<Exception?> {
+                    barrier.await()
+                    try {
+                        sut.update(createClubResponse(tag, members))
+                        null
+                    } catch (e: Exception) {
+                        e
+                    }
                 }
             }
-        }
         val results = futures.map { it.get(10, TimeUnit.SECONDS) }
         executor.shutdown()
 
@@ -128,12 +131,13 @@ class ClubUpdaterConcurrencyTest(
         members = members,
     )
 
-    private fun createClubMemberResponse(tag: String) = ClubMemberResponse(
-        tag = tag,
-        name = "Member $tag",
-        nameColor = "0xff0000ff",
-        role = "member",
-        trophies = 500,
-        icon = PlayerIconResponse(id = 1L),
-    )
+    private fun createClubMemberResponse(tag: String) =
+        ClubMemberResponse(
+            tag = tag,
+            name = "Member $tag",
+            nameColor = "0xff0000ff",
+            role = "member",
+            trophies = 500,
+            icon = PlayerIconResponse(id = 1L),
+        )
 }

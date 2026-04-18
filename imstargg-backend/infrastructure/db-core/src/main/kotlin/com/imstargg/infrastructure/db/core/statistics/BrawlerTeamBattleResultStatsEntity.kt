@@ -3,7 +3,6 @@ package com.imstargg.infrastructure.db.core.statistics
 import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
-import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
@@ -13,7 +12,6 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDate
 
@@ -40,22 +38,11 @@ class BrawlerTeamBattleResultStatsEntity(
     val battleDate: LocalDate,
     @Embedded
     val resultCount: ResultCountEmbedded,
-    initialBrawlerBrawlStarsIds: List<Long>,
+    @Embedded
+    val brawlerTeam: BrawlerTeamEmbedded,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_team_battle_result_stats_id", nullable = false)
     val id: Long? = null
-
-    @Embedded
-    val brawlerTeam: BrawlerTeamEmbedded = BrawlerTeamEmbedded.of(initialBrawlerBrawlStarsIds)
-
-    @OneToMany(mappedBy = "stats", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val brawlers: List<BrawlerTeamBattleResultStatsBrawlerEntity> =
-        initialBrawlerBrawlStarsIds.map {
-            BrawlerTeamBattleResultStatsBrawlerEntity(stats = this, brawlerBrawlStarsId = it)
-        }
-
-    val brawlerBrawlStarsIds: List<Long>
-        get() = brawlerTeam.brawlerBrawlStarsIds
 }

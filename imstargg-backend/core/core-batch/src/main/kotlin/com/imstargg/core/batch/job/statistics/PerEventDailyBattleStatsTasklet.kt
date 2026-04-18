@@ -2,6 +2,7 @@ package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
 import com.querydsl.jpa.impl.JPAQueryFactory
+import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.scope.context.ChunkContext
@@ -19,6 +20,7 @@ class PerEventDailyBattleStatsTasklet<TBattle, TEntity>(
     private val getId: (TBattle) -> Long,
     private val aggregatorFactory: () -> BattleStatsAggregator<TBattle, TEntity>,
     private val deleteExisting: (JPAQueryFactory, LocalDate, Long) -> Unit,
+    private val persistAdditional: (EntityManager, TEntity) -> Unit = { _, _ -> },
 ) : Tasklet {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -66,7 +68,10 @@ class PerEventDailyBattleStatsTasklet<TBattle, TEntity>(
                 totalEntities += entities.size
                 entities.chunked(BattleStatsConstants.BATCH_SIZE).forEach { batch ->
                     em.transaction.begin()
-                    batch.forEach { em.persist(it) }
+                    batch.forEach {
+                        em.persist(it)
+                        persistAdditional(em, it)
+                    }
                     em.transaction.commit()
                     em.clear()
                 }

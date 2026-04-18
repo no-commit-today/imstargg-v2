@@ -43,9 +43,6 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
 
         return queryFactory
             .selectFrom(brawlerTeamBattleResultStatsEntity)
-            .distinct()
-            .leftJoin(brawlerTeamBattleResultStatsEntity.brawlers, brawlerTeamBattleResultStatsBrawlerEntity)
-            .fetchJoin()
             .where(
                 brawlerFilter,
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
