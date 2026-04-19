@@ -3,8 +3,11 @@ spring:
 
   profiles:
     active: local
-    include:
-      - db
+    group:
+      local:     [db]
+      local-dev: [db]
+      dev:       [db]
+      prod:      [db]
 
   config:
     import:
@@ -41,15 +44,6 @@ spring:
         order_inserts: true
         order_updates: true
 
-storage:
-  datasource:
-    core:
-      hikari:
-        minimum-idle: 0
-        maximum-pool-size: 5
-        data-source-properties:
-          socketTimeout: 0
-
 app:
   alert:
     type: NO_OPS
@@ -59,17 +53,42 @@ spring:
   config:
     activate:
       on-profile: local
+
+storage:
+  datasource:
+    core:
+      minimum-idle: 0
+      maximum-pool-size: 5
+      data-source-properties:
+        socketTimeout: 0
+
 ---
 spring:
   config:
     activate:
       on-profile: local-dev
 
+storage:
+  datasource:
+    core:
+      minimum-idle: 0
+      maximum-pool-size: 5
+      data-source-properties:
+        socketTimeout: 0
+
 ---
 spring:
   config:
     activate:
       on-profile: dev
+
+storage:
+  datasource:
+    core:
+      minimum-idle: 0
+      maximum-pool-size: 5
+      data-source-properties:
+        socketTimeout: 0
 
 app:
   alert:
@@ -82,6 +101,14 @@ spring:
   config:
     activate:
       on-profile: prod
+
+storage:
+  datasource:
+    core:
+      minimum-idle: 0
+      maximum-pool-size: 5
+      data-source-properties:
+        socketTimeout: 0
 
 app:
   alert:

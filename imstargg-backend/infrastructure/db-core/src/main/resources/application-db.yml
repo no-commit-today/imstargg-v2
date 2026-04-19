@@ -22,17 +22,14 @@ storage:
       jdbc-url: ${DATABASE_URL}
       username: ${DATABASE_USERNAME}
       password: ${DATABASE_PASSWORD}
-      hikari:
-        pool-name: core-db-pool
-        minimum-idle: 5
-        maximum-pool-size: 5
-        connection-timeout: 1100
-        validation-timeout: 1000
-        keepalive-time: 30000
-        max-lifetime: 1800000
-        data-source-properties:
-          reWriteBatchedInserts: true
-          socketTimeout: 3
+      pool-name: core-db-pool
+      connection-timeout: 1100
+      validation-timeout: 1000
+      keepalive-time: 30000
+      max-lifetime: 1800000
+      data-source-properties:
+        reWriteBatchedInserts: true
+        socketTimeout: 3
 
 ---
 spring:
@@ -75,11 +72,3 @@ spring:
   config:
     activate:
       on-profile: prod
-
-storage:
-  datasource:
-    core:
-      hikari:
-        minimum-idle: 10
-        maximum-pool-size: 15
-

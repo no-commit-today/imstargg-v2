@@ -5,9 +5,11 @@ spring:
 
   profiles:
     active: local
-    include:
-      - db
-      - aws-sqs
+    group:
+      local:     [db, aws-sqs]
+      local-dev: [db, aws-sqs]
+      dev:       [db, aws-sqs]
+      prod:      [db, aws-sqs]
 
   config:
     import:
@@ -27,9 +29,8 @@ spring:
 storage:
   datasource:
     core:
-      hikari:
-        minimum-idle: 5
-        maximum-pool-size: 5
+      minimum-idle: 5
+      maximum-pool-size: 5
 
 app:
   schedule:

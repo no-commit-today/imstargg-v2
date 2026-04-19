@@ -5,16 +5,15 @@ storage:
       jdbc-url: ${DATABASE_URL}
       username: ${DATABASE_USERNAME}
       password: ${DATABASE_PASSWORD}
-      hikari:
-        pool-name: lock-db-pool
-        minimum-idle: 1
-        maximum-pool-size: 3
-        connection-timeout: 1100
-        validation-timeout: 1000
-        keepalive-time: 30000
-        max-lifetime: 1800000
-        data-source-properties:
-          socketTimeout: 3
+      pool-name: lock-db-pool
+      minimum-idle: 1
+      maximum-pool-size: 3
+      connection-timeout: 1100
+      validation-timeout: 1000
+      keepalive-time: 30000
+      max-lifetime: 1800000
+      data-source-properties:
+        socketTimeout: 3
 
 ---
 spring:
@@ -38,6 +37,5 @@ spring:
 storage:
   datasource:
     lock:
-      hikari:
-        minimum-idle: 3
-        maximum-pool-size: 5
+      minimum-idle: 3
+      maximum-pool-size: 5
