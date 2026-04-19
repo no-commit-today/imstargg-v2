@@ -17,7 +17,7 @@
 | 배포 파일 위치 | `imstargg-v2/imstargg-deploy/` (모노레포 내) |
 | 빌드 방식 | Dockerfile + `docker buildx` (모듈별 Multi-stage) |
 | 이미지 레지스트리 | 사용하지 않음. `docker save` + `scp` + `k3s ctr images import` |
-| 버전 태깅 | `v{semver}-{YYYY.MM.DD}-{git_short_sha}` + 이동 태그 `v{semver}` / `latest` (k8s 매니페스트는 full tag 사용) |
+| 버전 태깅 | `v{semver}-{YYYY.MM.DD}-{git_short_sha}` 를 k8s 매니페스트 `image:` 에 직접 명시. 버전 변경 이력은 git commit 으로 관리 |
 | Secret 주입 | `kubectl create secret generic --from-env-file` |
 | 네임스페이스 | `imstargg-prod` (현재는 prod만) |
 | core-api | k8s `Deployment` (replicas=1, Actuator 헬스체크 on 9292) |
@@ -36,7 +36,6 @@ imstargg-v2/
 │       └── core-batch/Dockerfile
 └── imstargg-deploy/
     ├── README.md                       # 빌드·전송·배포·롤백 가이드
-    ├── VERSIONS.md                     # 모듈별 현재 버전 기록 (수동 갱신)
     ├── scripts/
     │   ├── build-image.sh              # 모듈 + 버전 입력 → buildx 빌드 + 태깅
     │   ├── save-image.sh               # docker save | gzip
@@ -141,10 +140,12 @@ gunzip -c "${TAR_GZ}" | sudo k3s ctr images import -
 
 ## 버전 관리 정책
 
-- 태그 형식: `v{MAJOR}.{MINOR}.{PATCH}-{YYYY.MM.DD}-{GIT_SHA}` (불변, k8s 매니페스트에 기록).
-- 이동 태그: `v{MAJOR}.{MINOR}.{PATCH}`, `latest` — 편의용. **k8s Deployment/CronJob 의 `image:` 필드에는 사용 금지**.
-- `imstargg-deploy/VERSIONS.md` 에 모듈별 현재 prod 버전을 수동 기록.
-- 릴리스 시 `git tag {module}-v{semver}` 부여.
+- 태그 형식: `v{MAJOR}.{MINOR}.{PATCH}-{YYYY.MM.DD}-{GIT_SHA}` (불변).
+- **각 k8s 매니페스트의 `image:` 필드에 full tag 를 직접 하드코딩.** 변수/placeholder 대입 없음. 예: `image: imstargg/core-worker:v1.0.0-2026.04.19-a3f9b2c`.
+- **버전 변경 = yaml 편집 + git commit.** commit 메시지와 git log 가 버전 이력의 단일 소스 (별도 `VERSIONS.md` 등 중간 상태 파일을 두지 않음).
+  - 권장 commit 메시지 형식: `deploy(core-worker): bump to v1.0.0-2026.04.19-a3f9b2c`
+- 이동 태그: `v{MAJOR}.{MINOR}.{PATCH}`, `latest` — 로컬 개발/검증 편의용으로 `build-image.sh` 가 함께 생성하지만 **k8s 매니페스트에는 사용 금지** (full tag 만).
+- 릴리스 시 `git tag {module}-v{semver}` 부여 (선택).
 - `imagePullPolicy: IfNotPresent` (레지스트리 미사용 → 이미 import 된 이미지 사용).
 
 ## Kubernetes 매니페스트
@@ -361,17 +362,19 @@ kubectl -n imstargg-prod create secret generic core-batch-secret \
 4. **최초 배포 준비**
    - namespace 생성, 3개 모듈의 secret 생성.
 5. **배포**
-   - 해당 `deployment.yaml` / `cronjob-*.yaml` 의 `image:` 필드를 새 full tag 로 업데이트.
-   - `kubectl apply -f k8s/prod/core-worker/deployment.yaml`
-   - `VERSIONS.md` 업데이트, git commit, `git tag core-worker-v1.0.0`.
+   - 해당 `deployment.yaml` / `cronjob-*.yaml` 의 `image:` 필드를 새 full tag 로 편집.
+   - `git add` + `git commit -m "deploy(core-worker): bump to <full-tag>"` 로 버전 변경 이력 기록.
+   - `kubectl apply -f k8s/prod/core-worker/deployment.yaml`.
+   - (선택) `git tag core-worker-v1.0.0` 로 semver 태그 부여.
 6. **롤백**
-   - `image:` 를 이전 full tag 로 되돌려 `kubectl apply`, 또는 `kubectl rollout undo deployment/core-worker -n imstargg-prod`.
+   - `git revert` 또는 `git checkout <prev-commit> -- k8s/prod/core-worker/deployment.yaml` 로 이전 image 로 되돌리고 다시 commit → `kubectl apply`.
+   - 긴급 시 `kubectl rollout undo deployment/core-worker -n imstargg-prod` 후 git 상태 동기화.
 7. **CronJob 수동 실행 (검증용)**
    - `kubectl create job --from=cronjob/brawler-battle-rank-stats manual-run-$(date +%s) -n imstargg-prod`
 8. **로그 확인**
    - `kubectl logs -f deployment/core-worker -n imstargg-prod`
    - `kubectl logs -f -l app=core-api -n imstargg-prod`
-9. **버전 관리 규칙** — full tag 를 매니페스트에 기록, `latest` 는 매니페스트 사용 금지, `VERSIONS.md` 수동 갱신.
+9. **버전 관리 규칙** — full tag 를 매니페스트에 직접 하드코딩, 버전 변경 = yaml 편집 + git commit (`git log k8s/prod/<module>/deployment.yaml` 이 버전 이력), `latest` 는 매니페스트 사용 금지.
 
 ## 범위 외 (추후 과제)
 
