@@ -20,7 +20,8 @@
 | 버전 태깅 | `v{semver}-{YYYY.MM.DD}-{git_short_sha}` + 이동 태그 `v{semver}` / `latest` (k8s 매니페스트는 full tag 사용) |
 | Secret 주입 | `kubectl create secret generic --from-env-file` |
 | 네임스페이스 | `imstargg-prod` (현재는 prod만) |
-| core-api/worker | k8s `Deployment` (replicas=1, Actuator 헬스체크) |
+| core-api | k8s `Deployment` (replicas=1, Actuator 헬스체크 on 9292) |
+| core-worker | k8s `Deployment` (replicas=1, probe 없음 — 웹 스타터 부재) |
 | core-batch | k8s `CronJob` 3종 (rotation, rank-stats, result-stats) |
 | 타임존 | `Asia/Seoul` (컨테이너 `TZ=Asia/Seoul`, CronJob `spec.timeZone` 명시) |
 
@@ -185,19 +186,49 @@ spec:
           envFrom:
             - secretRef: { name: core-api-secret }
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 9292
           resources:
             requests: { cpu: 200m, memory: 512Mi }
             limits:   { cpu: 1000m, memory: 2Gi }
           livenessProbe:
-            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            httpGet: { path: /actuator/health/liveness, port: 9292 }
             initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
-            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            httpGet: { path: /actuator/health/readiness, port: 9292 }
             initialDelaySeconds: 30
             periodSeconds: 10
 ```
+
+**전제 조건 (monitoring.yml 수정 필요):**
+
+현재 `support/monitoring/src/main/resources/monitoring.yml` 은 `management.endpoints.web.exposure.include: prometheus` 만 노출하고 있어 `/actuator/health/*` 가 404 를 반환한다. 배포 전에 다음을 반영해야 한다:
+
+```yaml
+management:
+  server:
+    port: 9292
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health
+  endpoint:
+    health:
+      probes:
+        enabled: true        # liveness/readiness 그룹 활성화
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState, db
+```
+
+- `management.endpoint.health.probes.enabled: true` 로 `/actuator/health/liveness`, `/actuator/health/readiness` endpoint 가 노출.
+- readiness 에 `db` 를 포함하여 DB 연결 복구 전까지 트래픽 수신 방지.
+- `management.server.port: 9292` 는 이미 설정됨.
 
 `service.yaml`:
 
@@ -229,11 +260,13 @@ DATABASE_PASSWORD=
 
 ### core-worker
 
-`deployment.yaml` 은 core-api 와 동일 패턴. 차이:
+`deployment.yaml` 은 core-api 와 유사하되 다음 차이가 있다:
 
 - Service 없음 (외부 노출 불필요).
+- **HTTP probe 없음.** core-worker 의 `build.gradle.kts` 는 `spring-boot-starter` (non-web) 만 사용하므로 HTTP 서버가 기동되지 않는다. Actuator 역시 HTTP endpoint 를 노출하지 못한다. 따라서 `livenessProbe` / `readinessProbe` / `ports` 필드를 생략하고, Pod 의 기본 `restartPolicy: Always` (Deployment 는 항상 Always) 에 의한 프로세스 crash 복구에 의존한다.
+- 향후 개선 옵션: (a) monitoring 모듈 또는 core-worker 에 `spring-boot-starter-web` 추가하여 actuator HTTP 활성화 → core-api 와 동일한 probe 구성, (b) `exec` probe 로 프로세스 존재 확인. 본 설계 범위에서는 (a)/(b) 를 도입하지 않는다.
 - Secret 키: `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`, `BRAWLSTARS_API_KEYS`, `DATABASE_URL`, `DATABASE_USERNAME`.
-- 현재 요청된 환경변수에 `DATABASE_PASSWORD` 가 없어 그대로 반영. 실제 DB 접속 시 필요하면 추후 추가.
+- 사용자가 제공한 환경변수 목록에 `DATABASE_PASSWORD` 가 없어 그대로 반영. 실제 DB 접속 시 필요하면 추가한다.
 
 ### core-batch (CronJob 3종)
 
@@ -355,5 +388,6 @@ kubectl -n imstargg-prod create secret generic core-batch-secret \
 - `./gradlew :core:core-worker:bootJar` 가 로컬 build 에서 성공.
 - `build-image.sh core-worker v0.1.0` 수행 시 arm64 이미지 생성 및 `docker images` 에서 3개 태그 확인.
 - save/load 스크립트로 k3s 서버 containerd 에 이미지 import 성공 (`sudo k3s ctr images ls | grep core-worker`).
-- `kubectl apply` 후 Pod `Running` 및 readiness 통과.
+- `monitoring.yml` 에 health endpoint 노출 + probes 그룹 설정 반영 후, core-api 컨테이너의 `curl :9292/actuator/health/liveness` 가 200 OK.
+- `kubectl apply` 후 core-api Pod `Running` 및 readiness 통과, core-worker Pod `Running` (probe 없이 프로세스 유지).
 - core-batch CronJob 수동 트리거 (`kubectl create job --from=cronjob/...`) 시 Spring Batch 가 지정된 `job.name` 으로 실행되고 정상 종료 (ExitCode 0).
