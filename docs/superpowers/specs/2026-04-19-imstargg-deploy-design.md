@@ -51,9 +51,7 @@ imstargg-v2/
             │   ├── deployment.yaml
             │   └── secret.env.example
             └── core-batch/
-                ├── cronjob-battle-event-rotation-sync.yaml
-                ├── cronjob-brawler-battle-rank-stats.yaml
-                ├── cronjob-brawler-battle-result-stats.yaml
+                ├── cronjobs.yaml           # 3개 CronJob 을 multi-document YAML 로 통합
                 └── secret.env.example
 ```
 
@@ -282,11 +280,23 @@ DATABASE_PASSWORD=
 - Secret 키: `BRAWLSTARS_API_KEYS`, `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `DISCORD_WEBHOOK_URL`.
 - `command: ["sh", "-c"]` + `args` 로 shell expansion 사용.
 
-| CronJob 파일 | `schedule` | job.name | date 파라미터 |
+3개 CronJob 은 `cronjobs.yaml` 단일 파일에 `---` 구분자로 나열한다:
+
+| CronJob name | `schedule` | job.name | date 파라미터 |
 |---|---|---|---|
-| `cronjob-battle-event-rotation-sync.yaml` | `"0 * * * *"` | `battleEventRotationSyncJob` | 없음 |
-| `cronjob-brawler-battle-rank-stats.yaml` | `"0 2 * * *"` | `brawlerBattleRankStatsJob` | `date=$(date -d 'yesterday' +%Y-%m-%d)` |
-| `cronjob-brawler-battle-result-stats.yaml` | `"0 2 * * *"` | `brawlerBattleResultStatsJob` | `date=$(date -d 'yesterday' +%Y-%m-%d)` |
+| `battle-event-rotation-sync` | `"0 * * * *"` | `battleEventRotationSyncJob` | 없음 |
+| `brawler-battle-rank-stats` | `"0 2 * * *"` | `brawlerBattleRankStatsJob` | `date=$(date -d 'yesterday' +%Y-%m-%d)` |
+| `brawler-battle-result-stats` | `"0 2 * * *"` | `brawlerBattleResultStatsJob` | `date=$(date -d 'yesterday' +%Y-%m-%d)` |
+
+**버전 일관성:** 세 CronJob 의 `image:` 는 반드시 동일한 full tag 로 유지된다. 단일 파일이므로 다음과 같이 일괄 치환 후 diff 로 3건 모두 갱신됐는지 확인하고 commit:
+
+```bash
+NEW_TAG=v1.0.0-2026.04.19-a3f9b2c
+sed -i '' "s|imstargg/core-batch:[^[:space:]]*|imstargg/core-batch:${NEW_TAG}|g" \
+  k8s/prod/core-batch/cronjobs.yaml
+git diff k8s/prod/core-batch/cronjobs.yaml   # 3곳 변경 확인
+git commit -am "deploy(core-batch): bump to ${NEW_TAG}"
+```
 
 예시 (rank-stats):
 
@@ -362,10 +372,10 @@ kubectl -n imstargg-prod create secret generic core-batch-secret \
 4. **최초 배포 준비**
    - namespace 생성, 3개 모듈의 secret 생성.
 5. **배포**
-   - 해당 `deployment.yaml` / `cronjob-*.yaml` 의 `image:` 필드를 새 full tag 로 편집.
-   - `git add` + `git commit -m "deploy(core-worker): bump to <full-tag>"` 로 버전 변경 이력 기록.
-   - `kubectl apply -f k8s/prod/core-worker/deployment.yaml`.
-   - (선택) `git tag core-worker-v1.0.0` 로 semver 태그 부여.
+   - 해당 `deployment.yaml` (core-api/core-worker) 또는 `cronjobs.yaml` (core-batch) 의 `image:` 필드를 새 full tag 로 편집. core-batch 는 3곳이 동시에 갱신되도록 `sed` 일괄 치환 + `git diff` 확인.
+   - `git add` + `git commit -m "deploy(<module>): bump to <full-tag>"` 로 버전 변경 이력 기록.
+   - `kubectl apply -f k8s/prod/<module>/`.
+   - (선택) `git tag <module>-v1.0.0` 로 semver 태그 부여.
 6. **롤백**
    - `git revert` 또는 `git checkout <prev-commit> -- k8s/prod/core-worker/deployment.yaml` 로 이전 image 로 되돌리고 다시 commit → `kubectl apply`.
    - 긴급 시 `kubectl rollout undo deployment/core-worker -n imstargg-prod` 후 git 상태 동기화.
@@ -374,7 +384,7 @@ kubectl -n imstargg-prod create secret generic core-batch-secret \
 8. **로그 확인**
    - `kubectl logs -f deployment/core-worker -n imstargg-prod`
    - `kubectl logs -f -l app=core-api -n imstargg-prod`
-9. **버전 관리 규칙** — full tag 를 매니페스트에 직접 하드코딩, 버전 변경 = yaml 편집 + git commit (`git log k8s/prod/<module>/deployment.yaml` 이 버전 이력), `latest` 는 매니페스트 사용 금지.
+9. **버전 관리 규칙** — full tag 를 매니페스트에 직접 하드코딩. 버전 변경 = yaml 편집 + git commit. 모듈별 버전 이력은 단일 파일 git log 로 추적: core-api/core-worker 는 `k8s/prod/<module>/deployment.yaml`, core-batch 는 `k8s/prod/core-batch/cronjobs.yaml`. `latest` 태그는 매니페스트 사용 금지.
 
 ## 범위 외 (추후 과제)
 
