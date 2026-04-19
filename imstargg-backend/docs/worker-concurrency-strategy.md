@@ -20,15 +20,15 @@ Worker는 같은 플레이어/클럽에 대해 여러 Job이 동시에 실행될
 
 ```
 @Transactional 시작
-├─ findWithLockByBrawlStarsTag()    ← SELECT FOR UPDATE
-│   └─ row 없으면 createPlayer()   ← INSERT (IDENTITY 전략으로 즉시 실행)
-├─ playerUpdateApplier.apply()     ← 트랜잭션 합류 (REQUIRED)
-└─ battleUpdateApplier.apply()     ← 트랜잭션 합류 (REQUIRED)
+├─ playerRepository.findWithLockByBrawlStarsTag()   ← SELECT FOR UPDATE
+│   └─ row 없으면 Player.create(response)           ← 도메인 팩터리로 새 Player
+├─ player.update(response)                          ← 도메인 내부 변경/신규 추적
+├─ playerRepository.save(player)                    ← PlayerEntity + brawlers + accessories 저장
+└─ updateBattles(player.entity, battles)            ← battle 저장 및 중복 제거
 @Transactional 커밋
 ```
 
-`PlayerUpdater.update()` 및 `updatePlayer()`는 `@Transactional`로 감싸져 있고,
-`PlayerUpdateApplier`, `BattleUpdateApplier`의 내부 `@Transactional`은 `REQUIRED` 전파로 외부 트랜잭션에 합류합니다.
+`PlayerUpdater.update()` / `updatePlayer()` / `updateBattles()` 모두 `@Transactional`이며, `update()`는 내부적으로 `updateBattles()`를 호출해 단일 트랜잭션 안에서 player 락 → battle 저장까지 이어집니다.
 
 ### 2.2 INSERT Race 처리
 
@@ -45,9 +45,9 @@ Worker B: SELECT → null → INSERT player (race!)
 
 ### 2.3 관련 코드
 
-- `PlayerUpdater`: `@Transactional` + `findWithLockByBrawlStarsTag()`
-- `PlayerUpdateApplier`: player 정보 및 brawler 동기화 (`@Transactional`)
-- `BattleUpdateApplier`: battle 저장 및 중복 제거 (`@Transactional`)
+- `PlayerUpdater` (application): 얇은 `@Transactional` 오케스트레이터. `update` / `updatePlayer` / `updateBattles` 제공
+- `Player` (domain): `PlayerEntity` + brawlers/accessory 엔티티들을 감싸는 쓰기 애그리거트. `create(response)` 팩터리 및 `update(response)` 로직 보유
+- `PlayerRepository` (application): `findWithLockByBrawlStarsTag` + `save`. PlayerEntity, PlayerBrawler, 5종 accessory에 대한 `saveAll` 수행 (dirty checking으로 기존 엔티티는 변경 시에만 UPDATE, 신규는 INSERT)
 - `PlayerRenewalService`: 배틀 빌드 및 `statsBattleAggregator.asyncAggregate()` 호출 (트랜잭션 바깥)
 
 ---
@@ -58,13 +58,14 @@ Worker B: SELECT → null → INSERT player (race!)
 
 ```
 @Transactional 시작
-├─ findWithLockByBrawlStarsTag()    ← SELECT FOR UPDATE
-│   └─ row 없으면 createClub()
-└─ clubUpdateApplier.apply()        ← 트랜잭션 합류 (REQUIRED)
+├─ clubRepository.findWithLockByBrawlStarsTag()    ← SELECT FOR UPDATE
+│   └─ row 없으면 Club.create(response)            ← 도메인 팩터리로 새 Club
+├─ club.update(response)                           ← 엔티티 필드 갱신 + members 전체 재구성
+└─ clubRepository.save(club)                       ← 기존 멤버 deleteAllInBatch → 신규 saveAll
 @Transactional 커밋
 ```
 
-PlayerUpdater와 동일한 Pessimistic Lock 패턴을 사용합니다.
+PlayerUpdater와 동일한 Pessimistic Lock 패턴을 사용합니다. 차이점은 club member는 삭제될 수 있으므로, 저장 단계에서 기존 멤버를 일괄 삭제하고 응답 기준으로 재삽입합니다 (`(club_id, brawlstars_tag)` 유니크 인덱스 보존을 위해 `deleteAllInBatch`로 즉시 실행).
 
 ### 3.2 Pessimistic Lock 선택 이유
 
@@ -76,8 +77,9 @@ PlayerUpdater와 동일한 Pessimistic Lock 패턴을 사용합니다.
 
 ### 3.3 관련 코드
 
-- `ClubUpdater`: `@Transactional` + `findWithLockByBrawlStarsTag()`
-- `ClubUpdateApplier`: club 정보 및 member 동기화 (`@Transactional`)
+- `ClubUpdater` (application): 얇은 `@Transactional` 오케스트레이터
+- `Club` (domain): `ClubEntity` + members 목록을 감싸는 쓰기 애그리거트. `create(response)` 팩터리 및 `update(response)`에서 멤버 전체 재구성
+- `ClubRepository` (application): `findWithLockByBrawlStarsTag` + `save` (기존 멤버 `deleteAllInBatch` 후 `saveAll`)
 
 ---
 

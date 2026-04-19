@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class BattleUpdateApplierTest(
-    private val sut: BattleUpdateApplier,
+class PlayerUpdaterUpdateBattlesTest(
+    private val sut: PlayerUpdater,
     private val cleanUp: CleanUp,
     private val playerRepository: PlayerJpaRepository,
     private val battleRepository: BattleJpaRepository,
@@ -39,7 +39,7 @@ class BattleUpdateApplierTest(
             )
 
         // when
-        val result = sut.apply(player, battles)
+        val result = sut.updateBattles(player, battles)
 
         // then
         assertThat(result).hasSize(2)
@@ -65,7 +65,7 @@ class BattleUpdateApplierTest(
             )
 
         // when
-        val result = sut.apply(player, battles)
+        val result = sut.updateBattles(player, battles)
 
         // then
         assertThat(result).hasSize(2)
@@ -93,7 +93,7 @@ class BattleUpdateApplierTest(
             )
 
         // when
-        val result = sut.apply(player, battles)
+        val result = sut.updateBattles(player, battles)
 
         // then
         assertThat(result).isEmpty()

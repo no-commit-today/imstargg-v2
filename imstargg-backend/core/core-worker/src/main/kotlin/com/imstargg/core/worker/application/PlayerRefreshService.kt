@@ -31,7 +31,7 @@ class PlayerRefreshService(
         }
 
         val players = findRandomPlayers()
-        log.info("[플레이어 갱신] {}명 플레이어 처리 시작: {}", players.size, players.map { it.brawlStarsTag })
+        log.debug("[플레이어 갱신] {}명 플레이어 처리 시작: {}", players.size, players.map { it.brawlStarsTag })
 
         for (player in players) {
             try {
@@ -53,7 +53,7 @@ class PlayerRefreshService(
             }
         }
 
-        log.info("[플레이어 갱신] 처리 완료")
+        log.debug("[플레이어 갱신] 처리 완료")
     }
 
     private fun findRandomPlayers(): List<PlayerEntity> {

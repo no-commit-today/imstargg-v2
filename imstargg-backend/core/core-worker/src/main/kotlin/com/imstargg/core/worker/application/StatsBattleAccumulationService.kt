@@ -31,7 +31,7 @@ class StatsBattleAccumulationService(
         }
 
         val statsPlayers = findRandomPlayers()
-        log.info("[배틀 통계 축적] {}명 플레이어 처리 시작: {}", statsPlayers.size, statsPlayers.map { it.brawlStarsTag })
+        log.debug("[배틀 통계 축적] {}명 플레이어 처리 시작: {}", statsPlayers.size, statsPlayers.map { it.brawlStarsTag })
 
         for (statsPlayer in statsPlayers) {
             try {
@@ -54,7 +54,7 @@ class StatsBattleAccumulationService(
             }
         }
 
-        log.info("[배틀 통계 축적] 처리 완료")
+        log.debug("[배틀 통계 축적] 처리 완료")
     }
 
     private fun findRandomPlayers(): List<StatsPlayerEntity> {

@@ -2,57 +2,112 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.worker.domain.Battle
+import com.imstargg.core.worker.domain.Player
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntityBrawler
+import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
-import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntityClub
-import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
 class PlayerUpdater(
-    private val playerRepository: PlayerJpaRepository,
-    private val playerUpdateApplier: PlayerUpdateApplier,
-    private val battleUpdateApplier: BattleUpdateApplier,
+    private val playerRepository: PlayerRepository,
+    private val battleJpaRepository: BattleJpaRepository,
+    private val battleTeamPlayerJpaRepository: BattleTeamPlayerJpaRepository,
 ) {
     @Transactional
     fun update(
         playerResponse: PlayerResponse,
         battles: List<Battle>,
     ): List<Battle> {
-        val player =
-            playerRepository.findWithLockByBrawlStarsTag(playerResponse.tag)
-                ?: createPlayer(playerResponse)
-
-        playerUpdateApplier.apply(player, playerResponse)
-        return battleUpdateApplier.apply(player, battles)
+        val player = findOrCreate(playerResponse)
+        player.update(playerResponse)
+        playerRepository.save(player)
+        return updateBattles(player.entity, battles)
     }
 
     @Transactional
     fun updatePlayer(response: PlayerResponse) {
-        val player =
-            playerRepository.findWithLockByBrawlStarsTag(response.tag)
-                ?: createPlayer(response)
-
-        playerUpdateApplier.apply(player = player, response = response)
+        val player = findOrCreate(response)
+        player.update(response)
+        playerRepository.save(player)
     }
 
-    private fun createPlayer(response: PlayerResponse): PlayerEntity =
-        PlayerEntity(
-            brawlStarsTag = response.tag,
-            name = response.name,
-            nameColor = response.nameColor,
-            iconBrawlStarsId = response.icon.id,
-            trophies = response.trophies,
-            highestTrophies = response.highestTrophies,
-            expLevel = response.expLevel,
-            expPoints = response.expPoints,
-            qualifiedFromChampionshipChallenge = response.isQualifiedFromChampionshipChallenge,
-            victories3vs3 = response.victories3vs3,
-            victoriesSolo = response.victoriesSolo,
-            victoriesDuo = response.victoriesDuo,
-            bestRoboRumbleTime = response.bestRoboRumbleTime,
-            bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
-            totalPrestigeLevel = response.totalPrestigeLevel,
-            club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
-        )
+    @Transactional
+    fun updateBattles(
+        player: PlayerEntity,
+        battles: List<Battle>,
+    ): List<Battle> {
+        val latestBattleTime =
+            battleJpaRepository
+                .findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
+                ?.battleAt
+
+        val newBattles =
+            if (latestBattleTime != null) {
+                battles.filter { it.battleAt.isAfter(latestBattleTime) }
+            } else {
+                battles
+            }
+
+        val battleEntities =
+            newBattles.map { battle ->
+                BattleEntity(
+                    battleKey = battle.battleKey,
+                    battleAt = battle.battleAt,
+                    event =
+                        battle.event?.let {
+                            BattleEntityEvent(
+                                brawlStarsId = it.brawlStarsId,
+                                modeBrawlStarsName = it.modeBrawlStarsName,
+                                modeBrawlStarsId = it.modeBrawlStarsId,
+                                map = it.map,
+                            )
+                        },
+                    mode = battle.mode,
+                    type = battle.type,
+                    result = battle.result,
+                    duration = battle.duration,
+                    starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
+                    player = player,
+                    battleRank = battle.battleRank,
+                    trophyChange = battle.trophyChange,
+                )
+            }
+        battleJpaRepository.saveAll(battleEntities)
+
+        val teamPlayerEntities =
+            newBattles.zip(battleEntities).flatMap { (battle, battleEntity) ->
+                battle.teams.flatMapIndexed { teamIdx, team ->
+                    team.mapIndexed { playerIdx, tp ->
+                        BattleTeamPlayerEntity(
+                            battle = battleEntity,
+                            teamIdx = teamIdx,
+                            playerIdx = playerIdx,
+                            brawlStarsTag = tp.brawlStarsTag,
+                            name = tp.name,
+                            brawler =
+                                BattleTeamPlayerEntityBrawler(
+                                    brawlStarsId = tp.brawler.brawlStarsId,
+                                    name = tp.brawler.name,
+                                    power = tp.brawler.power,
+                                    trophies = tp.brawler.trophies,
+                                    trophyChange = tp.brawler.trophyChange,
+                                ),
+                        )
+                    }
+                }
+            }
+        battleTeamPlayerJpaRepository.saveAll(teamPlayerEntities)
+
+        return newBattles
+    }
+
+    private fun findOrCreate(response: PlayerResponse): Player =
+        playerRepository.findWithLockByBrawlStarsTag(response.tag)
+            ?: Player.create(response)
 }

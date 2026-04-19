@@ -83,26 +83,3 @@ storage:
         minimum-idle: 10
         maximum-pool-size: 15
 
----
-spring:
-  config:
-    activate:
-      on-profile: batch
-
-  jpa:
-    properties:
-      hibernate:
-        jdbc:
-          batch_size: 100
-          batch_versioned_data: false
-        order_inserts: true
-        order_updates: true
-
-storage:
-  datasource:
-    core:
-      hikari:
-        minimum-idle: 0
-        maximum-pool-size: 5
-        data-source-properties:
-          socketTimeout: 0
