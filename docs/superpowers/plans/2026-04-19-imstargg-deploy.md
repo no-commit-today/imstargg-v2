@@ -79,20 +79,21 @@ management:
         enabled: false
 ```
 
-- [ ] **Step 2: core-api 기동으로 health endpoint 동작 확인 (로컬 검증)**
-
-로컬에서 docker-compose 인프라 기동 후:
+- [ ] **Step 2: YAML 문법 및 actuator 키 구조 정적 검증**
 
 Run:
 ```bash
-cd imstargg-backend
-./gradlew :core:core-api:bootRun &
-sleep 30
-curl -sf http://localhost:9292/actuator/health/liveness
-curl -sf http://localhost:9292/actuator/health/readiness
+python3 -c "import yaml; yaml.safe_load_all(open('imstargg-backend/support/monitoring/src/main/resources/monitoring.yml'))"
+grep -E 'include:.*health' imstargg-backend/support/monitoring/src/main/resources/monitoring.yml
+grep -E 'probes:' imstargg-backend/support/monitoring/src/main/resources/monitoring.yml
 ```
 
-Expected: 두 명령 모두 `{"status":"UP",...}` JSON 반환 (HTTP 200). 실패 시 구성 재검토. 검증 후 `bootRun` 프로세스 종료.
+Expected:
+- Python YAML 파싱이 오류 없이 완료 (종료 코드 0).
+- `include: prometheus, health` 라인 출력.
+- `probes:` 라인 출력.
+
+실제 endpoint 동작 검증(`curl :9292/actuator/health/liveness`)은 이 plan 의 범위 외로, 배포 직후 Deployment Readiness Checklist 에서 수행한다. 로컬 bootRun 검증은 docker-compose 인프라(PostgreSQL/Valkey/localstack) 의존성이 있어 plan 내 자동 단계로 신뢰성이 낮다.
 
 - [ ] **Step 3: Commit**
 
@@ -187,19 +188,21 @@ docker buildx build \
 
 Expected: `Successfully tagged imstargg/core-worker:dev`. `docker images imstargg/core-worker` 에 dev 태그 존재.
 
-- [ ] **Step 3: 컨테이너 기동 smoke test**
+- [ ] **Step 3: 이미지 내용 검증 (JAR + TZ + Java)**
 
 Run:
 ```bash
-docker run --rm -e SPRING_PROFILES_ACTIVE=local imstargg/core-worker:dev &
-CID=$!
-sleep 25
-docker ps --filter ancestor=imstargg/core-worker:dev --format '{{.Status}}'
-kill $CID 2>/dev/null || true
+docker run --rm --entrypoint sh imstargg/core-worker:dev -c \
+  'ls /app/app.jar && cat /etc/timezone 2>/dev/null || readlink /etc/localtime; java -version'
 docker rmi imstargg/core-worker:dev
 ```
 
-Expected: Spring Boot 기동 로그 출력. `Started CoreWorkerApplication` 라인 확인 후 종료.
+Expected:
+- `/app/app.jar` 파일 존재 (ls 출력).
+- TZ 가 `Asia/Seoul` 로 설정 (`/etc/timezone` 또는 `/etc/localtime` symlink 가 Seoul 을 가리킴).
+- `openjdk version "21..."` 출력.
+
+실제 Spring Boot 기동은 DB/SQS 인프라가 필요하므로 plan 범위 외. 배포 후 k8s Pod 로그에서 `Started CoreWorkerApplication` 확인.
 
 - [ ] **Step 4: Commit**
 
