@@ -30,8 +30,6 @@ storage:
       hikari:
         minimum-idle: 5
         maximum-pool-size: 5
-        data-source-properties:
-          socketTimeout: 0
 
 app:
   schedule:
