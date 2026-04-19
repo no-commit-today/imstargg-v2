@@ -6,7 +6,6 @@ plugins {
     id("io.spring.dependency-management")
     id("org.jlleitschuh.gradle.ktlint") apply false
     id("com.google.devtools.ksp")
-    id("com.vaadin") apply false
 }
 
 allprojects {
@@ -52,7 +51,6 @@ subprojects {
         imports {
             mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
             mavenBom("io.sentry:sentry-bom:${property("sentryVersion")}")
-            mavenBom("com.vaadin:vaadin-bom:${property("vaadinVersion")}")
             mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:${property("springCloudAwsVersion")}")
         }
     }

@@ -48,7 +48,7 @@ docker-compose up -d
 imstargg-backend/
 ├── core/                      # 핵심 도메인 모듈
 │   ├── core-api/             # REST API 서버 (bootJar 실행 가능)
-│   ├── core-admin/           # Vaadin 기반 관리자 UI (bootJar 실행 가능)
+│   ├── core-admin/           # 관리자 API 서버 (bootJar 실행 가능)
 │   ├── core-worker/          # 백그라운드 워커 (bootJar 실행 가능)
 │   ├── core-batch/           # 배치 작업 (bootJar 실행 가능)
 │   └── core-enum/            # 공유 Enum (외부 모듈에서 참조)

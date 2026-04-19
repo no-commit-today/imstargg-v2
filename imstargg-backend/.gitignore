@@ -42,16 +42,5 @@ out/
 ### Docker Compose ###
 /docker
 
-### Vaadin ###
-node_modules/
-**/src/main/frontend/
-package.json
-package-lock.json
-pnpm-lock.yaml
-tsconfig.json
-types.d.ts
-vite.config.ts
-vite.generated.ts
-
 ### Coding Agent ###
 .prompt
