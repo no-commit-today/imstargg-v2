@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { getGears, updateGearMessages, uploadGearImage } from "@/lib/api";
 import type { Gear } from "@/lib/types";
 import { toast } from "sonner";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 export default function GearEditPage() {
   const params = useParams();
@@ -40,18 +41,6 @@ export default function GearEditPage() {
       loadGear();
     } catch {
       toast.error("저장에 실패했습니다.");
-    }
-  };
-
-  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await uploadGearImage(brawlStarsId, file);
-      toast.success("이미지가 업로드되었습니다.");
-      loadGear();
-    } catch {
-      toast.error("업로드에 실패했습니다.");
     }
   };
 
@@ -87,13 +76,12 @@ export default function GearEditPage() {
 
         <Card>
           <CardHeader><CardTitle>이미지</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {gear.imageUrl ? (
-              <img src={gear.imageUrl} alt="" className="max-h-32" />
-            ) : (
-              <p className="text-sm text-muted-foreground">이미지 없음</p>
-            )}
-            <Input type="file" accept="image/*" onChange={handleUploadImage} />
+          <CardContent>
+            <ImageUploadField
+              currentImageUrl={gear.imageUrl}
+              onUpload={(file) => uploadGearImage(brawlStarsId, file)}
+              onUploaded={loadGear}
+            />
           </CardContent>
         </Card>
       </div>

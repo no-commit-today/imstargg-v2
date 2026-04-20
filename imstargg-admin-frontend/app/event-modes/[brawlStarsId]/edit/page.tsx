@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { getEventModes, updateEventModeMessages, uploadEventModeImage } from "@/lib/api";
 import type { BattleEventMode } from "@/lib/types";
 import { toast } from "sonner";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 export default function EventModeEditPage() {
   const params = useParams();
@@ -40,18 +41,6 @@ export default function EventModeEditPage() {
       loadEventMode();
     } catch {
       toast.error("저장에 실패했습니다.");
-    }
-  };
-
-  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await uploadEventModeImage(brawlStarsId, file);
-      toast.success("아이콘이 업로드되었습니다.");
-      loadEventMode();
-    } catch {
-      toast.error("업로드에 실패했습니다.");
     }
   };
 
@@ -87,13 +76,14 @@ export default function EventModeEditPage() {
 
         <Card>
           <CardHeader><CardTitle>아이콘</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {eventMode.iconImageUrl ? (
-              <img src={eventMode.iconImageUrl} alt="" className="max-h-32" />
-            ) : (
-              <p className="text-sm text-muted-foreground">아이콘 없음</p>
-            )}
-            <Input type="file" accept="image/*" onChange={handleUploadImage} />
+          <CardContent>
+            <ImageUploadField
+              currentImageUrl={eventMode.iconImageUrl}
+              onUpload={(file) => uploadEventModeImage(brawlStarsId, file)}
+              onUploaded={loadEventMode}
+              emptyText="아이콘 없음"
+              successMessage="아이콘이 업로드되었습니다."
+            />
           </CardContent>
         </Card>
       </div>

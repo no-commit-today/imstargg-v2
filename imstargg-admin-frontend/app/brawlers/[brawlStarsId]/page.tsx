@@ -44,6 +44,7 @@ import {
 } from "@/lib/api";
 import type { BrawlerDetail, BuffyType, StarPower, Gadget, HyperCharge } from "@/lib/types";
 import { toast } from "sonner";
+import { ImageUploadField } from "@/components/image-upload-field";
 
 const BUFFY_TYPES: BuffyType[] = ["GADGET", "STAR_POWER", "HYPER_CHARGE"];
 const BUFFY_LABELS: Record<BuffyType, string> = {
@@ -76,17 +77,6 @@ function SubItemEditDialog({
     }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await onUploadImage(file);
-      toast.success("이미지가 업로드되었습니다.");
-    } catch {
-      toast.error("업로드에 실패했습니다.");
-    }
-  };
-
   return (
     <DialogContent>
       <DialogHeader>
@@ -106,12 +96,11 @@ function SubItemEditDialog({
         <Button onClick={handleSave}>이름 저장</Button>
         <div>
           <Label>이미지</Label>
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt="" className="mb-2 max-h-24" />
-          ) : (
-            <p className="text-sm text-muted-foreground">이미지 없음</p>
-          )}
-          <Input type="file" accept="image/*" onChange={handleUpload} />
+          <ImageUploadField
+            currentImageUrl={item.imageUrl}
+            onUpload={onUploadImage}
+            previewClassName="max-h-24"
+          />
         </div>
       </div>
     </DialogContent>
@@ -249,30 +238,6 @@ export default function BrawlerDetailPage() {
     }
   };
 
-  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await uploadBrawlerImage(brawlStarsId, file);
-      toast.success("이미지가 업로드되었습니다.");
-      loadDetail();
-    } catch {
-      toast.error("업로드에 실패했습니다.");
-    }
-  };
-
-  const handleUploadBuffyImage = async (type: BuffyType, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await uploadBrawlerBuffyImage(brawlStarsId, type, file);
-      toast.success("이미지가 업로드되었습니다.");
-      loadDetail();
-    } catch {
-      toast.error("업로드에 실패했습니다.");
-    }
-  };
-
   const handleCreateBuffy = async (type: BuffyType) => {
     try {
       await createBrawlerBuffy(brawlStarsId, type);
@@ -353,13 +318,12 @@ export default function BrawlerDetailPage() {
 
           <Card>
             <CardHeader><CardTitle>메인 이미지</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              {detail.imageUrl ? (
-                <img src={detail.imageUrl} alt="" className="max-h-32" />
-              ) : (
-                <p className="text-sm text-muted-foreground">이미지 없음</p>
-              )}
-              <Input type="file" accept="image/*" onChange={handleUploadImage} />
+            <CardContent>
+              <ImageUploadField
+                currentImageUrl={detail.imageUrl}
+                onUpload={(file) => uploadBrawlerImage(brawlStarsId, file)}
+                onUploaded={loadDetail}
+              />
             </CardContent>
           </Card>
 
@@ -376,18 +340,12 @@ export default function BrawlerDetailPage() {
                     <div className="flex-1 space-y-2">
                       <p className="text-sm font-medium">{BUFFY_LABELS[type]}</p>
                       {buffy ? (
-                        <>
-                          {buffy.imageUrl ? (
-                            <img src={buffy.imageUrl} alt="" className="max-h-24" />
-                          ) : (
-                            <p className="text-sm text-muted-foreground">이미지 없음</p>
-                          )}
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleUploadBuffyImage(type, e)}
-                          />
-                        </>
+                        <ImageUploadField
+                          currentImageUrl={buffy.imageUrl}
+                          onUpload={(file) => uploadBrawlerBuffyImage(brawlStarsId, type, file)}
+                          onUploaded={loadDetail}
+                          previewClassName="max-h-24"
+                        />
                       ) : (
                         <p className="text-sm text-muted-foreground">미등록</p>
                       )}
