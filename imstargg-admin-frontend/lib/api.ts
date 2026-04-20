@@ -2,6 +2,7 @@ import type {
   DashboardSummary,
   BrawlerListItem,
   BrawlerDetail,
+  BuffyType,
   Gear,
   BattleEvent,
   BattleEventMode,
@@ -50,14 +51,23 @@ export const uploadBrawlerImage = (brawlStarsId: number, file: File) => {
   return request<void>(`/brawlers/${brawlStarsId}/image`, { method: "PUT", body: formData });
 };
 
-export const uploadBrawlerBuffyImage = (brawlStarsId: number, buffyType: string, file: File) => {
+export const createBrawlerBuffy = (brawlStarsId: number, type: BuffyType) =>
+  request<void>(`/brawlers/${brawlStarsId}/buffies`, {
+    method: "POST",
+    body: JSON.stringify({ type }),
+  });
+
+export const uploadBrawlerBuffyImage = (brawlStarsId: number, type: BuffyType, file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-  return request<void>(`/brawlers/${brawlStarsId}/buffy-image?buffyType=${buffyType}`, {
+  return request<void>(`/brawlers/${brawlStarsId}/buffies/${type}/image`, {
     method: "PUT",
     body: formData,
   });
 };
+
+export const deleteBrawlerBuffy = (brawlStarsId: number, type: BuffyType) =>
+  request<void>(`/brawlers/${brawlStarsId}/buffies/${type}`, { method: "DELETE" });
 
 export const updateBrawlerGears = (brawlStarsId: number, gearBrawlStarsIds: number[]) =>
   request<void>(`/brawlers/${brawlStarsId}/gears`, {

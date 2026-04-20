@@ -28,7 +28,9 @@ import {
   getBrawlerDetail,
   updateBrawlerMessages,
   uploadBrawlerImage,
+  createBrawlerBuffy,
   uploadBrawlerBuffyImage,
+  deleteBrawlerBuffy,
   updateBrawlerGears,
   createStarPower,
   updateStarPowerMessages,
@@ -40,8 +42,15 @@ import {
   updateHyperChargeMessages,
   uploadHyperChargeImage,
 } from "@/lib/api";
-import type { BrawlerDetail, StarPower, Gadget, HyperCharge } from "@/lib/types";
+import type { BrawlerDetail, BuffyType, StarPower, Gadget, HyperCharge } from "@/lib/types";
 import { toast } from "sonner";
+
+const BUFFY_TYPES: BuffyType[] = ["GADGET", "STAR_POWER", "HYPER_CHARGE"];
+const BUFFY_LABELS: Record<BuffyType, string> = {
+  GADGET: "가젯 버피",
+  STAR_POWER: "스타파워 버피",
+  HYPER_CHARGE: "하이퍼차지 버피",
+};
 
 // Sub-item (StarPower/Gadget/HyperCharge) edit dialog
 function SubItemEditDialog({
@@ -252,15 +261,36 @@ export default function BrawlerDetailPage() {
     }
   };
 
-  const handleUploadBuffyImage = async (buffyType: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadBuffyImage = async (type: BuffyType, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      await uploadBrawlerBuffyImage(brawlStarsId, buffyType, file);
+      await uploadBrawlerBuffyImage(brawlStarsId, type, file);
       toast.success("이미지가 업로드되었습니다.");
       loadDetail();
     } catch {
       toast.error("업로드에 실패했습니다.");
+    }
+  };
+
+  const handleCreateBuffy = async (type: BuffyType) => {
+    try {
+      await createBrawlerBuffy(brawlStarsId, type);
+      toast.success("버피가 등록되었습니다.");
+      loadDetail();
+    } catch {
+      toast.error("등록에 실패했습니다.");
+    }
+  };
+
+  const handleDeleteBuffy = async (type: BuffyType) => {
+    if (!confirm(`${BUFFY_LABELS[type]}를 삭제할까요? 이미지도 함께 삭제됩니다.`)) return;
+    try {
+      await deleteBrawlerBuffy(brawlStarsId, type);
+      toast.success("버피가 삭제되었습니다.");
+      loadDetail();
+    } catch {
+      toast.error("삭제에 실패했습니다.");
     }
   };
 
@@ -334,27 +364,48 @@ export default function BrawlerDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>버피 이미지</CardTitle></CardHeader>
+            <CardHeader><CardTitle>버피</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {[
-                { type: "BUFFY_GADGET", label: "가젯 버피" },
-                { type: "BUFFY_STAR_POWER", label: "스타파워 버피" },
-                { type: "BUFFY_HYPER_CHARGE", label: "하이퍼차지 버피" },
-              ].map(({ type, label }) => (
-                <div key={type}>
-                  <p className="mb-1 text-sm font-medium">{label}</p>
-                  {detail.buffyImages[type] ? (
-                    <img src={detail.buffyImages[type]!} alt="" className="mb-2 max-h-24" />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">이미지 없음</p>
-                  )}
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleUploadBuffyImage(type, e)}
-                  />
-                </div>
-              ))}
+              {BUFFY_TYPES.map((type) => {
+                const buffy = detail.buffies.find((b) => b.type === type);
+                return (
+                  <div
+                    key={type}
+                    className="flex items-start gap-4 border-b pb-4 last:border-b-0 last:pb-0"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm font-medium">{BUFFY_LABELS[type]}</p>
+                      {buffy ? (
+                        <>
+                          {buffy.imageUrl ? (
+                            <img src={buffy.imageUrl} alt="" className="max-h-24" />
+                          ) : (
+                            <p className="text-sm text-muted-foreground">이미지 없음</p>
+                          )}
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleUploadBuffyImage(type, e)}
+                          />
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">미등록</p>
+                      )}
+                    </div>
+                    <div className="pt-5">
+                      {buffy ? (
+                        <Button variant="outline" size="sm" onClick={() => handleDeleteBuffy(type)}>
+                          삭제
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={() => handleCreateBuffy(type)}>
+                          등록
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </TabsContent>

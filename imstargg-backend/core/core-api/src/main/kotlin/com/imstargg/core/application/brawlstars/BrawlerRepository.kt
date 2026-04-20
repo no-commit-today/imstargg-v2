@@ -21,6 +21,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.brawler.HyperChargeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BuffyJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.HyperChargeJpaRepository
@@ -39,6 +40,7 @@ class BrawlerRepository(
     private val gearJpaRepository: GearJpaRepository,
     private val hyperChargeJpaRepository: HyperChargeJpaRepository,
     private val brawlerGearJpaRepository: BrawlerGearJpaRepository,
+    private val buffyJpaRepository: BuffyJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
     private val cloudFrontProperties: CloudFrontProperties,
@@ -85,6 +87,8 @@ class BrawlerRepository(
         val gadgetsByBrawlerId = gadgetEntities.groupBy { it.brawlerBrawlStarsId }
         val starPowersByBrawlerId = starPowerEntities.groupBy { it.brawlerBrawlStarsId }
         val hyperChargesByBrawlerId = hyperChargeEntities.groupBy { it.brawlerBrawlStarsId }
+        val buffiesByBrawlerId =
+            buffyJpaRepository.findAllByBrawlerBrawlStarsIdIn(brawlerIds).groupBy { it.brawlerBrawlStarsId }
 
         val gearsById = gearEntities.associateBy { it.brawlStarsId }
 
@@ -105,14 +109,22 @@ class BrawlerRepository(
                 hyperCharges = (hyperChargesByBrawlerId[brawlerId] ?: emptyList()).map { toHyperCharge(it, hyperChargeNames, imagesByKey) },
                 portraitImageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.toImageUrl(),
                 buffies =
-                    listOf(
-                        Buffy(BuffyType.GADGET, imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlerId]?.toImageUrl()),
-                        Buffy(BuffyType.STAR_POWER, imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlerId]?.toImageUrl()),
-                        Buffy(BuffyType.HYPER_CHARGE, imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlerId]?.toImageUrl()),
-                    ),
+                    (buffiesByBrawlerId[brawlerId] ?: emptyList()).map { buffyEntity ->
+                        Buffy(
+                            type = buffyEntity.type,
+                            imageUrl = imagesByKey[buffyEntity.type.toImageType() to brawlerId]?.toImageUrl(),
+                        )
+                    },
             )
         }
     }
+
+    private fun BuffyType.toImageType(): BrawlStarsImageType =
+        when (this) {
+            BuffyType.GADGET -> BrawlStarsImageType.BUFFY_GADGET
+            BuffyType.STAR_POWER -> BrawlStarsImageType.BUFFY_STAR_POWER
+            BuffyType.HYPER_CHARGE -> BrawlStarsImageType.BUFFY_HYPER_CHARGE
+        }
 
     private fun toMessages(entities: List<MessageEntity>?): Messages {
         if (entities.isNullOrEmpty()) return Messages(emptyMap())

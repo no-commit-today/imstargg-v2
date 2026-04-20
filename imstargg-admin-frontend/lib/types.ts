@@ -47,13 +47,20 @@ export interface Gear {
   imageUrl: string | null;
 }
 
+export type BuffyType = "GADGET" | "STAR_POWER" | "HYPER_CHARGE";
+
+export interface Buffy {
+  type: BuffyType;
+  imageUrl: string | null;
+}
+
 export interface BrawlerDetail {
   brawlStarsId: number;
   names: Record<Language, string>;
   rarity: string;
   role: string;
   imageUrl: string | null;
-  buffyImages: Record<string, string | null>;
+  buffies: Buffy[];
   starPowers: StarPower[];
   gadgets: Gadget[];
   hyperCharges: HyperCharge[];

@@ -3,12 +3,15 @@ package com.imstargg.core.admin.application
 import com.imstargg.core.admin.config.CloudFrontProperties
 import com.imstargg.core.admin.request.BrawlerCreateRequest
 import com.imstargg.core.admin.request.BrawlerSubItemCreateRequest
+import com.imstargg.core.admin.request.BuffyCreateRequest
 import com.imstargg.core.admin.response.BrawlerDetailResponse
 import com.imstargg.core.admin.response.BrawlerResponse
+import com.imstargg.core.admin.response.BuffyResponse
 import com.imstargg.core.admin.response.GadgetResponse
 import com.imstargg.core.admin.response.GearResponse
 import com.imstargg.core.admin.response.HyperChargeResponse
 import com.imstargg.core.admin.response.StarPowerResponse
+import com.imstargg.core.enums.BuffyType
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -16,11 +19,13 @@ import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.BuffyEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.HyperChargeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BuffyJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.HyperChargeJpaRepository
@@ -39,6 +44,7 @@ class BrawlerService(
     private val hyperChargeJpaRepository: HyperChargeJpaRepository,
     private val gearJpaRepository: GearJpaRepository,
     private val brawlerGearJpaRepository: BrawlerGearJpaRepository,
+    private val buffyJpaRepository: BuffyJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val imageJpaRepository: BrawlStarsImageJpaRepository,
     private val imageStorageService: ImageStorageService,
@@ -76,6 +82,7 @@ class BrawlerService(
         val gadgets = gadgetJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
         val hyperCharges = hyperChargeJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
         val brawlerGears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
+        val buffies = buffyJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
         val allGears = gearJpaRepository.findAll()
 
         val brawlerNameMessages =
@@ -124,15 +131,13 @@ class BrawlerService(
             rarity = brawler.rarity,
             role = brawler.role,
             imageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlStarsId]?.toImageUrl(),
-            buffyImages =
-                mapOf(
-                    BrawlStarsImageType.BUFFY_GADGET to
-                        imagesByKey[BrawlStarsImageType.BUFFY_GADGET to brawlStarsId]?.toImageUrl(),
-                    BrawlStarsImageType.BUFFY_STAR_POWER to
-                        imagesByKey[BrawlStarsImageType.BUFFY_STAR_POWER to brawlStarsId]?.toImageUrl(),
-                    BrawlStarsImageType.BUFFY_HYPER_CHARGE to
-                        imagesByKey[BrawlStarsImageType.BUFFY_HYPER_CHARGE to brawlStarsId]?.toImageUrl(),
-                ),
+            buffies =
+                buffies.map { buffy ->
+                    BuffyResponse(
+                        type = buffy.type,
+                        imageUrl = imagesByKey[buffy.type.toImageType() to brawlStarsId]?.toImageUrl(),
+                    )
+                },
             starPowers =
                 starPowers.map { sp ->
                     StarPowerResponse(
@@ -240,12 +245,40 @@ class BrawlerService(
     }
 
     @Transactional
+    fun createBuffy(
+        brawlerBrawlStarsId: Long,
+        request: BuffyCreateRequest,
+    ) {
+        require(buffyJpaRepository.findByBrawlerBrawlStarsIdAndType(brawlerBrawlStarsId, request.type) == null) {
+            "이미 등록된 버피입니다: brawlerBrawlStarsId=$brawlerBrawlStarsId, type=${request.type}"
+        }
+        buffyJpaRepository.save(BuffyEntity(brawlerBrawlStarsId, request.type))
+    }
+
+    @Transactional
     fun updateBuffyImage(
-        buffyType: BrawlStarsImageType,
-        brawlStarsId: Long,
+        brawlerBrawlStarsId: Long,
+        buffyType: BuffyType,
         update: ImageUpdate,
     ) {
-        doUpdateImage(buffyType, brawlStarsId, update)
+        requireNotNull(buffyJpaRepository.findByBrawlerBrawlStarsIdAndType(brawlerBrawlStarsId, buffyType)) {
+            "등록되지 않은 버피입니다: brawlerBrawlStarsId=$brawlerBrawlStarsId, type=$buffyType"
+        }
+        doUpdateImage(buffyType.toImageType(), brawlerBrawlStarsId, update)
+    }
+
+    @Transactional
+    fun deleteBuffy(
+        brawlerBrawlStarsId: Long,
+        buffyType: BuffyType,
+    ) {
+        val imageType = buffyType.toImageType()
+        val existingImage = imageJpaRepository.findByTypeAndBrawlStarsId(imageType, brawlerBrawlStarsId)
+        buffyJpaRepository.deleteByBrawlerBrawlStarsIdAndType(brawlerBrawlStarsId, buffyType)
+        imageJpaRepository.deleteByTypeAndBrawlStarsId(imageType, brawlerBrawlStarsId)
+        if (existingImage != null) {
+            imageStorageService.deleteAfterCommit(existingImage.storedName)
+        }
     }
 
     @Transactional
@@ -311,4 +344,11 @@ class BrawlerService(
             imageStorageService.deleteAfterCommit(existing.storedName)
         }
     }
+
+    private fun BuffyType.toImageType(): BrawlStarsImageType =
+        when (this) {
+            BuffyType.GADGET -> BrawlStarsImageType.BUFFY_GADGET
+            BuffyType.STAR_POWER -> BrawlStarsImageType.BUFFY_STAR_POWER
+            BuffyType.HYPER_CHARGE -> BrawlStarsImageType.BUFFY_HYPER_CHARGE
+        }
 }

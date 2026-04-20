@@ -96,7 +96,12 @@ imstargg-backend/
 
 ### DB & Entity Conventions
 
-- **스키마 관리**: DB 변경사항 발생 시 `infrastructure/db-core/src/main/resources/schema.sql`에 반영
+- **스키마 관리**: DB 변경사항 발생 시 다음 두 파일에 모두 반영
+  - `infrastructure/db-core/src/main/resources/schema.sql`: 전체 현재 스키마 스냅샷 (신규 환경 프로비저닝용)
+  - `infrastructure/db-core/src/main/resources/db/migration/V{yyMMdd}__{title}.sql`: 증분 마이그레이션 파일 (운영 DB에 적용할 DDL/DML)
+    - 예: `V260420__add_buffy_table.sql`
+    - 같은 날 여러 변경이 있으면 title로 구분 (필요 시 `V260420a__...`, `V260420b__...` 형태로 순서를 드러내도 됨)
+    - DDL은 `create ... if not exists`, DML은 `on conflict ... do nothing` 등 **멱등적**으로 작성
 - **BaseEntity 상속**: 모든 엔티티는 `BaseEntity` 상속 (createdAt, updatedAt, deleted 필드 포함)
 - **변경 가능한 컬럼 패턴**: 생성자 파라미터 → `var` + `protected set`
 

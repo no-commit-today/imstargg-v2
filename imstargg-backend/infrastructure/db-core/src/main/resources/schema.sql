@@ -572,6 +572,17 @@ create table if not exists star_power
 );
 create unique index if not exists uk_starpower__brawlstarsid on star_power (brawlstars_id);
 
+-- buffy table
+create table if not exists buffy
+(
+    buffy_id              bigint generated always as identity primary key,
+    brawler_brawlstars_id bigint      not null,
+    type                  varchar(25) not null,
+    created_at            timestamptz not null default now(),
+    updated_at            timestamptz not null default now()
+);
+create unique index if not exists uk_buffy__brawlerbrawlstarsid_type on buffy (brawler_brawlstars_id, type);
+
 -- brawlstars_image table
 create table if not exists brawlstars_image
 (

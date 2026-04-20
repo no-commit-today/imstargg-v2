@@ -5,17 +5,18 @@ import com.imstargg.core.admin.controller.support.toImageUpdate
 import com.imstargg.core.admin.request.BrawlerCreateRequest
 import com.imstargg.core.admin.request.BrawlerGearsUpdateRequest
 import com.imstargg.core.admin.request.BrawlerSubItemCreateRequest
+import com.imstargg.core.admin.request.BuffyCreateRequest
 import com.imstargg.core.admin.request.MessagesUpdateRequest
 import com.imstargg.core.admin.response.BrawlerDetailResponse
 import com.imstargg.core.admin.response.BrawlerResponse
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
+import com.imstargg.core.enums.BuffyType
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
@@ -63,13 +64,31 @@ class BrawlerController(
         return ResponseEntity.ok().build()
     }
 
-    @PutMapping("/brawlers/{brawlStarsId}/buffy-image")
+    @PostMapping("/brawlers/{brawlStarsId}/buffies")
+    fun createBuffy(
+        @PathVariable brawlStarsId: Long,
+        @RequestBody request: BuffyCreateRequest,
+    ): ResponseEntity<Unit> {
+        brawlerService.createBuffy(brawlStarsId, request)
+        return ResponseEntity.ok().build()
+    }
+
+    @PutMapping("/brawlers/{brawlStarsId}/buffies/{buffyType}/image")
     fun updateBuffyImage(
         @PathVariable brawlStarsId: Long,
-        @RequestParam buffyType: BrawlStarsImageType,
+        @PathVariable buffyType: BuffyType,
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
-        brawlerService.updateBuffyImage(buffyType, brawlStarsId, file.toImageUpdate())
+        brawlerService.updateBuffyImage(brawlStarsId, buffyType, file.toImageUpdate())
+        return ResponseEntity.ok().build()
+    }
+
+    @DeleteMapping("/brawlers/{brawlStarsId}/buffies/{buffyType}")
+    fun deleteBuffy(
+        @PathVariable brawlStarsId: Long,
+        @PathVariable buffyType: BuffyType,
+    ): ResponseEntity<Unit> {
+        brawlerService.deleteBuffy(brawlStarsId, buffyType)
         return ResponseEntity.ok().build()
     }
 
