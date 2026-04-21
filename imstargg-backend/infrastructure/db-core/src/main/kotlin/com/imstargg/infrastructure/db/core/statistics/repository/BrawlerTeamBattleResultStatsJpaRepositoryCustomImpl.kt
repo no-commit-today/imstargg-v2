@@ -2,7 +2,6 @@ package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
-import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
@@ -46,9 +45,9 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
             .where(
                 brawlerFilter,
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
                 brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerTeamBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerTeamBattleResultStatsEntity.endBattleDate.loe(endDate),
                 brawlerTeamBattleResultStatsEntity.brawlerTeam.teamSize.eq(teamSize),
             ).fetch()
     }
@@ -86,8 +85,8 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
                 brawlerIdFilters(brawlerBrawlStarsIds),
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
-                brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerTeamBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerTeamBattleResultStatsEntity.endBattleDate.loe(endDate),
                 brawlerTeamBattleResultStatsEntity.brawlerTeam.teamSize.eq(teamSize),
             ).groupBy(teamKey)
             .orderBy(orderSpecifier, teamKey.asc())
@@ -123,8 +122,8 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
                 brawlerIdFilters(brawlerBrawlStarsIds),
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
-                brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerTeamBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerTeamBattleResultStatsEntity.endBattleDate.loe(endDate),
                 brawlerTeamBattleResultStatsEntity.brawlerTeam.teamSize.eq(teamSize),
             ).fetchOne() ?: 0L
 
@@ -143,8 +142,8 @@ internal class BrawlerTeamBattleResultStatsJpaRepositoryCustomImpl(
                 brawlerIdFilters(brawlerBrawlStarsIds),
                 eventBrawlStarsId?.let { brawlerTeamBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerTeamBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerTeamBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
-                brawlerTeamBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerTeamBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerTeamBattleResultStatsEntity.endBattleDate.loe(endDate),
                 brawlerTeamBattleResultStatsEntity.brawlerTeam.teamSize.eq(teamSize),
             ).fetchOne() ?: 0L
 

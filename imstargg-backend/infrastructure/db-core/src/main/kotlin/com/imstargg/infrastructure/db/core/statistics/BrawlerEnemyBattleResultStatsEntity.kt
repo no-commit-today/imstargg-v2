@@ -1,6 +1,5 @@
 package com.imstargg.infrastructure.db.core.statistics
 
-import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
@@ -21,11 +20,11 @@ import java.time.LocalDate
     indexes = [
         Index(
             name = "ix_brawler_enemy_battle_result_stats_1",
-            columnList = "event_brawlstars_id, tier_range, period_type, battle_date",
+            columnList = "event_brawlstars_id, tier_range, start_battle_date, end_battle_date",
         ),
         Index(
             name = "ix_brawler_enemy_battle_result_stats_2",
-            columnList = "brawler_brawlstars_id, tier_range, period_type, battle_date",
+            columnList = "brawler_brawlstars_id, tier_range, start_battle_date, end_battle_date",
         ),
     ],
 )
@@ -33,13 +32,12 @@ class BrawlerEnemyBattleResultStatsEntity(
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
     @Enumerated(EnumType.STRING)
-    @Column(name = "period_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
-    val periodType: StatsPeriodType,
-    @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
-    @Column(name = "battle_date", updatable = false, nullable = false)
-    val battleDate: LocalDate,
+    @Column(name = "start_battle_date", updatable = false, nullable = false)
+    val startBattleDate: LocalDate,
+    @Column(name = "end_battle_date", updatable = false, nullable = false)
+    val endBattleDate: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     @Column(name = "enemy_brawler_brawlstars_id", updatable = false, nullable = false)

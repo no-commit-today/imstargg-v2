@@ -16,37 +16,11 @@ class StatsDateRangeTest {
             zone,
         )
 
-    // 2026-04-15 수요일 기준
+    // 2026-04-15 수요일
     private val wednesdayClock = clockOf("2026-04-15")
 
-    // 2026-04-13 월요일 기준
+    // 2026-04-13 월요일
     private val mondayClock = clockOf("2026-04-13")
-
-    @Nested
-    inner class Today {
-        @Test
-        fun `오늘 날짜만 반환한다`() {
-            // when
-            val (startDate, endDate) = StatsDateRange.TODAY.dateRange(wednesdayClock)
-
-            // then
-            assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 15))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
-        }
-    }
-
-    @Nested
-    inner class Recent3Days {
-        @Test
-        fun `오늘 포함 3일 반환한다`() {
-            // when
-            val (startDate, endDate) = StatsDateRange.RECENT_3_DAYS.dateRange(wednesdayClock)
-
-            // then
-            assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 13))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
-        }
-    }
 
     @Nested
     inner class ThisWeek {
@@ -68,6 +42,19 @@ class StatsDateRangeTest {
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 13))
             assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 13))
+        }
+
+        @Test
+        fun `월 첫날이 주 중간이면 start이 월1일로 clip된다`() {
+            // given 2026-05-01 Fri
+            val fridayClock = clockOf("2026-05-01")
+
+            // when
+            val (startDate, endDate) = StatsDateRange.THIS_WEEK.dateRange(fridayClock)
+
+            // then
+            assertThat(startDate).isEqualTo(LocalDate.of(2026, 5, 1))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 5, 1))
         }
     }
 
@@ -126,26 +113,26 @@ class StatsDateRangeTest {
     @Nested
     inner class ThisMonth {
         @Test
-        fun `이번달 1일부터 오늘까지 반환한다`() {
+        fun `이번달 1일부터 말일까지 반환한다`() {
             // when
             val (startDate, endDate) = StatsDateRange.THIS_MONTH.dateRange(wednesdayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 1))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 30))
         }
     }
 
     @Nested
     inner class SinceLastMonth {
         @Test
-        fun `지난달 1일부터 오늘까지 반환한다`() {
+        fun `지난달 1일부터 이번달 말일까지 반환한다`() {
             // when
             val (startDate, endDate) = StatsDateRange.SINCE_LAST_MONTH.dateRange(wednesdayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 3, 1))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 30))
         }
     }
 
@@ -168,32 +155,6 @@ class StatsDateRangeTest {
 
             // when
             val (startDate, endDate) = StatsDateRange.LAST_MONTH.dateRange(marchClock)
-
-            // then
-            assertThat(startDate).isEqualTo(LocalDate.of(2026, 2, 1))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 2, 28))
-        }
-    }
-
-    @Nested
-    inner class SinceTwoMonthsAgo {
-        @Test
-        fun `지지난달 1일부터 오늘까지 반환한다`() {
-            // when
-            val (startDate, endDate) = StatsDateRange.SINCE_TWO_MONTHS_AGO.dateRange(wednesdayClock)
-
-            // then
-            assertThat(startDate).isEqualTo(LocalDate.of(2026, 2, 1))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
-        }
-    }
-
-    @Nested
-    inner class TwoMonthsAgo {
-        @Test
-        fun `지지난달 1일부터 마지막날까지 반환한다`() {
-            // when
-            val (startDate, endDate) = StatsDateRange.TWO_MONTHS_AGO.dateRange(wednesdayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 2, 1))

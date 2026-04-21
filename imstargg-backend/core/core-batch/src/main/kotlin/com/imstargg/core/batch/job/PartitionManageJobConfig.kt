@@ -30,7 +30,7 @@ class PartitionManageJobConfig(
         private const val CREATE_STEP_NAME = "partitionCreateStep"
         private const val DROP_STEP_NAME = "partitionDropStep"
         private const val DAYS_AHEAD = 7
-        private const val RETENTION_DAYS = 7
+        private const val RETENTION_DAYS = 10
     }
 
     @Bean(DATE_PARAMETER_NAME)

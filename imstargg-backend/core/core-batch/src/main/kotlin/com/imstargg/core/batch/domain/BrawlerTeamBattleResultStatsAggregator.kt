@@ -3,18 +3,18 @@ package com.imstargg.core.batch.domain
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
-import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamEmbedded
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import java.time.LocalDate
 
 /**
  * 브롤러 팀 조합의 승/패/무 결과 통계를 집계한다.
  *
  * ## 집계 키
- * 브롤러 조합(정렬된 ID 목록) × 이벤트 × 티어 구간 × 날짜
+ * 브롤러 조합(정렬된 ID 목록) × 이벤트 × 티어 구간
  *
  * ## 집계 규칙
  * - **아군 팀(playerTeam)과 적군 팀(enemyTeams) 모두** 집계 (적군은 반대 결과)
@@ -24,7 +24,10 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEn
  * - **브롤러 ID 정렬**: 조합 내 브롤러 ID를 오름차순 정렬하여 순서 무관하게 동일 조합으로 취급
  * - **티어 구간**: 조합 내 최소 트로피를 기준으로 결정
  */
-class BrawlerTeamBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBattleEntity, BrawlerTeamBattleResultStatsEntity> {
+class BrawlerTeamBattleResultStatsAggregator(
+    private val startBattleDate: LocalDate,
+    private val endBattleDate: LocalDate,
+) : BattleStatsAggregator<StatsResultBattleEntity, BrawlerTeamBattleResultStatsEntity> {
     private val resultCounts = ResultCountAccumulator<BrawlerTeamBattleStatsKey>()
 
     override fun aggregate(battle: StatsResultBattleEntity) {
@@ -57,7 +60,6 @@ class BrawlerTeamBattleResultStatsAggregator : BattleStatsAggregator<StatsResult
                             brawlerBrawlStarsIds = brawlerIds,
                             eventBrawlStarsId = battle.eventBrawlStarsId,
                             tierRange = tierRange,
-                            battleDate = battle.battleDate,
                         )
                     resultCounts.add(key, battleResult)
                 }
@@ -69,9 +71,9 @@ class BrawlerTeamBattleResultStatsAggregator : BattleStatsAggregator<StatsResult
         resultCounts.map { key, resultCount ->
             BrawlerTeamBattleResultStatsEntity(
                 eventBrawlStarsId = key.eventBrawlStarsId,
-                periodType = StatsPeriodType.DAILY,
                 tierRange = key.tierRange,
-                battleDate = key.battleDate,
+                startBattleDate = startBattleDate,
+                endBattleDate = endBattleDate,
                 resultCount = resultCount,
                 brawlerTeam = BrawlerTeamEmbedded.of(key.brawlerBrawlStarsIds),
             )

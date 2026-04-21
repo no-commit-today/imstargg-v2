@@ -2,7 +2,7 @@ package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.domain.BrawlerEnemyBattleResultStatsAggregator
 import com.imstargg.core.batch.support.parameter.DateJobParameter
-import com.imstargg.core.enums.StatsPeriodType
+import com.imstargg.core.enums.StatsWeekRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
 import jakarta.persistence.EntityManagerFactory
@@ -45,15 +45,25 @@ class BrawlerEnemyBattleResultStatsJobConfig(
     fun brawlerEnemyBattleResultStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
-                DailyBattleStatsTasklet(
+                PerEventWeeklyBattleStatsTasklet(
                     entityManagerFactory = entityManagerFactory,
                     jobName = JOB_NAME,
-                    dateSupplier = { dateJobParameter().date!! },
-                    readPage = { queryFactory, date, lastId ->
+                    weekRangesSupplier = { StatsWeekRange.currentAndPrevious(dateJobParameter().date!!) },
+                    readDistinctEventIds = { queryFactory, weekRange ->
+                        queryFactory
+                            .select(statsResultBattleEntity.eventBrawlStarsId)
+                            .distinct()
+                            .from(statsResultBattleEntity)
+                            .where(statsResultBattleEntity.battleDate.between(weekRange.start, weekRange.end))
+                            .fetch()
+                            .toList()
+                    },
+                    readPage = { queryFactory, weekRange, lastId, eventBrawlStarsId ->
                         queryFactory
                             .selectFrom(statsResultBattleEntity)
                             .where(
-                                statsResultBattleEntity.battleDate.eq(date),
+                                statsResultBattleEntity.battleDate.between(weekRange.start, weekRange.end),
+                                statsResultBattleEntity.eventBrawlStarsId.eq(eventBrawlStarsId),
                                 statsResultBattleEntity.id.gt(lastId),
                             ).orderBy(statsResultBattleEntity.id.asc())
                             .limit(BattleStatsConstants.READ_PAGE_SIZE)
@@ -61,14 +71,20 @@ class BrawlerEnemyBattleResultStatsJobConfig(
                             .toList()
                     },
                     getId = { it.id!! },
-                    aggregatorFactory = { BrawlerEnemyBattleResultStatsAggregator() },
-                    deleteExisting = { queryFactory, date ->
+                    aggregatorFactory = { weekRange ->
+                        BrawlerEnemyBattleResultStatsAggregator(
+                            startBattleDate = weekRange.start,
+                            endBattleDate = weekRange.end,
+                        )
+                    },
+                    deleteExisting = { queryFactory, weekRange, eventBrawlStarsId ->
                         queryFactory
                             .delete(brawlerEnemyBattleResultStatsEntity)
                             .where(
-                                brawlerEnemyBattleResultStatsEntity.periodType
-                                    .eq(StatsPeriodType.DAILY),
-                                brawlerEnemyBattleResultStatsEntity.battleDate.eq(date),
+                                brawlerEnemyBattleResultStatsEntity.startBattleDate.eq(weekRange.start),
+                                brawlerEnemyBattleResultStatsEntity.endBattleDate.eq(weekRange.end),
+                                brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId
+                                    .eq(eventBrawlStarsId),
                             ).execute()
                     },
                 ),

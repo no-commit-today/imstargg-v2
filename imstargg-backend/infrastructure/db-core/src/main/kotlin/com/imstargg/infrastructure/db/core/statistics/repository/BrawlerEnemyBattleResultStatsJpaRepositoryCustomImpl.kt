@@ -2,7 +2,6 @@ package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
-import com.imstargg.core.enums.StatsPeriodType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
 import com.querydsl.core.types.OrderSpecifier
@@ -49,8 +48,8 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
                 eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
                 brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
-                brawlerEnemyBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
             ).groupBy(brawlerId, enemyBrawlerId)
             .orderBy(orderSpecifier, enemyBrawlerId.asc())
             .offset(offset)
@@ -81,8 +80,8 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
                 eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
                 brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
-                brawlerEnemyBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
             ).fetchOne() ?: 0L
 
     override fun countDistinctEnemyBrawlers(
@@ -99,8 +98,8 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
                 eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
                 brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
                 brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.periodType.`in`(StatsPeriodType.entries),
-                brawlerEnemyBattleResultStatsEntity.battleDate.between(startDate, endDate),
+                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
             ).fetchOne() ?: 0L
 
     private fun resultStatsOrderSpecifier(
