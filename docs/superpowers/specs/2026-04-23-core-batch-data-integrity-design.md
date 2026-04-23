@@ -170,8 +170,22 @@ private fun createBattleKey(teams: List<List<BattleResultPlayerResponse>>): Stri
 - `BattleKeyPlayerTagProjection` 및 `findAllBattleKeyAndPlayerTagByStatsRankBattles` 제거.
 - `StatsRankBattleJpaRepositoryCustom` 에 `findAllBattleKeysByStatsRankBattles` 를 추가 (result 와 동일 시그니처).
 - dedup 키: `battle.battleKey` 단일.
+- **같은 `apply()` 호출 안에서 중복 방지** — 한 팀의 여러 플레이어가 모두 수집 대상이고 하나의 `apply()` 호출에서 함께 들어올 경우, 세 건이 같은 `battle_key` 로 만들어진다. DB 대조는 저장 전 상태이므로 세 건 모두 `newBattles` 로 통과하고 `saveAll` 에서 unique 제약 위반. in-memory `distinctBy { it.battleKey }` 를 DB 대조 전에 적용해 이 경로를 막는다.
+- result 전투에도 동일 원칙 적용 — 기존 unique 가 `(battle_date, battle_key)` 여서 원래도 잠재 문제였으나 실제 빈도가 낮았을 뿐. 일관성을 위해 함께 수정.
 
 ```kotlin
+val statsRankBattles =
+    aggregatableBattles
+        .filter { canCreateRankBattle(it) }
+        .map { toStatsRankBattle(it) }
+        .distinctBy { it.battleKey }    // in-memory dedup (same-apply duplicates)
+
+val statsResultBattles =
+    aggregatableBattles
+        .filter { canCreateResultBattle(it) }
+        .map { toStatsResultBattle(it) }
+        .distinctBy { it.battleKey }    // in-memory dedup (same-apply duplicates)
+
 val existingResultBattleKeys =
     statsResultBattleRepository.findAllBattleKeysByStatsResultBattles(statsResultBattles)
 val existingRankBattleKeys =
@@ -180,6 +194,8 @@ val existingRankBattleKeys =
 val newRankBattles = statsRankBattles.filter { it.battleKey !in existingRankBattleKeys }
 val newResultBattles = statsResultBattles.filter { it.battleKey !in existingResultBattleKeys }
 ```
+
+> `distinctBy` 는 최초 항목을 보존한다. 어떤 수집 주체의 row 가 살아남을지는 `battles` 입력 순서에 의존하며, 이는 `playerBrawlStarsTag` 대표 정책("팀 내 대표 1 명, 순서는 구현상 자연스러운 순") 과 일관된다.
 
 #### Unique index 변경 (`StatsRankBattleEntity`, schema.sql, migration)
 
@@ -466,6 +482,7 @@ JobBuilder(JOB_NAME, jobRepository)
 | 위험                                                                              | 완화                                                                                                                                  |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | rank 전투의 "진영 간 중복 관측" (같은 battle 을 상대 팀이 각각 수집)              | 용인 정책으로 문서화. 추적 대상 분포상 드묾. 필요 시 별도 스펙에서 "전체 팀 태그 unique" 로 강화 가능.                                 |
+| 같은 팀의 여러 수집 주체가 한 `apply()` 호출로 함께 들어와 unique 충돌             | `StatsBattleAggregateApplier` 에서 DB 대조 전 in-memory `distinctBy { battleKey }` 로 차단 (4.1 참조). rank/result 모두 적용.             |
 | `BattleKeyBuilder` 이전에 따른 import 깨짐                                         | 기존 파일 삭제 후 `db-core` 로 이관. 컴파일러가 누락 지점을 바로 보고한다. 테스트도 함께 이관.                                         |
 | `BattleKeyPlayerTagProjection` 제거로 기존 repository 메서드 소비자 깨짐          | 사용처 확인됨: `StatsBattleAggregateApplier` 만. 동시 수정.                                                                            |
 | 파티셔닝된 `stats_rank_battle` 의 인덱스 drop 범위                                 | 플랜 단계에서 파티션 구성 재확인 후 마이그레이션 형태 확정 (부모 테이블 기준 drop + 각 파티션 자동 반영 여부).                         |
@@ -487,7 +504,10 @@ JobBuilder(JOB_NAME, jobRepository)
 
 ### 8.2 Context / Integration 테스트
 
-- `StatsBattleAggregateApplierTest`: 같은 rank 배틀이 같은 팀의 서로 다른 수집 주체로 두 번 들어왔을 때 저장 결과는 1 row.
+- `StatsBattleAggregateApplierTest`
+  - 같은 rank 배틀이 같은 팀의 서로 다른 수집 주체로 두 번 들어왔을 때 저장 결과는 1 row.
+  - 같은 `apply()` 호출 안에서 같은 팀 A·B·C 세 수집분이 함께 들어와도 unique 충돌 없이 1 row 저장 (in-memory `distinctBy` 검증).
+  - result 전투도 동일 시나리오 검증.
 - tasklet 의 트랜잭션 원자성: 강제 예외 주입 시 delete 가 롤백되어 이전 통계가 유지.
 
 ### 8.3 수동 검증 (개발 DB)
