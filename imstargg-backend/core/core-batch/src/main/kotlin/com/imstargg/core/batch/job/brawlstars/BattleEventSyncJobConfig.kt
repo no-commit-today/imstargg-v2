@@ -56,8 +56,12 @@ class BattleEventSyncJobConfig(
     @Bean(JOB_NAME)
     fun battleEventSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(battleEventSyncFromRankBattleStep())
+            .validator(
+                DefaultJobParametersValidator(
+                    arrayOf(DateJobParameter.KEY),
+                    arrayOf("timestamp", "manualRunAt", "retry"),
+                ),
+            ).start(battleEventSyncFromRankBattleStep())
             .next(battleEventSyncFromResultBattleStep())
             .incrementer(RunIdIncrementer())
             .build()

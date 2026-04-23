@@ -36,8 +36,12 @@ class BrawlerEnemyBattleResultStatsJobConfig(
     @Bean(JOB_NAME)
     fun brawlerEnemyBattleResultStatsJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(brawlerEnemyBattleResultStatsStep())
+            .validator(
+                DefaultJobParametersValidator(
+                    arrayOf(DateJobParameter.KEY),
+                    arrayOf("timestamp", "manualRunAt", "retry"),
+                ),
+            ).start(brawlerEnemyBattleResultStatsStep())
             .build()
 
     @Bean(STEP_NAME)

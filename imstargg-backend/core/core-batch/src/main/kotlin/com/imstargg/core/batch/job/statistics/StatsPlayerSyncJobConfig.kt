@@ -60,8 +60,12 @@ class StatsPlayerSyncJobConfig(
     @Bean(JOB_NAME)
     fun statsPlayerSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(statsPlayerSyncFromRankBattleStep())
+            .validator(
+                DefaultJobParametersValidator(
+                    arrayOf(DateJobParameter.KEY),
+                    arrayOf("timestamp", "manualRunAt", "retry"),
+                ),
+            ).start(statsPlayerSyncFromRankBattleStep())
             .next(statsPlayerSyncFromResultBattleStep())
             .build()
 

@@ -40,8 +40,12 @@ class PartitionManageJobConfig(
     @Bean(JOB_NAME)
     fun partitionManageJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-            .start(partitionCreateStep())
+            .validator(
+                DefaultJobParametersValidator(
+                    arrayOf(DateJobParameter.KEY),
+                    arrayOf("timestamp", "manualRunAt", "retry"),
+                ),
+            ).start(partitionCreateStep())
             .next(partitionDropStep())
             .build()
 

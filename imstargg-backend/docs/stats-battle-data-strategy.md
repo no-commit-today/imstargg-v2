@@ -35,7 +35,7 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 #### `stats_rank_battle`
 - **목적**: 랭크(순위) 결과가 있는 배틀 데이터 저장
 - **파티션 키**: `battle_date` (battleAt의 한국시간 날짜)
-- **중복 방지**: Unique Index `(battle_date, battle_key, player_brawlstars_tag)` (같은 배틀의 같은 플레이어는 한 번만)
+- **중복 방지**: Unique Index `(battle_date, battle_key)` (같은 배틀 = 같은 팀 관점 = 1 row). 자세한 배틀 키 생성 규칙은 섹션 9 참조.
 - **사용처**: 솔로 쇼다운 등 순위 기반 통계
 
 ## 3. 데이터 흐름
