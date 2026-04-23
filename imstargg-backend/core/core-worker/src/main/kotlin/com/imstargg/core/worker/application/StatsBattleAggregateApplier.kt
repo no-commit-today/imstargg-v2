@@ -8,7 +8,6 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTe
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.repository.BattleKeyPlayerTagProjection
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRankBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import org.springframework.stereotype.Component
@@ -25,29 +24,26 @@ class StatsBattleAggregateApplier(
     @Transactional
     fun apply(battles: List<Battle>) {
         val aggregatableBattles = battles.filter { canAggregate(it) }
+
         val statsRankBattles =
             aggregatableBattles
                 .filter { canCreateRankBattle(it) }
                 .map { toStatsRankBattle(it) }
+                .distinctBy { it.battleKey }
 
         val statsResultBattles =
             aggregatableBattles
                 .filter { canCreateResultBattle(it) }
                 .map { toStatsResultBattle(it) }
+                .distinctBy { it.battleKey }
 
         val existingResultBattleKeys =
             statsResultBattleRepository.findAllBattleKeysByStatsResultBattles(statsResultBattles)
         val existingRankBattleKeys =
-            statsRankBattleRepository.findAllBattleKeyAndPlayerTagByStatsRankBattles(statsRankBattles)
+            statsRankBattleRepository.findAllBattleKeysByStatsRankBattles(statsRankBattles)
 
-        val newRankBattles =
-            statsRankBattles.filter { battle ->
-                BattleKeyPlayerTagProjection(battle.battleKey, battle.playerBrawlStarsTag) !in existingRankBattleKeys
-            }
-        val newResultBattles =
-            statsResultBattles.filter { battle ->
-                battle.battleKey !in existingResultBattleKeys
-            }
+        val newRankBattles = statsRankBattles.filter { it.battleKey !in existingRankBattleKeys }
+        val newResultBattles = statsResultBattles.filter { it.battleKey !in existingResultBattleKeys }
 
         statsRankBattleRepository.saveAll(newRankBattles)
         statsResultBattleRepository.saveAll(newResultBattles)
