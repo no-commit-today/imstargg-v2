@@ -4,15 +4,14 @@ import com.imstargg.core.batch.domain.BattleStatsAggregator
 import com.imstargg.core.enums.WeekRange
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.StepContribution
 import org.springframework.batch.core.step.tasklet.Tasklet
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 
-class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity>(
-    private val entityManagerFactory: EntityManagerFactory,
+class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity : Any>(
+    private val em: EntityManager,
     private val jobName: String,
     private val weekRangesSupplier: () -> List<WeekRange>,
     private val readDistinctEventIds: (JPAQueryFactory, WeekRange) -> List<Long>,
@@ -30,18 +29,15 @@ class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity>(
     ): RepeatStatus {
         val weekRanges = weekRangesSupplier()
         log.info("[{}] 주간 범위 {}개 처리 시작", jobName, weekRanges.size)
+        val queryFactory = JPAQueryFactory(em)
 
-        entityManagerFactory.createEntityManager().use { em ->
-            val queryFactory = JPAQueryFactory(em)
-            for (weekRange in weekRanges) {
-                processWeekRange(em, queryFactory, weekRange)
-            }
+        for (weekRange in weekRanges) {
+            processWeekRange(queryFactory, weekRange)
         }
         return RepeatStatus.FINISHED
     }
 
     private fun processWeekRange(
-        em: EntityManager,
         queryFactory: JPAQueryFactory,
         weekRange: WeekRange,
     ) {
@@ -62,27 +58,24 @@ class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity>(
 
             var lastId = 0L
             while (true) {
-                em.clear()
                 val battles = readPage(queryFactory, weekRange, lastId, eventId)
                 if (battles.isEmpty()) break
                 totalRead += battles.size
                 battles.forEach { aggregator.aggregate(it) }
                 lastId = getId(battles.last())
+                em.clear()
             }
 
-            em.transaction.begin()
             deleteExisting(queryFactory, weekRange, eventId)
-            em.transaction.commit()
 
             val entities = aggregator.toEntities()
             totalEntities += entities.size
             entities.chunked(BattleStatsConstants.BATCH_SIZE).forEach { batch ->
-                em.transaction.begin()
                 batch.forEach {
                     em.persist(it)
                     persistAdditional(em, it)
                 }
-                em.transaction.commit()
+                em.flush()
                 em.clear()
             }
         }

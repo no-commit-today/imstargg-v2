@@ -8,7 +8,7 @@ import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStat
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity.Companion.statsRankBattleEntity
 import com.querydsl.jpa.JPAExpressions
-import jakarta.persistence.EntityManagerFactory
+import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -24,7 +24,7 @@ import org.springframework.transaction.PlatformTransactionManager
 class BrawlerTeamBattleRankStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
-    private val entityManagerFactory: EntityManagerFactory,
+    private val em: EntityManager,
 ) {
     companion object {
         const val JOB_NAME = "brawlerTeamBattleRankStatsJob"
@@ -49,7 +49,7 @@ class BrawlerTeamBattleRankStatsJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 PerEventWeeklyBattleStatsTasklet(
-                    entityManagerFactory = entityManagerFactory,
+                    em = em,
                     jobName = JOB_NAME,
                     weekRangesSupplier = { StatsWeekRange.currentAndPrevious(dateJobParameter().date!!) },
                     readDistinctEventIds = { queryFactory, weekRange ->
