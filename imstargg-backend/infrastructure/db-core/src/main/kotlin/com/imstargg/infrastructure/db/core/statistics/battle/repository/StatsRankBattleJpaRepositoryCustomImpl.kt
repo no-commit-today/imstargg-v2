@@ -11,26 +11,19 @@ internal class StatsRankBattleJpaRepositoryCustomImpl(
 ) : StatsRankBattleJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findAllBattleKeyAndPlayerTagByStatsRankBattles(
-        statsRankBattles: Collection<StatsRankBattleEntity>,
-    ): Set<BattleKeyPlayerTagProjection> {
+    override fun findAllBattleKeysByStatsRankBattles(statsRankBattles: Collection<StatsRankBattleEntity>): Set<String> {
         if (statsRankBattles.isEmpty()) return emptySet()
 
         val battleKeys = statsRankBattles.map { it.battleKey }
         val battleDates = statsRankBattles.map { it.battleAt.toKoreaLocalDate() }.distinct()
 
         return queryFactory
-            .select(statsRankBattleEntity.battleKey, statsRankBattleEntity.playerBrawlStarsTag)
+            .select(statsRankBattleEntity.battleKey)
             .from(statsRankBattleEntity)
             .where(
                 statsRankBattleEntity.battleDate.`in`(battleDates),
                 statsRankBattleEntity.battleKey.`in`(battleKeys),
             ).fetch()
-            .map { tuple ->
-                BattleKeyPlayerTagProjection(
-                    battleKey = tuple[statsRankBattleEntity.battleKey]!!,
-                    playerBrawlStarsTag = tuple[statsRankBattleEntity.playerBrawlStarsTag]!!,
-                )
-            }.toSet()
+            .toSet()
     }
 }
