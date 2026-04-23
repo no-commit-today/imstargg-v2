@@ -292,8 +292,8 @@ create table if not exists stats_rank_battle
     updated_at                 timestamptz   not null default now(),
     primary key (stats_rank_battle_id, battle_date)
 ) partition by range (battle_date);
-create unique index if not exists uk_stats_rank_battle__battle_date_battle_key_player
-    on stats_rank_battle (battle_date, battle_key, player_brawlstars_tag);
+create unique index if not exists uk_stats_rank_battle__battle_date_battle_key
+    on stats_rank_battle (battle_date, battle_key);
 create index if not exists ix_stats_rank_battle__battle_date_event
     on stats_rank_battle (battle_date, event_brawlstars_id);
 create table if not exists stats_rank_battle_default partition of stats_rank_battle default;

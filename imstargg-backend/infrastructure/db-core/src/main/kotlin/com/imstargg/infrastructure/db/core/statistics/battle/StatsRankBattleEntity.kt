@@ -14,8 +14,8 @@ import java.time.OffsetDateTime
     name = "stats_rank_battle",
     indexes = [
         Index(
-            name = "uk_stats_rank_battle__battle_date_battle_key_player",
-            columnList = "battle_date, battle_key, player_brawlstars_tag",
+            name = "uk_stats_rank_battle__battle_date_battle_key",
+            columnList = "battle_date, battle_key",
             unique = true,
         ),
         Index(
