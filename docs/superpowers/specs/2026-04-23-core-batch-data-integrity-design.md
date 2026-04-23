@@ -48,9 +48,9 @@ core-batch 코드 리뷰 결과 Critical·High 로 분류된 **데이터 정확�
 | `infrastructure/db-core/src/main/resources/schema.sql`                                                   | unique index 재정의 + 통계 자연키 unique (1-A, 2-C) |
 | `infrastructure/db-core/src/main/resources/db/migration/V260423a__stats_rank_battle_unique_key.sql`      | 신규 (1-A)                                   |
 | `infrastructure/db-core/src/main/resources/db/migration/V260423b__stats_natural_key_unique.sql`          | 신규 (2-C)                                   |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/DailyBattleStatsTasklet.kt`      | 트랜잭션 구조 변경 (1-B, 2-B)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventDailyBattleStatsTasklet.kt` | 트랜잭션 구조 변경 (1-B, 2-B)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventWeeklyBattleStatsTasklet.kt` | 트랜잭션 구조 변경 (1-B, 2-B)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/DailyBattleStatsTasklet.kt`      | 수동 EM/트랜잭션 제거, Spring 트랜잭션 합류 (1-B, 2-B) |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventDailyBattleStatsTasklet.kt` | 수동 EM/트랜잭션 제거, Spring 트랜잭션 합류 (1-B, 2-B) |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventWeeklyBattleStatsTasklet.kt` | 수동 EM/트랜잭션 제거, Spring 트랜잭션 합류 (1-B, 2-B) |
 | `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleRankStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
 | `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleResultStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
 | `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleRankStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
@@ -250,7 +250,7 @@ create unique index if not exists uk_stats_rank_battle__battle_date_battle_key
 
 ---
 
-### 4.2 (1-B, 2-B) 트랜잭션 원자화
+### 4.2 (1-B, 2-B) 트랜잭션 원자화 — tasklet 의 Spring-managed 트랜잭션 활용
 
 #### 문제 요약
 
@@ -260,78 +260,77 @@ create unique index if not exists uk_stats_rank_battle__battle_date_battle_key
 2. `deleteExisting` 와 첫 `persist` 커밋 사이에 수십 초~수 분 간격 발생 → **외부 조회 API 가 빈 통계 관측**.
 3. 수동 EM 과 Spring EM 이 동시에 커넥션을 점유 → HikariCP 풀 고갈 가능.
 
+#### Spring Batch TaskletStep 트랜잭션 모델 재확인
+
+Spring Batch `TaskletStep` 은 **`execute()` 호출 자체를 `txManager` 기반 트랜잭션으로 래핑**한다. Tasklet 이 `RepeatStatus.FINISHED` 를 반환하는 단일 호출 구조이면 execute() 전체가 한 트랜잭션 안에서 수행되고 커밋 시점은 execute() 반환 시점이다.
+
+현재 세 tasklet 은 모두 `RepeatStatus.FINISHED` 단일 호출 구조. 즉 **이미 Spring-managed 트랜잭션이 열려 있는데도 코드가 그걸 외면하고 application-managed EM 으로 별도 트랜잭션을 만들고 있는 것**이 1-B/2-B 의 근본 원인이다.
+
 #### 수정 방침
 
-tasklet 을 "chunk-oriented step" 으로 전환하는 것은 스펙 B 에서 수행하는 큰 리팩토링이다. 본 스펙에서는 **현 tasklet 구조를 유지하되, "이벤트 1개(혹은 날짜 1개)의 delete + persist 전체" 를 하나의 Spring-managed 트랜잭션으로 묶는다**.
+별도 트랜잭션을 만들지 않는다. **tasklet 의 `execute()` 가 이미 들어와 있는 Spring-managed 트랜잭션 안에서 읽기·쓰기를 함께 수행**한다. 구체적으로:
+
+1. `entityManagerFactory.createEntityManager()` / 수동 `em.transaction.*` 를 전부 제거.
+2. tasklet 을 Spring bean 으로 노출하고 생성자로 `EntityManager` 를 주입. Spring Data JPA 가 등록한 `SharedEntityManagerCreator` 프록시가 자동으로 현재 스레드의 트랜잭션에 합류한다.
+3. 읽기 경로의 `JPAQueryFactory` 도 주입된 동일 EM 으로 구성 → 같은 영속성 컨텍스트.
+4. `em.clear()` 는 유지 (대량 읽기 중 1차 캐시 누적을 막는 목적 그대로).
+
+> Kotlin + Spring 6 기준: `@PersistenceContext` 대신 **생성자 주입** 을 사용한다. Spring 4.3+ 부터 단일 생성자에서는 `@Autowired` 도 생략 가능. `EntityManager` 는 `SharedEntityManagerCreator` 가 프록시 빈으로 노출하므로 생성자 인자로 자연스럽게 받는다.
 
 #### 트랜잭션 경계
 
-- `DailyBattleStatsTasklet`: `deleteExisting(date)` + 전체 `persist` 을 **하나의 트랜잭션**. (범위: 날짜 1건)
-- `PerEventDailyBattleStatsTasklet`: `deleteExisting(date, eventId)` + 해당 이벤트의 전체 `persist` 을 **이벤트별 트랜잭션**. (범위: 날짜 1개 × 이벤트 1개)
-- `PerEventWeeklyBattleStatsTasklet`: `deleteExisting(weekRange, eventId)` + 해당 (주간 범위, 이벤트) 의 전체 `persist` 을 **(주간 범위, 이벤트) 조합별 트랜잭션**. (범위: 주간 범위 1개 × 이벤트 1개)
-
-각 트랜잭션 내에서 대용량 데이터의 1차 캐시 누적을 막기 위해 기존 `em.clear()` 호출은 유지한다.
-
-#### 읽기/쓰기 EM 분리
-
-- **읽기 EM**: 트랜잭션 밖에서 배틀을 페이지 단위로 읽는 용도. application-managed `EntityManager` (`entityManagerFactory.createEntityManager()`) 를 사용하되 수동 트랜잭션은 열지 않는다. 읽기 중 `em.clear()` 로 1차 캐시 누적을 막는 기존 패턴 유지.
-- **쓰기 EM**: 실제 DML 을 수행하는 용도. **반드시 Spring-managed** 이어야 한다. 쓰기 전용 협력자 빈에 `@PersistenceContext` 로 EM 을 주입받고 `@Transactional` 메서드 안에서 사용한다. `entityManagerFactory.createEntityManager()` 를 트랜잭션 내부에서 직접 호출하면 application-managed 로 남아 Spring 트랜잭션에 묶이지 않으므로 **금지**.
+- **step(=execute()) 1 회 = 트랜잭션 1 회**. 별도 분할하지 않는다.
+- 그 결과 `DailyBattleStatsTasklet` 은 "날짜 1 건 전체", `PerEventDailyBattleStatsTasklet` / `PerEventWeeklyBattleStatsTasklet` 은 "모든 이벤트 전체" 가 하나의 트랜잭션 안에서 실행된다.
+- 이벤트 단위 원자성은 포기한다. 대신 "step 성공 or 전체 롤백" 이라는 단순한 원자성을 얻는다. 재실행은 3-A 의 `RunIdIncrementer` 로 같은 `date` 재실행 가능.
 
 #### 코드 스케치
 
-쓰기 전용 협력자 빈을 도입해 `@Transactional` 로 원자화한다.
-
 ```kotlin
 @Component
-class StatsReplaceWriter(
-    @PersistenceContext private val em: EntityManager,
-) {
-    @Transactional
-    fun <T : Any> replace(
-        deleteExisting: (JPAQueryFactory) -> Unit,
-        entities: List<T>,
-        persistAdditional: (EntityManager, T) -> Unit = { _, _ -> },
-    ) {
-        val writeQueryFactory = JPAQueryFactory(em)
-        deleteExisting(writeQueryFactory)
-        entities.chunked(BattleStatsConstants.BATCH_SIZE).forEach { batch ->
-            batch.forEach {
-                em.persist(it)
-                persistAdditional(em, it)
-            }
-            em.flush()
-            em.clear()
-        }
-    }
-}
-```
-
-tasklet 은 읽기 EM 만 직접 열고, 쓰기는 writer 빈에 위임한다.
-
-```kotlin
+@StepScope
 class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity : Any>(
-    private val entityManagerFactory: EntityManagerFactory, // 읽기 전용
-    private val writer: StatsReplaceWriter,                 // 쓰기 전용 (Spring-managed tx)
-    // ... 기존 함수형 의존성
+    private val em: EntityManager,           // Spring-managed proxy. 현재 tx 에 합류.
+    // 기존 함수형 의존성은 JobConfig 에서 주입된 형태 유지
+    private val jobName: String,
+    private val weekRangesSupplier: () -> List<WeekRange>,
+    private val readDistinctEventIds: (JPAQueryFactory, WeekRange) -> List<Long>,
+    private val readPage: (JPAQueryFactory, WeekRange, Long, Long) -> List<TBattle>,
+    private val getId: (TBattle) -> Long,
+    private val aggregatorFactory: (WeekRange) -> BattleStatsAggregator<TBattle, TEntity>,
+    private val deleteExisting: (JPAQueryFactory, WeekRange, Long) -> Unit,
+    private val persistAdditional: (EntityManager, TEntity) -> Unit = { _, _ -> },
 ) : Tasklet {
+
     override fun execute(
         contribution: StepContribution,
         chunkContext: ChunkContext,
     ): RepeatStatus {
+        // tasklet 진입 시 이미 Spring Batch 가 tx 를 열어두었다.
+        val queryFactory = JPAQueryFactory(em)
         val weekRanges = weekRangesSupplier()
-        entityManagerFactory.createEntityManager().use { readEm ->
-            val readQueryFactory = JPAQueryFactory(readEm)
-            for (weekRange in weekRanges) {
-                val eventIds = readDistinctEventIds(readQueryFactory, weekRange)
-                for (eventId in eventIds) {
-                    val aggregator = aggregatorFactory(weekRange)
-                    readBattlesIntoAggregator(readEm, readQueryFactory, weekRange, eventId, aggregator)
-                    val entities = aggregator.toEntities()
-                    writer.replace(
-                        deleteExisting = { qf -> deleteExisting(qf, weekRange, eventId) },
-                        entities = entities,
-                        persistAdditional = persistAdditional,
-                    )
+
+        for (weekRange in weekRanges) {
+            val eventIds = readDistinctEventIds(queryFactory, weekRange)
+            for (eventId in eventIds) {
+                val aggregator = aggregatorFactory(weekRange)
+
+                var lastId = 0L
+                while (true) {
+                    val battles = readPage(queryFactory, weekRange, lastId, eventId)
+                    if (battles.isEmpty()) break
+                    battles.forEach { aggregator.aggregate(it) }
+                    lastId = getId(battles.last())
+                    em.clear() // 읽기 1차 캐시만 비움. tx 는 유지됨.
+                }
+
+                deleteExisting(queryFactory, weekRange, eventId)
+                aggregator.toEntities().chunked(BattleStatsConstants.BATCH_SIZE).forEach { batch ->
+                    batch.forEach {
+                        em.persist(it)
+                        persistAdditional(em, it)
+                    }
+                    em.flush()
+                    em.clear()
                 }
             }
         }
@@ -340,16 +339,29 @@ class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity : Any>(
 }
 ```
 
+- `TBattle` 파라미터 수정: 기존 시그니처가 함수형으로 잘 분리되어 있어 **내부 로직만** 바꾸면 된다.
+- tasklet 은 `StepBuilder.tasklet(tasklet, txManager)` 에 그대로 등록. `JobScope` / `StepScope` 는 기존 구조 유지.
+
+`DailyBattleStatsTasklet` 과 `PerEventDailyBattleStatsTasklet` 도 동일 원칙으로 단순화. 공통 패턴(읽기 페이지 → `aggregator.aggregate` → `deleteExisting` → `persist`) 이 그대로 유지되며 수동 tx 코드만 사라진다.
+
+#### JobConfig 변경
+
+- 기존: tasklet 을 `new` 로 만들어 `StepBuilder.tasklet(...)` 에 넘김.
+- 변경: tasklet 을 `@Bean` / `@StepScope` 로 노출하거나, 여전히 `new` 로 만들되 생성자에 `EntityManager` 를 주입(`@JobScope` 빈의 constructor 인자로 전달).
+- 단순성을 위해 **tasklet 을 `@Component + @StepScope` 로 승격** 을 기본안으로 한다. 함수형 의존성(람다들)은 여전히 JobConfig 의 `@Bean` 에서 tasklet bean 을 fetch 한 뒤 `apply` 로 설정하거나, tasklet 을 factory 패턴으로 구성한다. 실제 형태는 플랜 단계에서 확정.
+
+대안: tasklet 클래스를 `@Component` 로 올리지 않고 JobConfig 에서 `EntityManager` bean 을 `@Autowired` 로 주입받아 tasklet 생성자에 넘기는 간단한 경로도 가능 (현 구조에 가장 가깝다).
+
 #### 실패 시 동작
 
-- 트랜잭션 내에서 예외 발생 시 delete + persist 모두 롤백 → 해당 이벤트 통계는 **이전 상태 그대로 유지**.
-- step 전체가 실패로 Spring Batch 에 보고되고, 재실행 시 `RunIdIncrementer`(3-A) 덕분에 같은 `date` 로 재시도 가능.
+- 예외 발생 시 Spring Batch 가 execute() 전체 트랜잭션을 롤백 → `deleteExisting` 포함 모든 변경 취소 → **통계는 이전 상태 그대로**.
+- step 이 FAILED 로 기록되고, `RunIdIncrementer` 덕분에 같은 `date` 재실행 가능.
 
 #### 한계 (의도된 미해결)
 
-- 단일 이벤트의 집계 결과 List 가 매우 크면 한 트랜잭션이 길어진다.
-- 현재 관측치 기준(수천~수만 추정, 리뷰 보고서 섹션 2-A)은 감당 가능.
-- 본 스펙에서는 이 tradeoff 를 수용하고, 스펙 B 의 스트리밍 + upsert 전환으로 구조적으로 해결한다.
+- **트랜잭션 길이 ↑**: 모든 이벤트가 한 트랜잭션이라 step 실행 시간만큼 PostgreSQL 에 long-running tx 가 유지된다. WAL / lock / vacuum 에 부담. 현재 데이터 규모(리뷰 보고서 2-A 분석: 이벤트당 고유 키 수천~수만) 에서는 감당 가능.
+- **이벤트 단위 원자성 상실**: 이벤트 100 개 중 99 번째에서 실패하면 앞 98 개도 롤백되어 재실행 시 처음부터. 본 스펙이 "데이터 정확성" 이 목적이라 "전체 성공 or 전체 롤백" 의 단순성을 선호한다.
+- 두 한계 모두 스펙 B 의 chunk-oriented step 전환 + 스트리밍 + upsert 로 구조적 해결.
 
 ---
 
@@ -457,8 +469,8 @@ JobBuilder(JOB_NAME, jobRepository)
 - **`BattleBuilder`** (`core-worker`): 수집 시 `battleKey` 생성. rank 여부는 `battle.rank != null` 로 판단.
 - **`StatsBattleAggregateApplier`** (`core-worker`): dedup 키 통일 — rank/result 모두 `battleKey` 만.
 - **Aggregator** (`core-batch/domain/*Aggregator.kt`): **수정 없음**. 데이터 모델 변경으로 자동 해결.
-- **Tasklet** (`core-batch/job/statistics/*Tasklet.kt`): 수동 트랜잭션 제거, 쓰기 협력자 빈 `StatsReplaceWriter` 에 위임.
-- **JobConfig** (`core-batch/job/statistics/*JobConfig.kt`): `RunIdIncrementer` + writer 빈 주입.
+- **Tasklet** (`core-batch/job/statistics/*Tasklet.kt`): 수동 트랜잭션 제거. 생성자로 `EntityManager` (Spring proxy) 주입받아 tasklet 이 이미 들어와 있는 Spring-managed 트랜잭션 안에서 읽기·쓰기 수행.
+- **JobConfig** (`core-batch/job/statistics/*JobConfig.kt`): `RunIdIncrementer` 추가. tasklet 생성 시 `EntityManager` 주입 구성.
 - **Schema** (`db-core/.../schema.sql`, `V260423a__*.sql`, `V260423b__*.sql`): unique index 교체 + 자연키 unique 추가.
 
 ## 6. 실행 순서와 롤아웃
@@ -486,7 +498,8 @@ JobBuilder(JOB_NAME, jobRepository)
 | `BattleKeyBuilder` 이전에 따른 import 깨짐                                         | 기존 파일 삭제 후 `db-core` 로 이관. 컴파일러가 누락 지점을 바로 보고한다. 테스트도 함께 이관.                                         |
 | `BattleKeyPlayerTagProjection` 제거로 기존 repository 메서드 소비자 깨짐          | 사용처 확인됨: `StatsBattleAggregateApplier` 만. 동시 수정.                                                                            |
 | 파티셔닝된 `stats_rank_battle` 의 인덱스 drop 범위                                 | 플랜 단계에서 파티션 구성 재확인 후 마이그레이션 형태 확정 (부모 테이블 기준 drop + 각 파티션 자동 반영 여부).                         |
-| 단일 이벤트 트랜잭션이 길어짐                                                      | 현 데이터 규모에서 감당 가능. 측정 후 임계 초과 시 스펙 B 의 chunk-oriented step 전환으로 해결.                                        |
+| step 전체 트랜잭션이 길어짐 (모든 이벤트가 한 트랜잭션)                            | 현 데이터 규모(이벤트당 수천~수만 키)에서 감당 가능. 측정 후 임계 초과 시 스펙 B 의 chunk-oriented step 전환 + 스트리밍·upsert 로 해결. |
+| 이벤트 1 건 실패 시 앞서 처리된 이벤트도 롤백                                     | 데이터 정확성 우선의 의도된 tradeoff. `RunIdIncrementer` 로 재실행 가능. 이벤트 단위 원자성은 스펙 B 에서 구조적으로 확보.                |
 | `RunIdIncrementer` 적용이 외부 스케줄러 동작에 미치는 영향                         | 진입점에서 job 을 트리거할 때 `run.id` 를 자동 증가시키는 것이 기본 동작. 기존 스크립트에서 `run.id` 를 명시하고 있는지 플랜에서 확인. |
 
 ## 8. 검증 계획
@@ -524,7 +537,7 @@ JobBuilder(JOB_NAME, jobRepository)
 
 ## 10. 오픈 이슈 (플랜 단계에서 확정)
 
-- `StatsReplaceWriter` 를 제네릭 단일 빈으로 둘지, 통계 종류별 별도 빈으로 둘지. 본 스펙 기본 추천은 제네릭 단일 빈.
+- tasklet 을 Spring bean(`@Component + @StepScope`) 으로 승격할지, 현 구조(JobConfig 에서 직접 new) 를 유지하며 생성자에 `EntityManager` 만 주입할지. 플랜 단계에서 실제 주입 경로 확정.
 - Spring Batch job 의 외부 트리거(스케줄러) 가 `run.id` 를 명시적으로 넘기고 있는지 확인 — 고정값이면 `RunIdIncrementer` 효과가 상쇄되므로 트리거 쪽도 같이 조정.
 - `stats_rank_battle` 이 파티셔닝 테이블인지와 unique index 재생성 시 파티션 레벨 DDL 필요 여부.
 - `BattleKeyEmbedded` 를 `@JvmInline value class` 로 두는 방식이 프로젝트 코드 스타일과 맞는지 — 단순 `object BattleKey { fun forResult(...)/forRank(...) }` 팩토리 object 도 대안.
