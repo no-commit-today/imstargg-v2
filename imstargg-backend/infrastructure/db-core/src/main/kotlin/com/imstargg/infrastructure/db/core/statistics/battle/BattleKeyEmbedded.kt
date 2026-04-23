@@ -4,8 +4,17 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.time.OffsetDateTime
 
+/**
+ * 배틀 식별자 값 객체. SHA-256(epochSeconds + sorted tags).
+ *
+ * [forResult] 와 [forRank] 는 입력이 같으면 **같은 해시를 반환**한다.
+ * 팩토리 분리는 호출 측 의도를 드러내기 위한 것이며(결과형 전투: 전체 플레이어 태그,
+ * 순위형 전투: 자기 팀 플레이어 태그), 내부 해시 함수는 공유한다.
+ */
 @JvmInline
-value class BattleKeyEmbedded(val value: String) {
+value class BattleKeyEmbedded(
+    val value: String,
+) {
     companion object {
         fun forResult(
             battleTime: OffsetDateTime,

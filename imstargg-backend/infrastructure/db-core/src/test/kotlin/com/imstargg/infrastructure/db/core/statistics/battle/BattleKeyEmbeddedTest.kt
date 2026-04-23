@@ -14,7 +14,7 @@ class BattleKeyEmbeddedTest {
         ZonedDateTime.of(LocalDateTime.of(2021, 1, 2, 0, 0), ZoneId.systemDefault()).toOffsetDateTime()
 
     @Nested
-    inner class forResult {
+    inner class ForResult {
         @Test
         fun `길이64의 배틀키를 생성한다`() {
             val sut = BattleKeyEmbedded.forResult(battleTime, listOf("player1", "player2", "player3"))
@@ -64,7 +64,7 @@ class BattleKeyEmbeddedTest {
     }
 
     @Nested
-    inner class forRank {
+    inner class ForRank {
         @Test
         fun `자기 팀 태그만으로 키를 생성한다`() {
             val myTeam = listOf("A", "B", "C")
@@ -97,7 +97,7 @@ class BattleKeyEmbeddedTest {
     }
 
     @Nested
-    inner class forResult_vs_forRank {
+    inner class ForResultVsForRank {
         @Test
         fun `같은 태그 집합이어도 forResult 와 forRank 는 같은 hash 를 반환한다`() {
             val tags = listOf("A", "B", "C")
