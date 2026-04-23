@@ -28,7 +28,7 @@ class StatsBattleAggregateApplierTest(
     }
 
     @Nested
-    inner class `Apply_중복_수집` {
+    inner class `apply 중복 수집` {
         @Test
         fun `rank 배틀을 같은 팀 A B C 가 동시에 수집해 넘겨도 1 row 만 저장된다`() {
             // given
@@ -45,7 +45,11 @@ class StatsBattleAggregateApplierTest(
             sut.apply(battles)
 
             // then
-            assertThat(statsRankBattleRepository.count()).isEqualTo(1)
+            val saved = statsRankBattleRepository.findAll()
+            assertThat(saved)
+                .singleElement()
+                .extracting { it.playerBrawlStarsTag }
+                .isEqualTo("#A")
         }
 
         @Test
