@@ -158,3 +158,50 @@ ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
 ### 설정
 
 - `StatsBattleHelper.BATTLE_MAX_AGE_DAYS = 7`: 수집 대상 배틀의 최대 경과 일수
+
+## 9. BattleKey 정의
+
+### 생성 규칙
+- `SHA-256(battleAt.toEpochSecond() || sorted(player tags).join(""))` 의 hex.
+- **Result 전투**: 전체 플레이어 태그(모든 팀) 로 key 생성. 같은 배틀이면 어느 수집 주체가 들어와도 같은 key → DB unique `(battle_date, battle_key)` 로 1 row 로 수렴.
+- **Rank 전투**: 수집 주체 플레이어의 **자기 팀 태그만** 으로 key 생성. 같은 팀의 여러 플레이어가 수집 대상이어도 모두 같은 key → 팀 단위로 1 row 로 수렴.
+
+### 구현 위치
+- `infrastructure/db-core` 의 `BattleKeyEmbedded`
+  - `BattleKeyEmbedded.forResult(battleTime, playerTags)`
+  - `BattleKeyEmbedded.forRank(battleTime, playerTeamTags)`
+- 호출부: `core-worker` 의 `BattleBuilder.createBattleKey()` (`battle.rank != null` 여부로 분기).
+
+### Rank 전투 row 정책
+- 같은 팀 관점의 중복 수집은 merge 된다 (팀 단위 1 row).
+- **서로 다른 팀의 관측은 서로 다른 key** 를 가지므로 별도 row 로 저장될 수 있다. 추적 대상 분포상 흔치 않아 용인한다.
+- `playerBrawlStarsTag` 컬럼은 "그 팀의 대표 1명"(먼저 적재되어 unique 에 살아남은 주체) 을 의미한다.
+
+### 집계 시 함의
+- `BrawlerBattleRankStatsAggregator`, `BrawlerTeamBattleRankStatsAggregator` 는 row 당 `playerTeams()` 를 그대로 순회해도 1 battle → 1 회 집계가 된다 (별도 dedup 장치 불필요).
+
+### Unique index 변경 이력 (2026-04-23)
+- `stats_rank_battle`: `uk_...__battle_date_battle_key_player` (3 컬럼) → `uk_...__battle_date_battle_key` (2 컬럼). 마이그레이션 `V260423a__stats_rank_battle_unique_key.sql`.
+- 5 개 집계 테이블: 자연키 unique 인덱스 신설. 마이그레이션 `V260423b__stats_natural_key_unique.sql`.
+
+## 10. Job 재실행 Runbook
+
+### 정기 스케줄
+- `date=YYYY-MM-DD` non-option argument 1 개만 전달.
+- 예: `java -jar core-batch.jar --job.name=brawlerBattleRankStatsJob date=2026-04-23`.
+
+### 재실행이 필요한 경우
+Spring Batch 는 `(jobName, identifying parameters)` 조합이 같으면 동일 JobInstance 로 보고 완료 상태이면 `JobInstanceAlreadyCompleteException` 을 던진다. 운영자가 수동으로 다시 돌려야 할 때는 **identifying non-option argument 를 하나 더 추가** 해 새 JobInstance 를 만든다.
+
+예:
+
+```bash
+java -jar core-batch.jar \
+    --job.name=brawlerBattleRankStatsJob \
+    date=2026-04-23 \
+    timestamp=$(date +%s%3N)
+```
+
+- `timestamp` 키 이름은 운영 재량 (`manualRunAt`, `retry` 등 무엇이든).
+- 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Dtimestamp=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
+- `RunIdIncrementer` 는 도입하지 않았다. `JobLauncherApplicationRunner` 는 CLI 파라미터로 JobInstance 를 먼저 조회하고, 완료 상태면 incrementer 를 호출하지 않기 때문에 정기 스케줄 케이스에서 효과가 없다 (Spring Boot issue #22602).
