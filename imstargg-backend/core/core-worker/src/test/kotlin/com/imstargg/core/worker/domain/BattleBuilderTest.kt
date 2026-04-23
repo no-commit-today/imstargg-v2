@@ -5,6 +5,7 @@ import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
 import com.imstargg.client.brawlstars.response.BattleResultResponse
 import com.imstargg.client.brawlstars.response.EventResponse
+import com.imstargg.infrastructure.db.core.statistics.battle.BattleKeyEmbedded
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.Test
@@ -190,7 +191,7 @@ class BattleBuilderTest {
                             listOf(
                                 listOf(
                                     createPlayerResponse(
-                                        "#player1",
+                                        playerBrawlStarsTag,
                                         "player1",
                                         createBrawlerResponse(Brawler.GALE, trophies = 476),
                                     ),
@@ -351,7 +352,7 @@ class BattleBuilderTest {
                         players =
                             listOf(
                                 createPlayerResponse(
-                                    "#player1",
+                                    playerBrawlStarsTag,
                                     "player1",
                                     createBrawlerResponse(Brawler.GALE, trophies = 476),
                                 ),
@@ -433,7 +434,7 @@ class BattleBuilderTest {
                         players =
                             listOf(
                                 createPlayerResponse(
-                                    "#player1",
+                                    playerBrawlStarsTag,
                                     "player1",
                                     brawler = null,
                                     brawlers =
@@ -601,6 +602,135 @@ class BattleBuilderTest {
         // then
         assertThat(exception).isNotNull()
         assertThat(exception.message).contains("브롤러 정보가 없습니다")
+    }
+
+    @Test
+    fun `rank 응답은 자기 팀 태그만으로 키를 생성한다`() {
+        // given
+        val collectedPlayerTag = "#A"
+        val battleResponse =
+            BattleResponse(
+                battleTime = battleTime,
+                event = createEventResponse(BattleEvent.DUO_SHOWDOWN),
+                battle =
+                    BattleResultResponse(
+                        mode = "duoShowdown",
+                        type = "ranked",
+                        result = null,
+                        duration = 117,
+                        rank = 2,
+                        trophyChange = 8,
+                        starPlayer = null,
+                        teams =
+                            listOf(
+                                listOf(
+                                    createPlayerResponse(collectedPlayerTag, "a", createBrawlerResponse(Brawler.GALE)),
+                                    createPlayerResponse("#B", "b", createBrawlerResponse(Brawler.GENE)),
+                                ),
+                                listOf(
+                                    createPlayerResponse("#C", "c", createBrawlerResponse(Brawler.BULL)),
+                                    createPlayerResponse("#D", "d", createBrawlerResponse(Brawler.BYRON)),
+                                ),
+                                listOf(
+                                    createPlayerResponse("#E", "e", createBrawlerResponse(Brawler.SHADE)),
+                                    createPlayerResponse("#F", "f", createBrawlerResponse(Brawler.COLT)),
+                                ),
+                            ),
+                        players = null,
+                    ),
+            )
+
+        // when
+        val sut = BattleBuilder(collectedPlayerTag, battleResponse)
+        val result = sut.build()
+
+        // then
+        val expected = BattleKeyEmbedded.forRank(battleTime, listOf(collectedPlayerTag, "#B")).value
+        assertThat(result.battleKey).isEqualTo(expected)
+    }
+
+    @Test
+    fun `result 응답은 전체 플레이어 태그로 키를 생성한다`() {
+        // given
+        val collectedPlayerTag = "#A"
+        val battleResponse =
+            BattleResponse(
+                battleTime = battleTime,
+                event = createEventResponse(BattleEvent.KNOCKOUT),
+                battle =
+                    BattleResultResponse(
+                        mode = "knockout",
+                        type = "soloRanked",
+                        result = "victory",
+                        duration = 117,
+                        rank = null,
+                        trophyChange = null,
+                        starPlayer = null,
+                        teams =
+                            listOf(
+                                listOf(
+                                    createPlayerResponse(collectedPlayerTag, "a", createBrawlerResponse(Brawler.JUJU)),
+                                    createPlayerResponse("#B", "b", createBrawlerResponse(Brawler.TICK)),
+                                    createPlayerResponse("#C", "c", createBrawlerResponse(Brawler.BUSTER)),
+                                ),
+                                listOf(
+                                    createPlayerResponse("#D", "d", createBrawlerResponse(Brawler.SPROUT)),
+                                    createPlayerResponse("#E", "e", createBrawlerResponse(Brawler.MOE)),
+                                    createPlayerResponse("#F", "f", createBrawlerResponse(Brawler.SQUEAK)),
+                                ),
+                            ),
+                        players = null,
+                    ),
+            )
+
+        // when
+        val sut = BattleBuilder(collectedPlayerTag, battleResponse)
+        val result = sut.build()
+
+        // then
+        val expected =
+            BattleKeyEmbedded.forResult(battleTime, listOf("#A", "#B", "#C", "#D", "#E", "#F")).value
+        assertThat(result.battleKey).isEqualTo(expected)
+    }
+
+    @Test
+    fun `rank 응답에서 수집 대상 플레이어가 팀에 없으면 예외`() {
+        // given
+        val battleResponse =
+            BattleResponse(
+                battleTime = battleTime,
+                event = createEventResponse(BattleEvent.DUO_SHOWDOWN),
+                battle =
+                    BattleResultResponse(
+                        mode = "duoShowdown",
+                        type = "ranked",
+                        result = null,
+                        duration = 117,
+                        rank = 2,
+                        trophyChange = 8,
+                        starPlayer = null,
+                        teams =
+                            listOf(
+                                listOf(
+                                    createPlayerResponse("#B", "b", createBrawlerResponse(Brawler.GALE)),
+                                    createPlayerResponse("#C", "c", createBrawlerResponse(Brawler.GENE)),
+                                ),
+                                listOf(
+                                    createPlayerResponse("#D", "d", createBrawlerResponse(Brawler.BULL)),
+                                    createPlayerResponse("#E", "e", createBrawlerResponse(Brawler.BYRON)),
+                                ),
+                            ),
+                        players = null,
+                    ),
+            )
+
+        // when
+        val sut = BattleBuilder("#UNKNOWN", battleResponse)
+        val exception = catchThrowableOfType(IllegalArgumentException::class.java) { sut.build() }
+
+        // then
+        assertThat(exception).isNotNull()
+        assertThat(exception.message).contains("수집 대상 플레이어가 팀에 포함되지 않았습니다")
     }
 
     private fun assertBattle(

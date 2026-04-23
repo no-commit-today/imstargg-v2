@@ -3,6 +3,7 @@ package com.imstargg.core.worker.domain
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BattleResultBrawlerResponse
 import com.imstargg.client.brawlstars.response.BattleResultPlayerResponse
+import com.imstargg.infrastructure.db.core.statistics.battle.BattleKeyEmbedded
 
 class BattleBuilder(
     private val brawlStarsTag: String,
@@ -20,9 +21,17 @@ class BattleBuilder(
             ?: throw IllegalArgumentException("플레이어 정보가 없습니다. battleResponse=$battleResponse")
 
     private fun createBattleKey(teams: List<List<BattleResultPlayerResponse>>): String {
-        val builder = BattleKeyBuilder(battleResponse.battleTime)
-        teams.flatten().forEach { builder.addPlayerTag(it.tag) }
-        return builder.build()
+        val battleTime = battleResponse.battleTime
+        return if (battleResponse.battle.rank != null) {
+            val playerTeam =
+                teams.firstOrNull { team -> team.any { it.tag == brawlStarsTag } }
+                    ?: throw IllegalArgumentException(
+                        "수집 대상 플레이어가 팀에 포함되지 않았습니다. tag=$brawlStarsTag",
+                    )
+            BattleKeyEmbedded.forRank(battleTime, playerTeam.map { it.tag }).value
+        } else {
+            BattleKeyEmbedded.forResult(battleTime, teams.flatten().map { it.tag }).value
+        }
     }
 
     private fun buildBattleResult(
