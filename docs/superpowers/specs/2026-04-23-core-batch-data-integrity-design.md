@@ -20,7 +20,7 @@ core-batch 코드 리뷰 결과 Critical·High 로 분류된 **데이터 정확�
 | 1-B | 🔴 Critical | 수동 `EntityManager` 트랜잭션과 Spring Batch step 트랜잭션 분리로 인한 부분 실패 시 깨진 상태 |
 | 2-B | 🟠 High     | `deleteExisting` → `persist` 사이 수십 초 공백에 외부 API가 빈 통계 관측                      |
 | 2-C | 🟠 High     | 집계 테이블에 자연키 unique 제약 없음                                                         |
-| 3-A | 🟡 Medium   | 통계/파티션 잡의 `RunIdIncrementer` 누락으로 동일 `date` 재실행 불가                          |
+| 3-A | 🟡 Medium   | 동일 `date` 로 잡 재실행 불가 (`JobInstanceAlreadyCompleteException`)                         |
 | 부수 | —          | `BattleKeyBuilder` 를 `db-core` 로 이전해 `BattleKeyEmbedded` 로 재구성                       |
 | 부수 | —          | `imstargg-backend/docs/stats-battle-data-strategy.md` 문서 확장                                |
 
@@ -51,13 +51,15 @@ core-batch 코드 리뷰 결과 Critical·High 로 분류된 **데이터 정확�
 | `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/DailyBattleStatsTasklet.kt`      | 수동 EM/트랜잭션 제거, Spring 트랜잭션 합류 (1-B, 2-B) |
 | `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventDailyBattleStatsTasklet.kt` | 수동 EM/트랜잭션 제거, Spring 트랜잭션 합류 (1-B, 2-B) |
 | `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventWeeklyBattleStatsTasklet.kt` | 수동 EM/트랜잭션 제거, Spring 트랜잭션 합류 (1-B, 2-B) |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleRankStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleResultStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleRankStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleResultStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerEnemyBattleResultStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerItemOwnershipStatsJobConfig.kt` | `RunIdIncrementer` 추가 (3-A)                |
-| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/PartitionManageJobConfig.kt`                | `RunIdIncrementer` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleRankStatsJobConfig.kt` | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleResultStatsJobConfig.kt` | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleRankStatsJobConfig.kt` | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleResultStatsJobConfig.kt` | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerEnemyBattleResultStatsJobConfig.kt` | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerItemOwnershipStatsJobConfig.kt` | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/PartitionManageJobConfig.kt`                | `RunAtJobParameter` 추가 (3-A)                |
+| `core/core-batch/src/main/kotlin/com/imstargg/core/batch/support/parameter/RunAtJobParameter.kt`         | 신규: identifying 파라미터 (3-A)              |
+| 배포/스케줄러 호출 스크립트 (플랜 단계에서 실제 경로 특정)                                                | 잡 트리거 시 `-DrunAt=<epoch ms>` 전달 (3-A)  |
 | `imstargg-backend/docs/stats-battle-data-strategy.md`                                                    | BattleKey 정의·rank 구조 섹션 추가           |
 
 ### 3.2 테스트 추가/확장 대상
@@ -281,7 +283,7 @@ Spring Batch `TaskletStep` 은 **`execute()` 호출 자체를 `txManager` 기반
 
 - **step(=execute()) 1 회 = 트랜잭션 1 회**. 별도 분할하지 않는다.
 - 그 결과 `DailyBattleStatsTasklet` 은 "날짜 1 건 전체", `PerEventDailyBattleStatsTasklet` / `PerEventWeeklyBattleStatsTasklet` 은 "모든 이벤트 전체" 가 하나의 트랜잭션 안에서 실행된다.
-- 이벤트 단위 원자성은 포기한다. 대신 "step 성공 or 전체 롤백" 이라는 단순한 원자성을 얻는다. 재실행은 3-A 의 `RunIdIncrementer` 로 같은 `date` 재실행 가능.
+- 이벤트 단위 원자성은 포기한다. 대신 "step 성공 or 전체 롤백" 이라는 단순한 원자성을 얻는다. 재실행은 3-A 의 `RunAtJobParameter` 로 같은 `date` 재실행 가능.
 
 #### 코드 스케치
 
@@ -355,7 +357,7 @@ class PerEventWeeklyBattleStatsTasklet<TBattle, TEntity : Any>(
 #### 실패 시 동작
 
 - 예외 발생 시 Spring Batch 가 execute() 전체 트랜잭션을 롤백 → `deleteExisting` 포함 모든 변경 취소 → **통계는 이전 상태 그대로**.
-- step 이 FAILED 로 기록되고, `RunIdIncrementer` 덕분에 같은 `date` 재실행 가능.
+- step 이 FAILED 로 기록되고, `RunAtJobParameter` 로 다음 실행에서 새 `runAt` 값을 받아 같은 `date` 재실행 가능.
 
 #### 한계 (의도된 미해결)
 
@@ -412,7 +414,7 @@ create unique index if not exists uk_brawler_enemy_battle_result_stats__1
 
 ---
 
-### 4.4 (3-A) `RunIdIncrementer` 적용
+### 4.4 (3-A) 재실행성 확보
 
 #### 현재 실행 경로 (확인됨)
 
@@ -426,17 +428,82 @@ spring:
       name: ${job.name:healthCheckJob}
 ```
 
-즉 Spring Boot 가 부팅 시 `JobLauncherApplicationRunner` 를 통해 `job.name` 시스템 프로퍼티에 지정된 잡 하나를 실행한다. 외부 스케줄러는 JVM 기동 시 `-Djob.name=brawlerTeamBattleRankStatsJob -Ddate=2026-04-23` 같은 형태로 파라미터를 넘긴다. `JobLauncherApplicationRunner` 는 Job 에 `incrementer` 가 설정되어 있으면 이를 호출해 `run.id` 를 자동 증가시킨 뒤 실행한다.
+Spring Boot 가 부팅 시 `JobLauncherApplicationRunner` 를 통해 `job.name` 시스템 프로퍼티에 지정된 잡 하나를 실행한다. 외부 스케줄러는 JVM 기동 시 `-Djob.name=brawlerTeamBattleRankStatsJob -Ddate=2026-04-23` 같은 형태로 파라미터를 넘긴다.
 
-따라서 **이 프로젝트에서는 `.incrementer(RunIdIncrementer())` 추가만으로 재실행성이 확보된다**. 추가 호출부 수정이 필요하지 않다.
+#### `JobLauncherApplicationRunner` + `RunIdIncrementer` 의 함정
 
-#### `RunIdIncrementer` 동작 오해의 해소
+**중요**: "Job 에 `RunIdIncrementer` 만 달면 같은 `date` 재실행이 자동으로 된다" 는 통념은 **틀렸다**. 실제 `JobLauncherApplicationRunner.getNextJobParameters()` 로직은 다음 순서다:
 
-"`date` 같은 다른 identifying parameter 가 있으면 `RunIdIncrementer` 는 동작하지 않는다" 는 통념은 **부정확하다**.
+1. CLI 에서 받은 파라미터로 이미 JobInstance 가 존재하는지 조회.
+2. 존재하고 **완료 상태** 면 incrementer 를 호출하지 않고 `JobInstanceAlreadyCompleteException` 을 던진다.
+3. Incrementer 는 "기존 JobInstance 가 없거나 미완" 일 때만 호출되어 `run.id` 를 부여한다.
 
-- `RunIdIncrementer.getNext(existingParams)` 는 기존 identifying parameter(`date` 등) 를 **전부 보존** 하고 `run.id` 만 +1 증가시켜 반환한다.
-- 따라서 `date=2026-04-23, run.id=1` 과 `date=2026-04-23, run.id=2` 는 서로 다른 JobInstance 로 식별되어 `JobInstanceAlreadyCompleteException` 을 피한다.
-- 이 프로젝트처럼 `JobLauncherApplicationRunner` 경로를 쓰는 경우 incrementer 는 자동 호출되므로 정상 동작한다.
+따라서 `-Ddate=2026-04-23` 만으로 두 번째 실행은 **실패**한다. 근거: Spring Boot issue #22602 ("JobLauncherApplicationRunner does not follow expected behavior with a JobParametersIncrementer").
+
+재실행성을 확보하려면 **CLI 파라미터 자체가 매 실행마다 달라야 한다**.
+
+#### 설계 — `RunAtJobParameter` 도입
+
+`date` 는 집계 대상 날짜를 식별하는 identifying 파라미터로 유지한다. 추가로 **매 실행마다 다른 값** 을 가지는 identifying 파라미터 `runAt` 을 도입한다. 이 둘의 조합이 JobInstance 를 유일하게 식별한다.
+
+- `runAt` 타입: `Long` (epoch milliseconds).
+- 기본값: 외부 스케줄러가 값을 넘겨주지 않은 경우를 위해 **파라미터 미지정 시 현재 epoch millis** 를 사용하도록 한다. 다만 Spring Batch 는 CLI 파라미터가 `#{jobParameters['runAt']}` 에 바인딩되기 전에 JobInstance 키를 계산하므로, **CLI 레벨에서 반드시 다른 값** 이 들어와야 한다. 따라서 스케줄러 쪽에서 값을 생성해 넘기는 것을 정석으로 한다.
+
+스케줄러 호출 형태 예:
+
+```bash
+java -Djob.name=brawlerBattleRankStatsJob \
+     -Ddate=2026-04-23 \
+     -DrunAt=$(date +%s%3N) \
+     -jar core-batch.jar
+```
+
+`RunIdIncrementer` 는 **더 이상 필요하지 않다** (CLI 파라미터가 이미 매번 달라 JobInstance 가 유일하게 생성됨). 본 스펙에서는 `RunIdIncrementer` 추가를 제외한다.
+
+#### 구현 상세
+
+`RunAtJobParameter` 신설:
+
+```kotlin
+// core-batch/support/parameter/RunAtJobParameter.kt
+package com.imstargg.core.batch.support.parameter
+
+import jakarta.annotation.PostConstruct
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+
+open class RunAtJobParameter {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    @set:Value("#{jobParameters['$KEY']}")
+    open var runAt: Long? = null
+
+    @PostConstruct
+    open fun init() {
+        log.debug("JobParameter[$KEY]={}", runAt)
+    }
+
+    companion object {
+        const val KEY = "runAt"
+    }
+}
+```
+
+각 JobConfig 에서 identifying 파라미터에 `runAt` 추가:
+
+```kotlin
+@Bean(JOB_NAME)
+fun brawlerTeamBattleRankStatsJob(): Job =
+    JobBuilder(JOB_NAME, jobRepository)
+        .validator(
+            DefaultJobParametersValidator(
+                arrayOf(DateJobParameter.KEY, RunAtJobParameter.KEY),
+                arrayOf(),
+            )
+        )
+        .start(brawlerTeamBattleRankStatsStep())
+        .build()
+```
 
 #### 대상 잡
 
@@ -448,26 +515,25 @@ spring:
 - `brawlerItemOwnershipStatsJob`
 - `partitionManageJob`
 
-#### 수정 내용
+`DateJobParameter` 를 쓰지 않는 잡도 `RunAtJobParameter` 만 추가해 동일 방식으로 재실행성을 확보한다 (`partitionManageJob` 등).
 
-각 `JobBuilder(...)` 에 `.incrementer(RunIdIncrementer())` 추가. 기존 `DateJobParameter` 는 identifying 파라미터로 유지하여 "같은 date, 다른 run.id" 로 재실행 가능.
+#### 스케줄러 호출부 변경
 
-```kotlin
-JobBuilder(JOB_NAME, jobRepository)
-    .incrementer(RunIdIncrementer())
-    .validator(DefaultJobParametersValidator(arrayOf(DateJobParameter.KEY), arrayOf()))
-    .start(step)
-    .build()
-```
-
-#### Spring Batch 6 future-proofing 참고
-
-Spring Batch 6 은 `JobLauncher` 인터페이스를 `JobOperator` 로 통합하는 방향(6.2 에서 `JobLauncher` 제거 예정)이며, `JobLauncherApplicationRunner` 는 Spring Boot 가 관리하는 자동 실행 경로로 유지된다. 따라서 본 스펙에서 추가하는 `RunIdIncrementer` 설정은 현재 Spring Boot 4.0.2 에서도 미래 `JobOperator` 기반 실행 경로에서도 호환된다. 별도 migrate 작업 없음.
+**필수 작업**: 외부 스케줄러가 잡 트리거 시 `runAt` 파라미터를 매번 생성해 넘기도록 변경. 이 변경은 본 스펙 범위에 포함된다 (코드 위치가 infra/스케줄링 쪽이라 플랜 단계에서 실제 수정 대상 스크립트/IaC 파일을 특정).
 
 #### 운영 영향
 
-- 같은 `date` 파라미터로 재실행 시 자동으로 `run.id` 가 증가해 새 JobInstance 가 만들어진다 → 재집계 간편.
-- 외부 스케줄러 호출부 수정 불필요.
+- `-Ddate=2026-04-23 -DrunAt=<매번 다른 epoch>` 형태로 스케줄러가 호출 → 매번 새 JobInstance 생성 → `JobInstanceAlreadyCompleteException` 회피.
+- 같은 `date` 로 "수동 재집계" 시에도 `runAt` 값을 다르게 넣어 실행하면 됨.
+- JobRepository 의 history 는 `(date, runAt)` 쌍으로 구분되어 과거 실행 이력이 보존된다.
+
+#### 대안 (플랜 단계 선택지)
+
+- 옵션 A (본 스펙 기본): `runAt` identifying 파라미터 추가. 스케줄러 호출부 수정.
+- 옵션 B: 기존 코드에 `RunIdIncrementer` 를 추가하고, 스케줄러가 `-Drun.id=<timestamp>` 를 매번 다르게 넘기도록 함. 결과는 옵션 A 와 동등하나 "incrementer 가 쓰이지 않음에도 선언" 이 되어 의미 전달이 모호.
+- 옵션 C: 스케줄러를 Spring Boot 앱 외부에서 `JobOperator.startNextInstance(Job)` 호출 경로로 바꾸는 것. Spring Batch 6.2 이후 지향점에 맞지만 현재 배포 구조(JVM 기동 기반) 를 바꾸는 큰 변경이라 본 스펙 범위 밖.
+
+옵션 A 가 파라미터 의미(runAt = 이 실행의 트리거 시각) 가 명확해 기본 추천.
 
 ---
 
@@ -498,7 +564,9 @@ Spring Batch 6 은 `JobLauncher` 인터페이스를 `JobOperator` 로 통합하�
 - **`StatsBattleAggregateApplier`** (`core-worker`): dedup 키 통일 — rank/result 모두 `battleKey` 만.
 - **Aggregator** (`core-batch/domain/*Aggregator.kt`): **수정 없음**. 데이터 모델 변경으로 자동 해결.
 - **Tasklet** (`core-batch/job/statistics/*Tasklet.kt`): 수동 트랜잭션 제거. 생성자로 `EntityManager` (Spring proxy) 주입받아 tasklet 이 이미 들어와 있는 Spring-managed 트랜잭션 안에서 읽기·쓰기 수행.
-- **JobConfig** (`core-batch/job/statistics/*JobConfig.kt`): `RunIdIncrementer` 추가. tasklet 생성 시 `EntityManager` 주입 구성.
+- **JobConfig** (`core-batch/job/statistics/*JobConfig.kt`): identifying 파라미터에 `runAt` 추가 (validator 갱신). tasklet 생성 시 `EntityManager` 주입 구성.
+- **`RunAtJobParameter`** (`core-batch/support/parameter`): 신규. 매 실행마다 다른 epoch millis 를 받아 JobInstance 유일성 보장.
+- **배포/스케줄러 호출부**: 잡 트리거 시 `-DrunAt=$(date +%s%3N)` 형태로 epoch millis 를 매번 다르게 전달.
 - **Schema** (`db-core/.../schema.sql`, `V260423a__*.sql`, `V260423b__*.sql`): unique index 교체 + 자연키 unique 추가.
 
 ## 6. 실행 순서와 롤아웃
@@ -511,8 +579,8 @@ Spring Batch 6 은 `JobLauncher` 인터페이스를 `JobOperator` 로 통합하�
 | 2    | `BattleBuilder` / `StatsBattleAggregateApplier` / repository 변경                                   |
 | 3    | `StatsRankBattleEntity` unique index 변경 + `schema.sql` 업데이트 + `V260423a__*.sql` 마이그레이션 |
 | 4    | `BattleKeyPlayerTagProjection` 및 관련 메서드 제거                                                  |
-| 5    | tasklet 3종 + `StatsReplaceWriter` 도입 (1-B, 2-B)                                                  |
-| 6    | 7 개 잡에 `RunIdIncrementer` 적용 (3-A)                                                             |
+| 5    | tasklet 3 종 수동 EM/트랜잭션 제거, 생성자 주입 `EntityManager` 로 Spring tx 합류 (1-B, 2-B)        |
+| 6    | `RunAtJobParameter` 신설 + 7 개 잡 JobConfig 의 identifying 파라미터에 `runAt` 추가 + 스케줄러 호출부에 `-DrunAt=$(date +%s%3N)` 전달 (3-A) |
 | 7    | 통계 자연키 unique 인덱스 추가 (`V260423b__*.sql`, 2-C)                                             |
 | 8    | `stats-battle-data-strategy.md` 섹션 추가 (4.5)                                                     |
 | 9    | 개발 DB truncate 후 통계 파이프라인 end-to-end 검증                                                 |
@@ -527,8 +595,8 @@ Spring Batch 6 은 `JobLauncher` 인터페이스를 `JobOperator` 로 통합하�
 | `BattleKeyPlayerTagProjection` 제거로 기존 repository 메서드 소비자 깨짐          | 사용처 확인됨: `StatsBattleAggregateApplier` 만. 동시 수정.                                                                            |
 | 파티셔닝된 `stats_rank_battle` 의 인덱스 drop 범위                                 | 플랜 단계에서 파티션 구성 재확인 후 마이그레이션 형태 확정 (부모 테이블 기준 drop + 각 파티션 자동 반영 여부).                         |
 | step 전체 트랜잭션이 길어짐 (모든 이벤트가 한 트랜잭션)                            | 현 데이터 규모(이벤트당 수천~수만 키)에서 감당 가능. 측정 후 임계 초과 시 스펙 B 의 chunk-oriented step 전환 + 스트리밍·upsert 로 해결. |
-| 이벤트 1 건 실패 시 앞서 처리된 이벤트도 롤백                                     | 데이터 정확성 우선의 의도된 tradeoff. `RunIdIncrementer` 로 재실행 가능. 이벤트 단위 원자성은 스펙 B 에서 구조적으로 확보.                |
-| `RunIdIncrementer` 적용이 외부 스케줄러 동작에 미치는 영향                         | 진입점에서 job 을 트리거할 때 `run.id` 를 자동 증가시키는 것이 기본 동작. 기존 스크립트에서 `run.id` 를 명시하고 있는지 플랜에서 확인. |
+| 이벤트 1 건 실패 시 앞서 처리된 이벤트도 롤백                                     | 데이터 정확성 우선의 의도된 tradeoff. `runAt` identifying 파라미터로 재실행 가능. 이벤트 단위 원자성은 스펙 B 에서 구조적으로 확보.      |
+| 스케줄러가 `-DrunAt` 을 빼먹거나 고정값으로 넘기는 경우                            | 잡이 `JobInstanceAlreadyCompleteException` 으로 실패. 스케줄러 변경은 본 스펙 범위에 포함하며 플랜 단계에서 실제 스크립트 경로를 특정해 반영. |
 
 ## 8. 검증 계획
 
@@ -566,6 +634,6 @@ Spring Batch 6 은 `JobLauncher` 인터페이스를 `JobOperator` 로 통합하�
 ## 10. 오픈 이슈 (플랜 단계에서 확정)
 
 - tasklet 을 Spring bean(`@Component + @StepScope`) 으로 승격할지, 현 구조(JobConfig 에서 직접 new) 를 유지하며 생성자에 `EntityManager` 만 주입할지. 플랜 단계에서 실제 주입 경로 확정.
-- ~~Spring Batch job 의 외부 트리거(스케줄러) 실행 경로 확인~~ — 해소됨. `application.yml` 의 `spring.batch.job.enabled=true` + `JobLauncherApplicationRunner` 경로 확인. incrementer 자동 호출 보장 (4.4 참조).
+- 스케줄러 호출 스크립트 실제 위치 특정 (IaC, cron, CI job 정의 등). 플랜 단계에서 `-DrunAt=$(date +%s%3N)` 삽입 지점을 확정.
 - `stats_rank_battle` 이 파티셔닝 테이블인지와 unique index 재생성 시 파티션 레벨 DDL 필요 여부.
 - `BattleKeyEmbedded` 를 `@JvmInline value class` 로 두는 방식이 프로젝트 코드 스타일과 맞는지 — 단순 `object BattleKey { fun forResult(...)/forRank(...) }` 팩토리 object 도 대안.
