@@ -4,7 +4,7 @@ import com.imstargg.core.batch.domain.BrawlerBattleResultStatsAggregator
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsEntity.Companion.brawlerBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
-import jakarta.persistence.EntityManagerFactory
+import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -20,7 +20,7 @@ import org.springframework.transaction.PlatformTransactionManager
 class BrawlerBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
-    private val entityManagerFactory: EntityManagerFactory,
+    private val em: EntityManager,
 ) {
     companion object {
         const val JOB_NAME = "brawlerBattleResultStatsJob"
@@ -45,7 +45,7 @@ class BrawlerBattleResultStatsJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 DailyBattleStatsTasklet(
-                    entityManagerFactory = entityManagerFactory,
+                    em = em,
                     jobName = JOB_NAME,
                     dateSupplier = { dateJobParameter().date!! },
                     readPage = { queryFactory, date, lastId ->
