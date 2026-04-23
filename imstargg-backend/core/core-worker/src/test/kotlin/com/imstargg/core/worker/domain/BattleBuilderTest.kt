@@ -427,7 +427,7 @@ class BattleBuilderTest {
                         type = "ranked",
                         result = "victory",
                         duration = 117,
-                        rank = 1,
+                        rank = null,
                         trophyChange = 11,
                         starPlayer = null,
                         teams = null,
