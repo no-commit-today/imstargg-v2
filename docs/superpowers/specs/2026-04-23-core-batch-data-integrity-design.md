@@ -414,13 +414,29 @@ create unique index if not exists uk_brawler_enemy_battle_result_stats__1
 
 ### 4.4 (3-A) `RunIdIncrementer` 적용
 
-#### 흔한 오해의 해소
+#### 현재 실행 경로 (확인됨)
 
-"`date` 같은 다른 identifying parameter 가 있으면 `RunIdIncrementer` 는 동작하지 않는다" 는 통념이 있으나, 이는 **부분적으로만 사실**이다. 정확한 동작:
+`core-batch` 는 Spring Boot 4.0.2 + Spring Batch 6 기반으로, `application.yml` 에 다음 설정이 있다:
 
-- `RunIdIncrementer.getNext(existingParams)` 는 기존 identifying parameter(`date` 등) 를 **전부 보존** 하고 `run.id` 만 +1 증가시켜 반환한다. 따라서 `date=2026-04-23, run.id=1` 과 `date=2026-04-23, run.id=2` 는 **서로 다른 JobInstance** 로 구분되어 `JobInstanceAlreadyCompleteException` 을 피한다.
-- 다만 incrementer 는 잡 **실행 경로** 가 `JobLauncherApplicationRunner` / `JobOperator.startNextInstance(jobName)` 류일 때만 자동 호출된다. `JobLauncher.run(job, userParams)` 를 스케줄러가 직접 호출하는 경로에서는 incrementer 가 호출되지 않아 효과가 없다.
-- 결론: incrementer 추가는 해롭지 않고, 올바른 실행 경로라면 동작한다. "효과 없는" 경로라면 스케줄러 쪽 보완이 필요하다.
+```yaml
+spring:
+  batch:
+    job:
+      enabled: true
+      name: ${job.name:healthCheckJob}
+```
+
+즉 Spring Boot 가 부팅 시 `JobLauncherApplicationRunner` 를 통해 `job.name` 시스템 프로퍼티에 지정된 잡 하나를 실행한다. 외부 스케줄러는 JVM 기동 시 `-Djob.name=brawlerTeamBattleRankStatsJob -Ddate=2026-04-23` 같은 형태로 파라미터를 넘긴다. `JobLauncherApplicationRunner` 는 Job 에 `incrementer` 가 설정되어 있으면 이를 호출해 `run.id` 를 자동 증가시킨 뒤 실행한다.
+
+따라서 **이 프로젝트에서는 `.incrementer(RunIdIncrementer())` 추가만으로 재실행성이 확보된다**. 추가 호출부 수정이 필요하지 않다.
+
+#### `RunIdIncrementer` 동작 오해의 해소
+
+"`date` 같은 다른 identifying parameter 가 있으면 `RunIdIncrementer` 는 동작하지 않는다" 는 통념은 **부정확하다**.
+
+- `RunIdIncrementer.getNext(existingParams)` 는 기존 identifying parameter(`date` 등) 를 **전부 보존** 하고 `run.id` 만 +1 증가시켜 반환한다.
+- 따라서 `date=2026-04-23, run.id=1` 과 `date=2026-04-23, run.id=2` 는 서로 다른 JobInstance 로 식별되어 `JobInstanceAlreadyCompleteException` 을 피한다.
+- 이 프로젝트처럼 `JobLauncherApplicationRunner` 경로를 쓰는 경우 incrementer 는 자동 호출되므로 정상 동작한다.
 
 #### 대상 잡
 
@@ -444,22 +460,14 @@ JobBuilder(JOB_NAME, jobRepository)
     .build()
 ```
 
-#### 실행 경로 확인 (플랜 단계 필수 작업)
+#### Spring Batch 6 future-proofing 참고
 
-플랜 단계에서 스케줄러가 잡을 실행하는 경로를 확인한다:
-
-1. **`JobLauncherApplicationRunner` / `JobOperator.startNextInstance`** 를 사용 → incrementer 자동 호출, 추가 작업 없음.
-2. **`JobLauncher.run(job, params)` 직접 호출** 이면 다음 중 하나로 보완:
-   - (a) 스케줄러가 `JobOperator.startNextInstance(jobName)` 경로로 전환.
-   - (b) 스케줄러가 `run.id=<현재 epoch millis>` 같은 값을 직접 넘기도록 변경.
-   - (c) 잡 트리거 래퍼에서 `incrementer.getNext(previousParams)` 를 수동 호출.
-
-본 스펙은 incrementer 추가까지 수행한다. 스케줄러 보완은 실행 경로 확인 후 별도 작업으로 분류.
+Spring Batch 6 은 `JobLauncher` 인터페이스를 `JobOperator` 로 통합하는 방향(6.2 에서 `JobLauncher` 제거 예정)이며, `JobLauncherApplicationRunner` 는 Spring Boot 가 관리하는 자동 실행 경로로 유지된다. 따라서 본 스펙에서 추가하는 `RunIdIncrementer` 설정은 현재 Spring Boot 4.0.2 에서도 미래 `JobOperator` 기반 실행 경로에서도 호환된다. 별도 migrate 작업 없음.
 
 #### 운영 영향
 
-- 적절한 실행 경로에서 재실행성이 확보되어 동일 `date` 재집계가 간단해진다.
-- 잘못된 실행 경로라도 incrementer 추가 자체는 해롭지 않다 (단지 효과가 없을 뿐).
+- 같은 `date` 파라미터로 재실행 시 자동으로 `run.id` 가 증가해 새 JobInstance 가 만들어진다 → 재집계 간편.
+- 외부 스케줄러 호출부 수정 불필요.
 
 ---
 
@@ -558,6 +566,6 @@ JobBuilder(JOB_NAME, jobRepository)
 ## 10. 오픈 이슈 (플랜 단계에서 확정)
 
 - tasklet 을 Spring bean(`@Component + @StepScope`) 으로 승격할지, 현 구조(JobConfig 에서 직접 new) 를 유지하며 생성자에 `EntityManager` 만 주입할지. 플랜 단계에서 실제 주입 경로 확정.
-- Spring Batch job 의 외부 트리거(스케줄러) 실행 경로 확인 — `JobLauncher.run(job, params)` 직접 호출이면 `RunIdIncrementer` 가 자동 호출되지 않는다. 4.4 의 "실행 경로 확인" 항목 참조.
+- ~~Spring Batch job 의 외부 트리거(스케줄러) 실행 경로 확인~~ — 해소됨. `application.yml` 의 `spring.batch.job.enabled=true` + `JobLauncherApplicationRunner` 경로 확인. incrementer 자동 호출 보장 (4.4 참조).
 - `stats_rank_battle` 이 파티셔닝 테이블인지와 unique index 재생성 시 파티션 레벨 DDL 필요 여부.
 - `BattleKeyEmbedded` 를 `@JvmInline value class` 로 두는 방식이 프로젝트 코드 스타일과 맞는지 — 단순 `object BattleKey { fun forResult(...)/forRank(...) }` 팩토리 object 도 대안.
