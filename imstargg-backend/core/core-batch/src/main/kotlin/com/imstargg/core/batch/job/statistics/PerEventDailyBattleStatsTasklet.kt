@@ -10,6 +10,15 @@ import org.springframework.batch.core.step.tasklet.Tasklet
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import java.time.LocalDate
 
+/**
+ * 이벤트별 일 단위 통계 집계 tasklet.
+ *
+ * **현재 사용처 없음**: 2026-04-23 기준 모든 통계 잡이 주간 집계
+ * ([PerEventWeeklyBattleStatsTasklet]) 로 전환되었다. 본 클래스는 향후
+ * 일 단위 이벤트별 집계가 다시 필요할 때를 위해 유지되며, 그때 이 패턴을
+ * 그대로 재사용할 수 있도록 Spring-managed [EntityManager] 주입 방식을
+ * 갖춘 상태로 보존한다.
+ */
 class PerEventDailyBattleStatsTasklet<TBattle, TEntity : Any>(
     private val em: EntityManager,
     private val jobName: String,

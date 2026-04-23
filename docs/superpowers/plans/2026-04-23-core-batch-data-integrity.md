@@ -993,9 +993,10 @@ em.transaction.begin/commit 하던 경로를 제거. Spring-managed EM 을
 
 ## Task 7: `PerEventDailyBattleStatsTasklet` 수동 트랜잭션 제거
 
+> **주의**: `BrawlerEnemyBattleResultStatsJobConfig` 는 실제로 Weekly tasklet 사용 중이므로 Task 8 에서 처리. 본 Task 에서는 tasklet 파일만 리팩토링 (현재 dead code).
+
 **Files:**
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventDailyBattleStatsTasklet.kt`
-- Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerEnemyBattleResultStatsJobConfig.kt`
 
 ### Step 1: `PerEventDailyBattleStatsTasklet` 교체
 
@@ -1078,9 +1079,7 @@ class PerEventDailyBattleStatsTasklet<TBattle, TEntity : Any>(
 }
 ```
 
-### Step 2: `BrawlerEnemyBattleResultStatsJobConfig` 주입 변경
-
-- [ ] Task 6 Step 2 와 동일: `entityManagerFactory: EntityManagerFactory` → `em: EntityManager`, tasklet 생성 시 `em = em,` 로 교체.
+### Step 2: (이전 Step 2 는 Task 8 로 이관) — 이번 Task 는 tasklet 파일만.
 
 ### Step 3: 컴파일 + 테스트 확인
 
@@ -1092,8 +1091,7 @@ class PerEventDailyBattleStatsTasklet<TBattle, TEntity : Any>(
 - [ ] Run:
 
 ```bash
-git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventDailyBattleStatsTasklet.kt \
-        imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerEnemyBattleResultStatsJobConfig.kt
+git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventDailyBattleStatsTasklet.kt
 git commit -m "refactor(core-batch): PerEventDailyBattleStatsTasklet 수동 트랜잭션 제거"
 ```
 
@@ -1101,10 +1099,13 @@ git commit -m "refactor(core-batch): PerEventDailyBattleStatsTasklet 수동 트�
 
 ## Task 8: `PerEventWeeklyBattleStatsTasklet` 수동 트랜잭션 제거
 
+Weekly tasklet 을 사용하는 3 개 Config (Team×2 + Enemy) 를 모두 새 주입 방식으로 전환한다.
+
 **Files:**
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/PerEventWeeklyBattleStatsTasklet.kt`
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleResultStatsJobConfig.kt`
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerTeamBattleRankStatsJobConfig.kt`
+- Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerEnemyBattleResultStatsJobConfig.kt`
 
 ### Step 1: `PerEventWeeklyBattleStatsTasklet` 교체
 
