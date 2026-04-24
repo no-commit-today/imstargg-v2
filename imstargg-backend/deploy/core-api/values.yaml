@@ -1,0 +1,46 @@
+imagePullSecrets:
+  - name: ecr-pull-secret
+
+deployment:
+  replicaCount: 1
+  image:
+    repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
+    tag: ""
+    pullPolicy: Always
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: prod
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  hosts:
+    - host: core-api.imstargg.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: core-api-tls
+      hosts:
+        - core-api.imstargg.com

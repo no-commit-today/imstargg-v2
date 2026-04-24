@@ -1,0 +1,88 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: '배포할 애플리케이션'
+        required: true
+        type: choice
+        options:
+          - core-api
+          - core-admin
+          - core-batch
+          - core-worker
+
+env:
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: imstargg-backend
+          file: imstargg-backend/core/${{ inputs.app }}/Dockerfile
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/imstargg/${{ inputs.app }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=${{ inputs.app }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.app }}
+
+  update-image-tags:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Update image tag
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}
+          cd imstargg-backend/deploy
+
+          if [ "${{ inputs.app }}" == "core-batch" ]; then
+            yq e ".cronjobs[].image.repository = \"${ECR_REGISTRY}/imstargg/core-batch\"" -i core-batch/values.yaml
+            yq e ".cronjobs[].image.tag = \"${IMAGE_TAG}\"" -i core-batch/values.yaml
+          else
+            yq e ".deployment.image.repository = \"${ECR_REGISTRY}/imstargg/${{ inputs.app }}\"" -i ${{ inputs.app }}/values.yaml
+            yq e ".deployment.image.tag = \"${IMAGE_TAG}\"" -i ${{ inputs.app }}/values.yaml
+          fi
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add imstargg-backend/deploy/
+          git diff --staged --quiet || git commit -m "chore: update ${{ inputs.app }} image tag to ${GITHUB_SHA::7}"
+          git push
