@@ -20,6 +20,7 @@ import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
@@ -55,7 +56,12 @@ class BattleEventSyncJobConfig(
     @Bean(JOB_NAME)
     fun battleEventSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .start(battleEventSyncFromRankBattleStep())
+            .validator(
+                DefaultJobParametersValidator(
+                    arrayOf(DateJobParameter.KEY),
+                    arrayOf(),
+                ),
+            ).start(battleEventSyncFromRankBattleStep())
             .next(battleEventSyncFromResultBattleStep())
             .incrementer(RunIdIncrementer())
             .build()

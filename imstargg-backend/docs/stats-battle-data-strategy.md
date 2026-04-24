@@ -201,6 +201,6 @@ java -jar core-batch.jar \
     rerun=1
 ```
 
-- Job 에 `JobParametersValidator` 를 두지 않았으므로 **키 이름은 자유** (의미만 명확하면 됨). 예: `rerun=1`, `rerun=2`, ... 식으로 단순 증가.
+- Job 의 `DefaultJobParametersValidator` 는 `date` 만 required 로 강제하고 optional 리스트는 비워둔다. Spring Batch 6 의 동작상 optional 이 비면 required 외의 임의 키는 **WARN 로그만 남기고 통과** 하므로 운영자가 임의 이름의 재실행 구분 키를 자유롭게 붙일 수 있다 (`rerun=1`, `manualRun=1` 등).
 - 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Drerun=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
 - `run.id` 같은 Spring Batch 예약 키는 피한다. `RunIdIncrementer` 가 쓰는 키라 혼동 소지가 있음. 본 프로젝트는 `RunIdIncrementer` 를 도입하지 않았다 — `JobLauncherApplicationRunner` 는 CLI 파라미터로 JobInstance 를 먼저 조회하고, 완료 상태면 incrementer 를 호출하지 않기 때문에 정기 스케줄 케이스에서 효과가 없다 (Spring Boot issue #22602).

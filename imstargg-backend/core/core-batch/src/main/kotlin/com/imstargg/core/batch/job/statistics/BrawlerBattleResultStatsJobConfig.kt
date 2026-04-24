@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
@@ -34,7 +35,12 @@ class BrawlerBattleResultStatsJobConfig(
     @Bean(JOB_NAME)
     fun brawlerBattleResultStatsJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
-            .start(brawlerBattleResultStatsStep())
+            .validator(
+                DefaultJobParametersValidator(
+                    arrayOf(DateJobParameter.KEY),
+                    arrayOf(),
+                ),
+            ).start(brawlerBattleResultStatsStep())
             .build()
 
     @Bean(STEP_NAME)
