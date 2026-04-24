@@ -38,7 +38,7 @@ class BrawlerBattleResultStatsJobConfig(
             .validator(
                 DefaultJobParametersValidator(
                     arrayOf(DateJobParameter.KEY),
-                    arrayOf("timestamp", "manualRunAt", "retry"),
+                    arrayOf("timestamp"),
                 ),
             ).start(brawlerBattleResultStatsStep())
             .build()

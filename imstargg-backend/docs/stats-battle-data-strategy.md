@@ -201,6 +201,6 @@ java -jar core-batch.jar \
     timestamp=$(date +%s%3N)
 ```
 
-- `timestamp` 키 이름은 운영 재량 (`manualRunAt`, `retry` 등 무엇이든).
+- 키 이름은 `timestamp` 로 고정 (각 JobConfig 의 `DefaultJobParametersValidator` 가 이 키만 optional 로 허용).
 - 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Dtimestamp=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
 - `RunIdIncrementer` 는 도입하지 않았다. `JobLauncherApplicationRunner` 는 CLI 파라미터로 JobInstance 를 먼저 조회하고, 완료 상태면 incrementer 를 호출하지 않기 때문에 정기 스케줄 케이스에서 효과가 없다 (Spring Boot issue #22602).
