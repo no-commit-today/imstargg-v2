@@ -10,6 +10,9 @@ deployment:
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: prod
+  envFrom:
+    - secretRef:
+        name: core-api-secret
   resources:
     requests:
       cpu: 200m
