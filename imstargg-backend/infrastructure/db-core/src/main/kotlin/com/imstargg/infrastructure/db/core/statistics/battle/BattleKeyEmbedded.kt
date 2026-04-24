@@ -7,31 +7,21 @@ import java.time.OffsetDateTime
 /**
  * 배틀 식별자 값 객체. SHA-256(epochSeconds + sorted tags).
  *
- * [forResult] 와 [forRank] 는 입력이 같으면 **같은 해시를 반환**한다.
- * 팩토리 분리는 호출 측 의도를 드러내기 위한 것이며(결과형 전투: 전체 플레이어 태그,
- * 순위형 전투: 자기 팀 플레이어 태그), 내부 해시 함수는 공유한다.
+ * 호출 측이 집계 의도에 따라 태그 범위를 결정한다:
+ * - 결과형 전투: 전체 플레이어 태그 → 같은 배틀이면 수집 주체와 무관하게 같은 키.
+ * - 순위형 전투: 수집 주체의 자기 팀 태그만 → 같은 팀이면 수집 주체와 무관하게 같은 키.
  */
 @JvmInline
 value class BattleKeyEmbedded(
     val value: String,
 ) {
     companion object {
-        fun forResult(
+        fun create(
             battleTime: OffsetDateTime,
             playerTags: Collection<String>,
-        ): BattleKeyEmbedded = hash(battleTime, playerTags)
-
-        fun forRank(
-            battleTime: OffsetDateTime,
-            playerTeamTags: Collection<String>,
-        ): BattleKeyEmbedded = hash(battleTime, playerTeamTags)
-
-        private fun hash(
-            battleTime: OffsetDateTime,
-            tags: Collection<String>,
         ): BattleKeyEmbedded {
             val joined =
-                tags
+                playerTags
                     .sorted()
                     .joinToString("")
                     .toByteArray(Charsets.UTF_8)

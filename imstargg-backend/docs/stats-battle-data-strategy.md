@@ -168,8 +168,7 @@ ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
 
 ### 구현 위치
 - `infrastructure/db-core` 의 `BattleKeyEmbedded`
-  - `BattleKeyEmbedded.forResult(battleTime, playerTags)`
-  - `BattleKeyEmbedded.forRank(battleTime, playerTeamTags)`
+  - `BattleKeyEmbedded.create(battleTime, playerTags)` — 호출 측이 집계 의도에 맞는 태그 범위를 넘긴다. 결과형은 전체 플레이어 태그, 순위형은 자기 팀 플레이어 태그.
 - 호출부: `core-worker` 의 `BattleBuilder.createBattleKey()` (`battle.rank != null` 여부로 분기).
 
 ### Rank 전투 row 정책

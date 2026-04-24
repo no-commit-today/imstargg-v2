@@ -22,16 +22,18 @@ class BattleBuilder(
 
     private fun createBattleKey(teams: List<List<BattleResultPlayerResponse>>): String {
         val battleTime = battleResponse.battleTime
-        return if (battleResponse.battle.rank != null) {
-            val playerTeam =
-                teams.firstOrNull { team -> team.any { it.tag == brawlStarsTag } }
-                    ?: throw IllegalArgumentException(
-                        "수집 대상 플레이어가 팀에 포함되지 않았습니다. tag=$brawlStarsTag",
-                    )
-            BattleKeyEmbedded.forRank(battleTime, playerTeam.map { it.tag }).value
-        } else {
-            BattleKeyEmbedded.forResult(battleTime, teams.flatten().map { it.tag }).value
-        }
+        val tags =
+            if (battleResponse.battle.rank != null) {
+                val playerTeam =
+                    teams.firstOrNull { team -> team.any { it.tag == brawlStarsTag } }
+                        ?: throw IllegalArgumentException(
+                            "수집 대상 플레이어가 팀에 포함되지 않았습니다. tag=$brawlStarsTag",
+                        )
+                playerTeam.map { it.tag }
+            } else {
+                teams.flatten().map { it.tag }
+            }
+        return BattleKeyEmbedded.create(battleTime, tags).value
     }
 
     private fun buildBattleResult(

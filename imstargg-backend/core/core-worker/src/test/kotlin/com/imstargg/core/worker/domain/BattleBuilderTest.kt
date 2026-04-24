@@ -645,7 +645,7 @@ class BattleBuilderTest {
         val result = sut.build()
 
         // then
-        val expected = BattleKeyEmbedded.forRank(battleTime, listOf(collectedPlayerTag, "#B")).value
+        val expected = BattleKeyEmbedded.create(battleTime, listOf(collectedPlayerTag, "#B")).value
         assertThat(result.battleKey).isEqualTo(expected)
     }
 
@@ -689,7 +689,7 @@ class BattleBuilderTest {
 
         // then
         val expected =
-            BattleKeyEmbedded.forResult(battleTime, listOf("#A", "#B", "#C", "#D", "#E", "#F")).value
+            BattleKeyEmbedded.create(battleTime, listOf("#A", "#B", "#C", "#D", "#E", "#F")).value
         assertThat(result.battleKey).isEqualTo(expected)
     }
 
