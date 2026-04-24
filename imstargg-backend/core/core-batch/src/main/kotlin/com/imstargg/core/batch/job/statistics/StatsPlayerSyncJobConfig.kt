@@ -63,7 +63,7 @@ class StatsPlayerSyncJobConfig(
             .validator(
                 DefaultJobParametersValidator(
                     arrayOf(DateJobParameter.KEY),
-                    arrayOf("timestamp"),
+                    arrayOf("run.id"),
                 ),
             ).start(statsPlayerSyncFromRankBattleStep())
             .next(statsPlayerSyncFromResultBattleStep())

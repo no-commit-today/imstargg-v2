@@ -43,7 +43,7 @@ class PartitionManageJobConfig(
             .validator(
                 DefaultJobParametersValidator(
                     arrayOf(DateJobParameter.KEY),
-                    arrayOf("timestamp"),
+                    arrayOf("run.id"),
                 ),
             ).start(partitionCreateStep())
             .next(partitionDropStep())

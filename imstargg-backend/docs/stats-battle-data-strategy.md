@@ -198,9 +198,9 @@ Spring Batch 는 `(jobName, identifying parameters)` 조합이 같으면 동일 
 java -jar core-batch.jar \
     --job.name=brawlerBattleRankStatsJob \
     date=2026-04-23 \
-    timestamp=$(date +%s%3N)
+    run.id=1
 ```
 
-- 키 이름은 `timestamp` 로 고정 (각 JobConfig 의 `DefaultJobParametersValidator` 가 이 키만 optional 로 허용).
-- 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Dtimestamp=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
+- 키 이름은 `run.id` 로 고정 (각 JobConfig 의 `DefaultJobParametersValidator` 가 이 키만 optional 로 허용). 값은 이전 실행과 달라 JobInstance 를 구분할 수 있는 값이면 됨. 첫 재실행은 `1`, 다음은 `2`, ... 식으로 단순 증가시켜 사용.
+- 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Drun.id=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
 - `RunIdIncrementer` 는 도입하지 않았다. `JobLauncherApplicationRunner` 는 CLI 파라미터로 JobInstance 를 먼저 조회하고, 완료 상태면 incrementer 를 호출하지 않기 때문에 정기 스케줄 케이스에서 효과가 없다 (Spring Boot issue #22602).

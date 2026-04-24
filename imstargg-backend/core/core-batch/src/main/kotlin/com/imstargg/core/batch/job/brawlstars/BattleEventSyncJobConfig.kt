@@ -59,7 +59,7 @@ class BattleEventSyncJobConfig(
             .validator(
                 DefaultJobParametersValidator(
                     arrayOf(DateJobParameter.KEY),
-                    arrayOf("timestamp"),
+                    arrayOf("run.id"),
                 ),
             ).start(battleEventSyncFromRankBattleStep())
             .next(battleEventSyncFromResultBattleStep())

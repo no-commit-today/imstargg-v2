@@ -42,7 +42,7 @@ class BrawlerTeamBattleRankStatsJobConfig(
             .validator(
                 DefaultJobParametersValidator(
                     arrayOf(DateJobParameter.KEY),
-                    arrayOf("timestamp"),
+                    arrayOf("run.id"),
                 ),
             ).start(brawlerTeamBattleRankStatsStep())
             .build()
