@@ -20,6 +20,7 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key = "'v1:brawlerResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
     )
     fun findBrawlerResultCounts(
         eventId: BrawlStarsId?,
