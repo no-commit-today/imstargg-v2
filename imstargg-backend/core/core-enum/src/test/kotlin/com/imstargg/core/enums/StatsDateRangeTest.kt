@@ -25,23 +25,23 @@ class StatsDateRangeTest {
     @Nested
     inner class ThisWeek {
         @Test
-        fun `이번주 월요일부터 오늘까지 반환한다`() {
+        fun `이번주 월요일부터 일요일까지 반환한다`() {
             // when
             val (startDate, endDate) = StatsDateRange.THIS_WEEK.dateRange(wednesdayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 13))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 19))
         }
 
         @Test
-        fun `월요일이면 월요일부터 월요일까지 반환한다`() {
+        fun `월요일이면 월요일부터 일요일까지 반환한다`() {
             // when
             val (startDate, endDate) = StatsDateRange.THIS_WEEK.dateRange(mondayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 13))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 13))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 19))
         }
 
         @Test
@@ -54,20 +54,20 @@ class StatsDateRangeTest {
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 5, 1))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 5, 1))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 5, 3))
         }
     }
 
     @Nested
     inner class SinceLastWeek {
         @Test
-        fun `지난주 월요일부터 오늘까지 반환한다`() {
+        fun `지난주 월요일부터 일요일까지 반환한다`() {
             // when
             val (startDate, endDate) = StatsDateRange.SINCE_LAST_WEEK.dateRange(wednesdayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 4, 6))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 19))
         }
     }
 
@@ -87,13 +87,13 @@ class StatsDateRangeTest {
     @Nested
     inner class SinceTwoWeeksAgo {
         @Test
-        fun `지지난주 월요일부터 오늘까지 반환한다`() {
+        fun `지지난주 월요일부터 일요일까지 반환한다`() {
             // when
             val (startDate, endDate) = StatsDateRange.SINCE_TWO_WEEKS_AGO.dateRange(wednesdayClock)
 
             // then
             assertThat(startDate).isEqualTo(LocalDate.of(2026, 3, 30))
-            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 15))
+            assertThat(endDate).isEqualTo(LocalDate.of(2026, 4, 19))
         }
     }
 
