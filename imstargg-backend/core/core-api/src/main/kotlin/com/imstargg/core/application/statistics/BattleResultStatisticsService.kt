@@ -46,28 +46,11 @@ class BattleResultStatisticsService(
         offsetLimit: OffsetLimit,
     ): BrawlerTeamResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        val totalBattleCount =
-            resultRepository.countTeamResultTotalBattleCount(
-                eventId = eventId,
-                brawlerIds = brawlerIds,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-                teamSize = teamSize,
-            )
-        val totalCount =
-            resultRepository.countTeamResultBy(
-                eventId = eventId,
-                brawlerIds = brawlerIds,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-                teamSize = teamSize,
-            )
+        val sortedBrawlerIds = brawlerIds.sortedBy { it.value }
         val counts =
-            resultRepository.findBrawlerTeamResultCounts(
+            resultRepository.findBrawlerTeamResult(
                 eventId = eventId,
-                brawlerIds = brawlerIds,
+                brawlerIds = sortedBrawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
@@ -76,7 +59,7 @@ class BattleResultStatisticsService(
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        return BrawlerTeamResultStatistics.create(totalBattleCount, totalCount, counts)
+        return BrawlerTeamResultStatistics.create(counts.totalBattleCount, counts.totalElementCount, counts.items)
     }
 
     fun getEnemyResultStatistics(
