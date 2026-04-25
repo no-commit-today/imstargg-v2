@@ -276,11 +276,29 @@ class StatisticsController(...) {
 
 ### 7.2 Service-level 검증
 
-Service 진입 시 `require(brawlerIds.size <= teamSize.value) { ... }` 명시. `IllegalArgumentException` 의 HTTP 매핑은 기존 GlobalExceptionHandler 정책에 따른다 (없다면 별도 작업, 본 스펙 범위 밖).
+`brawlerIds.size > teamSize.value` 같은 파라미터 간 의존 검증은 Bean Validation 으로 표현하기 어렵다. Service 진입 시 명시 검증하되, **`require(...)` (= `IllegalArgumentException`) 가 아니라 프로젝트 표준인 `CoreException(ErrorType.INVALID_REQUEST)` 를 throw 한다**.
 
-### 7.3 ConstraintViolationException 핸들링
+이유: `ApiExceptionHandler` 에는 `IllegalArgumentException` 매핑이 없어 catch-all (`Exception` → 500) 로 떨어진다. 동일 핸들러는 `CoreException` 을 명시적으로 처리하여 `errorType.status` (`INVALID_REQUEST` → 400) 를 반환한다.
 
-기존 GlobalExceptionHandler 가 `ConstraintViolationException` → 400 매핑이 없다면 추가. 있다면 그대로 활용.
+```kotlin
+if (brawlerIds.size > teamSize.value) {
+    throw CoreException(
+        ErrorType.INVALID_REQUEST,
+        "brawlerIds.size(${brawlerIds.size}) > teamSize(${teamSize.value})",
+    )
+}
+```
+
+### 7.3 검증 예외의 HTTP 매핑 — 확인 완료
+
+기존 `ApiExceptionHandler` ([core-api/.../api/error/ApiExceptionHandler.kt](../../imstargg-backend/core/core-api/src/main/kotlin/com/imstargg/core/api/error/ApiExceptionHandler.kt)) 가 다음을 모두 400 (`INVALID_REQUEST`) 으로 매핑함을 확인:
+
+- `ConstraintViolationException` (Bean Validation 메서드 파라미터 위반)
+- `HandlerMethodValidationException` (Spring 6 의 `@RequestParam` + `@Validated` 조합 — `@Size(max = 3)` 위반이 여기로 들어옴)
+- `MethodArgumentNotValidException` (`@RequestBody` Bean Validation)
+- `CoreException` (도메인 예외, `errorType.status` 사용)
+
+추가 핸들러는 불필요. **단, `IllegalArgumentException` 직접 throw 는 금지** (catch-all 로 500). 7.2 의 `CoreException` 사용을 구현 가이드로 강제한다.
 
 ## 8. 변경 파일 요약
 
@@ -340,7 +358,7 @@ Service 진입 시 `require(brawlerIds.size <= teamSize.value) { ... }` 명시. 
 
 - **`StatsWeekRange` 함수명 변경**: 외부 모듈에서 호출하지 않음을 grep 으로 확인했으나, KSP 생성 코드/리플렉션 호출은 별도 점검 필요.
 - **`StatsDateRange` 의 `endDate` 의미 변경**: 운영 미배포라 호환성 부담은 없으나 프론트와의 응답 표기 일관성 점검 필요. 본 스펙은 백엔드 단독 변경으로 한정.
-- **`@Size(max = 3)` 도입**: ConstraintViolation → HTTP 400 매핑이 글로벌 핸들러에 없다면 별건 작업 필요. 본 스펙에서는 매핑 추가까지만 책임진다 (있으면 활용, 없으면 최소 핸들러 추가).
+- **`@Size(max = 3)` 도입**: 기존 `ApiExceptionHandler` 가 `HandlerMethodValidationException` 을 400 으로 매핑하므로 추가 작업 없음. Service-level 의존 검증은 `CoreException(ErrorType.INVALID_REQUEST)` 사용 (7.2 참조) — `IllegalArgumentException` 사용 금지 (catch-all 500 함정).
 - **인덱스 추가 비용**: 통계 테이블은 batch write 한정이라 영향 미미.
 
 ## 11. 비목표
