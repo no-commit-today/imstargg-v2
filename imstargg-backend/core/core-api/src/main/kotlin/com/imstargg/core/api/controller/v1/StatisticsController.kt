@@ -17,12 +17,15 @@ import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
+import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@Validated
 class StatisticsController(
     private val statisticsQueryComposer: StatisticsQueryComposer,
 ) {
@@ -44,7 +47,9 @@ class StatisticsController(
     @GetMapping("/v1/statistics/brawler/team/result")
     fun getBrawlerTeamResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam(required = false, defaultValue = "") brawlerIds: List<Long>,
+        @RequestParam(required = false, defaultValue = "")
+        @Size(max = 3)
+        brawlerIds: List<Long>,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
@@ -103,7 +108,9 @@ class StatisticsController(
     @GetMapping("/v1/statistics/brawler/team/rank")
     fun getBrawlerTeamRankStatistics(
         @RequestParam eventId: Long,
-        @RequestParam(required = false, defaultValue = "") brawlerIds: List<Long>,
+        @RequestParam(required = false, defaultValue = "")
+        @Size(max = 3)
+        brawlerIds: List<Long>,
         @RequestParam teamSize: StatsTeamSize,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,

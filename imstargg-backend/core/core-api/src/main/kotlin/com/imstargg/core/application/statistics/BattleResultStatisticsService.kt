@@ -11,6 +11,8 @@ import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.core.error.CoreException
+import com.imstargg.core.error.ErrorType
 import org.springframework.stereotype.Service
 import java.time.Clock
 
@@ -45,6 +47,12 @@ class BattleResultStatisticsService(
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
     ): BrawlerTeamResultStatistics {
+        if (brawlerIds.size > teamSize.value) {
+            throw CoreException(
+                ErrorType.INVALID_REQUEST,
+                "brawlerIds.size(${brawlerIds.size}) > teamSize(${teamSize.value})",
+            )
+        }
         val (startDate, endDate) = dateRange.dateRange(clock)
         val sortedBrawlerIds = brawlerIds.sortedBy { it.value }
         val counts =
