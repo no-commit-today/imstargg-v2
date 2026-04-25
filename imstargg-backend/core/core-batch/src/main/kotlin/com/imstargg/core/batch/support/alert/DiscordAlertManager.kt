@@ -17,6 +17,7 @@ internal class DiscordAlertManager(
                 .uri(webhookUrl)
                 .body(DiscordWebhookRequest.from(alertCommand))
                 .retrieve()
+                .body(Void::class.java)
         } catch (ex: Exception) {
             log.error("Discord 알람 전송 실패", ex)
         }
