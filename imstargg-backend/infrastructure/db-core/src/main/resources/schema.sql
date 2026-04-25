@@ -439,6 +439,7 @@ create table if not exists brawler_team_battle_result_stats
     updated_at                          timestamptz  not null default now()
 );
 create index if not exists ix_brawler_team_battle_result_stats_1 on brawler_team_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date);
+create index if not exists ix_brawler_team_battle_result_stats_2 on brawler_team_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_size, team_key);
 create unique index if not exists uk_brawler_team_battle_result_stats__1
     on brawler_team_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_key);
 
@@ -469,6 +470,7 @@ create table if not exists brawler_team_battle_rank_stats
     updated_at                        timestamptz  not null default now()
 );
 create index if not exists ix_brawler_team_battle_rank_stats_1 on brawler_team_battle_rank_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date);
+create index if not exists ix_brawler_team_battle_rank_stats_2 on brawler_team_battle_rank_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_size, team_key);
 create unique index if not exists uk_brawler_team_battle_rank_stats__1
     on brawler_team_battle_rank_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_key);
 
