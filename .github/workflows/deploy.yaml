@@ -17,13 +17,44 @@ env:
   AWS_REGION: ap-northeast-2
 
 jobs:
+  build-jar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: gradle
+
+      - name: Build JAR
+        working-directory: imstargg-backend
+        run: |
+          ./gradlew :core:${{ inputs.app }}:bootJar -x test --no-daemon
+          find core/${{ inputs.app }}/build/libs -name "*.jar" -not -name "*plain*" \
+            -exec cp {} ${{ github.workspace }}/app.jar \;
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app }}-jar
+          path: app.jar
+
   build-and-push:
+    needs: build-jar
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.app }}-jar
+          path: jar
 
       - uses: docker/setup-buildx-action@v3
 
@@ -40,7 +71,7 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: imstargg-backend
+          context: jar
           file: imstargg-backend/core/${{ inputs.app }}/Dockerfile
           push: true
           platforms: linux/arm64
