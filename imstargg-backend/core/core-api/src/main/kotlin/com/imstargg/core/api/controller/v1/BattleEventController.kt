@@ -4,8 +4,10 @@ import com.imstargg.core.api.controller.ListResponse
 import com.imstargg.core.api.controller.v1.response.BattleEventResponse
 import com.imstargg.core.api.controller.v1.response.RotationBattleEventResponse
 import com.imstargg.core.application.brawlstars.BattleEventService
+import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
@@ -19,6 +21,14 @@ class BattleEventController(
         return ResponseEntity.ok(
             ListResponse(events.map { RotationBattleEventResponse.of(it) }),
         )
+    }
+
+    @GetMapping("/v1/events/{id}")
+    fun getEvent(
+        @PathVariable id: Long,
+    ): ResponseEntity<BattleEventResponse> {
+        val event = battleEventService.get(BrawlStarsId(id))
+        return ResponseEntity.ok(BattleEventResponse.of(event))
     }
 
     @GetMapping("/v1/events/solo-rank")
