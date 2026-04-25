@@ -39,28 +39,11 @@ class BattleRankStatisticsService(
         offsetLimit: OffsetLimit,
     ): BrawlerTeamRankStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        val totalBattleCount =
-            rankRepository.countTeamRankTotalBattleCount(
-                eventId = eventId,
-                brawlerIds = brawlerIds,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-                teamSize = teamSize,
-            )
-        val totalCount =
-            rankRepository.countTeamRankBy(
-                eventId = eventId,
-                brawlerIds = brawlerIds,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-                teamSize = teamSize,
-            )
+        val sortedBrawlerIds = brawlerIds.sortedBy { it.value }
         val counts =
-            rankRepository.findBrawlerTeamRankCounts(
+            rankRepository.findBrawlerTeamRank(
                 eventId = eventId,
-                brawlerIds = brawlerIds,
+                brawlerIds = sortedBrawlerIds,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
@@ -70,9 +53,9 @@ class BattleRankStatisticsService(
                 offsetLimit = offsetLimit,
             )
         return BrawlerTeamRankStatistics(
-            totalBattleCount = totalBattleCount,
-            totalElementCount = totalCount,
-            items = counts,
+            totalBattleCount = counts.totalBattleCount,
+            totalElementCount = counts.totalElementCount,
+            items = counts.items,
         )
     }
 }
