@@ -30,35 +30,25 @@ class BattleResultStatisticsRepository(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerResultCount> {
-        val entities =
-            if (eventId != null) {
-                battleResultJpaRepository
-                    .findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
-                        eventBrawlStarsId = eventId.value,
-                        tierRange = tierRange,
-                        startDate = startDate,
-                        endDate = endDate,
-                    )
-            } else {
-                battleResultJpaRepository
-                    .findAllByTierRangeAndBattleDateBetween(
-                        tierRange = tierRange,
-                        startDate = startDate,
-                        endDate = endDate,
-                    )
-            }
-
-        return entities
-            .groupBy { it.brawlerBrawlStarsId }
-            .map { (brawlerBrawlStarsId, grouped) ->
+    ): List<BrawlerResultCount> =
+        battleResultJpaRepository
+            .findGroupedByBrawler(
+                eventBrawlStarsId = eventId?.value,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            ).map { projection ->
                 BrawlerResultCount(
-                    brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                    resultCount = grouped.map { it.resultCount }.reduce { acc, r -> acc + r }.toResultCount(),
-                    starPlayerCount = grouped.sumOf { it.starPlayerCount },
+                    brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
+                    resultCount =
+                        ResultCount(
+                            victoryCount = projection.victoryCount,
+                            defeatCount = projection.defeatCount,
+                            drawCount = projection.drawCount,
+                        ),
+                    starPlayerCount = projection.starPlayerCount,
                 )
             }
-    }
 
     fun findBrawlerEnemyResultCounts(
         eventId: BrawlStarsId?,

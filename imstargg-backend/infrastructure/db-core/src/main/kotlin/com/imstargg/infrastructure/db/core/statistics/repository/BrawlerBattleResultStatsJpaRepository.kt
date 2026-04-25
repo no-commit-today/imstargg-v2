@@ -5,7 +5,9 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEn
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
 
-interface BrawlerBattleResultStatsJpaRepository : JpaRepository<BrawlerBattleResultStatsEntity, Long> {
+interface BrawlerBattleResultStatsJpaRepository :
+    JpaRepository<BrawlerBattleResultStatsEntity, Long>,
+    BrawlerBattleResultStatsJpaRepositoryCustom {
     fun findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
         eventBrawlStarsId: Long,
         tierRange: StatsTierRange,
