@@ -201,6 +201,44 @@ class SoloRankSeasonTest {
         }
     }
 
+    @Nested
+    inner class OfKey {
+        @Test
+        fun `1-1 키는 첫 시즌을 반환한다`() {
+            // when
+            val result = SoloRankSeason.ofKey("1-1")
+
+            // then
+            assertThat(result.key).isEqualTo("1-1")
+            assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-02-25T18:00:00+09:00"))
+        }
+
+        @Test
+        fun `2-1 키는 시즌 2의 1개월차를 반환한다`() {
+            // when
+            val result = SoloRankSeason.ofKey("2-1")
+
+            // then
+            assertThat(result.key).isEqualTo("2-1")
+        }
+
+        @Test
+        fun `잘못된 포맷은 IllegalArgumentException을 던진다`() {
+            // when & then
+            org.assertj.core.api.Assertions
+                .assertThatThrownBy { SoloRankSeason.ofKey("invalid") }
+                .isInstanceOf(IllegalArgumentException::class.java)
+        }
+
+        @Test
+        fun `month 가 범위를 벗어나면 IllegalArgumentException을 던진다`() {
+            // when & then
+            org.assertj.core.api.Assertions
+                .assertThatThrownBy { SoloRankSeason.ofKey("1-5") }
+                .isInstanceOf(IllegalArgumentException::class.java)
+        }
+    }
+
     private fun fixedClock(offsetDateTime: String): Clock {
         val odt = OffsetDateTime.parse(offsetDateTime)
         return Clock.fixed(odt.toInstant(), odt.offset)

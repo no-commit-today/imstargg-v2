@@ -28,10 +28,20 @@ class BrawlPassSeason(
                 endAt = OffsetDateTime.parse("2022-05-05T18:00:00+09:00"),
             )
 
-        fun current(clock: Clock): BrawlPassSeason {
-            val now = OffsetDateTime.now(clock)
+        fun current(clock: Clock): BrawlPassSeason = of(OffsetDateTime.now(clock))
+
+        fun of(time: OffsetDateTime): BrawlPassSeason {
             var season = createFirst()
-            while (!now.isBefore(season.endAt)) {
+            while (!time.isBefore(season.endAt)) {
+                season = season.next()
+            }
+            return season
+        }
+
+        fun ofNumber(number: Int): BrawlPassSeason {
+            require(number >= 1) { "number must be >= 1: $number" }
+            var season = createFirst()
+            while (season.number < number) {
                 season = season.next()
             }
             return season

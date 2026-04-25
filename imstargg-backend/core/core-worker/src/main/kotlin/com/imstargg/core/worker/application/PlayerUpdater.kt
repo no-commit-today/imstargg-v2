@@ -18,6 +18,7 @@ class PlayerUpdater(
     private val playerRepository: PlayerRepository,
     private val battleJpaRepository: BattleJpaRepository,
     private val battleTeamPlayerJpaRepository: BattleTeamPlayerJpaRepository,
+    private val playerBrawlerStatsAccumulator: PlayerBrawlerStatsAccumulator,
 ) {
     @Transactional
     fun update(
@@ -27,7 +28,10 @@ class PlayerUpdater(
         val player = findOrCreate(playerResponse)
         player.update(playerResponse)
         playerRepository.save(player)
-        return updateBattles(player.entity, battles)
+        val newBattles = filterNewBattles(player.entity, battles)
+        updateBattles(player.entity, newBattles)
+        playerBrawlerStatsAccumulator.accumulate(player.entity, newBattles)
+        return newBattles
     }
 
     @Transactional
@@ -37,8 +41,7 @@ class PlayerUpdater(
         playerRepository.save(player)
     }
 
-    @Transactional
-    fun updateBattles(
+    private fun filterNewBattles(
         player: PlayerEntity,
         battles: List<Battle>,
     ): List<Battle> {
@@ -46,14 +49,14 @@ class PlayerUpdater(
             battleJpaRepository
                 .findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
                 ?.battleAt
+                ?: return battles
+        return battles.filter { it.battleAt.isAfter(latestBattleTime) }
+    }
 
-        val newBattles =
-            if (latestBattleTime != null) {
-                battles.filter { it.battleAt.isAfter(latestBattleTime) }
-            } else {
-                battles
-            }
-
+    private fun updateBattles(
+        player: PlayerEntity,
+        newBattles: List<Battle>,
+    ) {
         val battleEntities =
             newBattles.map { battle ->
                 BattleEntity(
@@ -103,8 +106,6 @@ class PlayerUpdater(
                 }
             }
         battleTeamPlayerJpaRepository.saveAll(teamPlayerEntities)
-
-        return newBattles
     }
 
     private fun findOrCreate(response: PlayerResponse): Player =

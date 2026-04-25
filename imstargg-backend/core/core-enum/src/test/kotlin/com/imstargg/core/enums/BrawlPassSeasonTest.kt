@@ -150,6 +150,76 @@ class BrawlPassSeasonTest {
         }
     }
 
+    @Nested
+    inner class Of {
+        @Test
+        fun `시즌 1 기간 중의 시각은 시즌 1을 반환한다`() {
+            // given
+            val time = OffsetDateTime.parse("2022-04-15T12:00:00+09:00")
+
+            // when
+            val result = BrawlPassSeason.of(time)
+
+            // then
+            assertThat(result.number).isEqualTo(1)
+        }
+
+        @Test
+        fun `시즌 endAt 시점은 다음 시즌을 반환한다`() {
+            // given
+            val time = OffsetDateTime.parse("2022-05-05T18:00:00+09:00")
+
+            // when
+            val result = BrawlPassSeason.of(time)
+
+            // then
+            assertThat(result.number).isEqualTo(2)
+        }
+
+        @Test
+        fun `과거 시즌 시각은 그 시점의 시즌을 반환한다`() {
+            // given
+            val time = OffsetDateTime.parse("2025-04-15T12:00:00+09:00")
+
+            // when
+            val result = BrawlPassSeason.of(time)
+
+            // then
+            assertThat(result.number).isEqualTo(37)
+        }
+    }
+
+    @Nested
+    inner class OfNumber {
+        @Test
+        fun `번호 1을 주면 첫 시즌을 반환한다`() {
+            // when
+            val result = BrawlPassSeason.ofNumber(1)
+
+            // then
+            assertThat(result.number).isEqualTo(1)
+            assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2022-04-07T18:00:00+09:00"))
+        }
+
+        @Test
+        fun `번호에 해당하는 시즌을 반환한다`() {
+            // when
+            val result = BrawlPassSeason.ofNumber(37)
+
+            // then
+            assertThat(result.number).isEqualTo(37)
+            assertThat(result.startAt).isEqualTo(OffsetDateTime.parse("2025-04-03T18:00:00+09:00"))
+        }
+
+        @Test
+        fun `번호가 1 미만이면 IllegalArgumentException을 던진다`() {
+            // when & then
+            org.assertj.core.api.Assertions
+                .assertThatThrownBy { BrawlPassSeason.ofNumber(0) }
+                .isInstanceOf(IllegalArgumentException::class.java)
+        }
+    }
+
     private fun fixedClock(offsetDateTime: String): Clock {
         val odt = OffsetDateTime.parse(offsetDateTime)
         return Clock.fixed(odt.toInstant(), odt.offset)

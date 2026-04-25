@@ -1,5 +1,6 @@
 package com.imstargg.infrastructure.db.core.statistics
 
+import com.imstargg.core.enums.BattleResult
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
@@ -36,4 +37,14 @@ data class ResultCountEmbedded internal constructor(
             drawCount = drawCount + other.drawCount,
             totalCount = totalCount + other.totalCount,
         )
+
+    fun increment(result: BattleResult): ResultCountEmbedded =
+        when (result) {
+            BattleResult.VICTORY ->
+                copy(victoryCount = victoryCount + 1, totalCount = totalCount + 1)
+            BattleResult.DEFEAT ->
+                copy(defeatCount = defeatCount + 1, totalCount = totalCount + 1)
+            BattleResult.DRAW ->
+                copy(drawCount = drawCount + 1, totalCount = totalCount + 1)
+        }
 }

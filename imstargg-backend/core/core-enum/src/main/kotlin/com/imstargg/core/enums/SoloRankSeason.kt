@@ -55,5 +55,22 @@ class SoloRankSeason private constructor(
         }
 
         fun current(clock: Clock): SoloRankSeason = of(OffsetDateTime.now(clock))
+
+        fun ofKey(key: String): SoloRankSeason {
+            val parts = key.split("-")
+            require(parts.size == 2) { "Invalid SoloRankSeason key: $key" }
+            val number =
+                parts[0].toIntOrNull()?.takeIf { it >= 1 }
+                    ?: throw IllegalArgumentException("Invalid SoloRankSeason key: $key")
+            val month =
+                parts[1].toIntOrNull()?.takeIf { it in 1..SEASON_MAX_MONTH }
+                    ?: throw IllegalArgumentException("Invalid SoloRankSeason key: $key")
+            val target = "$number-$month"
+            var season = createFirst()
+            while (season.key != target) {
+                season = season.next()
+            }
+            return season
+        }
     }
 }

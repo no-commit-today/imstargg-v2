@@ -1,6 +1,10 @@
 package com.imstargg.core.worker.application
 
 import com.imstargg.CoreWorkerContextTest
+import com.imstargg.client.brawlstars.response.BrawlerStatResponse
+import com.imstargg.client.brawlstars.response.PlayerClubResponse
+import com.imstargg.client.brawlstars.response.PlayerIconResponse
+import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.worker.domain.Battle
 import com.imstargg.core.worker.domain.BattleEvent
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
@@ -29,17 +33,17 @@ class PlayerUpdaterUpdateBattlesTest(
     @Test
     fun `기존_배틀이_없으면_모든_배틀을_저장한다`() {
         // given
-        val player = createPlayer("#PLAYER1")
-        playerRepository.save(player)
+        val tag = "#PLAYER1"
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
 
         val battles =
             listOf(
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
-        val result = sut.updateBattles(player, battles)
+        val result = sut.update(createPlayerResponse(tag), battles)
 
         // then
         assertThat(result).hasSize(2)
@@ -49,23 +53,22 @@ class PlayerUpdaterUpdateBattlesTest(
     @Test
     fun `기존_배틀이_있으면_최신_배틀_이후만_저장한다`() {
         // given
-        val player = createPlayer("#PLAYER2")
-        playerRepository.save(player)
+        val tag = "#PLAYER2"
+        val player = playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
 
         val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)
-        val existingBattle = createBattleEntity(player, existingBattleTime)
-        battleRepository.save(existingBattle)
+        battleRepository.save(createBattleEntity(player, existingBattleTime))
 
         val battles =
             listOf(
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
-        val result = sut.updateBattles(player, battles)
+        val result = sut.update(createPlayerResponse(tag), battles)
 
         // then
         assertThat(result).hasSize(2)
@@ -79,31 +82,46 @@ class PlayerUpdaterUpdateBattlesTest(
     @Test
     fun `저장할_새_배틀이_없으면_빈_리스트를_반환한다`() {
         // given
-        val player = createPlayer("#PLAYER3")
-        playerRepository.save(player)
+        val tag = "#PLAYER3"
+        val player = playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
 
         val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)
-        val existingBattle = createBattleEntity(player, existingBattleTime)
-        battleRepository.save(existingBattle)
+        battleRepository.save(createBattleEntity(player, existingBattleTime))
 
         val battles =
             listOf(
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(player.brawlStarsTag, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
             )
 
         // when
-        val result = sut.updateBattles(player, battles)
+        val result = sut.update(createPlayerResponse(tag), battles)
 
         // then
         assertThat(result).isEmpty()
         assertThat(battleRepository.count()).isEqualTo(1)
     }
 
-    private fun createPlayer(tag: String) =
-        aPlayerEntity()
-            .withBrawlStarsTag(tag)
-            .build()
+    private fun createPlayerResponse(tag: String) =
+        PlayerResponse(
+            tag = tag,
+            name = "Test",
+            nameColor = "0xff0000ff",
+            icon = PlayerIconResponse(id = 1L),
+            trophies = 1000,
+            highestTrophies = 1200,
+            expLevel = 50,
+            expPoints = 5000,
+            isQualifiedFromChampionshipChallenge = false,
+            victories3vs3 = 10,
+            victoriesSolo = 5,
+            victoriesDuo = 3,
+            bestRoboRumbleTime = 0,
+            bestTimeAsBigBrawler = 0,
+            totalPrestigeLevel = 0,
+            club = PlayerClubResponse(tag = "#CLUBTEST", name = "Test Club"),
+            brawlers = emptyList<BrawlerStatResponse>(),
+        )
 
     private fun createBattleEntity(
         player: PlayerEntity,
