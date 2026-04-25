@@ -3,7 +3,6 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.enums.ResultStatsSortBy
@@ -38,52 +37,13 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'v1:enemyResultTotal:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
-                " + ':' + #startDate + ':' + #endDate",
+            "'v1:enemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+                " + ':' + #startDate + ':' + #endDate" +
+                " + ':' + #sortField + ':' + #sortOrder" +
+                " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+        sync = true,
     )
-    fun countEnemyResultTotalBattleCount(
-        eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        battleResultStatisticsRepository.countEnemyResultTotalBattleCount(
-            eventId = eventId,
-            brawlerId = brawlerId,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
-
-    @Cacheable(
-        cacheNames = [CacheNames.STATISTICS],
-        key =
-            "'v1:enemyResultCount:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
-                " + ':' + #startDate + ':' + #endDate",
-    )
-    fun countEnemyResultBy(
-        eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        battleResultStatisticsRepository.countEnemyResultBy(
-            eventId = eventId,
-            brawlerId = brawlerId,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
-
-    @Cacheable(
-        cacheNames = [CacheNames.STATISTICS],
-        key =
-            "'v1:enemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #sortField + ':' + #sortOrder + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
-    )
-    fun findBrawlerEnemyResultCounts(
+    fun findBrawlerEnemyResult(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
@@ -92,17 +52,40 @@ class BattleResultStatisticsRepositoryWithCache(
         sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerEnemyResultCount> =
-        battleResultStatisticsRepository.findBrawlerEnemyResultCounts(
-            eventId = eventId,
-            brawlerId = brawlerId,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-            sortField = sortField,
-            sortOrder = sortOrder,
-            offsetLimit = offsetLimit,
+    ): BrawlerEnemyResultCounts {
+        val items =
+            battleResultStatisticsRepository.findBrawlerEnemyResultCounts(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+                sortField = sortField,
+                sortOrder = sortOrder,
+                offsetLimit = offsetLimit,
+            )
+        val totalBattleCount =
+            battleResultStatisticsRepository.countEnemyResultTotalBattleCount(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        val totalElementCount =
+            battleResultStatisticsRepository.countEnemyResultBy(
+                eventId = eventId,
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        return BrawlerEnemyResultCounts(
+            items = items,
+            totalBattleCount = totalBattleCount,
+            totalElementCount = totalElementCount,
         )
+    }
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
