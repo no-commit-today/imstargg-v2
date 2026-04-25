@@ -20,12 +20,12 @@ enum class StatsDateRange {
         val today = LocalDate.now(clock)
         return when (this) {
             THIS_WEEK -> {
-                val current = StatsWeekRange.currentWeek(today)
+                val current = StatsWeekRange.weekRange(today)
                 current.start to current.end
             }
             SINCE_LAST_WEEK -> {
                 val lastMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1)
-                val current = StatsWeekRange.currentWeek(today)
+                val current = StatsWeekRange.weekRange(today)
                 lastMonday to current.end
             }
             LAST_WEEK -> {
@@ -34,7 +34,7 @@ enum class StatsDateRange {
             }
             SINCE_TWO_WEEKS_AGO -> {
                 val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(2)
-                val current = StatsWeekRange.currentWeek(today)
+                val current = StatsWeekRange.weekRange(today)
                 monday to current.end
             }
             TWO_WEEKS_AGO -> {
