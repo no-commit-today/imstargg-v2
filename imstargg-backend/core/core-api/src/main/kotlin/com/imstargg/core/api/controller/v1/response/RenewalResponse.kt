@@ -12,6 +12,7 @@ data class RenewalResponse(
     val requestedAt: OffsetDateTime,
     val executedAt: OffsetDateTime?,
     val completedAt: OffsetDateTime?,
+    val renewedAt: OffsetDateTime?,
 ) {
     companion object {
         fun of(
@@ -25,6 +26,7 @@ data class RenewalResponse(
             requestedAt = renewal.requestedAt,
             executedAt = renewal.executedAt,
             completedAt = renewal.completedAt,
+            renewedAt = renewal.completedAt,
         )
     }
 }
