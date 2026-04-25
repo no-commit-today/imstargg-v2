@@ -8,7 +8,6 @@ import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleRankStats
 import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamEmbedded
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsBrawlerEntity.Companion.brawlerTeamBattleRankStatsBrawlerEntity
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleRankStatsEntity.Companion.brawlerTeamBattleRankStatsEntity
-import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.Predicate
 import com.querydsl.core.types.dsl.Expressions
@@ -144,19 +143,20 @@ internal class BrawlerTeamBattleRankStatsJpaRepositoryCustomImpl(
                 brawlerTeamBattleRankStatsEntity.brawlerTeam.teamSize.eq(teamSize),
             ).fetchOne() ?: 0L
 
-    private fun brawlerIdFilters(brawlerBrawlStarsIds: List<Long>): Predicate {
-        val builder = BooleanBuilder()
-        brawlerBrawlStarsIds.forEach { id ->
-            builder.and(
-                brawlerTeamBattleRankStatsEntity.id.`in`(
-                    JPAExpressions
-                        .select(brawlerTeamBattleRankStatsBrawlerEntity.stats.id)
-                        .from(brawlerTeamBattleRankStatsBrawlerEntity)
-                        .where(brawlerTeamBattleRankStatsBrawlerEntity.brawlerBrawlStarsId.eq(id)),
+    private fun brawlerIdFilters(brawlerBrawlStarsIds: List<Long>): Predicate? {
+        if (brawlerBrawlStarsIds.isEmpty()) return null
+        return brawlerTeamBattleRankStatsEntity.id.`in`(
+            JPAExpressions
+                .select(brawlerTeamBattleRankStatsBrawlerEntity.stats.id)
+                .from(brawlerTeamBattleRankStatsBrawlerEntity)
+                .where(brawlerTeamBattleRankStatsBrawlerEntity.brawlerBrawlStarsId.`in`(brawlerBrawlStarsIds))
+                .groupBy(brawlerTeamBattleRankStatsBrawlerEntity.stats.id)
+                .having(
+                    brawlerTeamBattleRankStatsBrawlerEntity.brawlerBrawlStarsId
+                        .countDistinct()
+                        .eq(brawlerBrawlStarsIds.size.toLong()),
                 ),
-            )
-        }
-        return builder
+        )
     }
 
     private fun rankStatsOrderSpecifier(
