@@ -72,11 +72,11 @@ jobs:
           cd imstargg-backend/deploy
 
           if [ "${{ inputs.app }}" == "core-batch" ]; then
-            yq e ".cronjobs[].image.repository = \"${ECR_REGISTRY}/imstargg/core-batch\"" -i core-batch/values.yaml
-            yq e ".cronjobs[].image.tag = \"${IMAGE_TAG}\"" -i core-batch/values.yaml
+            yq e ".nct-chart.cronjobs[].image.repository = \"${ECR_REGISTRY}/imstargg/core-batch\"" -i core-batch/values.yaml
+            yq e ".nct-chart.cronjobs[].image.tag = \"${IMAGE_TAG}\"" -i core-batch/values.yaml
           else
-            yq e ".deployment.image.repository = \"${ECR_REGISTRY}/imstargg/${{ inputs.app }}\"" -i ${{ inputs.app }}/values.yaml
-            yq e ".deployment.image.tag = \"${IMAGE_TAG}\"" -i ${{ inputs.app }}/values.yaml
+            yq e ".nct-chart.deployment.image.repository = \"${ECR_REGISTRY}/imstargg/${{ inputs.app }}\"" -i ${{ inputs.app }}/values.yaml
+            yq e ".nct-chart.deployment.image.tag = \"${IMAGE_TAG}\"" -i ${{ inputs.app }}/values.yaml
           fi
 
       - name: Commit and push

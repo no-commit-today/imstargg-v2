@@ -1,0 +1,7 @@
+apiVersion: v2
+name: core-admin
+version: 0.1.0
+dependencies:
+  - name: nct-chart
+    version: 0.1.0
+    repository: oci://ghcr.io/no-commit-today

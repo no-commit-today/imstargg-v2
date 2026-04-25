@@ -1,26 +1,27 @@
-imagePullSecrets:
-  - name: ecr-pull-secret
+nct-chart:
+  imagePullSecrets:
+    - name: ecr-pull-secret
 
-deployment:
-  replicaCount: 1
-  image:
-    repository: ghcr.io/nocommittoday/imstargg/core-worker
-    tag: ""
-    pullPolicy: Always
-  env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: prod
-  ports: []
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 1Gi
+  deployment:
+    replicaCount: 1
+    image:
+      repository: ghcr.io/nocommittoday/imstargg/core-worker
+      tag: ""
+      pullPolicy: Always
+    env:
+      - name: SPRING_PROFILES_ACTIVE
+        value: prod
+    ports: []
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
 
-service:
-  enabled: false
+  service:
+    enabled: false
 
-ingress:
-  enabled: false
+  ingress:
+    enabled: false

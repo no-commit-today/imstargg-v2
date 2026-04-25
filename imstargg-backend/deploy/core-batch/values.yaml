@@ -1,87 +1,88 @@
-imagePullSecrets:
-  - name: ecr-pull-secret
+nct-chart:
+  imagePullSecrets:
+    - name: ecr-pull-secret
 
-deployment:
-  enabled: false
+  deployment:
+    enabled: false
 
-service:
-  enabled: false
+  service:
+    enabled: false
 
-ingress:
-  enabled: false
+  ingress:
+    enabled: false
 
-cronjobs:
-  - name: battle-event-rotation-sync
-    schedule: "0 * * * *"
-    image:
-      repository: ghcr.io/nocommittoday/imstargg/core-batch
-      tag: ""
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
-    args:
-      - "java -jar /app/app.jar --job.name=battleEventRotationSyncJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
+  cronjobs:
+    - name: battle-event-rotation-sync
+      schedule: "0 * * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=battleEventRotationSyncJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
 
-  - name: brawler-battle-rank-stats
-    schedule: "0 2 * * *"
-    image:
-      repository: ghcr.io/nocommittoday/imstargg/core-batch
-      tag: ""
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
-    args:
-      - "java -jar /app/app.jar --job.name=brawlerBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
+    - name: brawler-battle-rank-stats
+      schedule: "0 2 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
 
-  - name: brawler-battle-result-stats
-    schedule: "0 2 * * *"
-    image:
-      repository: ghcr.io/nocommittoday/imstargg/core-batch
-      tag: ""
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
-    args:
-      - "java -jar /app/app.jar --job.name=brawlerBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
+    - name: brawler-battle-result-stats
+      schedule: "0 2 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
