@@ -1,26 +1,233 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
 @import "tailwindcss";
 
+/* ============================================================
+   Fonts (local)
+   ============================================================ */
+@font-face {
+  font-family: 'KoBrawl Gothic';
+  src: url('/fonts/KoBrawl_Gothic40.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Lilita One';
+  src: url('/fonts/lilitaone-regular-webfont__2_.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   Design tokens — exposed both as Tailwind theme vars and
+   raw CSS custom properties (kept on :root so existing
+   inline `var(--...)` references in ported screens resolve).
+   ============================================================ */
+@theme {
+  --color-brand-yellow: #FFC60A;
+  --color-brand-yellow-deep: #E8A900;
+  --color-brand-yellow-soft: #FFE082;
+  --color-brand-black: #14161B;
+  --color-brand-ink: #0B0C10;
+
+  --color-accent-red: #FF3A3A;
+  --color-accent-red-deep: #C9141A;
+  --color-accent-blue: #2E7CF6;
+  --color-accent-blue-deep: #1D4FB3;
+  --color-accent-purple: #9146FF;
+  --color-accent-pink: #FF5DAA;
+  --color-accent-green: #2BD576;
+  --color-accent-orange: #FF8A1F;
+  --color-accent-cyan: #3DE0FF;
+
+  --color-neutral-950: #0B0C10;
+  --color-neutral-900: #14161B;
+  --color-neutral-800: #1E2128;
+  --color-neutral-700: #2A2E38;
+  --color-neutral-600: #3B404D;
+  --color-neutral-500: #5C6271;
+  --color-neutral-400: #8A90A0;
+  --color-neutral-300: #B4B9C7;
+  --color-neutral-200: #D8DCE5;
+  --color-neutral-100: #ECEEF3;
+  --color-neutral-50: #F6F7FA;
+
+  --font-display: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
+  --font-title: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-num: 'Bricolage Grotesque', 'Pretendard Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-brand-yellow: #FFC60A;
+  --color-brand-yellow-deep: #E8A900;
+  --color-brand-yellow-soft: #FFE082;
+  --color-brand-black: #14161B;
+  --color-brand-ink: #0B0C10;
+  --color-brand-white: #FFFFFF;
+
+  --color-accent-red: #FF3A3A;
+  --color-accent-red-deep: #C9141A;
+  --color-accent-blue: #2E7CF6;
+  --color-accent-blue-deep: #1D4FB3;
+  --color-accent-purple: #9146FF;
+  --color-accent-pink: #FF5DAA;
+  --color-accent-green: #2BD576;
+  --color-accent-orange: #FF8A1F;
+  --color-accent-cyan: #3DE0FF;
+
+  --color-neutral-950: #0B0C10;
+  --color-neutral-900: #14161B;
+  --color-neutral-800: #1E2128;
+  --color-neutral-700: #2A2E38;
+  --color-neutral-600: #3B404D;
+  --color-neutral-500: #5C6271;
+  --color-neutral-400: #8A90A0;
+  --color-neutral-300: #B4B9C7;
+  --color-neutral-200: #D8DCE5;
+  --color-neutral-100: #ECEEF3;
+  --color-neutral-50: #F6F7FA;
+
+  --bg: var(--color-neutral-50);
+  --bg-elev-1: #FFFFFF;
+  --bg-elev-2: #FFFFFF;
+  --bg-inverse: var(--color-neutral-900);
+  --bg-hero: var(--color-neutral-900);
+
+  --fg: var(--color-neutral-900);
+  --fg-muted: var(--color-neutral-500);
+  --fg-subtle: var(--color-neutral-400);
+  --fg-inverse: #FFFFFF;
+  --fg-brand: var(--color-brand-yellow);
+
+  --border: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-900);
+  --border-focus: var(--color-brand-yellow);
+
+  --success: var(--color-accent-green);
+  --danger: var(--color-accent-red);
+  --warning: var(--color-accent-orange);
+  --info: var(--color-accent-blue);
+
+  --result-win: var(--color-accent-green);
+  --result-loss: var(--color-accent-red);
+  --result-draw: var(--color-neutral-500);
+
+  --class-damage: #FF3A3A;
+  --class-tank: #9146FF;
+  --class-marksman: #FF8A1F;
+  --class-assassin: #FF5DAA;
+  --class-support: #2BD576;
+  --class-controller: #3DE0FF;
+  --class-artillery: #FFC60A;
+
+  --tier-bronze: #C77545;
+  --tier-silver: #9FAFC5;
+  --tier-gold: #F2B93B;
+  --tier-diamond: #58D7E8;
+  --tier-legendary: #B83BFF;
+  --tier-masters: #FF3A3A;
+  --tier-pro: #FFD447;
+
+  --rarity-common: #B4B9C7;
+  --rarity-rare: #2BD576;
+  --rarity-super-rare: #3DE0FF;
+  --rarity-epic: #9146FF;
+  --rarity-mythic: #FF3A3A;
+  --rarity-legendary: #FFC60A;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-pill: 999px;
+
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  --shadow-sticker: 0 3px 0 0 rgba(0,0,0,0.35);
+  --shadow-sticker-lg: 0 6px 0 0 rgba(0,0,0,0.35);
+  --shadow-card: 0 1px 2px rgba(20,22,27,0.06), 0 4px 12px rgba(20,22,27,0.08);
+  --shadow-card-lg: 0 2px 4px rgba(20,22,27,0.06), 0 12px 32px rgba(20,22,27,0.12);
+  --shadow-glow-yellow: 0 0 0 4px rgba(255,198,10,0.35);
+  --shadow-inset-hi: inset 0 2px 0 rgba(255,255,255,0.25);
+  --shadow-inset-lo: inset 0 -3px 0 rgba(0,0,0,0.25);
+
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+
+  --font-display: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
+  --font-title: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-num: 'Bricolage Grotesque', 'Pretendard Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 16px;
+  --fs-md: 18px;
+  --fs-lg: 20px;
+  --fs-xl: 24px;
+  --fs-2xl: 32px;
+  --fs-3xl: 44px;
+  --fs-4xl: 60px;
+  --fs-5xl: 84px;
+
+  --lh-tight: 1.1;
+  --lh-snug: 1.25;
+  --lh-base: 1.5;
+  --lh-loose: 1.7;
+
+  --tr-tight: -0.02em;
+  --tr-normal: 0;
+  --tr-loose: 0.04em;
+  --tr-caps: 0.12em;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Semantic type styles (from tokens.css) */
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-5xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-loose);
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--fg);
 }
+.t-h1 { font-family: var(--font-title); font-size: var(--fs-4xl); line-height: var(--lh-tight); letter-spacing: var(--tr-tight); font-weight: 400; }
+.t-h2 { font-family: var(--font-title); font-size: var(--fs-3xl); line-height: var(--lh-snug); letter-spacing: var(--tr-tight); font-weight: 400; }
+.t-h3 { font-family: var(--font-title); font-size: var(--fs-2xl); line-height: var(--lh-snug); font-weight: 400; }
+.t-h4 { font-family: var(--font-body); font-size: var(--fs-xl); line-height: var(--lh-snug); font-weight: 700; letter-spacing: var(--tr-tight); }
+.t-h5 { font-family: var(--font-body); font-size: var(--fs-lg); line-height: var(--lh-snug); font-weight: 700; }
+.t-body { font-family: var(--font-body); font-size: var(--fs-base); line-height: var(--lh-base); font-weight: 400; color: var(--fg); }
+.t-body-sm { font-family: var(--font-body); font-size: var(--fs-sm); line-height: var(--lh-base); font-weight: 400; }
+.t-caption { font-family: var(--font-body); font-size: var(--fs-xs); line-height: var(--lh-snug); font-weight: 500; color: var(--fg-muted); }
+.t-overline { font-family: var(--font-body); font-size: var(--fs-xs); line-height: 1; font-weight: 700; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--fg-muted); }
+.t-num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: var(--tr-tight); }
+.t-num-xl { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 800; font-size: var(--fs-3xl); line-height: 1; letter-spacing: var(--tr-tight); }
+.t-mono { font-family: var(--font-mono); font-size: var(--fs-sm); }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+body { font-family: var(--font-body); color: var(--fg); background: var(--bg); }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@import "./styles/app.css";
+@import "./styles/responsive.css";

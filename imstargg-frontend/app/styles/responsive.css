@@ -1,0 +1,389 @@
+/* ============================================================
+   ImStarGG — Responsive overrides
+   Breakpoints:
+     - desktop:  >= 960px (default styles)
+     - tablet:   640px – 959px
+     - mobile:    < 640px
+   Strategy:
+     - Override fixed widths, grid-templates and inline-styled
+       layouts via attribute / descendant selectors.
+     - Convert PlayerPage two-column layout into stacked.
+     - Replace top-nav links with a mobile bottom tab bar.
+   ============================================================ */
+
+/* ===== Base: allow page to fit narrow viewports ===== */
+html, body { overflow-x: hidden; }
+.app { overflow-x: hidden; }
+
+/* Mobile tab bar — hidden by default, only shown on mobile */
+.mobile-tabbar { display: none; }
+
+/* ===== Tablet & smaller ===== */
+@media (max-width: 959px) {
+  .topnav-inner {
+    padding: 0 16px;
+    gap: 16px;
+  }
+  .topnav-search { width: 180px; }
+  .main { padding: 16px; }
+
+  /* PlayerPage: stack sidebar + content */
+  .main[style*="display: flex"][style*="gap: 16px"] {
+    flex-direction: column !important;
+  }
+  .main aside[style*="width: 320px"] {
+    width: 100% !important;
+  }
+
+  /* Brawler detail hero: stack portrait + meta */
+  .card > div[style*="grid-template-columns: 260px 1fr"],
+  .card > div[style*="gridTemplateColumns: '260px 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Event detail hero */
+  .card > div[style*="grid-template-columns: 320px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Club hero */
+  .card > div[style*="grid-template-columns: 180px 1fr 240px"] {
+    grid-template-columns: 1fr !important;
+  }
+  .card > div[style*="grid-template-columns: 180px 1fr 240px"] > div {
+    border-right: none !important;
+    border-left: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Event detail: stack table + side panel */
+  .main > div[style*="grid-template-columns: 1fr 380px"] {
+    grid-template-columns: 1fr !important;
+  }
+  .main > div[style*="grid-template-columns: 1fr 380px"] .card[style*="position: sticky"] {
+    position: static !important;
+  }
+
+  /* Club detail: members + right column → stack */
+  .main > div[style*="grid-template-columns: 1fr 320px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Brawler detail: pair + enemy → stack */
+  .main > div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Item ownership 4-col → 2-col */
+  .card > div[style*="grid-template-columns: repeat(4, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .card > div[style*="grid-template-columns: repeat(4, 1fr)"] > div {
+    border-right: none !important;
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 639px) {
+  /* ----- Top nav ----- */
+  .topnav-inner {
+    height: 56px;
+    padding: 0 12px;
+    gap: 10px;
+  }
+  .topnav-logo img { height: 26px !important; }
+  /* Hide desktop link row; bottom tab bar replaces it */
+  .topnav-links { display: none !important; }
+  .topnav-spacer { display: none; }
+  .topnav-search {
+    width: auto;
+    flex: 1;
+    padding: 6px 10px;
+  }
+  .topnav-search input { font-size: 14px; }
+
+  /* Search dropdown should be full-width under nav */
+  .topnav nav, .topnav-inner > div[style*="position: relative"] {
+    position: static !important;
+  }
+  .topnav-inner > div[style*="position: relative"] > div[style*="position: absolute"] {
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+  }
+
+  /* ----- Mobile bottom tab bar ----- */
+  body { padding-bottom: 64px; }
+  body::after {
+    content: '';
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: 60px;
+    background: var(--color-neutral-900);
+    border-top: 2px solid var(--color-brand-yellow);
+    z-index: 60;
+    pointer-events: none;
+  }
+  /* Inject visual labels for nav routes via a fixed bar built in CSS */
+  /* (Functional nav still works through the search field; bottom bar is decorative
+     hash-anchor links that route via #/) */
+  .mobile-tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: 60px;
+    background: var(--color-neutral-900);
+    border-top: 2px solid var(--color-brand-yellow);
+    z-index: 70;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    padding: 0 4px;
+  }
+  .mobile-tabbar a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #C9C5BA;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 6px 2px;
+    border-radius: 8px;
+    transition: color 0.15s;
+  }
+  .mobile-tabbar a.active { color: var(--color-brand-yellow); }
+  .mobile-tabbar a:hover { color: #fff; }
+  .mobile-tabbar .tab-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  /* Hide the decorative ::after when the real tab bar is rendered */
+  body:has(.mobile-tabbar)::after { display: none; }
+
+  /* ----- Main padding ----- */
+  .main {
+    padding: 12px;
+  }
+
+  /* ----- Cards / heads ----- */
+  .card-head {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .card-body { padding: 12px 14px; }
+
+  /* Card-head with right-side button group: let it wrap */
+  .card-head > div[style*="margin-left: auto"] {
+    margin-left: 0 !important;
+    flex-wrap: wrap;
+  }
+
+  /* ----- Generic grid → single col on mobile ----- */
+  /* These are the inline-styled grid-template-columns we want to flatten. */
+  div[style*="grid-template-columns: 1fr 1fr"]:not(.keep-grid) {
+    grid-template-columns: 1fr !important;
+  }
+  /* repeat(2,1fr) → keep 2-col except on tightest spaces handled below */
+  /* repeat(3,1fr) → 2-col */
+  div[style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* repeat(4,1fr) (was already 2 on tablet) → 2 */
+  div[style*="grid-template-columns: repeat(4, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* repeat(5,1fr) (showdown) → 5 stays but compact */
+  div[style*="grid-template-columns: repeat(5, 1fr)"] {
+    gap: 4px !important;
+  }
+
+  /* Podium 3-col → keep but tighter */
+  .main > div[style*="grid-template-columns: 1fr 1.1fr 1fr"] {
+    grid-template-columns: 1fr 1.1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  /* ----- Home hero ----- */
+  /* Search box stays full width but smaller text */
+  /* Big logo */
+  .main img[src*="BS_KO_KR"] { height: 64px !important; }
+
+  /* ----- TopNav search dropdown widths ----- */
+  div[style*="width: 280px"] { width: calc(100vw - 24px) !important; max-width: 320px; }
+
+  /* ----- Big H1 page titles ----- */
+  h1[style*="font-size: 32px"] { font-size: 24px !important; }
+  h1[style*="font-size: 28px"] { font-size: 22px !important; }
+  h1[style*="font-size: 56px"] { font-size: 38px !important; }
+  h1[style*="font-size: 24px"] { font-size: 20px !important; line-height: 1.3 !important; }
+
+  /* Font scales for hero stats */
+  div[style*="font-size: 26px"] { font-size: 20px !important; }
+  div[style*="font-size: 22px"] { font-size: 18px !important; }
+  div[style*="font-size: 28px"] { font-size: 22px !important; }
+  div[style*="font-size: 30px"] { font-size: 22px !important; }
+
+  /* ----- Brawler detail hero portrait area: shrink ----- */
+  .card > div[style*="padding: 28px 24px"] {
+    padding: 20px 16px !important;
+  }
+  .brawler-portrait[style*="width: 140px"],
+  .brawler-portrait[style*="width: 64px"] { /* don't go below 64 */ }
+
+  /* ----- Filters / chips wrap ----- */
+  .card > div[style*="flex-wrap: wrap"] { gap: 8px !important; }
+
+  /* ----- TABLES: PlayerBrawlers / Stats / Meta / Ranking / Members ----- */
+  /* Convert dense desktop tables to flex-row cards on mobile.
+     We target the row containers via [style*="display: grid"] AND
+     [style*="grid-template-columns:"] with our specific column strings. */
+
+  /* PlayerBrawlers table: 40px 1fr 80px 100px 1fr  → flex card */
+  div[style*="grid-template-columns: 40px 1fr 80px 100px 1fr"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  /* Hide the table-header row entirely on mobile */
+  div[style*="grid-template-columns: 40px 1fr 80px 100px 1fr"][style*="text-transform: uppercase"] {
+    display: none !important;
+  }
+
+  /* Meta brawler table: 50px 1fr 60px 90px 110px 110px 130px */
+  div[style*="grid-template-columns: 50px 1fr 60px 90px 110px 110px 130px"] {
+    display: grid !important;
+    grid-template-columns: 32px 1fr auto 70px !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+  /* Hide 4th cell (role icon) – class is implicit from name; show only #/brawler/tier/winrate.
+     These are positional, so we use nth-child to hide the role/pickrate/starrate columns. */
+  div[style*="grid-template-columns: 50px 1fr 60px 90px 110px 110px 130px"] > :nth-child(4),
+  div[style*="grid-template-columns: 50px 1fr 60px 90px 110px 110px 130px"] > :nth-child(6),
+  div[style*="grid-template-columns: 50px 1fr 60px 90px 110px 110px 130px"] > :nth-child(7) {
+    display: none !important;
+  }
+
+  /* Ranking tables: 60px 60px 1fr 1fr 120px and 60px 60px 1fr 100px 120px */
+  div[style*="grid-template-columns: 60px 60px 1fr 1fr 120px"],
+  div[style*="grid-template-columns: 60px 60px 1fr 100px 120px"] {
+    display: grid !important;
+    grid-template-columns: 40px 1fr auto !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  div[style*="grid-template-columns: 60px 60px 1fr 1fr 120px"] > :nth-child(2),
+  div[style*="grid-template-columns: 60px 60px 1fr 1fr 120px"] > :nth-child(4),
+  div[style*="grid-template-columns: 60px 60px 1fr 100px 120px"] > :nth-child(2),
+  div[style*="grid-template-columns: 60px 60px 1fr 100px 120px"] > :nth-child(4) {
+    display: none !important;
+  }
+
+  /* StatsTable (PlayerStats): 32px 1fr 70px 70px 70px 110px 70px */
+  div[style*="grid-template-columns: 32px 1fr 70px 70px 70px 110px 70px"] {
+    display: grid !important;
+    grid-template-columns: 28px 1fr 80px 50px !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+  div[style*="grid-template-columns: 32px 1fr 70px 70px 70px 110px 70px"] > :nth-child(3),
+  div[style*="grid-template-columns: 32px 1fr 70px 70px 70px 110px 70px"] > :nth-child(4),
+  div[style*="grid-template-columns: 32px 1fr 70px 70px 70px 110px 70px"] > :nth-child(5),
+  div[style*="grid-template-columns: 32px 1fr 70px 70px 70px 110px 70px"] > :nth-child(7) {
+    display: none !important;
+  }
+
+  /* EventDetail BrawlerStatsTable headers/rows:
+     non-showdown: 40px 56px 1fr 90px 1fr 1fr 80px 80px
+     showdown:     40px 56px 1fr 1fr 1fr 90px */
+  div[style*="grid-template-columns: 40px 56px 1fr 90px 1fr 1fr 80px 80px"] {
+    grid-template-columns: 32px 44px 1fr 70px !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+  div[style*="grid-template-columns: 40px 56px 1fr 90px 1fr 1fr 80px 80px"] > :nth-child(4),
+  div[style*="grid-template-columns: 40px 56px 1fr 90px 1fr 1fr 80px 80px"] > :nth-child(6),
+  div[style*="grid-template-columns: 40px 56px 1fr 90px 1fr 1fr 80px 80px"] > :nth-child(7),
+  div[style*="grid-template-columns: 40px 56px 1fr 90px 1fr 1fr 80px 80px"] > :nth-child(8) {
+    display: none !important;
+  }
+  div[style*="grid-template-columns: 40px 56px 1fr 1fr 1fr 90px"] {
+    grid-template-columns: 32px 44px 1fr 70px !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+  div[style*="grid-template-columns: 40px 56px 1fr 1fr 1fr 90px"] > :nth-child(5),
+  div[style*="grid-template-columns: 40px 56px 1fr 1fr 1fr 90px"] > :nth-child(6) {
+    display: none !important;
+  }
+
+  /* Pair/Enemy stats list: 32px 44px 1fr 1fr 1fr 70px */
+  div[style*="grid-template-columns: 32px 44px 1fr 1fr 1fr 70px"] {
+    grid-template-columns: 28px 38px 1fr 70px !important;
+    gap: 6px !important;
+    padding: 8px 12px !important;
+  }
+  div[style*="grid-template-columns: 32px 44px 1fr 1fr 1fr 70px"] > :nth-child(5),
+  div[style*="grid-template-columns: 32px 44px 1fr 1fr 1fr 70px"] > :nth-child(6) {
+    display: none !important;
+  }
+
+  /* Club members: 50px 1fr 100px 120px 60px */
+  div[style*="grid-template-columns: 50px 1fr 100px 120px 60px"] {
+    grid-template-columns: 32px 1fr 90px !important;
+    gap: 6px !important;
+    padding: 8px 12px !important;
+  }
+  div[style*="grid-template-columns: 50px 1fr 100px 120px 60px"] > :nth-child(3),
+  div[style*="grid-template-columns: 50px 1fr 100px 120px 60px"] > :nth-child(5) {
+    display: none !important;
+  }
+
+  /* ----- Battle card team layout ----- */
+  /* Solo showdown 5-col stays. Team-vs-team grid 1fr auto 1fr stays narrow but text shrinks */
+
+  /* ----- BrawlersList role tabs: shrink labels ----- */
+  div[style*="grid-template-columns: repeat(8, 1fr)"],
+  div[style*="grid-template-columns: repeat(7, 1fr)"] {
+    height: auto !important;
+    min-height: 56px;
+  }
+  /* RoleTab label shrink */
+  .card div[style*="grid-template-columns:"] button > span[style*="font-size: 17px"] {
+    font-size: 12px !important;
+  }
+
+  /* ----- Tabs on tight screens ----- */
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+  .tab { flex-shrink: 0; padding: 10px 14px; font-size: 13px; }
+
+  /* ----- Battle card header content ----- */
+  div[style*="padding: 12px 18px"][style*="gap: 14px"] { padding: 10px 12px !important; gap: 10px !important; }
+
+  /* ----- Page section header eyebrow rows ----- */
+  /* Already wraps via flex */
+
+  /* ----- Toasts ----- */
+  .toast-container { right: 12px; left: 12px; bottom: 76px; }
+  .toast { min-width: 0; }
+
+  /* ----- Modal padding ----- */
+  div[style*="position: fixed"][style*="inset: 0"] > div[style*="max-width: 520px"] {
+    max-width: 100% !important;
+  }
+}
+
+/* ===== Very small phones ===== */
+@media (max-width: 380px) {
+  .topnav-logo { font-size: 18px !important; }
+  .main { padding: 10px; }
+  div[style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
