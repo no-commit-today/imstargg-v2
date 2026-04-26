@@ -49,8 +49,9 @@ BEGIN
                     part_name, tbl_name, target_date, bound_date
                 );
                 -- default 파티션에서 새 파티션 범위에 해당하는 데이터 이동
+                -- ID 컬럼이 GENERATED ALWAYS AS IDENTITY 이므로 OVERRIDING SYSTEM VALUE 로 기존 ID 보존
                 EXECUTE format(
-                    'INSERT INTO %I SELECT * FROM %I WHERE battle_date >= %L AND battle_date < %L',
+                    'INSERT INTO %I OVERRIDING SYSTEM VALUE SELECT * FROM %I WHERE battle_date >= %L AND battle_date < %L',
                     part_name, tbl_name || '_default', target_date, bound_date
                 );
                 EXECUTE format(
