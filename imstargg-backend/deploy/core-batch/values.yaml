@@ -12,6 +12,56 @@ nct-chart:
     enabled: false
 
   cronjobs:
+    - name: partition-manage
+      schedule: "0 2 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=partitionManageJob date=$(date +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: battle-event-mode-sync
+      schedule: "0 8 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=battleEventModeSyncJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
     - name: battle-event-rotation-sync
       schedule: "0 * * * *"
       image:
@@ -23,6 +73,106 @@ nct-chart:
         - -c
       args:
         - "java -jar /app/app.jar --job.name=battleEventRotationSyncJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: battle-event-sync
+      schedule: "0 8 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=battleEventSyncJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: brawler-ranking-collect
+      schedule: "*/30 * * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerRankingCollectJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: club-ranking-collect
+      schedule: "*/30 * * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=clubRankingCollectJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: player-ranking-collect
+      schedule: "*/30 * * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=playerRankingCollectJob"
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
@@ -63,7 +213,7 @@ nct-chart:
           memory: 2Gi
 
     - name: brawler-battle-result-stats
-      schedule: "0 2 * * *"
+      schedule: "30 2 * * *"
       image:
         repository: ghcr.io/nocommittoday/imstargg/core-batch
         tag: ""
@@ -73,6 +223,106 @@ nct-chart:
         - -c
       args:
         - "java -jar /app/app.jar --job.name=brawlerBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: brawler-item-ownership-stats
+      schedule: "0 8 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerItemOwnershipStatsJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: brawler-item-ownership-stats-job
+      schedule: "0 10 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerItemOwnershipStatsJob"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: stats-player-sync
+      schedule: "0 9 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=statsPlayerSyncJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: stats-player-sync-from-ranking
+      schedule: "0 9 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=statsPlayerSyncFromRankingJob"
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
