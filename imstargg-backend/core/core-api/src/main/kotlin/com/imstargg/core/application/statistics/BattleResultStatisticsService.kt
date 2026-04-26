@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.brawlstars.BrawlStarsIds
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
@@ -54,11 +55,10 @@ class BattleResultStatisticsService(
             )
         }
         val (startDate, endDate) = dateRange.dateRange(clock)
-        val sortedBrawlerIds = brawlerIds.sortedBy { it.value }
         val counts =
             resultRepository.findBrawlerTeamResult(
                 eventId = eventId,
-                brawlerIds = sortedBrawlerIds,
+                brawlerIds = BrawlStarsIds.of(brawlerIds),
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,

@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.brawlstars.BrawlStarsIds
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
@@ -116,7 +117,7 @@ class BattleResultStatisticsRepository(
 
     fun findBrawlerTeamResultCounts(
         eventId: BrawlStarsId?,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -131,7 +132,7 @@ class BattleResultStatisticsRepository(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                brawlerBrawlStarsIds = brawlerIds.map { it.value },
+                brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
                 teamSize = teamSize,
                 sortBy = sortField,
                 sortOrder = sortOrder,
@@ -151,7 +152,7 @@ class BattleResultStatisticsRepository(
 
     fun countTeamResultTotalBattleCount(
         eventId: BrawlStarsId?,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -162,13 +163,13 @@ class BattleResultStatisticsRepository(
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
-            brawlerBrawlStarsIds = brawlerIds.map { it.value },
+            brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
             teamSize = teamSize,
         )
 
     fun countTeamResultBy(
         eventId: BrawlStarsId?,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -179,7 +180,7 @@ class BattleResultStatisticsRepository(
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
-            brawlerBrawlStarsIds = brawlerIds.map { it.value },
+            brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
             teamSize = teamSize,
         )
 

@@ -3,6 +3,7 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.brawlstars.BrawlStarsIds
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.enums.ResultStatsSortBy
@@ -91,8 +92,7 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'v1:teamResult:' + #eventId" +
-                " + ':' + T(com.imstargg.core.application.statistics.StatisticsCacheKeys).joinIds(#brawlerIds)" +
+            "'v1:teamResult:' + #eventId + ':' + #brawlerIds.key()" +
                 " + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
                 " + ':' + #teamSize + ':' + #sortField + ':' + #sortOrder" +
                 " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
@@ -100,7 +100,7 @@ class BattleResultStatisticsRepositoryWithCache(
     )
     fun findBrawlerTeamResult(
         eventId: BrawlStarsId?,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,

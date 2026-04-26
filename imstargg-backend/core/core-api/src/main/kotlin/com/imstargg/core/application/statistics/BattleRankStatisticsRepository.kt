@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.brawlstars.BrawlStarsIds
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerTeamRankStatisticsItem
 import com.imstargg.core.enums.RankStatsSortBy
@@ -42,7 +43,7 @@ class BattleRankStatisticsRepository(
 
     fun findBrawlerTeamRankCounts(
         eventId: BrawlStarsId,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -57,7 +58,7 @@ class BattleRankStatisticsRepository(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                brawlerBrawlStarsIds = brawlerIds.map { it.value },
+                brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
                 teamSize = teamSize,
                 sortBy = sortField,
                 sortOrder = sortOrder,
@@ -78,7 +79,7 @@ class BattleRankStatisticsRepository(
 
     fun countTeamRankTotalBattleCount(
         eventId: BrawlStarsId,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -89,13 +90,13 @@ class BattleRankStatisticsRepository(
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
-            brawlerBrawlStarsIds = brawlerIds.map { it.value },
+            brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
             teamSize = teamSize,
         )
 
     fun countTeamRankBy(
         eventId: BrawlStarsId,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerIds: BrawlStarsIds,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -106,7 +107,7 @@ class BattleRankStatisticsRepository(
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
-            brawlerBrawlStarsIds = brawlerIds.map { it.value },
+            brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
             teamSize = teamSize,
         )
 }
