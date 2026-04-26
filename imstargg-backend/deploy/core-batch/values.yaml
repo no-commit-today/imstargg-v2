@@ -237,6 +237,81 @@ nct-chart:
           cpu: 1000m
           memory: 2Gi
 
+    - name: brawler-enemy-battle-result-stats
+      schedule: "45 2 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerEnemyBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: brawler-pair-battle-rank-stats
+      schedule: "0 3 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerPairBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
+    - name: brawler-pair-battle-result-stats
+      schedule: "30 3 * * *"
+      image:
+        repository: ghcr.io/nocommittoday/imstargg/core-batch
+        tag: ""
+        pullPolicy: Always
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - "java -jar /app/app.jar --job.name=brawlerPairBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+
     - name: brawler-item-ownership-stats
       schedule: "0 8 * * *"
       image:
