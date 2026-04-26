@@ -56,8 +56,9 @@ class PartitionManageJobConfig(
             .tasklet({ _, _ ->
                 val date = dateJobParameter().date!!
                 log.info("파티션 생성 시작. date={}, daysAhead={}", date, DAYS_AHEAD)
-                jdbcTemplate.update(
+                jdbcTemplate.queryForObject(
                     "SELECT create_partitions(?, ?)",
+                    Any::class.java,
                     Date.valueOf(date),
                     DAYS_AHEAD,
                 )
@@ -73,8 +74,9 @@ class PartitionManageJobConfig(
             .tasklet({ _, _ ->
                 val date = dateJobParameter().date!!
                 log.info("오래된 파티션 삭제 시작. date={}, retentionDays={}", date, RETENTION_DAYS)
-                jdbcTemplate.update(
+                jdbcTemplate.queryForObject(
                     "SELECT drop_old_partitions(?, ?)",
+                    Any::class.java,
                     Date.valueOf(date),
                     RETENTION_DAYS,
                 )
