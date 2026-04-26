@@ -24,7 +24,6 @@ create table if not exists brawler_enemy_battle_result_stats
     created_at                           timestamptz  not null default now(),
     updated_at                           timestamptz  not null default now()
 );
-create index if not exists ix_brawler_enemy_battle_result_stats_1 on brawler_enemy_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date);
 create index if not exists ix_brawler_enemy_battle_result_stats_2 on brawler_enemy_battle_result_stats (brawler_brawlstars_id, tier_range, start_battle_date, end_battle_date);
 
 create table if not exists brawler_team_battle_result_stats

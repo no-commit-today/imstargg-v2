@@ -2,16 +2,12 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.brawlstars.BrawlStarsIds
+import com.imstargg.core.domain.statistics.BrawlerPairRankStatistics
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
-import com.imstargg.core.domain.statistics.BrawlerTeamRankStatistics
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
-import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.core.error.CoreException
-import com.imstargg.core.error.ErrorType
 import org.springframework.stereotype.Service
 import java.time.Clock
 
@@ -31,36 +27,30 @@ class BattleRankStatisticsService(
             .map { it.toStatistics() }
     }
 
-    fun getBrawlerTeamRankStatistics(
+    fun getBrawlerPairRankStatistics(
         eventId: BrawlStarsId,
-        brawlerIds: List<BrawlStarsId>,
+        brawlerId: BrawlStarsId,
+        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        teamSize: StatsTeamSize,
         sortBy: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): BrawlerTeamRankStatistics {
-        if (brawlerIds.size > teamSize.value) {
-            throw CoreException(
-                ErrorType.INVALID_REQUEST,
-                "brawlerIds.size(${brawlerIds.size}) > teamSize(${teamSize.value})",
-            )
-        }
+    ): BrawlerPairRankStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         val counts =
-            rankRepository.findBrawlerTeamRank(
+            rankRepository.findBrawlerPairRank(
                 eventId = eventId,
-                brawlerIds = BrawlStarsIds.of(brawlerIds),
+                brawlerId = brawlerId,
+                pairBrawlerId = pairBrawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                teamSize = teamSize,
                 sortField = sortBy,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
-        return BrawlerTeamRankStatistics(
+        return BrawlerPairRankStatistics(
             totalBattleCount = counts.totalBattleCount,
             totalElementCount = counts.totalElementCount,
             items = counts.items,

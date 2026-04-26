@@ -413,76 +413,121 @@ create table if not exists brawler_enemy_battle_result_stats
     created_at                           timestamptz  not null default now(),
     updated_at                           timestamptz  not null default now()
 );
-create index if not exists ix_brawler_enemy_battle_result_stats_1 on brawler_enemy_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date);
 create index if not exists ix_brawler_enemy_battle_result_stats_2 on brawler_enemy_battle_result_stats (brawler_brawlstars_id, tier_range, start_battle_date, end_battle_date);
 create unique index if not exists uk_brawler_enemy_battle_result_stats__1
     on brawler_enemy_battle_result_stats (
-        event_brawlstars_id, tier_range, start_battle_date, end_battle_date,
+        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
         brawler_brawlstars_id, enemy_brawler_brawlstars_id
     );
 
--- 브롤러 팀 전투 결과 통계
-create table if not exists brawler_team_battle_result_stats
+-- 브롤러 pair 전투 결과 통계 (기준 브롤러 관점의 방향성 팀원 통계)
+create table if not exists brawler_pair_battle_result_stats
 (
-    brawler_team_battle_result_stats_id bigint generated always as identity primary key,
-    event_brawlstars_id                 bigint       not null,
-    tier_range                          varchar(45)  not null,
-    start_battle_date                   date         not null,
-    end_battle_date                     date         not null,
-    team_size                           int          not null,
-    team_key                            varchar(100) not null,
-    victory_count                       bigint       not null,
-    defeat_count                        bigint       not null,
-    draw_count                          bigint       not null,
-    total_count                         bigint       not null,
-    created_at                          timestamptz  not null default now(),
-    updated_at                          timestamptz  not null default now()
+    brawler_pair_battle_result_stats_id bigint generated always as identity primary key,
+    event_brawlstars_id                 bigint      not null,
+    tier_range                          varchar(45) not null,
+    start_battle_date                   date        not null,
+    end_battle_date                     date        not null,
+    brawler_brawlstars_id               bigint      not null,
+    pair_brawler_brawlstars_id          bigint      not null,
+    victory_count                       bigint      not null,
+    defeat_count                        bigint      not null,
+    draw_count                          bigint      not null,
+    total_count                         bigint      not null,
+    created_at                          timestamptz not null default now(),
+    updated_at                          timestamptz not null default now(),
+    constraint ck_brawler_pair_battle_result_stats_distinct_brawler
+        check (brawler_brawlstars_id <> pair_brawler_brawlstars_id)
 );
-create index if not exists ix_brawler_team_battle_result_stats_1 on brawler_team_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date);
-create index if not exists ix_brawler_team_battle_result_stats_2 on brawler_team_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_size, team_key);
-create unique index if not exists uk_brawler_team_battle_result_stats__1
-    on brawler_team_battle_result_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_key);
+create index if not exists ix_brawler_pair_battle_result_stats_2 on brawler_pair_battle_result_stats (brawler_brawlstars_id, tier_range, start_battle_date, end_battle_date);
+create unique index if not exists uk_brawler_pair_battle_result_stats__1
+    on brawler_pair_battle_result_stats (
+        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
+        brawler_brawlstars_id, pair_brawler_brawlstars_id
+    );
 
-create table if not exists brawler_team_battle_result_stats_brawler
+-- 브롤러 pair 전투 랭크 통계 (기준 브롤러 관점의 방향성 팀원 통계)
+create table if not exists brawler_pair_battle_rank_stats
 (
-    brawler_team_battle_result_stats_brawler_id bigint generated always as identity primary key,
-    brawler_team_battle_result_stats_id          bigint       not null,
-    brawler_brawlstars_id                        bigint       not null,
-    created_at                                   timestamptz  not null default now(),
-    updated_at                                   timestamptz  not null default now()
+    brawler_pair_battle_rank_stats_id bigint generated always as identity primary key,
+    event_brawlstars_id               bigint      not null,
+    tier_range                        varchar(45) not null,
+    start_battle_date                 date        not null,
+    end_battle_date                   date        not null,
+    brawler_brawlstars_id             bigint      not null,
+    pair_brawler_brawlstars_id        bigint      not null,
+    rank_counts                       jsonb       not null,
+    total_count                       bigint      not null,
+    weighted_rank_sum                 bigint      not null,
+    created_at                        timestamptz not null default now(),
+    updated_at                        timestamptz not null default now(),
+    constraint ck_brawler_pair_battle_rank_stats_distinct_brawler
+        check (brawler_brawlstars_id <> pair_brawler_brawlstars_id)
 );
-create index if not exists ix_brawler_team_battle_result_stats_brawler_1 on brawler_team_battle_result_stats_brawler (brawler_brawlstars_id, brawler_team_battle_result_stats_id);
+create unique index if not exists uk_brawler_pair_battle_rank_stats__1
+    on brawler_pair_battle_rank_stats (
+        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
+        brawler_brawlstars_id, pair_brawler_brawlstars_id
+    );
 
--- 브롤러 팀 전투 랭크 통계
-create table if not exists brawler_team_battle_rank_stats
+-- 브롤러 trio 전투 결과 통계 (현재 API/배치 미제공)
+create table if not exists brawler_trio_battle_result_stats
 (
-    brawler_team_battle_rank_stats_id bigint generated always as identity primary key,
-    event_brawlstars_id               bigint       not null,
-    tier_range                        varchar(45)  not null,
-    start_battle_date                 date         not null,
-    end_battle_date                   date         not null,
-    team_size                         int          not null,
-    team_key                          varchar(100) not null,
-    rank_counts                       jsonb        not null,
-    total_count                       bigint       not null,
-    weighted_rank_sum                 bigint       not null,
-    created_at                        timestamptz  not null default now(),
-    updated_at                        timestamptz  not null default now()
+    brawler_trio_battle_result_stats_id bigint generated always as identity primary key,
+    event_brawlstars_id                 bigint      not null,
+    tier_range                          varchar(45) not null,
+    start_battle_date                   date        not null,
+    end_battle_date                     date        not null,
+    brawler_brawlstars_id               bigint      not null,
+    pair_brawler1_brawlstars_id         bigint      not null,
+    pair_brawler2_brawlstars_id         bigint      not null,
+    victory_count                       bigint      not null,
+    defeat_count                        bigint      not null,
+    draw_count                          bigint      not null,
+    total_count                         bigint      not null,
+    created_at                          timestamptz not null default now(),
+    updated_at                          timestamptz not null default now(),
+    constraint ck_brawler_trio_battle_result_stats_distinct_brawler
+        check (
+            brawler_brawlstars_id <> pair_brawler1_brawlstars_id
+            and brawler_brawlstars_id <> pair_brawler2_brawlstars_id
+            and pair_brawler1_brawlstars_id < pair_brawler2_brawlstars_id
+        )
 );
-create index if not exists ix_brawler_team_battle_rank_stats_1 on brawler_team_battle_rank_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date);
-create index if not exists ix_brawler_team_battle_rank_stats_2 on brawler_team_battle_rank_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_size, team_key);
-create unique index if not exists uk_brawler_team_battle_rank_stats__1
-    on brawler_team_battle_rank_stats (event_brawlstars_id, tier_range, start_battle_date, end_battle_date, team_key);
+create unique index if not exists uk_brawler_trio_battle_result_stats__1
+    on brawler_trio_battle_result_stats (
+        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
+        brawler_brawlstars_id, pair_brawler1_brawlstars_id, pair_brawler2_brawlstars_id
+    );
 
-create table if not exists brawler_team_battle_rank_stats_brawler
+-- 브롤러 trio 전투 랭크 통계 (현재 API/배치 미제공)
+create table if not exists brawler_trio_battle_rank_stats
 (
-    brawler_team_battle_rank_stats_brawler_id bigint generated always as identity primary key,
-    brawler_team_battle_rank_stats_id          bigint       not null,
-    brawler_brawlstars_id                      bigint       not null,
-    created_at                                 timestamptz  not null default now(),
-    updated_at                                 timestamptz  not null default now()
+    brawler_trio_battle_rank_stats_id bigint generated always as identity primary key,
+    event_brawlstars_id               bigint      not null,
+    tier_range                        varchar(45) not null,
+    start_battle_date                 date        not null,
+    end_battle_date                   date        not null,
+    brawler_brawlstars_id             bigint      not null,
+    pair_brawler1_brawlstars_id       bigint      not null,
+    pair_brawler2_brawlstars_id       bigint      not null,
+    rank_counts                       jsonb       not null,
+    total_count                       bigint      not null,
+    weighted_rank_sum                 bigint      not null,
+    created_at                        timestamptz not null default now(),
+    updated_at                        timestamptz not null default now(),
+    constraint ck_brawler_trio_battle_rank_stats_distinct_brawler
+        check (
+            brawler_brawlstars_id <> pair_brawler1_brawlstars_id
+            and brawler_brawlstars_id <> pair_brawler2_brawlstars_id
+            and pair_brawler1_brawlstars_id < pair_brawler2_brawlstars_id
+        )
 );
-create index if not exists ix_brawler_team_battle_rank_stats_brawler_1 on brawler_team_battle_rank_stats_brawler (brawler_brawlstars_id, brawler_team_battle_rank_stats_id);
+create unique index if not exists uk_brawler_trio_battle_rank_stats__1
+    on brawler_trio_battle_rank_stats (
+        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
+        brawler_brawlstars_id, pair_brawler1_brawlstars_id, pair_brawler2_brawlstars_id
+    );
 
 create table if not exists battle_event_rotation
 (

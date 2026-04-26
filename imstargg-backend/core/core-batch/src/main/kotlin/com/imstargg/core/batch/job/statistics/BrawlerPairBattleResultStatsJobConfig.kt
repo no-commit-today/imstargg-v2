@@ -1,13 +1,10 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerTeamBattleResultStatsAggregator
+import com.imstargg.core.batch.domain.BrawlerPairBattleResultStatsAggregator
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.enums.StatsWeekRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTeamBattleResultStatsBrawlerEntity
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsBrawlerEntity.Companion.brawlerTeamBattleResultStatsBrawlerEntity
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerTeamBattleResultStatsEntity.Companion.brawlerTeamBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerPairBattleResultStatsEntity.Companion.brawlerPairBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
-import com.querydsl.jpa.JPAExpressions
 import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
@@ -21,15 +18,15 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class BrawlerTeamBattleResultStatsJobConfig(
+class BrawlerPairBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val em: EntityManager,
 ) {
     companion object {
-        const val JOB_NAME = "brawlerTeamBattleResultStatsJob"
-        const val DATE_PARAMETER_NAME = "brawlerTeamBattleResultStatsJobDateJobParameter"
-        private const val STEP_NAME = "brawlerTeamBattleResultStatsStep"
+        const val JOB_NAME = "brawlerPairBattleResultStatsJob"
+        const val DATE_PARAMETER_NAME = "brawlerPairBattleResultStatsJobDateJobParameter"
+        private const val STEP_NAME = "brawlerPairBattleResultStatsStep"
     }
 
     @Bean(DATE_PARAMETER_NAME)
@@ -37,19 +34,19 @@ class BrawlerTeamBattleResultStatsJobConfig(
     fun dateJobParameter() = DateJobParameter()
 
     @Bean(JOB_NAME)
-    fun brawlerTeamBattleResultStatsJob(): Job =
+    fun brawlerPairBattleResultStatsJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
             .validator(
                 DefaultJobParametersValidator(
                     arrayOf(DateJobParameter.KEY),
                     arrayOf(),
                 ),
-            ).start(brawlerTeamBattleResultStatsStep())
+            ).start(brawlerPairBattleResultStatsStep())
             .build()
 
     @Bean(STEP_NAME)
     @JobScope
-    fun brawlerTeamBattleResultStatsStep(): Step =
+    fun brawlerPairBattleResultStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 PerEventWeeklyBattleStatsTasklet(
@@ -79,47 +76,19 @@ class BrawlerTeamBattleResultStatsJobConfig(
                     },
                     getId = { it.id!! },
                     aggregatorFactory = { weekRange ->
-                        BrawlerTeamBattleResultStatsAggregator(
+                        BrawlerPairBattleResultStatsAggregator(
                             startBattleDate = weekRange.start,
                             endBattleDate = weekRange.end,
                         )
                     },
                     deleteExisting = { queryFactory, weekRange, eventBrawlStarsId ->
                         queryFactory
-                            .delete(brawlerTeamBattleResultStatsBrawlerEntity)
+                            .delete(brawlerPairBattleResultStatsEntity)
                             .where(
-                                brawlerTeamBattleResultStatsBrawlerEntity.stats.id.`in`(
-                                    JPAExpressions
-                                        .select(brawlerTeamBattleResultStatsEntity.id)
-                                        .from(brawlerTeamBattleResultStatsEntity)
-                                        .where(
-                                            brawlerTeamBattleResultStatsEntity.startBattleDate
-                                                .eq(weekRange.start),
-                                            brawlerTeamBattleResultStatsEntity.endBattleDate
-                                                .eq(weekRange.end),
-                                            brawlerTeamBattleResultStatsEntity.eventBrawlStarsId
-                                                .eq(eventBrawlStarsId),
-                                        ),
-                                ),
+                                brawlerPairBattleResultStatsEntity.startBattleDate.eq(weekRange.start),
+                                brawlerPairBattleResultStatsEntity.endBattleDate.eq(weekRange.end),
+                                brawlerPairBattleResultStatsEntity.eventBrawlStarsId.eq(eventBrawlStarsId),
                             ).execute()
-                        queryFactory
-                            .delete(brawlerTeamBattleResultStatsEntity)
-                            .where(
-                                brawlerTeamBattleResultStatsEntity.startBattleDate.eq(weekRange.start),
-                                brawlerTeamBattleResultStatsEntity.endBattleDate.eq(weekRange.end),
-                                brawlerTeamBattleResultStatsEntity.eventBrawlStarsId
-                                    .eq(eventBrawlStarsId),
-                            ).execute()
-                    },
-                    persistAdditional = { em, parent ->
-                        parent.brawlerTeam.brawlerBrawlStarsIds.forEach { brawlerId ->
-                            em.persist(
-                                BrawlerTeamBattleResultStatsBrawlerEntity(
-                                    stats = parent,
-                                    brawlerBrawlStarsId = brawlerId,
-                                ),
-                            )
-                        }
                     },
                 ),
                 txManager,

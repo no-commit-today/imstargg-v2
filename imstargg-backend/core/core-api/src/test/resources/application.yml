@@ -21,6 +21,15 @@ spring:
         await-termination: true
         await-termination-period: 10000
 
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: false
+    tracing:
+      export:
+        enabled: false
+
 app:
   aws:
     sqs:

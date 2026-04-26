@@ -14,6 +14,6 @@ create unique index if not exists uk_brawler_team_battle_rank_stats__1
 
 create unique index if not exists uk_brawler_enemy_battle_result_stats__1
     on brawler_enemy_battle_result_stats (
-        event_brawlstars_id, tier_range, start_battle_date, end_battle_date,
+        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
         brawler_brawlstars_id, enemy_brawler_brawlstars_id
     );

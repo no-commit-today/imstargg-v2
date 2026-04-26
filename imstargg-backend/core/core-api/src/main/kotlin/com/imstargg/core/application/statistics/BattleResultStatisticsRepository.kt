@@ -2,19 +2,17 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.brawlstars.BrawlStarsIds
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
+import com.imstargg.core.domain.statistics.BrawlerPairResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
-import com.imstargg.core.domain.statistics.BrawlerTeamResultCount
 import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
-import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTeamBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -24,7 +22,7 @@ import java.time.LocalDate
 class BattleResultStatisticsRepository(
     private val battleResultJpaRepository: BrawlerBattleResultStatsJpaRepository,
     private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
-    private val teamBattleResultJpaRepository: BrawlerTeamBattleResultStatsJpaRepository,
+    private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
 ) {
     fun findBrawlerResultCounts(
         eventId: BrawlStarsId?,
@@ -115,32 +113,33 @@ class BattleResultStatisticsRepository(
             endDate = endDate,
         )
 
-    fun findBrawlerTeamResultCounts(
+    fun findBrawlerPairResultCounts(
         eventId: BrawlStarsId?,
-        brawlerIds: BrawlStarsIds,
+        brawlerId: BrawlStarsId,
+        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        teamSize: StatsTeamSize,
         sortField: ResultStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): List<BrawlerTeamResultCount> =
-        teamBattleResultJpaRepository
+    ): List<BrawlerPairResultCount> =
+        pairBattleResultJpaRepository
             .findPagedByConditions(
                 eventBrawlStarsId = eventId?.value,
+                brawlerBrawlStarsId = brawlerId.value,
+                pairBrawlerBrawlStarsId = pairBrawlerId?.value,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
-                teamSize = teamSize,
                 sortBy = sortField,
                 sortOrder = sortOrder,
                 offset = offsetLimit.offset.toLong(),
                 limit = offsetLimit.limit.toLong(),
             ).map { projection ->
-                BrawlerTeamResultCount(
-                    brawlerIds = projection.brawlerTeam.brawlerBrawlStarsIds.map { BrawlStarsId(it) },
+                BrawlerPairResultCount(
+                    brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
+                    pairBrawlerId = BrawlStarsId(projection.pairBrawlerBrawlStarsId),
                     resultCount =
                         ResultCount(
                             victoryCount = projection.victoryCount,
@@ -150,38 +149,36 @@ class BattleResultStatisticsRepository(
                 )
             }
 
-    fun countTeamResultTotalBattleCount(
+    fun countPairResultTotalBattleCount(
         eventId: BrawlStarsId?,
-        brawlerIds: BrawlStarsIds,
+        brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        teamSize: StatsTeamSize,
     ): Long =
-        teamBattleResultJpaRepository.countTotalBattleCount(
+        pairBattleResultJpaRepository.countTotalBattleCount(
             eventBrawlStarsId = eventId?.value,
+            brawlerBrawlStarsId = brawlerId.value,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
-            brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
-            teamSize = teamSize,
         )
 
-    fun countTeamResultBy(
+    fun countPairResultBy(
         eventId: BrawlStarsId?,
-        brawlerIds: BrawlStarsIds,
+        brawlerId: BrawlStarsId,
+        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        teamSize: StatsTeamSize,
     ): Long =
-        teamBattleResultJpaRepository.countDistinctTeamKeys(
+        pairBattleResultJpaRepository.countDistinctPairBrawlers(
             eventBrawlStarsId = eventId?.value,
+            brawlerBrawlStarsId = brawlerId.value,
+            pairBrawlerBrawlStarsId = pairBrawlerId?.value,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
-            brawlerBrawlStarsIds = brawlerIds.values.map { it.value },
-            teamSize = teamSize,
         )
 
     fun findBrawlerDailyResultCounts(

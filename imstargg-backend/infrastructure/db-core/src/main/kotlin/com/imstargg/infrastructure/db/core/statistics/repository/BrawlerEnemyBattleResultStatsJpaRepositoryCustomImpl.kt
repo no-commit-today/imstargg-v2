@@ -5,6 +5,7 @@ import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
 import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.core.types.dsl.NumberExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -111,7 +112,13 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         val expression =
             when (sortField) {
                 ResultStatsSortBy.PICK_RATE -> totalCountSum
-                ResultStatsSortBy.WIN_RATE -> victorySum
+                ResultStatsSortBy.WIN_RATE ->
+                    Expressions.numberTemplate(
+                        Double::class.java,
+                        "cast({0} as double) / nullif(cast({1} as double), 0.0)",
+                        victorySum,
+                        totalCountSum,
+                    )
             }
         return when (sortOrder) {
             SortOrder.ASC -> expression.asc()

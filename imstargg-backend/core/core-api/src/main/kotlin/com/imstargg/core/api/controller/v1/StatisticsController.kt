@@ -3,11 +3,11 @@ package com.imstargg.core.api.controller.v1
 import com.imstargg.core.api.controller.ListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerPairRankStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerPairResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerTeamRankStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerTeamResultStatisticsItemResponse
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.BrawlerTrophyRange
@@ -15,9 +15,7 @@ import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.ResultStatsSortBy
 import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
-import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
-import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -44,25 +42,23 @@ class StatisticsController(
         return ResponseEntity.ok(response)
     }
 
-    @GetMapping("/v1/statistics/brawler/team/result")
-    fun getBrawlerTeamResultStatistics(
+    @GetMapping("/v1/statistics/brawler/pair/result")
+    fun getBrawlerPairResultStatistics(
         @RequestParam eventId: Long?,
-        @RequestParam(required = false, defaultValue = "")
-        @Size(max = 3)
-        brawlerIds: List<Long>,
-        @RequestParam teamSize: StatsTeamSize,
+        @RequestParam brawlerId: Long,
+        @RequestParam(required = false) pairBrawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
         @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
-    ): ResponseEntity<ListResponse<BrawlerTeamResultStatisticsItemResponse>> {
+    ): ResponseEntity<ListResponse<BrawlerPairResultStatisticsItemResponse>> {
         val responses =
-            statisticsQueryComposer.getBrawlerTeamResultStatistics(
+            statisticsQueryComposer.getBrawlerPairResultStatistics(
                 eventId = eventId?.let { BrawlStarsId(it) },
-                brawlerIds = brawlerIds.map { BrawlStarsId(it) },
+                brawlerId = BrawlStarsId(brawlerId),
+                pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
                 tierRange = tierRange,
                 dateRange = dateRange,
-                teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
             )
@@ -105,25 +101,23 @@ class StatisticsController(
         return ResponseEntity.ok(ListResponse(responses))
     }
 
-    @GetMapping("/v1/statistics/brawler/team/rank")
-    fun getBrawlerTeamRankStatistics(
+    @GetMapping("/v1/statistics/brawler/pair/rank")
+    fun getBrawlerPairRankStatistics(
         @RequestParam eventId: Long,
-        @RequestParam(required = false, defaultValue = "")
-        @Size(max = 3)
-        brawlerIds: List<Long>,
-        @RequestParam teamSize: StatsTeamSize,
+        @RequestParam brawlerId: Long,
+        @RequestParam(required = false) pairBrawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
         @RequestParam(defaultValue = "PICK_RATE") sortBy: RankStatsSortBy,
         @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
-    ): ResponseEntity<ListResponse<BrawlerTeamRankStatisticsResponse>> {
+    ): ResponseEntity<ListResponse<BrawlerPairRankStatisticsResponse>> {
         val responses =
-            statisticsQueryComposer.getBrawlerTeamRankStatistics(
+            statisticsQueryComposer.getBrawlerPairRankStatistics(
                 eventId = BrawlStarsId(eventId),
-                brawlerIds = brawlerIds.map { BrawlStarsId(it) },
+                brawlerId = BrawlStarsId(brawlerId),
+                pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
                 tierRange = tierRange,
                 dateRange = dateRange,
-                teamSize = teamSize,
                 sortBy = sortBy,
                 sortOrder = sortOrder,
             )

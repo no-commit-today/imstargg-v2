@@ -3,11 +3,9 @@ package com.imstargg.core.application.statistics
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.brawlstars.BrawlStarsIds
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.enums.RankStatsSortBy
 import com.imstargg.core.enums.SortOrder
-import com.imstargg.core.enums.StatsTeamSize
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -31,54 +29,53 @@ class BattleRankStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'v1:teamRank:' + #eventId + ':' + #brawlerIds.key()" +
+            "'v2:pairRank:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
                 " + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #teamSize + ':' + #sortField + ':' + #sortOrder" +
+                " + ':' + #sortField + ':' + #sortOrder" +
                 " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
         sync = true,
     )
-    fun findBrawlerTeamRank(
+    fun findBrawlerPairRank(
         eventId: BrawlStarsId,
-        brawlerIds: BrawlStarsIds,
+        brawlerId: BrawlStarsId,
+        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        teamSize: StatsTeamSize,
         sortField: RankStatsSortBy,
         sortOrder: SortOrder,
         offsetLimit: OffsetLimit,
-    ): BrawlerTeamRankCounts {
+    ): BrawlerPairRankCounts {
         val items =
-            battleRankStatisticsRepository.findBrawlerTeamRankCounts(
+            battleRankStatisticsRepository.findBrawlerPairRankCounts(
                 eventId = eventId,
-                brawlerIds = brawlerIds,
+                brawlerId = brawlerId,
+                pairBrawlerId = pairBrawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                teamSize = teamSize,
                 sortField = sortField,
                 sortOrder = sortOrder,
                 offsetLimit = offsetLimit,
             )
         val totalBattleCount =
-            battleRankStatisticsRepository.countTeamRankTotalBattleCount(
+            battleRankStatisticsRepository.countPairRankTotalBattleCount(
                 eventId = eventId,
-                brawlerIds = brawlerIds,
+                brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                teamSize = teamSize,
             )
         val totalElementCount =
-            battleRankStatisticsRepository.countTeamRankBy(
+            battleRankStatisticsRepository.countPairRankBy(
                 eventId = eventId,
-                brawlerIds = brawlerIds,
+                brawlerId = brawlerId,
+                pairBrawlerId = pairBrawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                teamSize = teamSize,
             )
-        return BrawlerTeamRankCounts(
+        return BrawlerPairRankCounts(
             items = items,
             totalBattleCount = totalBattleCount,
             totalElementCount = totalElementCount,
