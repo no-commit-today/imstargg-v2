@@ -3,6 +3,7 @@ package com.imstargg.core.admin.controller
 import com.imstargg.core.admin.application.BattleEventService
 import com.imstargg.core.admin.controller.support.toImageUpdate
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
+import com.imstargg.core.admin.request.BattleEventModeResultTypeUpdateRequest
 import com.imstargg.core.admin.request.MessagesUpdateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import org.springframework.http.ResponseEntity
@@ -45,6 +46,15 @@ class BattleEventModeController(
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
         battleEventService.updateModeImage(brawlStarsId, file.toImageUpdate())
+        return ResponseEntity.ok().build()
+    }
+
+    @PutMapping("/event-modes/{brawlStarsId}/result-type")
+    fun updateResultType(
+        @PathVariable brawlStarsId: Long,
+        @RequestBody request: BattleEventModeResultTypeUpdateRequest,
+    ): ResponseEntity<Unit> {
+        battleEventService.updateModeResultType(brawlStarsId, request.resultType)
         return ResponseEntity.ok().build()
     }
 }

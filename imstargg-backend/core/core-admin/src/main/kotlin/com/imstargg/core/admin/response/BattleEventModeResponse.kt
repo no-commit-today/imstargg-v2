@@ -1,5 +1,6 @@
 package com.imstargg.core.admin.response
 
+import com.imstargg.core.enums.BattleEventResultType
 import com.imstargg.core.enums.Language
 
 data class BattleEventModeResponse(
@@ -7,4 +8,5 @@ data class BattleEventModeResponse(
     val brawlStarsName: String,
     val names: Map<Language, String>,
     val iconImageUrl: String?,
+    val resultType: BattleEventResultType,
 )

@@ -5,6 +5,7 @@ import com.imstargg.core.admin.request.BattleEventCreateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
+import com.imstargg.core.enums.BattleEventResultType
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -66,6 +67,7 @@ class BattleEventService(
                 brawlStarsName = mode.brawlStarsName,
                 names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
                 iconImageUrl = imagesByBrawlStarsId[mode.brawlStarsId]?.let { "${cloudFrontProperties.baseUrl}/${it.storedName}" },
+                resultType = mode.resultType,
             )
         }
     }
@@ -73,8 +75,23 @@ class BattleEventService(
     @Transactional
     fun createMode(request: BattleEventModeCreateRequest) {
         battleEventModeJpaRepository.save(
-            BattleEventModeEntity(request.brawlStarsId, request.brawlStarsName),
+            BattleEventModeEntity(
+                brawlStarsId = request.brawlStarsId,
+                brawlStarsName = request.brawlStarsName,
+                resultType = request.resultType,
+            ),
         )
+    }
+
+    @Transactional
+    fun updateModeResultType(
+        brawlStarsId: Long,
+        resultType: BattleEventResultType,
+    ) {
+        val entity =
+            battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
+                ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
+        entity.changeResultType(resultType)
     }
 
     @Transactional

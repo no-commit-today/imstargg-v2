@@ -341,6 +341,7 @@ create table if not exists battle_event_mode
     battle_event_mode_id bigint generated always as identity primary key,
     brawlstars_id        bigint       not null,
     brawlstars_name      varchar(255) not null,
+    result_type          varchar(20)  not null default 'RESULT',
     created_at           timestamptz  not null default now(),
     updated_at           timestamptz  not null default now()
 );

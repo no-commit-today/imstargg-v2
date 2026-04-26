@@ -13,6 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,14 +29,19 @@ import {
 } from "@/components/ui/table";
 import { getEventModes, createEventMode } from "@/lib/api";
 import { ImageThumbnail } from "@/components/image-thumbnail";
-import type { BattleEventMode } from "@/lib/types";
+import type { BattleEventMode, BattleEventResultType } from "@/lib/types";
+import { BATTLE_EVENT_RESULT_TYPES } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
 
 export default function EventModeListPage() {
   const [eventModes, setEventModes] = useState<BattleEventMode[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ brawlStarsId: "", brawlStarsName: "" });
+  const [form, setForm] = useState<{
+    brawlStarsId: string;
+    brawlStarsName: string;
+    resultType: BattleEventResultType;
+  }>({ brawlStarsId: "", brawlStarsName: "", resultType: "RESULT" });
 
   const loadEventModes = () => getEventModes().then(setEventModes);
 
@@ -44,10 +56,14 @@ export default function EventModeListPage() {
       return;
     }
     try {
-      await createEventMode({ brawlStarsId: id, brawlStarsName: form.brawlStarsName });
+      await createEventMode({
+        brawlStarsId: id,
+        brawlStarsName: form.brawlStarsName,
+        resultType: form.resultType,
+      });
       toast.success("이벤트 모드가 등록되었습니다.");
       setOpen(false);
-      setForm({ brawlStarsId: "", brawlStarsName: "" });
+      setForm({ brawlStarsId: "", brawlStarsName: "", resultType: "RESULT" });
       loadEventModes();
     } catch {
       toast.error("등록에 실패했습니다.");
@@ -80,6 +96,22 @@ export default function EventModeListPage() {
                   onChange={(e) => setForm({ ...form, brawlStarsName: e.target.value })}
                 />
               </div>
+              <div>
+                <Label>Result Type</Label>
+                <Select
+                  value={form.resultType}
+                  onValueChange={(v) =>
+                    setForm({ ...form, resultType: (v ?? "RESULT") as BattleEventResultType })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BATTLE_EVENT_RESULT_TYPES.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button onClick={handleCreate} className="w-full">등록</Button>
             </div>
           </DialogContent>
@@ -93,6 +125,7 @@ export default function EventModeListPage() {
             <TableHead>BrawlStars Name</TableHead>
             <TableHead>이름 (KO)</TableHead>
             <TableHead>이름 (EN)</TableHead>
+            <TableHead>결과 타입</TableHead>
             <TableHead>아이콘</TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -104,6 +137,7 @@ export default function EventModeListPage() {
               <TableCell>{m.brawlStarsName}</TableCell>
               <TableCell>{m.names.KOREAN || "-"}</TableCell>
               <TableCell>{m.names.ENGLISH || "-"}</TableCell>
+              <TableCell>{m.resultType}</TableCell>
               <TableCell><ImageThumbnail url={m.iconImageUrl} alt={m.names.KOREAN || m.brawlStarsName} /></TableCell>
               <TableCell>
                 <Link href={`/event-modes/${m.brawlStarsId}/edit`}>

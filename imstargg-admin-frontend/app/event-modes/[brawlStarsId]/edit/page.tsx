@@ -7,8 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getEventModes, updateEventModeMessages, uploadEventModeImage } from "@/lib/api";
-import type { BattleEventMode } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  getEventModes,
+  updateEventModeMessages,
+  uploadEventModeImage,
+  updateEventModeResultType,
+} from "@/lib/api";
+import type { BattleEventMode, BattleEventResultType } from "@/lib/types";
+import { BATTLE_EVENT_RESULT_TYPES } from "@/lib/types";
 import { toast } from "sonner";
 import { ImageUploadField } from "@/components/image-upload-field";
 
@@ -18,6 +31,7 @@ export default function EventModeEditPage() {
   const [eventMode, setEventMode] = useState<BattleEventMode | null>(null);
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
+  const [resultType, setResultType] = useState<BattleEventResultType>("RESULT");
 
   const loadEventMode = useCallback(() => {
     getEventModes().then((modes) => {
@@ -26,6 +40,7 @@ export default function EventModeEditPage() {
         setEventMode(found);
         setKo(found.names.KOREAN || "");
         setEn(found.names.ENGLISH || "");
+        setResultType(found.resultType);
       }
     });
   }, [brawlStarsId]);
@@ -38,6 +53,16 @@ export default function EventModeEditPage() {
     try {
       await updateEventModeMessages(brawlStarsId, { KOREAN: ko, ENGLISH: en });
       toast.success("이름이 저장되었습니다.");
+      loadEventMode();
+    } catch {
+      toast.error("저장에 실패했습니다.");
+    }
+  };
+
+  const handleSaveResultType = async () => {
+    try {
+      await updateEventModeResultType(brawlStarsId, resultType);
+      toast.success("결과 타입이 저장되었습니다.");
       loadEventMode();
     } catch {
       toast.error("저장에 실패했습니다.");
@@ -71,6 +96,27 @@ export default function EventModeEditPage() {
               <Input value={en} onChange={(e) => setEn(e.target.value)} />
             </div>
             <Button onClick={handleSaveMessages}>이름 저장</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>결과 타입</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Result Type</Label>
+              <Select
+                value={resultType}
+                onValueChange={(v) => setResultType((v ?? "RESULT") as BattleEventResultType)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BATTLE_EVENT_RESULT_TYPES.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleSaveResultType}>결과 타입 저장</Button>
           </CardContent>
         </Card>
 
