@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
   const router = useRouter();
   const [value, setValue] = useState(defaultValue);
 
-  function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = value.trim();
     if (!isValidTag(trimmed)) {

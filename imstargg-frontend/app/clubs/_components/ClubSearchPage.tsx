@@ -14,7 +14,7 @@ export default function ClubSearchPage() {
   const router = useRouter();
   const [tag, setTag] = useState("");
 
-  const submit = (e: React.FormEvent) => {
+  const submit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const cleaned = tag.trim().replace(/^#/, "").toUpperCase();
     if (cleaned) router.push(`/clubs/${cleaned}`);
