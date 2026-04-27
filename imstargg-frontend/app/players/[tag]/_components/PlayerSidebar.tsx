@@ -13,7 +13,7 @@ import {
   triggerRenewalError,
   type RenewalState,
 } from "@/lib/renewal";
-import { pushToast } from "@/lib/toast";
+import { toast } from "sonner";
 import RenewalButton from "@/components/shared/RenewalButton";
 
 function StatRow({
@@ -191,7 +191,7 @@ export default function PlayerSidebar() {
             <button
               onClick={() => {
                 navigator.clipboard?.writeText(player.tag);
-                pushToast("태그가 복사되었어요", "success", 1500);
+                toast.success("태그가 복사되었어요", { duration: 1500 });
               }}
               style={{
                 background: "none",
@@ -260,7 +260,7 @@ export default function PlayerSidebar() {
             </div>
             <RenewalButton size="lg" />
             <button
-              onClick={() => pushToast(triggerRenewalError(), "error")}
+              onClick={() => toast.error(triggerRenewalError())}
               style={{
                 background: "none",
                 border: "none",

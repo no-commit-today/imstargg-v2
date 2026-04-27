@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import TopNav from "@/components/layout/TopNav";
 import MobileTabBar from "@/components/layout/MobileTabBar";
-import ToastContainer from "@/components/shared/ToastContainer";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "ImStarGG — 브롤스타즈 전적 통계",
@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TopNav />
           {children}
           <MobileTabBar />
-          <ToastContainer />
+          <Toaster richColors position="top-center" />
         </div>
       </body>
     </html>
