@@ -1,12 +1,11 @@
 nct-chart:
   imagePullSecrets:
     - name: ecr-pull-secret
-
   deployment:
     replicaCount: 1
     image:
-      repository: ghcr.io/nocommittoday/imstargg/core-worker
-      tag: ""
+      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-worker
+      tag: "5a84208"
       pullPolicy: Always
     env:
       - name: SPRING_PROFILES_ACTIVE
@@ -22,9 +21,7 @@ nct-chart:
       limits:
         cpu: 500m
         memory: 1Gi
-
   service:
     enabled: false
-
   ingress:
     enabled: false
