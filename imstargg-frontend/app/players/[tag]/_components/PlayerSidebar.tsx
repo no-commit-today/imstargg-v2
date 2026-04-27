@@ -14,7 +14,7 @@ import {
   type RenewalState,
 } from "@/lib/renewal";
 import { pushToast } from "@/lib/toast";
-import RenewalButton from "@/components/RenewalButton";
+import RenewalButton from "@/components/shared/RenewalButton";
 
 function StatRow({
   icon,
