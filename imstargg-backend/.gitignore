@@ -44,3 +44,6 @@ out/
 
 ### Coding Agent ###
 .prompt
+
+### Properties ###
+application-prod.yml

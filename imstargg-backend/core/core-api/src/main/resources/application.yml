@@ -66,4 +66,3 @@ app:
   cors:
     allowed-origins:
       - https://imstargg.com
-      - http://localhost:3000
