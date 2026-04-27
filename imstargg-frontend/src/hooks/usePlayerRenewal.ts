@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { renewalApi } from "@/api/endpoints/renewal";
+import { NotFoundError } from "@/api/errors";
+import { emptyRenewal } from "@/domain/renewal/empty";
 import { queryKeys } from "@/hooks/queries/queryKeys";
 
 export function usePlayerRenewal(tag: string) {
@@ -11,7 +13,14 @@ export function usePlayerRenewal(tag: string) {
 
   const renewalQuery = useQuery({
     queryKey: queryKeys.player.renewal(tag),
-    queryFn: ({ signal }) => renewalApi.getPlayer(tag, { signal }),
+    queryFn: async ({ signal }) => {
+      try {
+        return await renewalApi.getPlayer(tag, { signal });
+      } catch (e) {
+        if (e instanceof NotFoundError) return emptyRenewal(tag);
+        throw e;
+      }
+    },
     refetchInterval: (q) =>
       q.state.data?.progressing ? 1000 : false,
     refetchIntervalInBackground: false,

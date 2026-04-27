@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { playerApi } from "@/api/endpoints/player";
 import { renewalApi } from "@/api/endpoints/renewal";
 import { toPlayer, toPlayerBrawler } from "@/domain/player/mappers";
+import { emptyRenewal } from "@/domain/renewal/empty";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { normalizeTag, toUrlPath } from "@/lib/tag";
@@ -47,7 +48,7 @@ export default async function PlayerPage({ params }: Params) {
   const brawlers = await playerApi.getBrawlers(tag, { next: { revalidate: 60 } });
   const renewal = await renewalApi
     .getPlayer(tag, { next: { revalidate: 0 } })
-    .catch(() => null);
+    .catch((e: unknown) => (e instanceof NotFoundError ? emptyRenewal(tag) : null));
 
   return (
     <PlayerContent
