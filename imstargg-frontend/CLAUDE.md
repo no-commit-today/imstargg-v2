@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-next-line MD041 -->
 @AGENTS.md
 
 # imstargg-frontend
@@ -17,7 +18,7 @@ pnpm test:e2e         # Playwright (prod API 호출)
 
 ## 아키텍처 레이어 (단방향 의존)
 
-```
+```text
 app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
             │
             ▼
