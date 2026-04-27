@@ -225,7 +225,7 @@ nct-chart:
           cpu: 1000m
           memory: 2Gi
     - name: brawler-battle-result-stats
-      schedule: "30 2 * * *"
+      schedule: "0 3 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
         tag: "4625fdf"
@@ -252,7 +252,7 @@ nct-chart:
           cpu: 1000m
           memory: 2Gi
     - name: brawler-enemy-battle-result-stats
-      schedule: "45 2 * * *"
+      schedule: "0 4 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
         tag: "4625fdf"
@@ -279,7 +279,7 @@ nct-chart:
           cpu: 1000m
           memory: 2Gi
     - name: brawler-pair-battle-rank-stats
-      schedule: "0 3 * * *"
+      schedule: "0 6 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
         tag: "4625fdf"
@@ -306,7 +306,7 @@ nct-chart:
           cpu: 1000m
           memory: 2Gi
     - name: brawler-pair-battle-result-stats
-      schedule: "30 3 * * *"
+      schedule: "0 7 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
         tag: "4625fdf"
@@ -359,33 +359,7 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-    - name: brawler-item-ownership-stats-job
-      schedule: "0 10 * * *"
-      image:
-        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
-        pullPolicy: Always
-      command:
-        - /bin/sh
-        - -c
-      args:
-        - "java -jar /app/app.jar --job.name=brawlerItemOwnershipStatsJob"
-      env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: prod
-      envFrom:
-        - secretRef:
-            name: core-batch-secret
-      concurrencyPolicy: Forbid
-      successfulJobsHistoryLimit: 3
-      failedJobsHistoryLimit: 1
-      resources:
-        requests:
-          cpu: 200m
-          memory: 512Mi
-        limits:
-          cpu: 1000m
-          memory: 2Gi
+
     - name: stats-player-sync
       schedule: "0 9 * * *"
       image:
