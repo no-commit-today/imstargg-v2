@@ -26,6 +26,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -51,6 +54,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -76,6 +82,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -101,6 +110,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -126,6 +138,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -151,6 +166,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -176,6 +194,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -201,6 +222,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -226,6 +250,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -251,6 +278,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -276,6 +306,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -301,6 +334,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -326,6 +362,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -351,6 +390,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -376,6 +418,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1
@@ -401,6 +446,9 @@ nct-chart:
       env:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
+      envFrom:
+        - secretRef:
+            name: core-batch-secret
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
       failedJobsHistoryLimit: 1

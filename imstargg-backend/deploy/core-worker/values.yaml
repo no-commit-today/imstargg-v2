@@ -11,6 +11,9 @@ nct-chart:
     env:
       - name: SPRING_PROFILES_ACTIVE
         value: prod
+    envFrom:
+      - secretRef:
+          name: core-worker-secret
     ports: []
     resources:
       requests:
