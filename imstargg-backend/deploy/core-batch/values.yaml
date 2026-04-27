@@ -197,7 +197,7 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-    - name: brawler-battle-rank-stats
+    - name: battle-rank-stats
       schedule: "0 2 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
@@ -224,7 +224,7 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-    - name: brawler-battle-result-stats
+    - name: battle-result-stats
       schedule: "0 3 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
@@ -251,7 +251,7 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-    - name: brawler-enemy-battle-result-stats
+    - name: enemy-battle-result-stats
       schedule: "0 4 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
@@ -278,7 +278,7 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-    - name: brawler-pair-battle-rank-stats
+    - name: pair-battle-rank-stats
       schedule: "0 6 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
@@ -305,7 +305,7 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-    - name: brawler-pair-battle-result-stats
+    - name: pair-battle-result-stats
       schedule: "0 7 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
