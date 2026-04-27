@@ -1,22 +1,18 @@
 nct-chart:
   imagePullSecrets:
     - name: ecr-pull-secret
-
   deployment:
     enabled: false
-
   service:
     enabled: false
-
   ingress:
     enabled: false
-
   cronjobs:
     - name: partition-manage
       schedule: "0 2 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -39,12 +35,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: battle-event-mode-sync
       schedule: "0 8 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -67,12 +62,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: battle-event-rotation-sync
       schedule: "0 * * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -95,12 +89,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: battle-event-sync
       schedule: "0 8 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -123,12 +116,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-ranking-collect
       schedule: "*/30 * * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -151,12 +143,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: club-ranking-collect
       schedule: "*/30 * * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -179,12 +170,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: player-ranking-collect
       schedule: "*/30 * * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -207,12 +197,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-battle-rank-stats
       schedule: "0 2 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -235,12 +224,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-battle-result-stats
       schedule: "30 2 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -263,12 +251,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-enemy-battle-result-stats
       schedule: "45 2 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -291,12 +278,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-pair-battle-rank-stats
       schedule: "0 3 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -319,12 +305,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-pair-battle-result-stats
       schedule: "30 3 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -347,12 +332,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-item-ownership-stats
       schedule: "0 8 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -375,12 +359,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: brawler-item-ownership-stats-job
       schedule: "0 10 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -403,12 +386,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: stats-player-sync
       schedule: "0 9 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -431,12 +413,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: stats-player-sync-from-ranking
       schedule: "0 9 * * *"
       image:
-        repository: ghcr.io/nocommittoday/imstargg/core-batch
-        tag: ""
+        repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+        tag: "4625fdf"
         pullPolicy: Always
       command:
         - /bin/sh
