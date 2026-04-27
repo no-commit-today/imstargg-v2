@@ -14,7 +14,7 @@ import {
   type RenewalState,
 } from "@/lib/renewal";
 import { toast } from "sonner";
-import RenewalButton from "@/components/shared/RenewalButton";
+import { RenewalButton } from "@/components/shared/RenewalButton";
 
 function StatRow({
   icon,
@@ -258,7 +258,7 @@ export default function PlayerSidebar() {
                 <RenewedAtLabel />
               </span>
             </div>
-            <RenewalButton size="lg" />
+            <RenewalButton kind="player" tag={PLAYER.tag} />
             <button
               onClick={() => toast.error(triggerRenewalError())}
               style={{
