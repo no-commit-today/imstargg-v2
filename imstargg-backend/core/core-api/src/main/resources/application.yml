@@ -63,3 +63,7 @@ app:
   aws:
     cloudfront:
       baseUrl: https://cdn.imstargg.com
+  cors:
+    allowed-origins:
+      - https://imstargg.com
+      - http://localhost:3000
