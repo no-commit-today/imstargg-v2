@@ -11,6 +11,7 @@
 ## 1. 목표와 비목표
 
 ### 목표
+
 - 유지보수·확장에 강한 프론트엔드 아키텍처 확립 (레이어 분리, 의존 방향 단방향)
 - `https://core-api.imstargg.com`과의 API 연동 패턴 확정
 - SEO 기반 인프라 (metadata / sitemap / robots) 확립
@@ -19,6 +20,7 @@
 - 백엔드 CORS 설정을 본 spec과 동시에 정합되도록 변경
 
 ### 비목표
+
 - 클럽 / 브롤러 / 이벤트 / 랭킹 / 통계 / 배틀 도메인의 완전한 구현 (도메인 spec에서 처리)
 - 동적 OG 이미지, JSON-LD 구조화 데이터 (도메인 spec에서)
 - i18n (현재 한국어 단일)
@@ -46,7 +48,7 @@
 
 ## 3. 기술스택
 
-```
+```text
 런타임/프레임워크    Next.js 16.2.1, React 19.2.4         (이미 설치)
 스타일             Tailwind v4                          (이미 설치)
 서버 데이터         Next.js fetch + revalidate (RSC)
@@ -71,7 +73,7 @@ UI 컴포넌트         shadcn/ui (CLI 설치) + Radix + cva
 
 ## 4. 폴더 구조
 
-```
+```text
 imstargg-frontend/
 ├── app/                                 # Next.js App Router (라우팅 + RSC)
 │   ├── layout.tsx                       # 루트 layout (QueryProvider, Toaster, TopNav 포함)
@@ -165,6 +167,7 @@ imstargg-frontend/
 ```
 
 ### 4.1 `src/` 도입과 마이그레이션
+
 - 현재 루트의 `app/`, `components/`, `lib/`은 정리:
   - `app/` → 그대로 (Next.js 라우팅 위치). 단 `app/_components/*`은 그대로 유지하거나 도메인별 페이지의 `_components/`로 이동.
   - 기존 `components/` → `src/components/` (구조에 맞춰 `layout/`, `shared/`, `primitives/`로 분류)
@@ -173,7 +176,7 @@ imstargg-frontend/
 
 ### 4.2 레이어 의존 방향 (단방향)
 
-```
+```text
 app/  ──▶  hooks/  ──▶  api/     ──▶  외부(HTTP)
    ▲          │           │
    │          ▼           ▼
@@ -189,6 +192,7 @@ app/  ──▶  hooks/  ──▶  api/     ──▶  외부(HTTP)
 ## 5. API 레이어
 
 ### 5.1 `src/config/env.ts`
+
 ```ts
 import { z } from "zod";
 const schema = z.object({
@@ -202,12 +206,14 @@ export const env = schema.parse({
 ```
 
 `.env.example`:
-```
+
+```text
 NEXT_PUBLIC_API_BASE_URL=https://core-api.imstargg.com
 NEXT_PUBLIC_SITE_URL=https://imstargg.com
 ```
 
 ### 5.2 `src/api/client.ts`
+
 ```ts
 type FetchOpts = {
   next?: { revalidate?: number; tags?: string[] };
@@ -234,6 +240,7 @@ export async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T
 ```
 
 ### 5.3 `src/api/errors.ts`
+
 ```ts
 export class ApiError extends Error {
   constructor(public status: number, public code: string | null, public path: string, message: string) {
@@ -248,6 +255,7 @@ export class NetworkError extends ApiError {}
 라우트의 `not-found.tsx` / `error.tsx`에서 에러 종류로 분기 — Foundation에서는 플레이어 페이지에 적용.
 
 ### 5.4 `src/api/endpoints/player.ts`
+
 ```ts
 import { apiFetch, type FetchOpts } from "@/api/client";
 import { normalizeTag } from "@/lib/tag";
@@ -265,6 +273,7 @@ export const playerApi = {
 ```
 
 ### 5.5 `src/api/endpoints/renewal.ts`
+
 ```ts
 export const renewalApi = {
   getPlayer: (tag: string, opts?: FetchOpts) =>
@@ -279,6 +288,7 @@ export const renewalApi = {
 ```
 
 ### 5.6 `src/lib/tag.ts`
+
 ```ts
 // 입력: "#88J8Q9RPV", "88J8Q9RPV", "%2388J8Q9RPV"
 // 출력 (normalizeTag): "#88J8Q9RPV"
@@ -289,6 +299,7 @@ export function toUrlPath(input: string): string { ... }   // encodeURIComponent
 ```
 
 ### 5.7 캐싱 정책 (RSC fetch)
+
 | 영역 | revalidate | 비고 |
 |---|---|---|
 | 플레이어/클럽 상세 | 60초 | 갱신 버튼 클릭 시 mutation 후 client invalidate. 서버 캐시는 60초 후 자연 갱신 |
@@ -345,6 +356,7 @@ export function toPlayer(dto: PlayerResponse): Player { ... }
 ## 7. 훅 레이어
 
 ### 7.1 `src/hooks/queries/queryKeys.ts`
+
 ```ts
 export const queryKeys = {
   player: {
@@ -358,6 +370,7 @@ export const queryKeys = {
 ```
 
 ### 7.2 `src/hooks/queries/usePlayer.ts`
+
 ```ts
 export function usePlayer(tag: string, options?: { initialData?: Player }) {
   return useQuery({
@@ -370,6 +383,7 @@ export function usePlayer(tag: string, options?: { initialData?: Player }) {
 ```
 
 ### 7.3 `src/hooks/usePlayerRenewal.ts`
+
 ```ts
 export function usePlayerRenewal(tag: string) {
   const qc = useQueryClient();
@@ -410,6 +424,7 @@ export function usePlayerRenewal(tag: string) {
 ```
 
 ### 7.4 RSC initialData 패턴
+
 ```tsx
 // app/players/[tag]/page.tsx (RSC)
 export default async function PlayerPage({ params }) {
@@ -432,6 +447,7 @@ export function PlayerContent({ tag, initialPlayer }) {
 ## 8. SEO 인프라
 
 ### 8.1 `src/lib/seo.ts`
+
 ```ts
 const SITE = {
   name: "ImStarGG",
@@ -461,17 +477,20 @@ export function buildMetadata(input: {
 ```
 
 ### 8.2 페이지별 metadata
+
 - `app/layout.tsx`: 사이트 기본 metadata + `metadataBase`.
 - 정적 페이지: 모듈 레벨 `export const metadata = buildMetadata({...})`.
 - 동적 페이지: `export async function generateMetadata({ params })` 내부에서 RSC fetch와 동일한 `apiFetch`를 호출. Next.js의 fetch dedupe로 중복 호출 방지.
 - 404/에러 시: `noindex: true` + 일반 메시지로 대체.
 
 ### 8.3 `app/sitemap.ts`
+
 - 정적: `/`, `/ranking`, `/brawlers`, `/events`, `/players`(검색 진입), `/clubs`(검색 진입)
 - 동적: 모든 브롤러, 모든 이벤트
 - 인기 플레이어/클럽: 인덱싱은 허용하되 sitemap 등록은 도메인 spec에서 결정 (랭킹 N위까지 등)
 
 ### 8.4 `app/robots.ts`
+
 ```ts
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -482,6 +501,7 @@ export default function robots(): MetadataRoute.Robots {
 ```
 
 ### 8.5 도메인 spec에서 추가 예정
+
 - 동적 OG 이미지 (`opengraph-image.tsx`) — 플레이어/클럽 카드형
 - JSON-LD 구조화 데이터 — 브롤러(`Game`), 이벤트(`Event`) 등
 - 랭킹 상위 플레이어/클럽 sitemap 추가
@@ -491,21 +511,26 @@ export default function robots(): MetadataRoute.Robots {
 ## 9. UI 컴포넌트 전략
 
 ### 9.1 shadcn 도입 범위 (Foundation)
+
 다음 컴포넌트만 우선 설치 — 플레이어 도메인에 필요한 것 + 공통:
-```
+
+```text
 button, input, label, dialog, sheet, tabs, dropdown-menu,
 tooltip, skeleton, select, command, sonner, card, badge, separator,
 pagination
 ```
+
 나머지(form 등)는 도메인 spec에서 필요 시 추가.
 
 ### 9.2 기존 컴포넌트 정리
+
 - `components/primitives/*` → `src/components/primitives/` 그대로 이동 (도메인 시각요소, 유지)
 - `components/TopNav.tsx`, `MobileTabBar.tsx` → `src/components/layout/`
 - `components/RenewalButton.tsx` → `src/components/shared/RenewalButton.tsx` (shadcn `Button` 위에 재구현, `usePlayerRenewal` / 향후 `useClubRenewal` 훅 사용)
 - `components/ToastContainer.tsx` + `lib/toast.ts` → 제거. 루트 layout에 `<Toaster />`(sonner) 한 줄, 호출은 `import { toast } from "sonner"`.
 
 ### 9.3 디자인 토큰
+
 기존 `app/globals.css`, `app/styles/*.css`의 CSS 변수를 그대로 유지. shadcn 설치 시 그 위에 shadcn 토큰 추가 (충돌 시 기존 변수 우선).
 
 ---
@@ -513,10 +538,12 @@ pagination
 ## 10. 환경변수 & CORS (백엔드 변경 포함)
 
 ### 10.1 프론트
+
 - `.env.example` 추가 (위 §5.1)
 - `.env.local`은 사용자가 로컬에 작성 (gitignore)
 
 ### 10.2 백엔드 CORS (core-api)
+
 **작업 위치**: `imstargg-backend/core/core-api/src/main/kotlin/com/imstargg/core/api/config/`
 
 ```kotlin
@@ -542,12 +569,14 @@ class WebMvcConfig(private val cors: CorsProperties) : WebMvcConfigurer {
 ```
 
 **프로필별 설정**:
+
 - `application.yml` (기본): `app.cors.allowed-origins:` (비어 있음 → 차단)
 - `application-prod.yml`:
   ```yaml
   app:
     cors:
       allowed-origins:
+
         - https://imstargg.com
         - http://localhost:3000
   ```
@@ -560,6 +589,7 @@ class WebMvcConfig(private val cors: CorsProperties) : WebMvcConfigurer {
 ## 11. 테스트 전략
 
 ### 11.1 핵심 원칙 (백엔드 `CoreApiContextTest` 정신)
+
 1. **네트워크 경계에서만 모킹** — MSW로 HTTP 응답만 가짜로. 우리 코드(`api/endpoints/*`, `hooks/*`, 컴포넌트)는 절대 모킹하지 않는다.
 2. **사용자 관점에서 테스트** — Testing Library의 `getByRole` / `getByText`로 화면에 보이는 것을 검증. 컴포넌트 내부 state·props·구현 상세는 검증하지 않는다.
 3. **통합 우선** — 컴포넌트 + 훅 + 실제 QueryClient + MSW를 묶은 통합 테스트가 기본.
@@ -567,12 +597,14 @@ class WebMvcConfig(private val cors: CorsProperties) : WebMvcConfigurer {
 5. **E2E는 prod API 직접** — 가장 높은 충실도. 환경 의존이지만 안전망 역할.
 
 ### 11.2 금지
+
 - `vi.mock("@/hooks/...")`, `vi.mock("@/api/...")` — 우리 코드 모킹 금지
 - `expect(mockFn).toHaveBeenCalledWith(...)` 위주 검증 — 구현 상세 의존
 - shallow rendering, `wrapper.find(...).props()`
 - 수동 `act()`로 시간 제어 — `findBy*`의 자동 retry로 충분
 
 ### 11.3 테스트 베이스
+
 ```tsx
 // tests/setup/renderWithProviders.tsx
 export function renderWithProviders(ui: React.ReactElement) {
@@ -590,6 +622,7 @@ export function renderWithProviders(ui: React.ReactElement) {
   };
 }
 ```
+
 ```ts
 // tests/setup/msw.ts
 export const server = setupServer();
@@ -597,22 +630,27 @@ export const server = setupServer();
 ```
 
 ### 11.4 Foundation에 포함되는 테스트
+
 **단위 (Vitest):**
+
 - `tests/unit/lib/tag.test.ts` — `#PREFIX`, URL 인코딩 모든 입력 케이스
 - `tests/unit/lib/format.test.ts` — 숫자/날짜 포맷
 - `tests/unit/domain/player/mappers.test.ts` — `toPlayer` 변환
 
 **통합 (Vitest + Testing Library + MSW):**
+
 - `tests/integration/player/playerRenewal.test.tsx` — 갱신 클릭 → "갱신 요청됨" 토스트 → progressing이 false로 바뀌면 → "갱신 완료" 토스트 + 플레이어 쿼리 invalidate
 - `tests/integration/player/playerSearch.test.tsx` — 검색 입력 → 정상 태그 → 라우터 push 호출 검증 (라우터는 Next 제공 mock 사용)
 
 **E2E (Playwright, prod API):**
+
 1. 홈 진입 → 메타데이터 확인 (`<title>` 포함)
 2. 검색 폼에 `#88J8Q9RPV` → `/players/...` 이동 → 닉네임/트로피 표시
 3. 플레이어 페이지 갱신 버튼 → "갱신 요청됨" 토스트 → 1초 폴링 동안 버튼 비활성화 → "갱신 완료" 토스트 (실제 백엔드의 `progressing` 동작 의존)
 4. `/sitemap.xml` 200 + 적어도 정적 URL 포함 / `/robots.txt` 200
 
 ### 11.5 설정
+
 - `vitest.config.ts`: jsdom, `setupFiles: ["tests/setup/vitest.setup.ts"]`, `@/` 별칭, `globals: true`
 - `playwright.config.ts`: chromium 단일, `baseURL: http://localhost:3000`, `webServer: { command: "pnpm dev", reuseExistingServer: true }`, `retries: 1`
 - `package.json` 스크립트:
@@ -632,6 +670,7 @@ export const server = setupServer();
 Foundation에서 플레이어 도메인을 **end-to-end 완성**하여, 이후 도메인 spec(클럽/브롤러/이벤트/랭킹)이 그대로 복제할 수 있는 템플릿이 되도록 한다.
 
 **포함 범위:**
+
 - API: `api/endpoints/player.ts`, `api/endpoints/renewal.ts`, `api/types.ts` (Player·PlayerBrawler·Renewal·ListResponse)
 - 도메인: `domain/player/{types.ts,mappers.ts}`
 - 훅: `hooks/queries/{usePlayer,usePlayerBrawlers}.ts`, `hooks/usePlayerRenewal.ts`, `hooks/queries/queryKeys.ts`(player만)
@@ -641,13 +680,14 @@ Foundation에서 플레이어 도메인을 **end-to-end 완성**하여, 이후 �
 - 테스트: §11.4의 단위·통합·E2E 모두 포함
 
 **Foundation에서는 placeholder로만 남기는 것 (도메인 spec에서 채움):**
+
 - 클럽, 브롤러, 이벤트, 랭킹, 통계, 배틀 페이지: 빌드만 통과하도록 임시 콘텐츠 + 기존 mock 유지 (단, mock을 새 코드 패턴으로 끌어오지는 않음 — 도메인 spec에서 한꺼번에 정리)
 
 ---
 
 ## 13. 구현 순서 (plan에서 상세화)
 
-```
+```text
 1. 의존성 설치 + 설정 파일
    - pnpm add @tanstack/react-query @tanstack/react-query-devtools zustand
              zod react-hook-form @hookform/resolvers sonner
