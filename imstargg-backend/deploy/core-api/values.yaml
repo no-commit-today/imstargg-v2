@@ -16,10 +16,9 @@ nct-chart:
     resources:
       requests:
         cpu: 200m
-        memory: 512Mi
+        memory: 2Gi
       limits:
-        cpu: 500m
-        memory: 1Gi
+        memory: 2Gi
     podDisruptionBudget:
       enabled: true
       minAvailable: 1

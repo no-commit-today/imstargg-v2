@@ -16,11 +16,10 @@ nct-chart:
     ports: []
     resources:
       requests:
-        cpu: 100m
-        memory: 256Mi
+        cpu: 200m
+        memory: 2Gi
       limits:
-        cpu: 500m
-        memory: 1Gi
+        memory: 2Gi
   service:
     enabled: false
   ingress:
