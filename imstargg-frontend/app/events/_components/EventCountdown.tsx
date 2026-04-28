@@ -7,8 +7,10 @@ export function EventCountdown({ endTime }: { endTime: string }) {
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
-    setNow(Date.now());
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    const update = () => setNow(Date.now());
+    // 첫 갱신은 microtask로 defer — effect 본문에서 동기 setState 회피 (lint rule)
+    queueMicrotask(update);
+    const t = setInterval(update, 1000);
     return () => clearInterval(t);
   }, []);
 
