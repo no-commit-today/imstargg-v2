@@ -40,7 +40,7 @@ const RARITIES = [
   "EPIC",
   "MYTHIC",
   "LEGENDARY",
-  "TIME_LIMITED_BRAWLER",
+  "ULTRA_LEGENDARY",
 ];
 
 const ROLES = [
