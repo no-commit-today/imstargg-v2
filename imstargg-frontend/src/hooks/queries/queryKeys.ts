@@ -23,4 +23,13 @@ export const queryKeys = {
     detail: (id: number | string) =>
       [...queryKeys.brawler.all, "detail", String(id)] as const,
   },
+  event: {
+    all: ["event"] as const,
+    rotation: () => [...queryKeys.event.all, "rotation"] as const,
+    soloRank: () => [...queryKeys.event.all, "solo-rank"] as const,
+    detail: (id: number | string) =>
+      [...queryKeys.event.all, "detail", String(id)] as const,
+    search: (name: string) =>
+      [...queryKeys.event.all, "search", name] as const,
+  },
 } as const;
