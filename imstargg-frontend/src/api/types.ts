@@ -144,3 +144,40 @@ export interface RotationBattleEventResponse {
   startTime: string;  // OffsetDateTime serialized as ISO 8601
   endTime: string;
 }
+
+// === Ranking ===
+export interface RankingPlayerResponse {
+  tag: string;
+  name: string;
+  nameColor: string | null;
+  iconId: number;
+  clubName: string;
+}
+
+export interface PlayerRankingResponse {
+  country: string;
+  rank: number;
+  player: RankingPlayerResponse;
+  trophies: number;
+  rankChange: number | null;
+}
+
+export interface BrawlerRankingResponse {
+  country: string;
+  brawlerId: number;
+  rank: number;
+  player: RankingPlayerResponse;
+  trophies: number;
+  rankChange: number | null;
+}
+
+export interface ClubRankingResponse {
+  country: string;
+  tag: string;
+  name: string;
+  badgeId: number;
+  trophies: number;
+  rank: number;
+  memberCount: number;
+  rankChange: number | null;
+}

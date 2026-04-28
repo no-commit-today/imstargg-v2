@@ -32,4 +32,13 @@ export const queryKeys = {
     search: (name: string) =>
       [...queryKeys.event.all, "search", name] as const,
   },
+  ranking: {
+    all: ["ranking"] as const,
+    players: (country: string) =>
+      [...queryKeys.ranking.all, "players", country] as const,
+    brawlers: (brawlerId: number | string, country: string) =>
+      [...queryKeys.ranking.all, "brawlers", String(brawlerId), country] as const,
+    clubs: (country: string) =>
+      [...queryKeys.ranking.all, "clubs", country] as const,
+  },
 } as const;
