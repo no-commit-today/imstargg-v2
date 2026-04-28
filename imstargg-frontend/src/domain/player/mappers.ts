@@ -1,14 +1,9 @@
 import type {
   PlayerResponse,
   PlayerBrawlerResponse,
-  MessagesResponse,
 } from "@/api/types";
 import type { Player, PlayerBrawler } from "@/domain/player/types";
-
-function pickName(messages: MessagesResponse | undefined): string {
-  if (!messages) return "(unknown)";
-  return messages.ko ?? messages.en ?? Object.values(messages)[0] ?? "(unknown)";
-}
+import { pickName } from "@/domain/i18n";
 
 export function toPlayer(dto: PlayerResponse): Player {
   return {
