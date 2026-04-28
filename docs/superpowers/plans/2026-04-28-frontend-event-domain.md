@@ -14,7 +14,8 @@
 - Working directory: `imstargg-frontend/` (run all `pnpm` commands from here unless otherwise stated)
 - File paths in this plan are relative to `imstargg-frontend/`
 - Stage only files explicitly touched by each task. **Never use `git add -A` or `git add .`**
-- Commit message style: `<type>(frontend): <imperative summary>` matching club/brawler history
+- Commit message style: `<type>(frontend): <한글 요약>` (한글로 작성). 예: `feat(frontend): BattleEvent DTO 타입 추가`
+- 본문에 `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>` 트레일러 포함 (HEREDOC 방식)
 
 ---
 
@@ -101,7 +102,7 @@ Expected: PASS (no consumers yet)
 
 ```bash
 git add src/api/types.ts
-git commit -m "feat(frontend): add BattleEvent DTO types"
+git commit -m "feat(frontend): BattleEvent DTO 타입 추가"
 ```
 
 ---
@@ -148,7 +149,7 @@ Expected: PASS
 
 ```bash
 git add src/api/endpoints/event.ts
-git commit -m "feat(frontend): add eventApi endpoint"
+git commit -m "feat(frontend): eventApi endpoint 추가"
 ```
 
 ---
@@ -192,7 +193,7 @@ Expected: PASS
 
 ```bash
 git add src/domain/event/types.ts
-git commit -m "feat(frontend): add Event domain types"
+git commit -m "feat(frontend): Event 도메인 타입 추가"
 ```
 
 ---
@@ -348,7 +349,7 @@ Expected: PASS (8 tests)
 
 ```bash
 git add tests/unit/domain/event/mappers.test.ts src/domain/event/mappers.ts
-git commit -m "feat(frontend): add Event domain mappers (TDD)"
+git commit -m "feat(frontend): Event 도메인 매퍼 추가 (TDD)"
 ```
 
 ---
@@ -460,7 +461,7 @@ Expected: PASS (5 tests)
 
 ```bash
 git add tests/unit/lib/countdown.test.ts src/lib/countdown.ts
-git commit -m "feat(frontend): add countdown utility (TDD)"
+git commit -m "feat(frontend): countdown 유틸 추가 (TDD)"
 ```
 
 ---
@@ -594,7 +595,7 @@ Expected: PASS
 
 ```bash
 git add src/hooks/queries/queryKeys.ts src/hooks/queries/useRotationEvents.ts src/hooks/queries/useSoloRankEvents.ts src/hooks/queries/useEvent.ts src/hooks/queries/useEventSearch.ts
-git commit -m "feat(frontend): add event query keys and hooks"
+git commit -m "feat(frontend): event query key 및 훅 추가"
 ```
 
 ---
@@ -647,7 +648,7 @@ Expected: PASS
 
 ```bash
 git add app/events/_components/EventCountdown.tsx
-git commit -m "feat(frontend): add EventCountdown client tick component"
+git commit -m "feat(frontend): EventCountdown 클라이언트 컴포넌트 추가"
 ```
 
 ---
@@ -758,7 +759,7 @@ Expected: PASS
 
 ```bash
 git add app/events/_components/RotationCard.tsx app/events/_components/RotationSection.tsx
-git commit -m "feat(frontend): rotation card + section with countdown"
+git commit -m "feat(frontend): rotation 카드/섹션 추가 (카운트다운 포함)"
 ```
 
 ---
@@ -851,7 +852,7 @@ Expected: PASS
 
 ```bash
 git add app/events/_components/SoloRankCard.tsx app/events/_components/SoloRankSection.tsx
-git commit -m "feat(frontend): solo-rank card + section"
+git commit -m "feat(frontend): solo-rank 카드/섹션 추가"
 ```
 
 ---
@@ -953,7 +954,7 @@ Expected: PASS
 
 ```bash
 git add app/events/_components/EventSearchResults.tsx app/events/_components/EventSearch.tsx
-git commit -m "feat(frontend): event search input with debounced backend search"
+git commit -m "feat(frontend): 디바운스 백엔드 검색 input 추가"
 ```
 
 ---
@@ -1057,7 +1058,7 @@ Expected: PASS
 
 ```bash
 git add app/events/_components/EventsListPage.tsx app/events/page.tsx
-git commit -m "feat(frontend): real events list RSC + EventsListPage"
+git commit -m "feat(frontend): events 목록 RSC + EventsListPage 추가"
 ```
 
 ---
@@ -1150,7 +1151,7 @@ Expected: PASS
 
 ```bash
 git add app/events/[id]/_components/EventHero.tsx app/events/[id]/_components/EventContent.tsx
-git commit -m "feat(frontend): event detail hero + content (header only)"
+git commit -m "feat(frontend): event 상세 Hero + Content 추가 (헤더 한정)"
 ```
 
 ---
@@ -1284,7 +1285,7 @@ Expected: PASS
 
 ```bash
 git add app/events/[id]/page.tsx app/events/[id]/error.tsx app/events/[id]/not-found.tsx
-git commit -m "feat(frontend): event detail RSC + error/not-found"
+git commit -m "feat(frontend): event 상세 RSC + error/not-found 추가"
 ```
 
 ---
@@ -1360,7 +1361,7 @@ Expected: PASS
 
 ```bash
 git add app/sitemap.ts
-git commit -m "feat(frontend): include event detail URLs in sitemap"
+git commit -m "feat(frontend): sitemap 에 event 상세 URL 포함"
 ```
 
 ---
@@ -1414,7 +1415,7 @@ Stage only the files actually touched (deletions + `src/lib/data.ts`):
 
 ```bash
 git add -u app/events/_components/EventsPage.tsx app/events/[id]/_components/EventDetailPage.tsx src/lib/data.ts
-git commit -m "chore(frontend): remove legacy event mock data and components"
+git commit -m "chore(frontend): 레거시 event mock 데이터/컴포넌트 제거"
 ```
 
 ---
@@ -1502,7 +1503,7 @@ test("상세 페이지 SEO: title + canonical 1개", async ({ page }) => {
 
 ```bash
 git add tests/e2e/event.spec.ts
-git commit -m "test(frontend): e2e event list/search/detail/SEO"
+git commit -m "test(frontend): e2e event 목록/검색/상세/SEO"
 ```
 
 ---
