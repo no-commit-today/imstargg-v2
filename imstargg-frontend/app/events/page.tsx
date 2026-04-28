@@ -1,6 +1,29 @@
-// TODO(domain-spec): Replace mock data with real API. See docs/superpowers/specs/2026-04-27-frontend-foundation-design.md §15.
-import EventsPage from "./_components/EventsPage";
+import type { Metadata } from "next";
+import { eventApi } from "@/api/endpoints/event";
+import { toBattleEvent, toRotationEvent } from "@/domain/event/mappers";
+import { buildMetadata } from "@/lib/seo";
+import EventsListPage from "./_components/EventsListPage";
 
-export default function Page() {
-  return <EventsPage />;
+export const metadata: Metadata = buildMetadata({
+  title: "이벤트 로테이션 | ImStarGG",
+  description:
+    "현재 진행 중인 이벤트 로테이션과 경쟁전 맵 정보를 확인하세요.",
+  path: "/events",
+});
+
+export const revalidate = 600;
+
+export default async function Page() {
+  const [rotationDto, soloRankDto] = await Promise.all([
+    eventApi.rotation({ next: { revalidate: 600 } }),
+    eventApi.soloRank({ next: { revalidate: 3600 } }),
+  ]);
+  const initialRotation = rotationDto.content.map(toRotationEvent);
+  const initialSoloRank = soloRankDto.content.map(toBattleEvent);
+  return (
+    <EventsListPage
+      initialRotation={initialRotation}
+      initialSoloRank={initialSoloRank}
+    />
+  );
 }
