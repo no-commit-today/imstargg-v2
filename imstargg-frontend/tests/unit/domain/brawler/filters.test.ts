@@ -5,7 +5,7 @@ import type { Brawler } from "@/domain/brawler/types";
 const b = (overrides: Partial<Brawler> = {}): Brawler => ({
   id: 1,
   name: "Shelly",
-  rarity: "COMMON",
+  rarity: "STARTING_BRAWLER",
   role: "DAMAGE_DEALER",
   portraitImageUrl: null,
   gadgets: [],
@@ -18,9 +18,9 @@ const b = (overrides: Partial<Brawler> = {}): Brawler => ({
 
 describe("filterBrawlers", () => {
   const list: Brawler[] = [
-    b({ id: 1, name: "셸리", role: "DAMAGE_DEALER", rarity: "COMMON" }),
-    b({ id: 2, name: "Shelly", role: "DAMAGE_DEALER", rarity: "COMMON" }),
-    b({ id: 3, name: "콜트", role: "MARKSMAN", rarity: "COMMON" }),
+    b({ id: 1, name: "셸리", role: "DAMAGE_DEALER", rarity: "STARTING_BRAWLER" }),
+    b({ id: 2, name: "Shelly", role: "DAMAGE_DEALER", rarity: "STARTING_BRAWLER" }),
+    b({ id: 3, name: "콜트", role: "MARKSMAN", rarity: "STARTING_BRAWLER" }),
     b({ id: 4, name: "리언", role: "ASSASSIN", rarity: "LEGENDARY" }),
   ];
 

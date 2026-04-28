@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brawlerApi } from "@/api/endpoints/brawler";
 import { toBrawler } from "@/domain/brawler/mappers";
+import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { BrawlerContent } from "./_components/BrawlerContent";
@@ -15,33 +16,13 @@ export async function generateStaticParams() {
   return list.content.map((b) => ({ id: String(b.id) }));
 }
 
-const ROLE_LABEL_META: Record<string, string> = {
-  DAMAGE_DEALER: "어태커",
-  TANK: "탱커",
-  MARKSMAN: "마크스맨",
-  ASSASSIN: "어쌔신",
-  SUPPORT: "서포터",
-  CONTROLLER: "컨트롤러",
-  ARTILLERY: "아틸러리",
-};
-
-const RARITY_LABEL_META: Record<string, string> = {
-  COMMON: "기본",
-  RARE: "레어",
-  SUPER_RARE: "슈퍼 레어",
-  EPIC: "에픽",
-  MYTHIC: "미식",
-  LEGENDARY: "레전더리",
-  ULTRA_LEGENDARY: "울트라 레전더리",
-};
-
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
     const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
     const brawler = toBrawler(dto);
-    const role = ROLE_LABEL_META[brawler.role] ?? brawler.role;
-    const rarity = RARITY_LABEL_META[brawler.rarity] ?? brawler.rarity;
+    const role = ROLE_LABEL_KO[brawler.role];
+    const rarity = RARITY_LABEL_KO[brawler.rarity];
     return buildMetadata({
       title: `${brawler.name} | ImStarGG`,
       description: `${brawler.name} — ${role} · ${rarity} · 가젯 ${brawler.gadgets.length} · 스타파워 ${brawler.starPowers.length} · 기어 ${brawler.gears.length} · 하이퍼차지 ${brawler.hyperCharges.length}.`,

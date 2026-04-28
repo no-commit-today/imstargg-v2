@@ -10,27 +10,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 
 const ROLES: ReadonlyArray<{ value: BrawlerRole | "ALL"; label: string }> = [
   { value: "ALL", label: "전체" },
-  { value: "DAMAGE_DEALER", label: "어태커" },
-  { value: "TANK", label: "탱커" },
-  { value: "MARKSMAN", label: "마크스맨" },
-  { value: "ASSASSIN", label: "어쌔신" },
-  { value: "SUPPORT", label: "서포터" },
-  { value: "CONTROLLER", label: "컨트롤러" },
-  { value: "ARTILLERY", label: "아틸러리" },
+  ...(Object.entries(ROLE_LABEL_KO) as [BrawlerRole, string][]).map(
+    ([value, label]) => ({ value, label }),
+  ),
 ];
 
 const RARITIES: ReadonlyArray<{ value: BrawlerRarity | "ALL"; label: string }> = [
   { value: "ALL", label: "전체 희귀도" },
-  { value: "COMMON", label: "기본" },
-  { value: "RARE", label: "레어" },
-  { value: "SUPER_RARE", label: "슈퍼 레어" },
-  { value: "EPIC", label: "에픽" },
-  { value: "MYTHIC", label: "미식" },
-  { value: "LEGENDARY", label: "레전더리" },
-  { value: "ULTRA_LEGENDARY", label: "울트라 레전더리" },
+  ...(Object.entries(RARITY_LABEL_KO) as [BrawlerRarity, string][]).map(
+    ([value, label]) => ({ value, label }),
+  ),
 ];
 
 interface Props {

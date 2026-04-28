@@ -32,7 +32,7 @@ export interface PlayerClubResponse {
 
 // === Brawler ===
 export type BrawlerRarity =
-  | "COMMON" | "RARE" | "SUPER_RARE" | "EPIC"
+  | "STARTING_BRAWLER" | "RARE" | "SUPER_RARE" | "EPIC"
   | "MYTHIC" | "LEGENDARY" | "ULTRA_LEGENDARY";
 
 export type BrawlerRole =

@@ -38,7 +38,7 @@ const brawlerDto: PlayerBrawlerResponse = {
   brawler: {
     id: 16000000,
     name: { ko: "쉘리", en: "SHELLY" },
-    rarity: "COMMON",
+    rarity: "STARTING_BRAWLER",
     role: "DAMAGE_DEALER",
     gadgets: [],
     gears: [],
@@ -60,7 +60,7 @@ describe("toPlayerBrawler", () => {
     const b = toPlayerBrawler(brawlerDto);
     expect(b.name).toBe("쉘리");
     expect(b.power).toBe(11);
-    expect(b.rarity).toBe("COMMON");
+    expect(b.rarity).toBe("STARTING_BRAWLER");
     expect(b.portraitImageUrl).toBe("https://img/shelly.png");
   });
   it("falls back to English when ko missing", () => {

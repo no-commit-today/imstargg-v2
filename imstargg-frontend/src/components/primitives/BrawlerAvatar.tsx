@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import type { BrawlerRarity } from "@/api/types";
 
 const RARITY_BORDER: Record<BrawlerRarity, string> = {
-  COMMON: "#B4B9C7",
+  STARTING_BRAWLER: "#B4B9C7",
   RARE: "#2BD576",
   SUPER_RARE: "#3DE0FF",
   EPIC: "#9146FF",

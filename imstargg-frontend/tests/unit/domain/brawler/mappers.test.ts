@@ -12,7 +12,7 @@ const dtoGadget = (overrides: Partial<GadgetResponse> = {}): GadgetResponse => (
 const dtoBrawler = (overrides: Partial<BrawlerResponse> = {}): BrawlerResponse => ({
   id: 16000000,
   name: { ko: "셸리", en: "Shelly" },
-  rarity: "COMMON",
+  rarity: "STARTING_BRAWLER",
   role: "DAMAGE_DEALER",
   gadgets: [dtoGadget()],
   gears: [],
