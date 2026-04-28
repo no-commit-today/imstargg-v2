@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { clubApi } from "@/api/endpoints/club";
 import { renewalApi } from "@/api/endpoints/renewal";
 import { toClub } from "@/domain/club/mappers";
@@ -9,6 +8,7 @@ import { buildMetadata } from "@/lib/seo";
 import { normalizeTag, toUrlPath } from "@/lib/tag";
 import { formatNumber } from "@/lib/format";
 import { ClubContent } from "./_components/ClubContent";
+import { ClubNotFoundView } from "./_components/ClubNotFoundView";
 
 type Params = { params: Promise<{ tag: string }> };
 
@@ -42,7 +42,9 @@ export default async function ClubPage({ params }: Params) {
   try {
     dto = await loadClub(tag);
   } catch (e) {
-    if (e instanceof NotFoundError) notFound();
+    if (e instanceof NotFoundError) {
+      return <ClubNotFoundView tag={normalizeTag(tag)} />;
+    }
     throw e;
   }
   const renewal = await renewalApi
