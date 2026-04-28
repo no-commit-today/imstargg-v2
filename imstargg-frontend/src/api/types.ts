@@ -92,3 +92,33 @@ export interface RenewalResponse {
   completedAt: string | null;
   renewedAt: string | null;
 }
+
+// === Club ===
+export type ClubType = "OPEN" | "INVITE_ONLY" | "CLOSED" | "UNKNOWN";
+
+export type ClubMemberRole =
+  | "PRESIDENT"
+  | "VICE_PRESIDENT"
+  | "SENIOR"
+  | "MEMBER"
+  | "UNKNOWN";
+
+export interface ClubMemberResponse {
+  tag: string;
+  name: string;
+  nameColor: string | null;
+  role: ClubMemberRole | null;
+  trophies: number;
+  iconId: number;
+}
+
+export interface ClubResponse {
+  tag: string;
+  name: string;
+  description: string;
+  type: ClubType | null;
+  badgeId: number;
+  requiredTrophies: number;
+  trophies: number;
+  members: ClubMemberResponse[];
+}
