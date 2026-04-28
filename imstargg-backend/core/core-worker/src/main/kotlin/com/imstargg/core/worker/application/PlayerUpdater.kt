@@ -10,6 +10,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEnt
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,6 +21,10 @@ class PlayerUpdater(
     private val battleTeamPlayerJpaRepository: BattleTeamPlayerJpaRepository,
     private val playerBrawlerStatsAccumulator: PlayerBrawlerStatsAccumulator,
 ) {
+    companion object {
+        private val log = LoggerFactory.getLogger(PlayerUpdater::class.java)
+    }
+
     @Transactional
     fun update(
         playerResponse: PlayerResponse,
@@ -29,6 +34,7 @@ class PlayerUpdater(
         player.update(playerResponse)
         playerRepository.save(player)
         val newBattles = filterNewBattles(player.entity, battles)
+        log.debug("[플레이어 갱신] 신규 배틀 {}건 tag={}", newBattles.size, playerResponse.tag)
         updateBattles(player.entity, newBattles)
         playerBrawlerStatsAccumulator.accumulate(player.entity, newBattles)
         return newBattles

@@ -16,6 +16,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleE
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 import jakarta.persistence.EntityManagerFactory
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
@@ -137,6 +138,7 @@ class BattleEventSyncJobConfig(
         private val battleEventJpaRepository: BattleEventJpaRepository,
         private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
     ) : ItemWriter<T> {
+        private val log = LoggerFactory.getLogger(BattleEventSyncItemWriter::class.java)
         private val checkedEventIds: MutableSet<Long> = mutableSetOf()
         private val soloRankSeasonCache = SoloRankSeasonCache()
         private val existingSoloRankEventIds: MutableMap<String, MutableSet<Long>> = mutableMapOf()
@@ -185,6 +187,13 @@ class BattleEventSyncJobConfig(
         }
 
         private fun alertUnregisteredEvent(battle: BaseStatsBattleEntity) {
+            log.warn(
+                "[{}] 미등록 배틀 이벤트 eventBrawlStarsId={}, modeBrawlStarsId={}, map={}",
+                JOB_NAME,
+                battle.eventBrawlStarsId,
+                battle.eventModeBrawlStarsId,
+                battle.eventMap,
+            )
             alertManager.alert(
                 AlertCommand
                     .builder()
@@ -204,6 +213,7 @@ class BattleEventSyncJobConfig(
             battle: BaseStatsBattleEntity,
             event: BattleEventEntity,
         ) {
+            log.warn("[{}] 배틀 이벤트 불일치 eventBrawlStarsId={}", JOB_NAME, event.brawlStarsId)
             alertManager.alert(
                 AlertCommand
                     .builder()

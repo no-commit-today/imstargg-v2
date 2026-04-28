@@ -7,6 +7,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingItemE
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -32,6 +33,7 @@ class PlayerRankingCollectJobConfig(
         const val JOB_NAME = "playerRankingCollectJob"
         private const val STEP_NAME = "playerRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
+        private val log = LoggerFactory.getLogger(PlayerRankingCollectJobConfig::class.java)
     }
 
     @Bean(JOB_NAME)
@@ -46,6 +48,7 @@ class PlayerRankingCollectJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
+                    log.info("[{}] 시작", JOB_NAME)
                     Country.entries.forEach { country ->
                         val collectedAt = OffsetDateTime.now(clock)
                         val response = brawlStarsClient.getPlayerRanking(country.code)
@@ -82,7 +85,15 @@ class PlayerRankingCollectJobConfig(
                             playerRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
                             playerRankingJpaRepository.deleteAllInBatch(outdated)
                         }
+                        log.debug(
+                            "[{}] 국가 {} 수집 - {}건 (정리: {}건)",
+                            JOB_NAME,
+                            country,
+                            items.size,
+                            outdated.size,
+                        )
                     }
+                    log.info("[{}] 완료", JOB_NAME)
                 },
                 txManager,
             ).build()

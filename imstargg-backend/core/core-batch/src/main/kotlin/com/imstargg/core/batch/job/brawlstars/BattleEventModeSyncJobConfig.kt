@@ -5,6 +5,7 @@ import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -26,6 +27,7 @@ class BattleEventModeSyncJobConfig(
     companion object {
         const val JOB_NAME = "battleEventModeSyncJob"
         const val STEP_NAME = "battleEventModeSyncStep"
+        private val log = LoggerFactory.getLogger(BattleEventModeSyncJobConfig::class.java)
     }
 
     @Bean(JOB_NAME)
@@ -40,6 +42,7 @@ class BattleEventModeSyncJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
+                    log.info("[{}] 시작", JOB_NAME)
                     val gameModes = brawlStarsClient.getGameModes().items
                     val existingIds =
                         battleEventModeJpaRepository
@@ -49,6 +52,7 @@ class BattleEventModeSyncJobConfig(
 
                     val newModes = gameModes.filter { it.id !in existingIds }
                     alertNewModes(newModes)
+                    log.info("[{}] 완료 - 신규 모드: {}건", JOB_NAME, newModes.size)
                 },
                 txManager,
             ).build()

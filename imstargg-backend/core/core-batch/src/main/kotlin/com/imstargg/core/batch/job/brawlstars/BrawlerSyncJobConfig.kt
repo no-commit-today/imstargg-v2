@@ -9,6 +9,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.Brawler
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.HyperChargeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.StarPowerJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -35,6 +36,7 @@ class BrawlerSyncJobConfig(
     companion object {
         const val JOB_NAME = "brawlerSyncJob"
         const val STEP_NAME = "brawlerSyncStep"
+        private val log = LoggerFactory.getLogger(BrawlerSyncJobConfig::class.java)
     }
 
     enum class BrawlerChangeType {
@@ -69,6 +71,7 @@ class BrawlerSyncJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
+                    log.info("[{}] 시작", JOB_NAME)
                     val brawlers = brawlStarsClient.getBrawlers().items
                     val existingBrawlerEntities = brawlerJpaRepository.findAll().toList()
                     val existingIds = existingBrawlerEntities.map { it.brawlStarsId }.toSet()
@@ -83,6 +86,13 @@ class BrawlerSyncJobConfig(
                     val existingBrawlers = brawlers.filter { it.id in existingIds }
                     val changes = detectBrawlerChanges(existingBrawlers)
                     alertBrawlerChanges(changes)
+                    log.info(
+                        "[{}] 완료 - 신규: {}건, 삭제: {}건, 변경: {}건",
+                        JOB_NAME,
+                        newBrawlers.size,
+                        deletedBrawlerIds.size,
+                        changes.size,
+                    )
                 },
                 txManager,
             ).build()

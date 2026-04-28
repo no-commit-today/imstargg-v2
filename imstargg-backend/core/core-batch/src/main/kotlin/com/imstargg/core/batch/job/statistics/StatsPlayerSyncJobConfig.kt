@@ -16,6 +16,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEnti
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import jakarta.persistence.EntityManagerFactory
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
@@ -51,6 +52,7 @@ class StatsPlayerSyncJobConfig(
         const val RANK_BATTLE_STEP_NAME = "statsPlayerSyncFromRankBattleStep"
         const val RESULT_BATTLE_STEP_NAME = "statsPlayerSyncFromResultBattleStep"
         private const val CHUNK_SIZE = 1000
+        private val log = LoggerFactory.getLogger(StatsPlayerSyncJobConfig::class.java)
     }
 
     @Bean(DATE_PARAMETER_NAME)
@@ -80,6 +82,7 @@ class StatsPlayerSyncJobConfig(
     fun statsPlayerSyncFromRankingStep(): Step =
         StepBuilder(RANKING_STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
+                log.info("[{}] 시작", RANKING_JOB_NAME)
                 val playerRankingIds =
                     Country.entries.mapNotNull { country ->
                         playerRankingJpaRepository
@@ -109,6 +112,7 @@ class StatsPlayerSyncJobConfig(
                         }
                     }.distinct()
 
+                var totalNew = 0
                 allTags.chunked(CHUNK_SIZE).forEach { batch ->
                     val existingTags =
                         statsPlayerJpaRepository
@@ -121,9 +125,11 @@ class StatsPlayerSyncJobConfig(
                             .map { StatsPlayerEntity(brawlStarsTag = it) }
                     if (newPlayers.isNotEmpty()) {
                         statsPlayerJpaRepository.saveAll(newPlayers)
+                        totalNew += newPlayers.size
                     }
                 }
 
+                log.info("[{}] 완료 - 대상 태그: {}건, 신규: {}건", RANKING_JOB_NAME, allTags.size, totalNew)
                 RepeatStatus.FINISHED
             }, txManager)
             .build()

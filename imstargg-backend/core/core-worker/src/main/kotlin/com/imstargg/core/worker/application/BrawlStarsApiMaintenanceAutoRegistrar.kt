@@ -2,6 +2,7 @@ package com.imstargg.core.worker.application
 
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
 import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
 import java.time.OffsetDateTime
@@ -13,6 +14,7 @@ class BrawlStarsApiMaintenanceAutoRegistrar(
 ) {
     companion object {
         private const val DEFAULT_DURATION_HOURS = 1L
+        private val log = LoggerFactory.getLogger(BrawlStarsApiMaintenanceAutoRegistrar::class.java)
     }
 
     fun register() {
@@ -20,11 +22,13 @@ class BrawlStarsApiMaintenanceAutoRegistrar(
         if (brawlStarsApiMaintenanceJpaRepository.existsByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(now, now)) {
             return
         }
+        val endTime = now.plusHours(DEFAULT_DURATION_HOURS)
         brawlStarsApiMaintenanceJpaRepository.save(
             BrawlStarsApiMaintenanceEntity(
                 startTime = now,
-                endTime = now.plusHours(DEFAULT_DURATION_HOURS),
+                endTime = endTime,
             ),
         )
+        log.warn("[BrawlStars API 점검] 자동 점검 등록 startTime={} endTime={}", now, endTime)
     }
 }

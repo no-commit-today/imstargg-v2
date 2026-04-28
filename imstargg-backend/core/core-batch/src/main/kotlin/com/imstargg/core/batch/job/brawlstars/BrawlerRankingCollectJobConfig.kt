@@ -7,6 +7,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItem
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -32,6 +33,7 @@ class BrawlerRankingCollectJobConfig(
         const val JOB_NAME = "brawlerRankingCollectJob"
         private const val STEP_NAME = "brawlerRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
+        private val log = LoggerFactory.getLogger(BrawlerRankingCollectJobConfig::class.java)
     }
 
     @Bean(JOB_NAME)
@@ -46,8 +48,10 @@ class BrawlerRankingCollectJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
+                    log.info("[{}] 시작", JOB_NAME)
                     val brawlers = brawlStarsClient.getBrawlers().items
                     Country.entries.forEach { country ->
+                        log.info("[{}] 국가 {} 진행 - 브롤러 {}개", JOB_NAME, country, brawlers.size)
                         brawlers.forEach { brawler ->
                             val collectedAt = OffsetDateTime.now(clock)
                             val response = brawlStarsClient.getBrawlerRanking(country.code, brawler.id)
@@ -92,6 +96,7 @@ class BrawlerRankingCollectJobConfig(
                             }
                         }
                     }
+                    log.info("[{}] 완료", JOB_NAME)
                 },
                 txManager,
             ).build()

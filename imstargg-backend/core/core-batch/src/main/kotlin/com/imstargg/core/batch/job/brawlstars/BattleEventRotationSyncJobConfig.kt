@@ -5,6 +5,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationE
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventRotationItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventRotationJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -29,6 +30,7 @@ class BattleEventRotationSyncJobConfig(
     companion object {
         const val JOB_NAME = "battleEventRotationSyncJob"
         const val STEP_NAME = "battleEventRotationSyncStep"
+        private val log = LoggerFactory.getLogger(BattleEventRotationSyncJobConfig::class.java)
     }
 
     @Bean(JOB_NAME)
@@ -43,6 +45,7 @@ class BattleEventRotationSyncJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
+                    log.info("[{}] 시작", JOB_NAME)
                     val now = OffsetDateTime.now(clock)
                     val rotations = brawlStarsClient.getEventRotation()
 
@@ -66,6 +69,7 @@ class BattleEventRotationSyncJobConfig(
                             )
                         }
                     battleEventRotationItemJpaRepository.saveAll(items)
+                    log.info("[{}] 완료 - 로테이션 슬롯 {}건 저장", JOB_NAME, items.size)
                 },
                 txManager,
             ).build()
