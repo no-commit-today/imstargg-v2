@@ -122,3 +122,25 @@ export interface ClubResponse {
   trophies: number;
   members: ClubMemberResponse[];
 }
+
+// === BattleEvent ===
+export type BattleEventResultType = "RESULT" | "RANK";
+
+export interface BattleEventModeResponse {
+  id: number;
+  name: MessagesResponse;
+  iconImageUrl: string | null;
+  resultType: BattleEventResultType;
+}
+
+export interface BattleEventResponse {
+  id: number;
+  mode: BattleEventModeResponse | null;
+  mapName: MessagesResponse;
+}
+
+export interface RotationBattleEventResponse {
+  event: BattleEventResponse;
+  startTime: string;  // OffsetDateTime serialized as ISO 8601
+  endTime: string;
+}
