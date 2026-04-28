@@ -17,4 +17,10 @@ export const queryKeys = {
     renewal: (tag: string) =>
       [...queryKeys.club.all, "renewal", normalizeTag(tag)] as const,
   },
+  brawler: {
+    all: ["brawler"] as const,
+    list: () => [...queryKeys.brawler.all, "list"] as const,
+    detail: (id: number | string) =>
+      [...queryKeys.brawler.all, "detail", String(id)] as const,
+  },
 } as const;
