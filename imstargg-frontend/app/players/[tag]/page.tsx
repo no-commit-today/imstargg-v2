@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { playerApi } from "@/api/endpoints/player";
 import { renewalApi } from "@/api/endpoints/renewal";
 import { toPlayer, toPlayerBrawler } from "@/domain/player/mappers";
@@ -9,6 +8,7 @@ import { buildMetadata } from "@/lib/seo";
 import { normalizeTag, toUrlPath } from "@/lib/tag";
 import { formatNumber } from "@/lib/format";
 import { PlayerContent } from "./_components/PlayerContent";
+import { PlayerNotFoundView } from "./_components/PlayerNotFoundView";
 
 type Params = { params: Promise<{ tag: string }> };
 
@@ -42,7 +42,9 @@ export default async function PlayerPage({ params }: Params) {
   try {
     dto = await loadPlayer(tag);
   } catch (e) {
-    if (e instanceof NotFoundError) notFound();
+    if (e instanceof NotFoundError) {
+      return <PlayerNotFoundView tag={normalizeTag(tag)} />;
+    }
     throw e;
   }
   const brawlers = await playerApi.getBrawlers(tag, { next: { revalidate: 60 } });

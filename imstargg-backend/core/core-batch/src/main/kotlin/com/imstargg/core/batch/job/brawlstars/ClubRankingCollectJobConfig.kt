@@ -6,6 +6,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingJpaRepository
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -31,6 +32,7 @@ class ClubRankingCollectJobConfig(
         const val JOB_NAME = "clubRankingCollectJob"
         private const val STEP_NAME = "clubRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
+        private val log = LoggerFactory.getLogger(ClubRankingCollectJobConfig::class.java)
     }
 
     @Bean(JOB_NAME)
@@ -45,6 +47,7 @@ class ClubRankingCollectJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
+                    log.info("[{}] 시작", JOB_NAME)
                     Country.entries.forEach { country ->
                         val collectedAt = OffsetDateTime.now(clock)
                         val response = brawlStarsClient.getClubRanking(country.code)
@@ -77,7 +80,15 @@ class ClubRankingCollectJobConfig(
                             clubRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
                             clubRankingJpaRepository.deleteAllInBatch(outdated)
                         }
+                        log.debug(
+                            "[{}] 국가 {} 수집 - {}건 (정리: {}건)",
+                            JOB_NAME,
+                            country,
+                            items.size,
+                            outdated.size,
+                        )
                     }
+                    log.info("[{}] 완료", JOB_NAME)
                 },
                 txManager,
             ).build()

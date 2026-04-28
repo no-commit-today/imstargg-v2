@@ -10,4 +10,11 @@ export const queryKeys = {
     renewal: (tag: string) =>
       [...queryKeys.player.all, "renewal", normalizeTag(tag)] as const,
   },
+  club: {
+    all: ["club"] as const,
+    detail: (tag: string) =>
+      [...queryKeys.club.all, "detail", normalizeTag(tag)] as const,
+    renewal: (tag: string) =>
+      [...queryKeys.club.all, "renewal", normalizeTag(tag)] as const,
+  },
 } as const;
