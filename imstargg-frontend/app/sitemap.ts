@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { env } from "@/config/env";
 import { brawlerApi } from "@/api/endpoints/brawler";
+import { eventApi } from "@/api/endpoints/event";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env.NEXT_PUBLIC_SITE_URL;
@@ -19,11 +20,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     brawlerEntries = [];
   }
 
+  let eventEntries: MetadataRoute.Sitemap = [];
+  try {
+    const [rotation, soloRank] = await Promise.all([
+      eventApi.rotation({ next: { revalidate: 3600 } }),
+      eventApi.soloRank({ next: { revalidate: 3600 } }),
+    ]);
+    const ids = new Set<number>();
+    for (const r of rotation.content) ids.add(r.event.id);
+    for (const e of soloRank.content) ids.add(e.id);
+    eventEntries = [...ids].map((id) => ({
+      url: `${base}/events/${id}`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.5,
+    }));
+  } catch {
+    eventEntries = [];
+  }
+
   return [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1.0 },
     { url: `${base}/ranking`, lastModified: now, changeFrequency: "hourly", priority: 0.8 },
     { url: `${base}/brawlers`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/events`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
     ...brawlerEntries,
+    ...eventEntries,
   ];
 }
