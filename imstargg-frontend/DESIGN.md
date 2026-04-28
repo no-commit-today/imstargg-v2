@@ -132,19 +132,16 @@ ImStarGG의 시그니처 모션은 "스티커 그림자(`0 3px 0 0 rgba(0,0,0,0.
 - 액티브 탭은 옐로우 텍스트
 
 ### RenewalButton — 시그니처 컴포넌트
-플레이어/클럽 페이지의 핵심 액션. shadcn `<Button>` 위에 구현 (`src/components/shared/RenewalButton.tsx`). 상태는 백엔드 `RenewalResponse`의 `progressing`/`canRenew` 플래그로 결정:
-- **활성(idle)**: `default` variant — "갱신" + ⟳ 아이콘, 클릭 가능
-- **갱신 중**: `disabled` + ⟳ `animate-spin` + 라벨 "갱신 중…" — 1초 간격 자동 폴링 (`usePlayerRenewal`)
-- **쿨다운/불가**: `canRenew=false` 시 자동 `disabled`
-- **완료/실패**: sonner 토스트(`toast.success("갱신 완료")` / `toast.error("갱신 요청 실패")`)로 피드백
+플레이어/클럽 페이지의 핵심 액션. 백엔드 갱신 상태에 따라 활성/비활성과 라벨이 바뀌는 단순 버튼.
+- **활성**: 옐로우 1차 버튼 + ⟳ 아이콘, "갱신"
+- **갱신 중**: 비활성 + ⟳ 회전 + "갱신 중…", 백그라운드 폴링이 끝날 때까지 유지
+- **쿨다운/불가**: 자동 비활성
+- **완료/실패 피드백**: 토스트로 통보 (직접 색을 바꾸지 않는다)
 
-> 향후 개선 여지: 진행 바, 쿨다운 카운트다운, JUST_DONE 그린 틴트는 도메인 spec에서 추가 검토.
-
-### Toast — sonner
-- `import { toast } from "sonner"` 로 호출. `toast()`, `toast.success()`, `toast.error()`, `toast.info()`
-- 루트 layout 에 `<Toaster richColors position="top-center" />` (shadcn `src/components/ui/sonner.tsx` 래퍼)
-- 시각: `richColors` 모드 — 종류별 자동 컬러링. `next-themes` 기반으로 라이트/다크 자동 전환
-- 갱신 트리거 시 "갱신 요청됨"(info) → 폴링 후 progressing false 전환 시 "갱신 완료"(success) 흐름이 표준
+### Toast
+- 라이트·다크 모드 자동 전환되는 풀 컬러 토스트(`richColors`) 사용
+- 위치는 화면 상단 중앙, `--ease-pop` 등으로 자연스러운 슬라이드인
+- 종류: `info`(요청 접수), `success`(완료), `error`(실패), `warning`. 결과 색은 토큰 기반
 
 ### Skeleton (`.skel`)
 - 200% 폭의 그라디언트 시머, 1.5s 무한 — `#ECEEF3 → #D8DCE5 → #ECEEF3`
@@ -256,7 +253,7 @@ ImStarGG의 시그니처 모션은 "스티커 그림자(`0 3px 0 0 rgba(0,0,0,0.
 ### Example Prompts
 - "카드 만들어줘: `#FFFFFF` 배경, 12px radius, 1px `#D8DCE5` 보더. head는 14×18 패딩에 하단 1px 디바이더. 타이틀 15px/700, body 16×18 패딩."
 - "WIN 칩: `.pill green`, 11px/700/uppercase, `rgba(43,213,118,0.15)` 배경, `#1a9550` 텍스트, 4px radius."
-- "전적 갱신 버튼: `.btn-primary`, 옐로우 배경, 잉크 텍스트, 하단 `0 1px 0 #E8A900` 그림자로 키캡 느낌. 5상태(IDLE/RENEWING/COOLDOWN/JUST_DONE/ERROR) 머신."
+- "갱신 버튼: 옐로우 1차 버튼, 잉크 텍스트, 하단 `0 1px 0 #E8A900` 그림자로 키캡 느낌. 갱신 중에는 비활성 + ⟳ 회전 + '갱신 중…', 결과는 토스트로."
 - "TopNav: 다크 `#14161B`, 60px 높이, 1,280px 컨테이너, 하단 3px 옐로우 보더. 로고+링크4+검색(#PLAYERTAG)."
 - "랭킹 표 행: grid-template-columns로 60/60/1fr/1fr/120, 모바일에선 40/1fr/auto + nth-child로 컬럼 숨김. 좌측 4px result-bar."
 
