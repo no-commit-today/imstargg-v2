@@ -34,7 +34,7 @@
 | 결정 | 선택 | 이유 |
 |---|---|---|
 | 백엔드 엔드포인트 | `/v1/events/rotation`, `/v1/events/solo-rank`, `/v1/events/{id}`, `/v1/event/search?name=` | 기존 `BattleEventController` 그대로 |
-| 검색 방식 | **백엔드 검색** (`/v1/event/search?name=`) | 약 100개 이벤트가 시즌별로 누적되며 화면에 보이는 ~30개를 넘어서야 의미 있음. 백엔드 검색은 모든 이벤트(rotation/solo-rank/과거)에서 매칭 가능 |
+| 검색 방식 | **백엔드 검색** (`/v1/event/search?name=`) — **맵 이름** 매칭 (case-insensitive substring) | 약 100개 이벤트가 시즌별로 누적되며 화면에 보이는 ~30개를 넘어서야 의미 있음. 백엔드(`BattleEventRepository.searchByMapName`)는 `MessageType.BATTLE_EVENT_NAME` 즉 맵 이름 메시지에 대해 ContainingIgnoreCase 매칭 — **모드 이름으로는 검색되지 않음** |
 | 검색 디바운스 | 300ms | 입력당 fetch 폭주 방지 |
 | 카운트다운 | client-side 1s `setInterval`, `endTime - now` | rotation 카드의 시그니처 표시 |
 | 카운트다운 정확도 | 분 단위까지만 표시(예: `02:13:45`), 1초 미만은 무시 | 시각적 노이즈 최소화 |
@@ -310,6 +310,8 @@ UI 상단: `<EventSearch />` (검색 결과가 있을 땐 검색 결과 리스�
 ### 6.3 `EventSearch`
 
 - shadcn `Input` + `Search` 아이콘
+- placeholder: `"맵 이름 검색"` — 백엔드 검색은 맵 이름만 매칭하므로 사용자에게 명시
+- aria-label: `"맵 이름 검색"`
 - 300ms 디바운스
 - 입력 비면 메인 섹션 복귀
 - 결과 0건일 때 "결과 없음" 빈 상태
@@ -406,7 +408,7 @@ export default async function EventPage({ params }: Params) {
 
 `tests/e2e/event.spec.ts`:
 1. `/events` 진입 → rotation 카드 ≥1, solo-rank 카드 ≥1
-2. 검색: `젬 그랩` 입력 → 결과 ≥1 (변경 가능. 안정적인 모드명 사용)
+2. 검색: 맵 이름 일부(예: rotation 응답에서 첫 카드의 맵 이름 토큰) 입력 → 결과 ≥1. 모드명("젬 그랩" 등)으로는 검색되지 않음을 별도로 검증(결과 0건 또는 무관 매칭)
 3. 검색 클리어 → 메인 섹션 복귀
 4. rotation 카드 클릭 → `/events/{id}` 진입, 맵 이름 표시
 5. SEO: `<title>`에 맵 이름 포함, canonical 1개
@@ -447,7 +449,7 @@ export default async function EventPage({ params }: Params) {
 
 - `pnpm typecheck` / `pnpm lint` / `pnpm test:run` / `pnpm build` 모두 통과
 - `/events` 진입 → rotation + solo-rank 카드 표시, 카운트다운 1초 단위로 갱신
-- 검색 input → 디바운스 후 백엔드 검색 결과 표시
+- 검색 input → 디바운스 후 백엔드 검색 결과 표시 (맵 이름 매칭 한정)
 - `/events/{id}` 진입 → 모드 아이콘/이름·맵 이름·결과 타입 칩 표시 (통계 영역 없음)
 - `app/sitemap.xml`에 `/events/{id}` 다수 항목 포함
 - E2E event spec 통과
