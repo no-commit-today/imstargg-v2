@@ -113,7 +113,7 @@ export default function TopNav() {
     [router],
   );
 
-  const submit = (e: React.FormEvent) => {
+  const submit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     goToTag(search);
   };

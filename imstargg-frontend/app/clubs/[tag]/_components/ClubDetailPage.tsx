@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import RenewalButton from "@/components/RenewalButton";
+import { RenewalButton } from "@/components/shared/RenewalButton";
 
 const ROLES = [
   { key: "PRESIDENT", ko: "회장", color: "#FFC60A", count: 1 },
@@ -302,7 +302,7 @@ export default function ClubDetailPage({ tag }: { tag: string }) {
                   5분 전
                 </span>
               </div>
-              <RenewalButton size="md" />
+              <RenewalButton kind="club" tag={tag} />
             </div>
           </div>
         </div>

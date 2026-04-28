@@ -202,6 +202,53 @@
   --tr-normal: 0;
   --tr-loose: 0.04em;
   --tr-caps: 0.12em;
+
+  /* shadcn/ui semantic tokens — mapped onto existing design system */
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--bg-elev-1);
+  --card-foreground: var(--fg);
+  --popover: var(--bg-elev-1);
+  --popover-foreground: var(--fg);
+  --primary: var(--color-brand-yellow);
+  --primary-foreground: var(--color-brand-ink);
+  --secondary: var(--color-neutral-100);
+  --secondary-foreground: var(--color-neutral-900);
+  --muted: var(--color-neutral-100);
+  --muted-foreground: var(--color-neutral-500);
+  --accent: var(--color-neutral-100);
+  --accent-foreground: var(--color-neutral-900);
+  --destructive: var(--color-accent-red);
+  --destructive-foreground: #ffffff;
+  --input: var(--color-neutral-200);
+  --ring: var(--color-brand-yellow);
+  --radius: var(--radius-md);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
 }
 
 /* Semantic type styles (from tokens.css) */
