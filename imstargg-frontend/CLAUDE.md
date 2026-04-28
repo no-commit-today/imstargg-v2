@@ -59,3 +59,7 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
 
 - `docs/superpowers/specs/2026-04-27-frontend-foundation-design.md`
 - `docs/superpowers/plans/2026-04-27-frontend-foundation.md`
+
+## Design
+
+@DESIGN.md

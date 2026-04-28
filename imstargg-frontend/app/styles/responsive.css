@@ -369,10 +369,6 @@ html, body { overflow-x: hidden; }
   /* ----- Page section header eyebrow rows ----- */
   /* Already wraps via flex */
 
-  /* ----- Toasts ----- */
-  .toast-container { right: 12px; left: 12px; bottom: 76px; }
-  .toast { min-width: 0; }
-
   /* ----- Modal padding ----- */
   div[style*="position: fixed"][style*="inset: 0"] > div[style*="max-width: 520px"] {
     max-width: 100% !important;
