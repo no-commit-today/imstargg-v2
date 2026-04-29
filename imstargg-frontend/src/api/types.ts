@@ -272,3 +272,59 @@ export interface BrawlerItemOwnershipStatisticsResponse {
   hyperCharges: BrawlerItemOwnershipStatisticsItemResponse[];
   buffies: BrawlerBuffyOwnershipStatisticsItemResponse[];
 }
+
+// === Slice (offset/limit pagination) ===
+export interface SliceResponse<T> {
+  content: T[];
+  hasNext: boolean;
+}
+
+// === Battle ===
+export type BattleMode =
+  | "KNOCKOUT" | "GEM_GRAB" | "HEIST" | "HOT_ZONE" | "SIEGE" | "BOUNTY"
+  | "BRAWL_BALL" | "DUELS" | "SOLO_SHOWDOWN" | "DUO_SHOWDOWN" | "WIPEOUT"
+  | "VOLLEY_BRAWL" | "TROPHY_THIEVES" | "BOSS_FIGHT" | "BIG_GAME" | "BASKET_BRAWL"
+  | "ROBO_RUMBLE" | "PAYLOAD" | "TAKEDOWN" | "HUNTERS" | "BOT_DROP"
+  | "HOLD_THE_TROPHY" | "UNKNOWN";
+
+export type BattleType =
+  | "RANKED" | "SOLO_RANKED" | "FRIENDLY" | "CHALLENGE"
+  | "TOURNAMENT" | "CHAMPIONSHIP_CHALLENGE";
+
+export type BattleResult = "VICTORY" | "DEFEAT" | "DRAW";
+
+export type SoloRankTier =
+  | "BRONZE_1" | "BRONZE_2" | "BRONZE_3"
+  | "SILVER_1" | "SILVER_2" | "SILVER_3"
+  | "GOLD_1" | "GOLD_2" | "GOLD_3"
+  | "DIAMOND_1" | "DIAMOND_2" | "DIAMOND_3"
+  | "MYTHIC_1" | "MYTHIC_2" | "MYTHIC_3"
+  | "LEGENDARY_1" | "LEGENDARY_2" | "LEGENDARY_3"
+  | "MASTERS";
+
+export interface BattlePlayerBrawlerResponse {
+  brawler: BrawlerResponse | null;
+  power: number;
+  trophies: number | null;
+  trophyChange: number | null;
+}
+
+export interface BattlePlayerResponse {
+  tag: string;
+  name: string;
+  soloRankTier: SoloRankTier | null;
+  brawler: BattlePlayerBrawlerResponse;
+}
+
+export interface BattleResponse {
+  battleTime: string;
+  event: BattleEventResponse | null;
+  mode: BattleMode;
+  type: BattleType | null;
+  result: BattleResult | null;
+  duration: number | null;
+  starPlayerTag: string | null;
+  rank: number | null;
+  trophyChange: number | null;
+  teams: BattlePlayerResponse[][];
+}
