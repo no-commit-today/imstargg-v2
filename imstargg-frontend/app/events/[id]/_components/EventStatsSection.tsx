@@ -24,8 +24,6 @@ type Props = {
 export async function EventStatsSection({ event, searchParams }: Props) {
   const tier = parseTierRange(searchParams.tier);
   const date = parseDateRange(searchParams.date);
-  const sort = typeof searchParams.sort === "string" ? searchParams.sort : "tier";
-  const order = parseSortOrder(searchParams.order);
   const brawlerIdRaw = searchParams.brawlerId;
   const selectedBrawlerId =
     typeof brawlerIdRaw === "string" && /^\d+$/.test(brawlerIdRaw) ? Number(brawlerIdRaw) : null;
@@ -33,11 +31,14 @@ export async function EventStatsSection({ event, searchParams }: Props) {
   const resultType = event.mode?.resultType ?? "RESULT";
 
   if (resultType === "RANK") {
+    const rankSort =
+      typeof searchParams.sort === "string" ? searchParams.sort : "averageRank";
+    const rankOrder = parseSortOrder(searchParams.order ?? "ASC");
     const main = await statisticsApi.brawlerRank(
       { eventId: event.id, tierRange: tier, dateRange: date },
       { next: { revalidate: 600 } },
     );
-    const items = main.content.map(toBrawlerRankStat);
+    const items = sortRankItems(main.content.map(toBrawlerRankStat), rankSort, rankOrder);
     return (
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -49,8 +50,8 @@ export async function EventStatsSection({ event, searchParams }: Props) {
         </div>
         <EventRankStatsTable
           items={items}
-          sort={sort}
-          order={order}
+          sort={rankSort}
+          order={rankOrder}
           selectedBrawlerId={selectedBrawlerId}
         />
         {selectedBrawlerId && (
@@ -69,6 +70,8 @@ export async function EventStatsSection({ event, searchParams }: Props) {
     );
   }
 
+  const sort = typeof searchParams.sort === "string" ? searchParams.sort : "tier";
+  const order = parseSortOrder(searchParams.order);
   const main = await statisticsApi.brawlerResult(
     { eventId: event.id, tierRange: tier, dateRange: date },
     { next: { revalidate: 600 } },
@@ -103,6 +106,22 @@ export async function EventStatsSection({ event, searchParams }: Props) {
       )}
     </section>
   );
+}
+
+function sortRankItems<
+  T extends { averageRank: number; totalBattleCount: number },
+>(items: T[], sort: string, order: import("@/domain/statistics/sort").SortOrder): T[] {
+  const sign = order === "DESC" ? -1 : 1;
+  const cmp = (a: T, b: T) => {
+    switch (sort) {
+      case "totalBattleCount":
+        return (a.totalBattleCount - b.totalBattleCount) * sign;
+      case "averageRank":
+      default:
+        return (a.averageRank - b.averageRank) * sign;
+    }
+  };
+  return [...items].sort(cmp);
 }
 
 function sortResultItems<
