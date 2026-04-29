@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title: `${display} | ImStarGG`,
       description: `${display} — 트로피 ${formatNumber(dto.trophies)}, ${dto.club?.name ?? "클럽 없음"}. 브롤스타즈 플레이어 통계.`,
       path: `/players/${toUrlPath(tag)}`,
+      dynamicOg: true,
     });
   } catch {
     return buildMetadata({
