@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { BattleMode } from "@/api/types";
 import { modeLabel } from "@/domain/battle/modeLabels";
 
@@ -10,11 +11,13 @@ interface Props {
 export function BattleModeIcon({ iconUrl, mode, size = 28 }: Props) {
   if (iconUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={iconUrl}
         alt={modeLabel(mode)}
-        style={{ width: size, height: size, objectFit: "contain" }}
+        width={size}
+        height={size}
+        unoptimized
+        style={{ objectFit: "contain" }}
       />
     );
   }
