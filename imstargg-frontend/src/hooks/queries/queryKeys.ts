@@ -9,6 +9,8 @@ export const queryKeys = {
       [...queryKeys.player.all, "brawlers", normalizeTag(tag)] as const,
     renewal: (tag: string) =>
       [...queryKeys.player.all, "renewal", normalizeTag(tag)] as const,
+    battles: (tag: string) =>
+      [...queryKeys.player.all, "battles", normalizeTag(tag)] as const,
   },
   club: {
     all: ["club"] as const,
