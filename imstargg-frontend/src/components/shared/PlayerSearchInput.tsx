@@ -22,9 +22,19 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
   const router = useRouter();
   const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
-  const [recents, setRecents] = useState<SearchEntry[]>(() => getRecents());
-  const [favorites, setFavorites] = useState<SearchEntry[]>(() => getFavorites());
+  const [recents, setRecents] = useState<SearchEntry[]>([]);
+  const [favorites, setFavorites] = useState<SearchEntry[]>([]);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  // Hydrate from localStorage after mount to avoid SSR/CSR mismatch.
+  // The hydration risk (server renders [] vs client real data) outweighs the
+  // cascading-render concern for a dropdown that only opens on user interaction.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRecents(getRecents());
+    setFavorites(getFavorites());
+  }, []);
 
   function refresh() {
     setRecents(getRecents());
@@ -39,6 +49,14 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
   }, []);
+
+  // Reset highlighted entry whenever the visible list or open state changes.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveIndex(-1);
+  }, [open, recents, favorites, value]);
+
+  const flatEntries: SearchEntry[] = [...favorites, ...recents];
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,6 +80,26 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
     refresh();
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || flatEntries.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % flatEntries.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i <= 0 ? flatEntries.length - 1 : i - 1));
+    } else if (e.key === "Escape") {
+      setOpen(false);
+      setActiveIndex(-1);
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      const entry = flatEntries[activeIndex];
+      addRecent({ kind: entry.kind, tag: entry.tag });
+      setOpen(false);
+      router.push(entry.kind === "player" ? routes.player(entry.tag) : routes.club(entry.tag));
+    }
+  }
+
   return (
     <div ref={wrapperRef} style={{ position: "relative", width: "100%", maxWidth: 448 }}>
       <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
@@ -74,8 +112,11 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setOpen(true)}
+          onKeyDown={handleKeyDown}
           aria-label="플레이어 태그 입력"
+          role="combobox"
           aria-expanded={open}
+          aria-haspopup="menu"
           aria-controls="search-history-dropdown"
         />
         <Button type="submit" size="default" aria-label="플레이어 검색">
@@ -87,6 +128,7 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
           <SearchHistoryDropdown
             recents={recents}
             favorites={favorites}
+            activeIndex={activeIndex}
             onSelect={() => setOpen(false)}
             onToggleFavorite={handleToggleFavorite}
             onClearRecents={handleClearRecents}

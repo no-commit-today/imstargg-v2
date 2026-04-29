@@ -2,6 +2,7 @@ import { normalizeTag } from "@/lib/tag";
 import type { SearchEntry, SearchEntryKind } from "@/lib/searchHistory";
 
 const FAVORITES_KEY = "imstargg.search.favorites";
+export const FAVORITES_LIMIT = 50;
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -24,7 +25,11 @@ function readArray(): SearchEntry[] {
 
 function writeArray(entries: SearchEntry[]): void {
   if (!isBrowser()) return;
-  window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(entries));
+  try {
+    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(entries));
+  } catch {
+    // QuotaExceededError or SecurityError — silently drop the write
+  }
 }
 
 export function getFavorites(): SearchEntry[] {
@@ -47,6 +52,7 @@ export function toggleFavorite(input: Omit<SearchEntry, "addedAt">): boolean {
     return false;
   }
   list.unshift({ ...input, tag, addedAt: Date.now() });
-  writeArray(list);
+  const trimmed = list.slice(0, FAVORITES_LIMIT);
+  writeArray(trimmed);
   return true;
 }

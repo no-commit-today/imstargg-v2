@@ -23,14 +23,14 @@ describe("PlayerSearchInput", () => {
   it("초기 상태에서 포커스해도 빈 드롭다운은 안 보임", () => {
     render(<PlayerSearchInput />);
     fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
-    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 
   it("최근 검색이 있으면 포커스 시 드롭다운 노출", () => {
     addRecent({ kind: "player", tag: "#ABC" });
     render(<PlayerSearchInput />);
     fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
-    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    expect(screen.getByRole("menu")).toBeInTheDocument();
     expect(screen.getByText("#ABC")).toBeInTheDocument();
   });
 
@@ -58,5 +58,13 @@ describe("PlayerSearchInput", () => {
     const starBtn = screen.getByLabelText("즐겨찾기에 추가");
     fireEvent.click(starBtn);
     expect(screen.getAllByLabelText("즐겨찾기 제거").length).toBeGreaterThan(0);
+  });
+
+  it("최근 항목 클릭 시 라우터 이동", () => {
+    addRecent({ kind: "player", tag: "#XYZ" });
+    render(<PlayerSearchInput />);
+    fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
+    const link = screen.getByRole("menuitem", { name: /XYZ/ });
+    expect(link).toHaveAttribute("href", "/players/%23XYZ");
   });
 });

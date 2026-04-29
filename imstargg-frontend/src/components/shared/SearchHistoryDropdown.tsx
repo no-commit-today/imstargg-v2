@@ -7,6 +7,7 @@ import { routes } from "@/config/routes";
 interface Props {
   recents: SearchEntry[];
   favorites: SearchEntry[];
+  activeIndex: number; // -1 = nothing active. 0..favorites.length-1 = fav, beyond = recents
   onSelect?: () => void;
   onToggleFavorite: (entry: Pick<SearchEntry, "kind" | "tag">) => void;
   onClearRecents: () => void;
@@ -18,13 +19,16 @@ function entryHref(e: SearchEntry): string {
 }
 
 export function SearchHistoryDropdown({
-  recents, favorites, onSelect, onToggleFavorite, onClearRecents, isFavorite,
+  recents, favorites, activeIndex, onSelect, onToggleFavorite, onClearRecents, isFavorite,
 }: Props) {
   if (recents.length === 0 && favorites.length === 0) return null;
 
+  const recentsActiveIndex = activeIndex >= favorites.length ? activeIndex - favorites.length : -1;
+  const favoritesActiveIndex = activeIndex < favorites.length ? activeIndex : -1;
+
   return (
     <div
-      role="listbox"
+      role="menu"
       style={{
         position: "absolute",
         top: "100%",
@@ -45,6 +49,7 @@ export function SearchHistoryDropdown({
         <Section
           title="즐겨찾기"
           entries={favorites}
+          activeIndex={favoritesActiveIndex}
           onSelect={onSelect}
           onToggleFavorite={onToggleFavorite}
           isFavorite={isFavorite}
@@ -54,6 +59,7 @@ export function SearchHistoryDropdown({
         <Section
           title="최근 검색"
           entries={recents}
+          activeIndex={recentsActiveIndex}
           onSelect={onSelect}
           onToggleFavorite={onToggleFavorite}
           isFavorite={isFavorite}
@@ -79,10 +85,11 @@ export function SearchHistoryDropdown({
 }
 
 function Section({
-  title, entries, onSelect, onToggleFavorite, isFavorite, rightAction,
+  title, entries, activeIndex, onSelect, onToggleFavorite, isFavorite, rightAction,
 }: {
   title: string;
   entries: SearchEntry[];
+  activeIndex: number;
   onSelect?: () => void;
   onToggleFavorite: (entry: Pick<SearchEntry, "kind" | "tag">) => void;
   isFavorite: (kind: SearchEntryKind, tag: string) => boolean;
@@ -101,13 +108,23 @@ function Section({
         {rightAction}
       </div>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {entries.map((e) => {
+        {entries.map((e, idx) => {
           const fav = isFavorite(e.kind, e.tag);
+          const isActive = idx === activeIndex;
           return (
-            <li key={`${e.kind}:${e.tag}`} role="option" aria-selected="false">
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <li key={`${e.kind}:${e.tag}`}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: isActive ? "rgba(255,198,10,0.15)" : "transparent",
+                  borderRadius: 6,
+                }}
+              >
                 <Link
                   href={entryHref(e)}
+                  role="menuitem"
                   onClick={onSelect}
                   style={{
                     flex: 1, display: "flex", alignItems: "center", gap: 8,

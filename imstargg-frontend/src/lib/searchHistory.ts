@@ -33,7 +33,11 @@ function readArray(key: string): SearchEntry[] {
 
 function writeArray(key: string, entries: SearchEntry[]): void {
   if (!isBrowser()) return;
-  window.localStorage.setItem(key, JSON.stringify(entries));
+  try {
+    window.localStorage.setItem(key, JSON.stringify(entries));
+  } catch {
+    // QuotaExceededError or SecurityError — silently drop the write
+  }
 }
 
 export function getRecents(): SearchEntry[] {

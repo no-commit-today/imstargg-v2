@@ -19,7 +19,9 @@ const jsonLd = {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: `${env.NEXT_PUBLIC_SITE_URL}/players/{search_term_string}`,
+      // routes.player encodes "#" → "%23"; SearchAction expects user to type the
+      // tag body without "#", so we prepend the encoded "#" in the template.
+      urlTemplate: `${env.NEXT_PUBLIC_SITE_URL}/players/%23{search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },
