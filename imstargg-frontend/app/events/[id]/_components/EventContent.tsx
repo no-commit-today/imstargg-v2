@@ -9,8 +9,8 @@ export function EventContent({ initialEvent }: { initialEvent: BattleEvent }) {
     initialData: initialEvent,
   });
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-6 space-y-5">
+    <section className="py-6 space-y-5">
       <EventHero event={event} />
-    </main>
+    </section>
   );
 }

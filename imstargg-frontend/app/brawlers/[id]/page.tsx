@@ -59,11 +59,9 @@ export default async function BrawlerPage({
   }
   const brawler = toBrawler(dto);
   return (
-    <>
+    <main className="mx-auto w-full max-w-6xl px-4 pb-10">
       <BrawlerContent initialBrawler={brawler} />
-      <main className="mx-auto w-full max-w-6xl px-4 pb-10">
-        <BrawlerStatsSection brawler={brawler} searchParams={sp} />
-      </main>
-    </>
+      <BrawlerStatsSection brawler={brawler} searchParams={sp} />
+    </main>
   );
 }

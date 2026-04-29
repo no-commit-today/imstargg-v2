@@ -11,10 +11,10 @@ export function BrawlerContent({ initialBrawler }: { initialBrawler: Brawler }) 
     initialData: initialBrawler,
   });
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-6 space-y-5">
+    <section className="py-6 space-y-5">
       <BrawlerHero brawler={brawler} />
       <BrawlerItems brawler={brawler} />
       {brawler.buffies.length > 0 && <BrawlerBuffies buffies={brawler.buffies} />}
-    </main>
+    </section>
   );
 }
