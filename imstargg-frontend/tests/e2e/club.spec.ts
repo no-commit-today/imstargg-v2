@@ -27,7 +27,7 @@ test("SEO 메타데이터: title에 클럽 태그가 포함되고 canonical 태�
   await expect(canonical).toHaveCount(1);
 });
 
-test.skip("갱신 버튼 클릭 시 토스트 → 폴링 → 완료 토스트 (CORS 배포 후 활성화)", async ({ page }) => {
+test("갱신 버튼 클릭 시 토스트 → 폴링 → 완료 토스트", async ({ page }) => {
   await page.goto(`/clubs/${TEST_TAGS.clubEncoded}`);
   const renewBtn = page.getByRole("button", { name: "클럽 정보 갱신" });
   await renewBtn.waitFor({ state: "visible", timeout: 15_000 });
