@@ -21,11 +21,10 @@ Player / Club 페이지의 SNS 공유 카드를 정적 logo 에서 동적 1200×
 2. `app/players/[tag]/twitter-image.tsx` 가 같은 ImageResponse 빌더(`src/lib/og/playerOgImage.tsx`)를 재사용해 동일 결과를 반환한다.
 3. `app/clubs/[tag]/opengraph-image.tsx` / `twitter-image.tsx` 가 동일 패턴으로 클럽 카드를 반환한다.
 4. 각 디렉토리에 `opengraph-image.alt.txt` 가 있어 `og:image:alt` 메타와 `twitter:image:alt` 메타가 모두 자동 생성된다.
-5. `buildMetadata` 에 `dynamicOg?: boolean` 옵션이 추가되어 `true` 면 `openGraph.images` / `twitter.images` 가 모두 omit 된다 (file convention 자동 적용).
-6. Player / Club `generateMetadata` 가 `dynamicOg: true` 를 전달.
-7. Player/Club 페이지의 응답 HTML 에 `<meta property="og:image">` 와 `<meta name="twitter:image">` 가 둘 다 생성된다 (file convention endpoint 를 가리킴).
-8. 기존 `app/page.tsx`, `app/brawlers/[id]/page.tsx` 의 OG 동작은 변경되지 않는다 (옵션 미사용 → 정적 logo / brawler portrait 그대로).
-9. `pnpm typecheck` / `pnpm lint` / `pnpm build` 가 통과한다.
+5. Player/Club 페이지의 응답 HTML 에 `<meta property="og:image">` 와 `<meta name="twitter:image">` 가 둘 다 생성되며 file convention endpoint(`/players/[tag]/opengraph-image`, `/players/[tag]/twitter-image` 등)를 가리킨다.
+6. 기존 `app/page.tsx`, `app/brawlers/[id]/page.tsx` 의 OG 동작은 변경되지 않는다 (file convention 미추가 → 기존 정적 logo / brawler portrait 그대로).
+7. `src/lib/seo.ts` (`buildMetadata`) 와 Player/Club `generateMetadata` 의 시그니처/호출은 **변경하지 않는다** — Next.js 16 의 file convention 이 `metadata`/`generateMetadata` 보다 우선이라 `og:image` / `twitter:image` 는 file convention 으로 자동 override.
+8. `pnpm typecheck` / `pnpm lint` / `pnpm build` 가 통과한다.
 
 ## Non-goals
 
@@ -63,51 +62,15 @@ imstargg-frontend/
 
 이 구조의 핵심: Twitter 카드가 opengraph 카드와 100% 동일한 PNG 를 받으므로 디자인이 분기되지 않고 SNS 별로 메타가 누락되지 않는다.
 
-### `buildMetadata` 옵션 변경
+### `buildMetadata` 변경 없음
 
-```ts
-type Input = {
-  title: string;
-  description: string;
-  path: string;
-  image?: string;
-  noindex?: boolean;
-  dynamicOg?: boolean;   // 신규
-};
+Next.js 16 의 [`generateMetadata` 문서](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) 명시:
 
-export function buildMetadata(input: Input): Metadata {
-  const url = `${SITE.url}${input.path}`;
-  const meta: Metadata = {
-    title: input.title,
-    description: input.description,
-    alternates: { canonical: url },
-    robots: input.noindex ? { index: false, follow: false } : undefined,
-    openGraph: {
-      title: input.title,
-      description: input.description,
-      url,
-      siteName: SITE.name,
-      locale: SITE.locale,
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: input.title,
-      description: input.description,
-    },
-  };
+> File-based metadata has the higher priority and will override the `metadata` object and `generateMetadata` function.
 
-  if (!input.dynamicOg) {
-    const image = input.image ?? SITE.defaultOgImage;
-    meta.openGraph!.images = [{ url: image, width: 1200, height: 630 }];
-    meta.twitter!.images = [image];
-  }
-  return meta;
-}
-```
+따라서 `buildMetadata` 가 명시적으로 `openGraph.images` 와 `twitter.images` 를 박더라도, 같은 디렉토리의 `opengraph-image.tsx` 와 `twitter-image.tsx` 가 있으면 file convention 의 `og:image` / `twitter:image` 가 자동으로 우선 적용된다. 이 spec 은 file convention 파일만 추가하면 되므로 `seo.ts` 와 페이지의 `generateMetadata` 는 그대로 둔다.
 
-- `dynamicOg: false` (기본) → 기존 동작과 동일.
-- `dynamicOg: true` → `openGraph.images` / `twitter.images` 미지정. Next.js 가 같은 디렉토리의 `opengraph-image.*` file convention 을 자동 picked up.
+검증 단계에서 빌드 후 HTML 메타를 확인해 file convention endpoint 가 실제로 노출되는지 점검한다(아래 "수동 검증" 참고).
 
 ### 카드 디자인 (1200×630)
 
@@ -314,35 +277,27 @@ export function OgCard({ eyebrow, name, tag, stats }: Props) {
 
 > `next/og` 의 `ImageResponse` 는 satori 기반 — `display: "flex"` 가 필수, 모든 자식 div 도 동일.
 
-### Player / Club generateMetadata 변경
+### Player / Club generateMetadata 변경 없음
 
-```diff
- return buildMetadata({
-   title: `${display} | ImStarGG`,
-   description: `${display} — 트로피 ${formatNumber(dto.trophies)}, ${dto.club?.name ?? "클럽 없음"}. 브롤스타즈 플레이어 통계.`,
-   path: `/players/${toUrlPath(tag)}`,
-+  dynamicOg: true,
- });
-```
-
-Club 도 동일 한 줄 추가. NotFound 분기는 dynamicOg 미사용 (정적 logo 유지).
+`buildMetadata` 가 박는 정적 `og:image` / `twitter:image` 는 file convention 에 의해 자동 override 되므로 페이지의 `generateMetadata` 호출은 그대로 둔다. NotFound 분기도 변경 없음 (file convention 도 NotFound 케이스를 안전하게 처리 — 아래 "Error 처리" 참고).
 
 ## 테스팅 전략
 
 ### 단위 테스트
-- `buildMetadata` 의 `dynamicOg` 분기에 대한 Vitest 테스트 추가 (`src/lib/seo.ts` 단위 테스트):
-  - `dynamicOg: false` → `openGraph.images` 와 `twitter.images` 가 존재.
-  - `dynamicOg: true` → 둘 다 undefined.
 - `OgCard` 는 ImageResponse JSX 출력이라 별도 단위 테스트는 만들지 않는다 (시각 회귀는 빌드 + 수동 검증).
+- `buildMetadata` 시그니처 변경 없음 → 신규 단위 테스트 없음.
 
 ### 빌드/타입 검증
 - `pnpm typecheck` — 통과.
 - `pnpm lint` — 새 파일에 ESLint 경고 0.
 - `pnpm build` — file convention 파일이 컴파일되고 메타 endpoint 가 생성되는지 확인.
 
-### 수동 검증 (사용자 또는 후속)
+### 수동 검증 (이 spec 에서 필수 — file convention 우선순위 가설을 직접 확인)
 - `pnpm dev` 후 `/players/88J8Q9RPV/opengraph-image` 와 `/players/88J8Q9RPV/twitter-image`, `/clubs/2U8CVLQQ9/opengraph-image` 와 `/clubs/2U8CVLQQ9/twitter-image` 모두 1200×630 PNG 200 응답.
-- 동일 페이지 HTML 의 `<meta property="og:image">` 와 `<meta name="twitter:image">` 둘 다 file convention endpoint 를 가리킨다 (curl + grep 으로 확인).
+- 동일 페이지의 HTML 메타를 `curl -s http://localhost:3000/players/88J8Q9RPV | grep -E 'og:image|twitter:image'` 로 확인:
+  - `<meta property="og:image">` 가 `/players/88J8Q9RPV/opengraph-image` (또는 hash 가 붙은 file convention endpoint) 를 가리킨다.
+  - `<meta name="twitter:image">` 가 `/players/88J8Q9RPV/twitter-image` 를 가리킨다.
+  - 정적 `/assets/logo-full.png` 가 잘못 노출되어 있지 않다.
 - 한국어 이름 (예: "쉘리") 이 깨지지 않고 KoBrawl Gothic 으로 렌더된다.
 - prod 배포 후 `https://www.opengraph.xyz/` 같은 외부 검증 도구로 페이스북/트위터 카드 미리보기 확인 (사용자 영역).
 
@@ -354,6 +309,7 @@ Club 도 동일 한 줄 추가. NotFound 분기는 dynamicOg 미사용 (정적 l
 
 | 위험 | 대응 |
 |---|---|
+| Next.js 16 의 file convention 우선순위가 spec 의 가정과 다를 수 있다 (실제 구현/버전 차이) | 빌드 후 HTML 메타를 직접 확인하는 검증 단계가 spec 의 필수 항목. 만약 file convention 이 generateMetadata 의 명시적 images 를 override 하지 않는 동작이 발견되면, plan 단계에서 `seo.ts` 에 omit 플래그 추가로 보강한다(현재는 docs 명시에 따라 불필요). |
 | `next/og` 의 satori 가 `KoBrawl Gothic` 의 일부 한자/특수 글리프를 못 그릴 수 있다 | KoBrawl Gothic 은 한글 위주 — 일반적인 플레이어/클럽 이름은 정상. 빌드 후 한국어/영문/이모지 케이스를 직접 fetch 해서 확인. 깨지면 fallback 으로 system 폰트 명시. |
 | `process.cwd()` 기준 폰트 경로가 prod 빌드에서 상대화돼 깨질 수 있다 | Next.js 공식 예시와 동일 패턴 (`process.cwd() + public/...`). next.js docs 가 이를 권장. |
 | satori 가 `display: "flex"` 외 layout 을 거부한다 | OgCard 의 모든 컨테이너에 `display: flex` 를 명시. |
