@@ -16,12 +16,12 @@ type Input = {
   path: string;
   image?: string;
   noindex?: boolean;
+  dynamicOg?: boolean;
 };
 
 export function buildMetadata(input: Input): Metadata {
   const url = `${SITE.url}${input.path}`;
-  const image = input.image ?? SITE.defaultOgImage;
-  return {
+  const meta: Metadata = {
     title: input.title,
     description: input.description,
     alternates: { canonical: url },
@@ -31,7 +31,6 @@ export function buildMetadata(input: Input): Metadata {
       description: input.description,
       url,
       siteName: SITE.name,
-      images: [{ url: image, width: 1200, height: 630 }],
       locale: SITE.locale,
       type: "website",
     },
@@ -39,7 +38,13 @@ export function buildMetadata(input: Input): Metadata {
       card: "summary_large_image",
       title: input.title,
       description: input.description,
-      images: [image],
     },
   };
+
+  if (!input.dynamicOg) {
+    const image = input.image ?? SITE.defaultOgImage;
+    meta.openGraph!.images = [{ url: image, width: 1200, height: 630 }];
+    meta.twitter!.images = [image];
+  }
+  return meta;
 }
