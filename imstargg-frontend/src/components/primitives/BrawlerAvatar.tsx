@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import type { BrawlerRarity } from "@/api/types";
 
 const RARITY_BORDER: Record<BrawlerRarity, string> = {
@@ -44,11 +45,12 @@ export function BrawlerAvatar({
         style={style}
         title={name}
       >
-        <img
+        <Image
           src={imageUrl}
           alt={name}
           width={size}
           height={size}
+          unoptimized
           className="h-full w-full object-cover"
         />
       </div>
