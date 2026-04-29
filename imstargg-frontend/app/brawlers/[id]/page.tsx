@@ -6,10 +6,12 @@ import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { BrawlerContent } from "./_components/BrawlerContent";
+import { BrawlerStatsSection } from "./_components/BrawlerStatsSection";
 
 type Params = { params: Promise<{ id: string }> };
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export const revalidate = 86400;
+export const revalidate = 600;
 
 export async function generateStaticParams() {
   const list = await brawlerApi.list({ next: { revalidate: 86400 } });
@@ -39,8 +41,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
-export default async function BrawlerPage({ params }: Params) {
+export default async function BrawlerPage({
+  params,
+  searchParams,
+}: {
+  params: Params["params"];
+  searchParams: SearchParams;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
   let dto;
   try {
     dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
@@ -48,5 +57,13 @@ export default async function BrawlerPage({ params }: Params) {
     if (e instanceof NotFoundError) notFound();
     throw e;
   }
-  return <BrawlerContent initialBrawler={toBrawler(dto)} />;
+  const brawler = toBrawler(dto);
+  return (
+    <>
+      <BrawlerContent initialBrawler={brawler} />
+      <main className="mx-auto w-full max-w-6xl px-4 pb-10">
+        <BrawlerStatsSection brawler={brawler} searchParams={sp} />
+      </main>
+    </>
+  );
 }

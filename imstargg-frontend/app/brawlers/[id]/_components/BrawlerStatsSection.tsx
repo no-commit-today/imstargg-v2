@@ -1,0 +1,90 @@
+import { statisticsApi } from "@/api/endpoints/statistics";
+import {
+  parseDateRange,
+  parseTierRange,
+  parseTrophyRange,
+  TIER_RANGE_LABELS,
+} from "@/domain/statistics/enums";
+import { parseResultSortBy, parseSortOrder } from "@/domain/statistics/sort";
+import {
+  toDailyResultStat,
+  toEnemyResultStat,
+  toItemOwnership,
+  toPairResultStat,
+} from "@/domain/statistics/mappers";
+import type { Brawler } from "@/domain/brawler/types";
+import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
+import { DailyTrendChart } from "./DailyTrendChart";
+import { PairStatsTable } from "./PairStatsTable";
+import { EnemyStatsTable } from "./EnemyStatsTable";
+import { ItemOwnershipSection } from "./ItemOwnershipSection";
+
+type Props = {
+  brawler: Brawler;
+  searchParams: Record<string, string | string[] | undefined>;
+};
+
+export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
+  const tier = parseTierRange(searchParams.tier);
+  const date = parseDateRange(searchParams.date);
+  const trophy = parseTrophyRange(searchParams.trophy);
+  const pairSort = parseResultSortBy(searchParams.pairSort);
+  const pairOrder = parseSortOrder(searchParams.pairOrder);
+  const enemySort = parseResultSortBy(searchParams.enemySort);
+  const enemyOrder = parseSortOrder(searchParams.enemyOrder);
+
+  const [daily, pair, enemy, ownership] = await Promise.all([
+    statisticsApi.daily(
+      { brawlerId: brawler.id, tierRange: tier, dateRange: date },
+      { next: { revalidate: 600 } },
+    ),
+    statisticsApi.pairResult(
+      {
+        brawlerId: brawler.id,
+        tierRange: tier,
+        dateRange: date,
+        sortBy: pairSort,
+        sortOrder: pairOrder,
+      },
+      { next: { revalidate: 600 } },
+    ),
+    statisticsApi.enemyResult(
+      {
+        brawlerId: brawler.id,
+        tierRange: tier,
+        dateRange: date,
+        sortBy: enemySort,
+        sortOrder: enemyOrder,
+      },
+      { next: { revalidate: 600 } },
+    ),
+    statisticsApi.itemOwnership(
+      { brawlerId: brawler.id, trophyRange: trophy },
+      { next: { revalidate: 600 } },
+    ),
+  ]);
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-lg font-bold">통계</h2>
+          <p className="text-xs text-[#5C6271]">
+            {TIER_RANGE_LABELS[tier]} 기준
+          </p>
+        </div>
+        <StatRangeSelector tier={tier} date={date} />
+      </div>
+      <DailyTrendChart items={daily.content.map(toDailyResultStat)} />
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <PairStatsTable items={pair.content.map(toPairResultStat)} sort={pairSort} order={pairOrder} />
+        <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} sort={enemySort} order={enemyOrder} />
+      </div>
+      <ItemOwnershipSection
+        brawler={brawler}
+        ownership={toItemOwnership(ownership)}
+        trophy={trophy}
+      />
+    </section>
+  );
+}
