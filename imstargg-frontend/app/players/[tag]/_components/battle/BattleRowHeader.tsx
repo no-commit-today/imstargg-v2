@@ -4,7 +4,8 @@ import { BattleResultBadge } from "./BattleResultBadge";
 import { BattleModeIcon } from "./BattleModeIcon";
 import { modeLabel } from "@/domain/battle/modeLabels";
 import { formatRelativeTime } from "@/lib/relativeTime";
-import type { Battle, BattlePlayer } from "@/domain/battle/types";
+import { isSameTag } from "@/lib/tag";
+import type { Battle, BattlePlayer, BattleType } from "@/domain/battle/types";
 
 interface Props {
   battle: Battle;
@@ -12,11 +13,18 @@ interface Props {
   expanded: boolean;
 }
 
+const TYPE_LABELS: Partial<Record<BattleType, string>> = {
+  SOLO_RANKED: "솔로 랭크",
+  FRIENDLY: "친선",
+  CHALLENGE: "챌린지",
+  TOURNAMENT: "토너먼트",
+  CHAMPIONSHIP_CHALLENGE: "챔피언십",
+};
+
 function findOwnerPlayer(battle: Battle, ownerTag: string): BattlePlayer | null {
-  const norm = ownerTag.replace(/^#/, "").toUpperCase();
   for (const team of battle.teams) {
     for (const p of team) {
-      if (p.tag.replace(/^#/, "").toUpperCase() === norm) return p;
+      if (isSameTag(p.tag, ownerTag)) return p;
     }
   }
   return null;
@@ -44,6 +52,7 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
     owner?.brawler.brawler?.id != null ? String(owner.brawler.brawler.id) : "0";
   const modeText = battle.event?.modeName ?? modeLabel(battle.mode);
   const mapText = battle.event?.mapName ?? "알 수 없는 맵";
+  const typeLabel = battle.type != null ? TYPE_LABELS[battle.type] : undefined;
 
   return (
     <div
@@ -54,13 +63,27 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
         alignItems: "center",
         gap: 12,
         padding: "10px 12px",
-        cursor: "pointer",
       }}
     >
       <div style={{ width: 4, height: 40, background: sideBarColor(battle), borderRadius: 2 }} />
       <BattleModeIcon iconUrl={battle.event?.modeIconUrl ?? null} mode={battle.mode} size={28} />
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#14161B" }}>{modeText}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#14161B" }}>{modeText}</span>
+          {typeLabel && (
+            <span
+              className="pill"
+              style={{
+                fontSize: 10,
+                padding: "2px 6px",
+                background: "#ECEEF3",
+                color: "#5C6271",
+              }}
+            >
+              {typeLabel}
+            </span>
+          )}
+        </div>
         <div style={{ fontSize: 12, color: "#5C6271" }}>{mapText}</div>
       </div>
       {owner && (
@@ -70,7 +93,7 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
         </div>
       )}
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <BattleResultBadge battle={battle} />
+        <BattleResultBadge battle={battle} totalTeams={battle.teams.length} />
         {battle.trophyChange != null && battle.trophyChange !== 0 && (
           <span
             style={{

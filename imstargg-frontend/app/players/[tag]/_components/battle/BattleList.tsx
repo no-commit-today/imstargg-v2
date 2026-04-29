@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BattleRow } from "./BattleRow";
 import { BattleSkeleton } from "./BattleSkeleton";
@@ -14,6 +16,10 @@ export function BattleList({ tag }: Props) {
     data, isLoading, isError, error,
     fetchNextPage, hasNextPage, isFetchingNextPage, refetch,
   } = usePlayerBattles(tag);
+
+  useEffect(() => {
+    if (isError) toast.error("배틀 기록을 불러오지 못했어요");
+  }, [isError]);
 
   if (isLoading) return <BattleSkeleton />;
 

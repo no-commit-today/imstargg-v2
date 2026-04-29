@@ -17,6 +17,10 @@ describe("formatRelativeTime", () => {
     expect(formatRelativeTime("2026-04-26T12:00:00Z", NOW)).toBe("3일 전");
   });
   it("7일 초과는 절대 날짜 yyyy.MM.dd", () => {
-    expect(formatRelativeTime("2026-04-20T12:00:00Z", NOW)).toBe("2026.04.20");
+    // 로컬 자정과 멀리 떨어진 시각을 사용해 타임존 경계 이슈를 회피
+    const iso = "2026-04-20T12:00:00Z";
+    const d = new Date(iso);
+    const expected = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+    expect(formatRelativeTime(iso, NOW)).toBe(expected);
   });
 });

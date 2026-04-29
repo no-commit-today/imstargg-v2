@@ -10,7 +10,7 @@ interface Props {
   containsOwner: boolean;
 }
 
-const COLOR_MAP: Record<string, string> = {
+const COLOR_MAP: Record<"green" | "red" | "neutral" | "yellow", string> = {
   green: "#2BD576",
   red: "#FF3A3A",
   neutral: "#8A90A0",

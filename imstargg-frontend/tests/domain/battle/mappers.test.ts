@@ -63,6 +63,11 @@ describe("toBattle", () => {
     expect(sut.event?.mapName).toBe("맵");
   });
 
+  it("빈 teams 처리", () => {
+    const sut = toBattle({ ...baseDto, teams: [] });
+    expect(sut.teams).toEqual([]);
+  });
+
   it("teams 의 각 플레이어가 BattlePlayer 형태로 매핑됨", () => {
     const sut = toBattle(baseDto);
     expect(sut.teams).toHaveLength(2);

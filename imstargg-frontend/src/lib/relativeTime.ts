@@ -10,8 +10,8 @@ export function formatRelativeTime(iso: string, nowMs: number = Date.now()): str
   const day = Math.floor(hr / 24);
   if (day <= 7) return `${day}일 전`;
   const d = new Date(ts);
-  const yyyy = d.getUTCFullYear();
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}.${mm}.${dd}`;
 }

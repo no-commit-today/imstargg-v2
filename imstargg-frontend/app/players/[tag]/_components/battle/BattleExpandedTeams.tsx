@@ -1,4 +1,5 @@
 import { BattleTeamCard } from "./BattleTeamCard";
+import { isSameTag } from "@/lib/tag";
 import type { Battle, BattlePlayer } from "@/domain/battle/types";
 
 interface Props {
@@ -7,8 +8,7 @@ interface Props {
 }
 
 function teamContainsOwner(team: BattlePlayer[], ownerTag: string): boolean {
-  const norm = ownerTag.replace(/^#/, "").toUpperCase();
-  return team.some((p) => p.tag.replace(/^#/, "").toUpperCase() === norm);
+  return team.some((p) => isSameTag(p.tag, ownerTag));
 }
 
 function resultLabel(battle: Battle, teamIndex: number, isOwnerTeam: boolean): {
@@ -18,9 +18,10 @@ function resultLabel(battle: Battle, teamIndex: number, isOwnerTeam: boolean): {
   if (battle.resultType === "RANK") {
     const rank = teamIndex + 1;
     const totalTeams = battle.teams.length;
-    const top = rank <= Math.ceil(totalTeams / 3);
-    const mid = rank <= Math.ceil(totalTeams * 2 / 3);
-    return { label: `#${rank}`, color: top ? "green" : mid ? "neutral" : "red" };
+    const top = rank <= 3;
+    const mid = rank <= Math.ceil(totalTeams / 2);
+    const color = top ? "yellow" : mid ? "green" : "red";
+    return { label: `#${rank}`, color };
   }
   // RESULT
   if (battle.result === "DRAW") return { label: "DRAW", color: "neutral" };

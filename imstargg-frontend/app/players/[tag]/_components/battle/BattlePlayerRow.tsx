@@ -2,17 +2,14 @@ import Link from "next/link";
 import BrawlerPortrait from "@/components/primitives/BrawlerPortrait";
 import PowerPill from "@/components/primitives/PowerPill";
 import Trophy from "@/components/primitives/Trophy";
-import { toUrlPath } from "@/lib/tag";
+import { isSameTag, toUrlPath } from "@/lib/tag";
+import { tierColor, tierLabel } from "@/domain/battle/tierLabels";
 import type { BattlePlayer } from "@/domain/battle/types";
 
 interface Props {
   player: BattlePlayer;
   ownerTag: string;
   starPlayerTag: string | null;
-}
-
-function isSameTag(a: string, b: string): boolean {
-  return a.replace(/^#/, "").toUpperCase() === b.replace(/^#/, "").toUpperCase();
 }
 
 export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
@@ -60,6 +57,25 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         <PowerPill level={player.brawler.power} />
         {player.brawler.trophies != null && <Trophy value={player.brawler.trophies} size={12} />}
+        {player.soloRankTier != null && (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              background: tierColor(player.soloRankTier),
+              color: "#FFFFFF",
+              fontFamily: "var(--font-num)",
+              fontWeight: 700,
+              fontSize: 9,
+              padding: "2px 4px",
+              borderRadius: 4,
+              letterSpacing: "0.02em",
+            }}
+            title={player.soloRankTier}
+          >
+            {tierLabel(player.soloRankTier)}
+          </span>
+        )}
       </div>
     </div>
   );

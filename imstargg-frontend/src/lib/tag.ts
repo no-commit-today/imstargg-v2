@@ -24,6 +24,10 @@ export function toUrlPath(input: string): string {
   return encodeURIComponent(normalizeTag(input));
 }
 
+export function isSameTag(a: string, b: string): boolean {
+  return normalizeTag(a) === normalizeTag(b);
+}
+
 export function isValidTag(input: string): boolean {
   if (!input) return false;
   const decoded = decode(input);
