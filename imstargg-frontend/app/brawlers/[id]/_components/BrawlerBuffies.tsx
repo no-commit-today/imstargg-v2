@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { BuffyResponse } from "@/api/types";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -19,7 +20,14 @@ export function BrawlerBuffies({ buffies }: { buffies: BuffyResponse[] }) {
               className="flex items-center gap-2 rounded border bg-background px-2.5 py-1.5"
             >
               {b.imageUrl && (
-                <img src={b.imageUrl} alt={label} width={20} height={20} className="h-5 w-5" />
+                <Image
+                  src={b.imageUrl}
+                  alt={label}
+                  width={20}
+                  height={20}
+                  unoptimized
+                  className="h-5 w-5"
+                />
               )}
               <span className="text-xs font-bold">{label}</span>
             </div>
