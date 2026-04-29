@@ -8,6 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   let brawlerEntries: MetadataRoute.Sitemap = [];
+  let rankingBrawlerEntries: MetadataRoute.Sitemap = [];
   try {
     const list = await brawlerApi.list({ next: { revalidate: 86400 } });
     brawlerEntries = list.content.map((b) => ({
@@ -16,8 +17,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.5,
     }));
+    rankingBrawlerEntries = list.content.map((b) => ({
+      url: `${base}/ranking/brawlers/${b.id}`,
+      lastModified: now,
+      changeFrequency: "hourly",
+      priority: 0.6,
+    }));
   } catch {
     brawlerEntries = [];
+    rankingBrawlerEntries = [];
   }
 
   let eventEntries: MetadataRoute.Sitemap = [];
@@ -48,6 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/brawlers`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/events`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
     ...brawlerEntries,
+    ...rankingBrawlerEntries,
     ...eventEntries,
   ];
 }
