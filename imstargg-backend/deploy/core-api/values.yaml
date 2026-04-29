@@ -5,7 +5,7 @@ imagePullSecrets:
   - name: ecr-pull-secret
 
 deployment:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
     tag: "267b951"
