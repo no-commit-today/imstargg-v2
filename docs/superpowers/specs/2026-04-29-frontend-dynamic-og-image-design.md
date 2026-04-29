@@ -50,7 +50,7 @@ imstargg-frontend/
       opengraph-image.alt.txt      # 신규
   src/
     lib/
-      seo.ts                       # buildMetadata 에 dynamicOg 옵션 추가
+      seo.ts                       # 변경 없음 (참고용 — file convention 이 자동 override)
       og/
         loadOgFonts.ts             # 신규: KoBrawl/Lilita 폰트 readFile 헬퍼
         OgCard.tsx                 # 신규: Player/Club 공통 다크 카드 레이아웃
@@ -318,4 +318,4 @@ export function OgCard({ eyebrow, name, tag, stats }: Props) {
 
 ## 작업 산출물
 
-이 spec 승인 후 별도 plan 문서 (`docs/superpowers/plans/2026-04-29-frontend-dynamic-og-image.md`) 에서 TDD 단위로 분해. 단위 테스트는 `buildMetadata.dynamicOg` 분기 1 종, 시각 검증은 빌드 + 수동.
+이 spec 승인 후 별도 plan 문서 (`docs/superpowers/plans/2026-04-29-frontend-dynamic-og-image.md`) 에서 단계별로 분해. 단위 테스트는 추가하지 않으며, 시각/메타 검증은 빌드 + 수동 (HTML 메타 grep + dev 서버 PNG 응답).
