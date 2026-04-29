@@ -1,6 +1,0 @@
-dependencies:
-- name: nct-chart
-  repository: oci://ghcr.io/no-commit-today
-  version: 0.1.0
-digest: sha256:c4222a569841cb7ec1501f8f31e5d24cadca27808eac117e875f6d0a5ce490ac
-generated: "2026-04-25T14:59:48.803487+09:00"
