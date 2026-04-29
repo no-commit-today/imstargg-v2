@@ -1,414 +1,92 @@
+workload:
+  kind: CronJob
+
 imagePullSecrets:
   - name: ecr-pull-secret
-deployment:
-  enabled: false
-service:
-  enabled: false
-ingress:
-  enabled: false
-cronjobs:
+
+cronjob:
+  image:
+    repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
+    tag: "97e1951"
+    pullPolicy: Always
+  command:
+    - /bin/sh
+    - -c
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: prod
+  envFrom:
+    - secretRef:
+        name: core-batch-secret
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+jobs:
   - name: partition-manage
     schedule: "0 2 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=partitionManageJob date=$(date +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: battle-event-mode-sync
     schedule: "0 8 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=battleEventModeSyncJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: battle-event-rotation-sync
     schedule: "0 * * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=battleEventRotationSyncJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: battle-event-sync
     schedule: "0 8 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=battleEventSyncJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: brawler-ranking-collect
     schedule: "*/30 * * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerRankingCollectJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: club-ranking-collect
     schedule: "*/30 * * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=clubRankingCollectJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: player-ranking-collect
     schedule: "*/30 * * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=playerRankingCollectJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: battle-rank-stats
     schedule: "0 2 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: battle-result-stats
     schedule: "0 3 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: enemy-battle-result-stats
     schedule: "0 4 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerEnemyBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: pair-battle-rank-stats
     schedule: "0 6 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerPairBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: pair-battle-result-stats
     schedule: "0 7 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerPairBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: brawler-item-ownership-stats
     schedule: "0 8 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=brawlerItemOwnershipStatsJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: stats-player-sync
     schedule: "0 9 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=statsPlayerSyncJob date=$(date -d 'yesterday' +%Y-%m-%d)"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi
   - name: stats-player-sync-from-ranking
     schedule: "0 9 * * *"
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-      tag: "97e1951"
-      pullPolicy: Always
-    command:
-      - /bin/sh
-      - -c
     args:
       - "java -jar /app/app.jar --job.name=statsPlayerSyncFromRankingJob"
-    env:
-      - name: SPRING_PROFILES_ACTIVE
-        value: prod
-    envFrom:
-      - secretRef:
-          name: core-batch-secret
-    concurrencyPolicy: Forbid
-    successfulJobsHistoryLimit: 3
-    failedJobsHistoryLimit: 1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 512Mi
-      limits:
-        cpu: 1000m
-        memory: 2Gi

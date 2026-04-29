@@ -1,5 +1,9 @@
+workload:
+  kind: Deployment
+
 imagePullSecrets:
   - name: ecr-pull-secret
+
 deployment:
   replicaCount: 1
   image:
@@ -18,9 +22,11 @@ deployment:
       memory: 2Gi
     limits:
       memory: 2Gi
-  podDisruptionBudget:
-    enabled: true
-    minAvailable: 1
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
 service:
   enabled: true
   type: ClusterIP
@@ -29,6 +35,7 @@ service:
       port: 8080
       targetPort: http
       protocol: TCP
+
 ingress:
   enabled: true
   className: traefik

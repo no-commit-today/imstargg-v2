@@ -1,5 +1,9 @@
+workload:
+  kind: Deployment
+
 imagePullSecrets:
   - name: ecr-pull-secret
+
 deployment:
   replicaCount: 1
   image:
@@ -19,7 +23,9 @@ deployment:
       memory: 2Gi
     limits:
       memory: 2Gi
+
 service:
   enabled: false
+
 ingress:
   enabled: false
