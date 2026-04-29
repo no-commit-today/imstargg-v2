@@ -16,10 +16,10 @@ import type {
   StatsTierRangeDto,
 } from "@/api/types";
 
-function buildQuery(params: Record<string, string | number | undefined | null>): string {
+function buildQuery(params: object): string {
   const entries = Object.entries(params).filter(
     ([, v]) => v !== undefined && v !== null,
-  ) as [string, string | number][];
+  );
   if (entries.length === 0) return "";
   const sp = new URLSearchParams();
   for (const [k, v] of entries) sp.set(k, String(v));
