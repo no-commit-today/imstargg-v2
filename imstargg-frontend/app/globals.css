@@ -278,3 +278,4 @@ body { font-family: var(--font-body); color: var(--fg); background: var(--bg); }
 
 @import "./styles/app.css";
 @import "./styles/responsive.css";
+@import "./styles/battle.css";
