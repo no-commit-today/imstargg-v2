@@ -181,3 +181,94 @@ export interface ClubRankingResponse {
   memberCount: number;
   rankChange: number | null;
 }
+
+// === Statistics ===
+export type StatsTierRangeDto =
+  | "TROPHY_1000_PLUS" | "TROPHY_2000_PLUS" | "TROPHY_3000_PLUS"
+  | "SOLO_RANK_MYTHIC_PLUS" | "SOLO_RANK_LEGENDARY_PLUS" | "SOLO_RANK_MASTER_PLUS";
+
+export type StatsDateRangeDto =
+  | "THIS_WEEK" | "SINCE_LAST_WEEK" | "LAST_WEEK"
+  | "SINCE_TWO_WEEKS_AGO" | "TWO_WEEKS_AGO"
+  | "THIS_MONTH" | "SINCE_LAST_MONTH" | "LAST_MONTH";
+
+export type BrawlerTrophyRangeDto =
+  | "TROPHY_500_PLUS" | "TROPHY_1000_PLUS" | "TROPHY_2000_PLUS" | "TROPHY_3000_PLUS";
+
+export type ResultStatsSortByDto = "PICK_RATE" | "WIN_RATE";
+export type RankStatsSortByDto = "PICK_RATE" | "AVERAGE_RANK";
+export type SortOrderDto = "ASC" | "DESC";
+
+export interface BrawlerResultStatisticsItemResponse {
+  brawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  pickRate: number;
+  winRate: number;
+  starPlayerRate: number;
+  tierScore: number;
+  tier: string; // "S" | "A" | "B" | "C" | "D"
+}
+
+export interface BrawlerResultStatisticsResponse {
+  totalBattleCount: number;
+  items: BrawlerResultStatisticsItemResponse[];
+}
+
+export interface BrawlerRankStatisticsResponse {
+  brawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  averageRank: number;
+}
+
+export interface BrawlerPairResultStatisticsItemResponse {
+  brawler: BrawlerResponse | null;
+  pairBrawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  pickRate: number;
+  winRate: number;
+}
+
+export interface BrawlerPairRankStatisticsResponse {
+  brawler: BrawlerResponse | null;
+  pairBrawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  averageRank: number;
+}
+
+export interface BrawlerEnemyResultStatisticsItemResponse {
+  brawler: BrawlerResponse | null;
+  enemyBrawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  pickRate: number;
+  winRate: number;
+}
+
+export interface BrawlerResultDailyStatisticsResponse {
+  date: string; // ISO yyyy-MM-dd
+  brawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  winRate: number;
+  starPlayerRate: number;
+}
+
+export interface BrawlerItemOwnershipStatisticsItemResponse {
+  itemId: number;
+  ownershipRate: number;
+  ownerCount: number;
+  totalCount: number;
+}
+
+export interface BrawlerBuffyOwnershipStatisticsItemResponse {
+  buffyType: string;
+  ownershipRate: number;
+  ownerCount: number;
+  totalCount: number;
+}
+
+export interface BrawlerItemOwnershipStatisticsResponse {
+  gears: BrawlerItemOwnershipStatisticsItemResponse[];
+  gadgets: BrawlerItemOwnershipStatisticsItemResponse[];
+  starPowers: BrawlerItemOwnershipStatisticsItemResponse[];
+  hyperCharges: BrawlerItemOwnershipStatisticsItemResponse[];
+  buffies: BrawlerBuffyOwnershipStatisticsItemResponse[];
+}
