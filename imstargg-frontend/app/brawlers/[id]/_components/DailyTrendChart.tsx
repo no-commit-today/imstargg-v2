@@ -37,7 +37,7 @@ export function DailyTrendChart({ items }: Props) {
             <XAxis dataKey="date" stroke="#5C6271" fontSize={11} />
             <YAxis stroke="#5C6271" fontSize={11} unit="%" domain={[0, 100]} />
             <Tooltip
-              formatter={(v: number, name: string) => [`${v}%`, name === "winRate" ? "승률" : "MVP"]}
+              formatter={(v, name) => [`${v}%`, name === "winRate" ? "승률" : "MVP"]}
             />
             <Line type="monotone" dataKey="winRate" stroke="#FFC60A" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="starPlayerRate" stroke="#9146FF" strokeWidth={2} strokeDasharray="4 4" dot={false} />
