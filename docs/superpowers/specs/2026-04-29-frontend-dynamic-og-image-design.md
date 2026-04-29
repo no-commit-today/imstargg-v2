@@ -30,7 +30,6 @@ Player / Club 페이지의 SNS 공유 카드를 정적 logo 에서 동적 1200×
 ## Non-goals
 
 - Home / 리스트 / Brawler / Event 의 동적 OG (정적 logo 또는 portraitImageUrl 그대로).
-- 별도 `twitter-image.tsx` 추가 (1차로 `opengraph-image` 가 twitter card 의 `summary_large_image` 로 cascade 되는지 검증 후 결정).
 - 한국어 추가 디스플레이 폰트 (Pretendard Variable 등) self-host. 이번 spec 은 KoBrawl Gothic + Lilita One + system sans-serif 만 사용.
 - 색약/접근성 컨트라스트 추가 검증.
 - 외부 SNS validator 자동화 테스트.
