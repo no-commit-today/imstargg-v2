@@ -42,11 +42,11 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
   hosts:
-    - host: core-api.imstargg.com
+    - host: api.imstargg.com
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: core-api-tls
       hosts:
-        - core-api.imstargg.com
+        - api.imstargg.com
