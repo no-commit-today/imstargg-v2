@@ -39,7 +39,7 @@ export async function BrawlerSelectedPanel({
       if (typeof v === "string") sp.set(k, v);
     }
     const qs = sp.toString();
-    return qs ? `?${qs}` : "?";
+    return qs ? `?${qs}` : "";
   })();
 
   if (resultType === "RANK") {
