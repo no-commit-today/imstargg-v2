@@ -12,7 +12,7 @@ nct-chart:
       schedule: "0 2 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -39,7 +39,7 @@ nct-chart:
       schedule: "0 8 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -66,7 +66,7 @@ nct-chart:
       schedule: "0 * * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -93,7 +93,7 @@ nct-chart:
       schedule: "0 8 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -120,7 +120,7 @@ nct-chart:
       schedule: "*/30 * * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -147,7 +147,7 @@ nct-chart:
       schedule: "*/30 * * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -174,7 +174,7 @@ nct-chart:
       schedule: "*/30 * * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -201,7 +201,7 @@ nct-chart:
       schedule: "0 2 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -228,7 +228,7 @@ nct-chart:
       schedule: "0 3 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -255,7 +255,7 @@ nct-chart:
       schedule: "0 4 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -282,7 +282,7 @@ nct-chart:
       schedule: "0 6 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -309,7 +309,7 @@ nct-chart:
       schedule: "0 7 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -336,7 +336,7 @@ nct-chart:
       schedule: "0 8 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -359,12 +359,11 @@ nct-chart:
         limits:
           cpu: 1000m
           memory: 2Gi
-
     - name: stats-player-sync
       schedule: "0 9 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
@@ -391,7 +390,7 @@ nct-chart:
       schedule: "0 9 * * *"
       image:
         repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-        tag: "4625fdf"
+        tag: "97e1951"
         pullPolicy: Always
       command:
         - /bin/sh
