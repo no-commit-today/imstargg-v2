@@ -51,14 +51,21 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
 - 도메인 시각요소: `src/components/primitives/` (Trophy, BrawlerPortrait 등).
 - 토스트: `import { toast } from "sonner"`.
 
+## 이미지
+
+CDN(`cdn.imstargg.com`) 동적 자산은 `next/image` + `unoptimized` (이미 webp 라 Vercel 변환 불필요, `next.config.ts` `remotePatterns` 도 불필요). 정적 `/assets/*` 만 raw `<img>` 잔존 — 새 동적 자산은 `<Image unoptimized width height alt>` 패턴.
+
+## 메타데이터 / OG image
+
+`src/lib/seo.ts` 의 `buildMetadata({ dynamicOg: true })` 는 `openGraph.images` / `twitter.images` 키를 객체에서 omit. Next.js 16.2.1 의 `mergeStaticMetadata` 는 source 가 `hasOwnProperty('images')` 면 file convention 을 skip 하므로, 동적 OG 카드를 적용하는 페이지는 반드시 이 옵션 + 같은 디렉토리에 `opengraph-image.tsx` / `twitter-image.tsx`. 공통 빌더는 `src/lib/og/`.
+
 ## 환경변수
 
 `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_SITE_URL`. 검증은 `src/config/env.ts`.
 
 ## 설계/구현 문서
 
-- `docs/superpowers/specs/2026-04-27-frontend-foundation-design.md`
-- `docs/superpowers/plans/2026-04-27-frontend-foundation.md`
+`docs/superpowers/specs/` (설계) 와 `docs/superpowers/plans/` (구현 계획) 에 도메인별로 보관. 신규 도메인 작업은 spec → plan → implementation 사이클을 따른다.
 
 ## Design
 
