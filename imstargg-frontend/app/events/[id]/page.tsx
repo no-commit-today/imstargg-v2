@@ -5,6 +5,7 @@ import { toBattleEvent } from "@/domain/event/mappers";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { EventContent } from "./_components/EventContent";
+import { EventStatsSection } from "./_components/EventStatsSection";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -44,8 +45,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
-export default async function EventPage({ params }: Params) {
+export default async function EventPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
   let dto;
   try {
     dto = await eventApi.get(id, { next: { revalidate: 3600 } });
@@ -53,5 +61,13 @@ export default async function EventPage({ params }: Params) {
     if (e instanceof NotFoundError) notFound();
     throw e;
   }
-  return <EventContent initialEvent={toBattleEvent(dto)} />;
+  const event = toBattleEvent(dto);
+  return (
+    <>
+      <EventContent initialEvent={event} />
+      <main className="mx-auto w-full max-w-6xl px-4 pb-10">
+        <EventStatsSection event={event} searchParams={sp} />
+      </main>
+    </>
+  );
 }
