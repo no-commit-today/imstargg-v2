@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { BrawlerItem } from "@/domain/brawler/types";
 
 export function BrawlerItemCard({ item }: { item: BrawlerItem }) {
@@ -7,11 +8,12 @@ export function BrawlerItemCard({ item }: { item: BrawlerItem }) {
     <div className="flex items-center gap-3 rounded border bg-card p-2.5">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
         {item.imageUrl ? (
-          <img
+          <Image
             src={item.imageUrl}
             alt={item.name}
             width={48}
             height={48}
+            unoptimized
             className="h-full w-full object-contain"
           />
         ) : (
