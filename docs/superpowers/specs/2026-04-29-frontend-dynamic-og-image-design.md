@@ -21,10 +21,11 @@ Player / Club 페이지의 SNS 공유 카드를 정적 logo 에서 동적 1200×
 2. `app/players/[tag]/twitter-image.tsx` 가 같은 ImageResponse 빌더(`src/lib/og/playerOgImage.tsx`)를 재사용해 동일 결과를 반환한다.
 3. `app/clubs/[tag]/opengraph-image.tsx` / `twitter-image.tsx` 가 동일 패턴으로 클럽 카드를 반환한다.
 4. 각 디렉토리에 `opengraph-image.alt.txt` 가 있어 `og:image:alt` 메타와 `twitter:image:alt` 메타가 모두 자동 생성된다.
-5. Player/Club 페이지의 응답 HTML 에 `<meta property="og:image">` 와 `<meta name="twitter:image">` 가 둘 다 생성되며 file convention endpoint(`/players/[tag]/opengraph-image`, `/players/[tag]/twitter-image` 등)를 가리킨다.
-6. 기존 `app/page.tsx`, `app/brawlers/[id]/page.tsx` 의 OG 동작은 변경되지 않는다 (file convention 미추가 → 기존 정적 logo / brawler portrait 그대로).
-7. `src/lib/seo.ts` (`buildMetadata`) 와 Player/Club `generateMetadata` 의 시그니처/호출은 **변경하지 않는다** — Next.js 16 의 file convention 이 `metadata`/`generateMetadata` 보다 우선이라 `og:image` / `twitter:image` 는 file convention 으로 자동 override.
-8. `pnpm typecheck` / `pnpm lint` / `pnpm build` 가 통과한다.
+5. `src/lib/seo.ts` 의 `buildMetadata` 에 `dynamicOg?: boolean` 옵션이 추가되어 `true` 일 때 `openGraph` 와 `twitter` 객체에서 `images` 키 자체를 omit (hasOwnProperty 가 false 가 되도록 객체 분기). Next.js 의 `mergeStaticMetadata` 가 file convention 을 적용하려면 source 가 `images` 를 hasOwnProperty 하지 않아야 한다.
+6. Player / Club `generateMetadata` 가 `dynamicOg: true` 를 전달.
+7. Player/Club 페이지의 응답 HTML 에 `<meta property="og:image">` 와 `<meta name="twitter:image">` 가 둘 다 생성되며 file convention endpoint(`/players/[tag]/opengraph-image`, `/players/[tag]/twitter-image` 등)를 가리킨다 (정적 `/assets/logo-full.png` 가 노출되지 않는다).
+8. 기존 `app/page.tsx`, `app/brawlers/[id]/page.tsx` 의 OG 동작은 변경되지 않는다 (`dynamicOg` 미사용 → 정적 logo / brawler portrait 그대로).
+9. `pnpm typecheck` / `pnpm lint` / `pnpm build` 가 통과한다.
 
 ## Non-goals
 
@@ -50,7 +51,7 @@ imstargg-frontend/
       opengraph-image.alt.txt      # 신규
   src/
     lib/
-      seo.ts                       # 변경 없음 (참고용 — file convention 이 자동 override)
+      seo.ts                       # buildMetadata 에 dynamicOg 옵션 추가 (images 키 omit)
       og/
         loadOgFonts.ts             # 신규: KoBrawl/Lilita 폰트 readFile 헬퍼
         OgCard.tsx                 # 신규: Player/Club 공통 다크 카드 레이아웃
@@ -62,15 +63,77 @@ imstargg-frontend/
 
 이 구조의 핵심: Twitter 카드가 opengraph 카드와 100% 동일한 PNG 를 받으므로 디자인이 분기되지 않고 SNS 별로 메타가 누락되지 않는다.
 
-### `buildMetadata` 변경 없음
+### `buildMetadata` — `dynamicOg` 옵션 추가
 
-Next.js 16 의 [`generateMetadata` 문서](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) 명시:
+#### 왜 옵션이 필요한가 (Next.js 16.2.1 실제 동작)
 
-> File-based metadata has the higher priority and will override the `metadata` object and `generateMetadata` function.
+Next.js 의 공식 docs 는 "file-based metadata has higher priority" 라고 명시하지만, 설치된 `next@16.2.1` 의 `mergeStaticMetadata` (in `next/dist/lib/metadata/resolve-metadata.js`) 의 실제 로직은 다음과 같다:
 
-따라서 `buildMetadata` 가 명시적으로 `openGraph.images` 와 `twitter.images` 를 박더라도, 같은 디렉토리의 `opengraph-image.tsx` 와 `twitter-image.tsx` 가 있으면 file convention 의 `og:image` / `twitter:image` 가 자동으로 우선 적용된다. 이 spec 은 file convention 파일만 추가하면 되므로 `seo.ts` 와 페이지의 `generateMetadata` 는 그대로 둔다.
+```js
+// file based metadata is specified and current level metadata openGraph.images is not specified
+if (openGraph && !source?.openGraph?.hasOwnProperty('images')) {
+  // file convention images 적용
+}
+// (twitter 도 동일 — source.twitter.hasOwnProperty('images') 가 true 면 file convention skip)
+```
 
-검증 단계에서 빌드 후 HTML 메타를 확인해 file convention endpoint 가 실제로 노출되는지 점검한다(아래 "수동 검증" 참고).
+즉 **`generateMetadata` 가 반환한 객체에서 `openGraph.images` / `twitter.images` 키가 `hasOwnProperty` 로 존재하면 file convention 의 `opengraph-image.tsx` / `twitter-image.tsx` 가 무시 (skip) 된다.** 현재 `buildMetadata` 는 항상 두 필드에 정적 logo 를 박으므로, file convention 만 추가해서는 OG 가 변경되지 않는다.
+
+추가로 `postProcessMetadata` 는 `twitter.images` 가 미지정인 경우에만 `openGraph.images` 로 자동 inherit:
+
+```js
+const hasTwImages = Boolean((twitter?.hasOwnProperty('images')) && twitter.images);
+if (!hasTwImages) autoFillProps.images = openGraph.images;
+```
+
+따라서 file convention 이 picked up 되려면 `images` 키 자체를 객체에서 제거해야 하며 `images: undefined` 도 부족하다 (hasOwnProperty 는 true).
+
+#### 수정안
+
+```ts
+type Input = {
+  title: string;
+  description: string;
+  path: string;
+  image?: string;
+  noindex?: boolean;
+  dynamicOg?: boolean;   // 신규
+};
+
+export function buildMetadata(input: Input): Metadata {
+  const url = `${SITE.url}${input.path}`;
+  const meta: Metadata = {
+    title: input.title,
+    description: input.description,
+    alternates: { canonical: url },
+    robots: input.noindex ? { index: false, follow: false } : undefined,
+    openGraph: {
+      title: input.title,
+      description: input.description,
+      url,
+      siteName: SITE.name,
+      locale: SITE.locale,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: input.title,
+      description: input.description,
+    },
+  };
+
+  // dynamicOg=false (기본): 정적 logo / 또는 input.image 를 박는다.
+  // dynamicOg=true: images 키 자체를 박지 않아 file convention 이 picked up.
+  if (!input.dynamicOg) {
+    const image = input.image ?? SITE.defaultOgImage;
+    meta.openGraph!.images = [{ url: image, width: 1200, height: 630 }];
+    meta.twitter!.images = [image];
+  }
+  return meta;
+}
+```
+
+핵심: `dynamicOg: true` 분기에서 `images` 를 할당하지 않는다 (객체에서 키 자체가 없음). 이로써 `mergeStaticMetadata` 가 file convention 을 picked up 한다.
 
 ### 카드 디자인 (1200×630)
 
@@ -277,15 +340,26 @@ export function OgCard({ eyebrow, name, tag, stats }: Props) {
 
 > `next/og` 의 `ImageResponse` 는 satori 기반 — `display: "flex"` 가 필수, 모든 자식 div 도 동일.
 
-### Player / Club generateMetadata 변경 없음
+### Player / Club generateMetadata — `dynamicOg: true` 추가
 
-`buildMetadata` 가 박는 정적 `og:image` / `twitter:image` 는 file convention 에 의해 자동 override 되므로 페이지의 `generateMetadata` 호출은 그대로 둔다. NotFound 분기도 변경 없음 (file convention 도 NotFound 케이스를 안전하게 처리 — 아래 "Error 처리" 참고).
+```diff
+ return buildMetadata({
+   title: `${display} | ImStarGG`,
+   description: `${display} — 트로피 ${formatNumber(dto.trophies)}, ${dto.club?.name ?? "클럽 없음"}. 브롤스타즈 플레이어 통계.`,
+   path: `/players/${toUrlPath(tag)}`,
++  dynamicOg: true,
+ });
+```
+
+Club 도 동일 한 줄 추가. NotFound 분기는 `dynamicOg` 미사용 (정적 logo 유지) — file convention 도 NotFound DTO 를 받아 fallback ImageResponse 를 반환하므로 안전하지만, 단순화를 위해 NotFound 케이스만 정적 logo.
 
 ## 테스팅 전략
 
 ### 단위 테스트
+- `buildMetadata` 의 `dynamicOg` 분기에 대한 Vitest 테스트 추가 (`src/lib/seo.test.ts` 또는 기존 적절 위치):
+  - `dynamicOg: false` (기본) → `openGraph.images` 와 `twitter.images` 가 hasOwnProperty 로 존재.
+  - `dynamicOg: true` → `openGraph` 와 `twitter` 객체에서 `images` 키가 hasOwnProperty 로 존재하지 않는다 (`'images' in obj === false`).
 - `OgCard` 는 ImageResponse JSX 출력이라 별도 단위 테스트는 만들지 않는다 (시각 회귀는 빌드 + 수동 검증).
-- `buildMetadata` 시그니처 변경 없음 → 신규 단위 테스트 없음.
 
 ### 빌드/타입 검증
 - `pnpm typecheck` — 통과.
@@ -309,7 +383,7 @@ export function OgCard({ eyebrow, name, tag, stats }: Props) {
 
 | 위험 | 대응 |
 |---|---|
-| Next.js 16 의 file convention 우선순위가 spec 의 가정과 다를 수 있다 (실제 구현/버전 차이) | 빌드 후 HTML 메타를 직접 확인하는 검증 단계가 spec 의 필수 항목. 만약 file convention 이 generateMetadata 의 명시적 images 를 override 하지 않는 동작이 발견되면, plan 단계에서 `seo.ts` 에 omit 플래그 추가로 보강한다(현재는 docs 명시에 따라 불필요). |
+| Next.js docs 와 실제 구현의 동작 차이 | 본 spec 은 docs 가 아닌 `next@16.2.1` 소스(`mergeStaticMetadata`, `postProcessMetadata`)의 실제 동작을 기준으로 설계됨. `dynamicOg=true` 시 `images` 키 omit 으로 file convention 을 활성화. 빌드 후 HTML 메타를 grep 으로 검증하는 단계를 필수 항목으로 둔다. Next.js 메이저 업그레이드 시 동작 회귀 가능성 있으므로 동일 검증을 재실행. |
 | `next/og` 의 satori 가 `KoBrawl Gothic` 의 일부 한자/특수 글리프를 못 그릴 수 있다 | KoBrawl Gothic 은 한글 위주 — 일반적인 플레이어/클럽 이름은 정상. 빌드 후 한국어/영문/이모지 케이스를 직접 fetch 해서 확인. 깨지면 fallback 으로 system 폰트 명시. |
 | `process.cwd()` 기준 폰트 경로가 prod 빌드에서 상대화돼 깨질 수 있다 | Next.js 공식 예시와 동일 패턴 (`process.cwd() + public/...`). next.js docs 가 이를 권장. |
 | satori 가 `display: "flex"` 외 layout 을 거부한다 | OgCard 의 모든 컨테이너에 `display: flex` 를 명시. |
@@ -318,4 +392,4 @@ export function OgCard({ eyebrow, name, tag, stats }: Props) {
 
 ## 작업 산출물
 
-이 spec 승인 후 별도 plan 문서 (`docs/superpowers/plans/2026-04-29-frontend-dynamic-og-image.md`) 에서 단계별로 분해. 단위 테스트는 추가하지 않으며, 시각/메타 검증은 빌드 + 수동 (HTML 메타 grep + dev 서버 PNG 응답).
+이 spec 승인 후 별도 plan 문서 (`docs/superpowers/plans/2026-04-29-frontend-dynamic-og-image.md`) 에서 단계별로 분해. 단위 테스트는 `buildMetadata.dynamicOg` 의 hasOwnProperty 분기 1 종, 시각/메타 검증은 빌드 + 수동 (HTML 메타 grep + dev 서버 PNG 응답).
