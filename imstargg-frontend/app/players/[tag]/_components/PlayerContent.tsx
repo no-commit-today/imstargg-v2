@@ -41,9 +41,19 @@ export function PlayerContent({
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
       <PlayerHero player={player} />
       <Tabs defaultValue="battles" className="w-full">
-        <TabsList>
-          <TabsTrigger value="battles">배틀</TabsTrigger>
-          <TabsTrigger value="brawlers">브롤러</TabsTrigger>
+        <TabsList variant="line" className="h-11 w-full justify-start gap-4 border-b border-[#D8DCE5] px-0">
+          <TabsTrigger
+            value="battles"
+            className="px-2 text-base font-semibold data-[state=active]:text-[#14161B]"
+          >
+            배틀
+          </TabsTrigger>
+          <TabsTrigger
+            value="brawlers"
+            className="px-2 text-base font-semibold data-[state=active]:text-[#14161B]"
+          >
+            브롤러
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="battles">
           <PlayerBattles tag={tag} />

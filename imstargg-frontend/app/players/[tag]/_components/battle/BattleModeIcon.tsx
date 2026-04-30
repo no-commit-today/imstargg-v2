@@ -17,7 +17,7 @@ export function BattleModeIcon({ iconUrl, mode, size = 28 }: Props) {
         width={size}
         height={size}
         unoptimized
-        style={{ objectFit: "contain" }}
+        style={{ width: size, height: size, objectFit: "contain" }}
       />
     );
   }
