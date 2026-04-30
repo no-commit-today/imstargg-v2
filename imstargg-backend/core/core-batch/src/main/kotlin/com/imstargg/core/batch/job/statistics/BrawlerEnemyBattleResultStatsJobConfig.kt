@@ -1,6 +1,7 @@
 package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.domain.BrawlerEnemyBattleResultStatsAggregator
+import com.imstargg.core.batch.job.statistics.task.WeeklyEventBattleStatsAggregationTask
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.enums.StatsWeekRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
@@ -13,6 +14,7 @@ import org.springframework.batch.core.job.parameters.DefaultJobParametersValidat
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -22,6 +24,7 @@ class BrawlerEnemyBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val em: EntityManager,
+    private val aggregationTask: WeeklyEventBattleStatsAggregationTask,
 ) {
     companion object {
         const val JOB_NAME = "brawlerEnemyBattleResultStatsJob"
@@ -48,11 +51,11 @@ class BrawlerEnemyBattleResultStatsJobConfig(
     @JobScope
     fun brawlerEnemyBattleResultStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
-            .tasklet(
-                PerEventWeeklyBattleStatsTasklet(
+            .tasklet({ _, _ ->
+                aggregationTask.aggregate(
                     em = em,
                     jobName = JOB_NAME,
-                    weekRangesSupplier = { StatsWeekRange.currentAndPrevious(dateJobParameter().date!!) },
+                    weekRanges = StatsWeekRange.currentAndPrevious(dateJobParameter().date!!),
                     readDistinctEventIds = { queryFactory, weekRange ->
                         queryFactory
                             .select(statsResultBattleEntity.eventBrawlStarsId)
@@ -91,7 +94,8 @@ class BrawlerEnemyBattleResultStatsJobConfig(
                                     .eq(eventBrawlStarsId),
                             ).execute()
                     },
-                ),
-                txManager,
-            ).build()
+                )
+                RepeatStatus.FINISHED
+            }, txManager)
+            .build()
 }
