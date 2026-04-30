@@ -19,9 +19,10 @@ class BrawlStarsApiTaskletTest {
     fun `action 이 성공하면 FINISHED 를 반환한다`() {
         // given
         var executed = false
-        val sut = BrawlStarsApiTasklet("testJob") {
-            executed = true
-        }
+        val sut =
+            BrawlStarsApiTasklet("testJob") {
+                executed = true
+            }
 
         // when
         val result = sut.execute(contribution, chunkContext)
@@ -34,9 +35,10 @@ class BrawlStarsApiTaskletTest {
     @Test
     fun `BrawlStars API 점검 예외는 삼키고 FINISHED 를 반환한다`() {
         // given
-        val sut = BrawlStarsApiTasklet("testJob") {
-            throw serviceUnavailable()
-        }
+        val sut =
+            BrawlStarsApiTasklet("testJob") {
+                throw serviceUnavailable()
+            }
 
         // when
         val result = sut.execute(contribution, chunkContext)
@@ -48,9 +50,10 @@ class BrawlStarsApiTaskletTest {
     @Test
     fun `ServiceUnavailable 이 아닌 예외는 전파한다`() {
         // given
-        val sut = BrawlStarsApiTasklet("testJob") {
-            throw IllegalStateException("boom")
-        }
+        val sut =
+            BrawlStarsApiTasklet("testJob") {
+                throw IllegalStateException("boom")
+            }
 
         // when
         val ex =
