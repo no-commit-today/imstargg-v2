@@ -63,7 +63,7 @@ export default async function EventPage({
   }
   const event = toBattleEvent(dto);
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-10">
+    <main className="mx-auto w-full max-w-7xl px-4 pb-10">
       <EventContent initialEvent={event} />
       <EventStatsSection event={event} searchParams={sp} />
     </main>

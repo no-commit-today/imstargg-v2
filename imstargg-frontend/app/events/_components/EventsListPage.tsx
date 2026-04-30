@@ -21,7 +21,7 @@ export default function EventsListPage({ initialRotation, initialSoloRank }: Pro
   });
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 space-y-6">
+    <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-6">
       <header>
         <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
           EVENTS

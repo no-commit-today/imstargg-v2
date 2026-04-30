@@ -19,6 +19,7 @@ export function SoloRankCard({ event }: { event: BattleEvent }) {
             width={40}
             height={40}
             className="rounded-md"
+            style={{ width: 40, height: 40 }}
             unoptimized
           />
         ) : (

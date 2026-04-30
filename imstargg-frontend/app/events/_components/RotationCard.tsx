@@ -22,6 +22,7 @@ export function RotationCard({ rotation }: { rotation: RotationEvent }) {
               width={48}
               height={48}
               className="rounded-md"
+              style={{ width: 48, height: 48 }}
               unoptimized
             />
           ) : (

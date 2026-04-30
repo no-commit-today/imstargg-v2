@@ -19,6 +19,7 @@ export function EventHero({ event }: { event: BattleEvent }) {
           width={96}
           height={96}
           className="rounded-lg"
+          style={{ width: 96, height: 96 }}
           unoptimized
         />
       ) : (
