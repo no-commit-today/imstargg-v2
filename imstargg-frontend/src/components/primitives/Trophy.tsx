@@ -1,4 +1,4 @@
-import { fmtNum } from "@/lib/data";
+import { formatNumber } from "@/lib/format";
 
 interface Props {
   value: number;
@@ -9,7 +9,7 @@ export default function Trophy({ value, size = 14 }: Props) {
   return (
     <span className="trophy" style={{ fontSize: size }}>
       <img src="/assets/trophy.png" alt="" style={{ width: size, height: size }} />
-      <span>{fmtNum(value)}</span>
+      <span>{formatNumber(value)}</span>
     </span>
   );
 }
