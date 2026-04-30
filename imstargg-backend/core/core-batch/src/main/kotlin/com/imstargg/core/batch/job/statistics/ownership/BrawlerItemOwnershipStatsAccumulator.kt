@@ -1,7 +1,6 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
 import com.imstargg.core.enums.BrawlerTrophyRange
-import com.imstargg.core.enums.BuffyType
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerBuffyOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGadgetOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGearOwnershipStatsEntity
@@ -142,34 +141,5 @@ class BrawlerItemOwnershipStatsAccumulator {
             hyperCharges = hyperChargeEntities,
             buffies = buffyEntities,
         )
-    }
-
-    private data class BrawlerTrophyKey(
-        val brawlerBrawlStarsId: Long,
-        val trophyRange: BrawlerTrophyRange,
-    )
-
-    private data class BrawlerTrophyBuffyKey(
-        val brawlerBrawlStarsId: Long,
-        val trophyRange: BrawlerTrophyRange,
-        val buffyType: BuffyType,
-    ) {
-        fun toBrawlerTrophyKey() =
-            BrawlerTrophyKey(
-                brawlerBrawlStarsId = brawlerBrawlStarsId,
-                trophyRange = trophyRange,
-            )
-    }
-
-    private data class BrawlerTrophyItemKey(
-        val brawlerBrawlStarsId: Long,
-        val trophyRange: BrawlerTrophyRange,
-        val itemBrawlStarsId: Long,
-    ) {
-        fun toBrawlerTrophyKey() =
-            BrawlerTrophyKey(
-                brawlerBrawlStarsId = brawlerBrawlStarsId,
-                trophyRange = trophyRange,
-            )
     }
 }

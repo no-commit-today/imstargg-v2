@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:filename")
-
 package com.imstargg.core.batch.job.statistics.ownership
 
 import com.imstargg.core.enums.BuffyType
