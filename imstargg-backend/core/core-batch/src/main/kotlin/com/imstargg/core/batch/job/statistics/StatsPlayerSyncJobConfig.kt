@@ -168,6 +168,7 @@ class StatsPlayerSyncJobConfig(
             queryFactory
                 .selectFrom(rankBattle)
                 .where(rankBattle.battleDate.eq(dateJobParameter().date))
+                .orderBy(rankBattle.id.asc())
         }
     }
 
@@ -179,6 +180,7 @@ class StatsPlayerSyncJobConfig(
             queryFactory
                 .selectFrom(resultBattle)
                 .where(resultBattle.battleDate.eq(dateJobParameter().date))
+                .orderBy(resultBattle.id.asc())
         }
     }
 
