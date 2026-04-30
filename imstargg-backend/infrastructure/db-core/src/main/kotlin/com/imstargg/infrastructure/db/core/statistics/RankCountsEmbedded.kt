@@ -42,12 +42,11 @@ data class RankCountsEmbedded internal constructor(
 
     fun weightedRankSum(): Long = paddedCounts().mapIndexed { index, count -> (index + 1).toLong() * count }.sum()
 
-    operator fun plus(other: RankCountsEmbedded): RankCountsEmbedded {
-        return RankCountsEmbedded(
+    operator fun plus(other: RankCountsEmbedded): RankCountsEmbedded =
+        RankCountsEmbedded(
             counts = paddedCounts().zip(other.paddedCounts()) { a, b -> a + b },
             totalCount = totalCount + other.totalCount,
         )
-    }
 
     private fun paddedCounts(): List<Long> =
         if (counts.size == MAX_RANK) {
