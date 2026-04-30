@@ -1,11 +1,6 @@
 package com.imstargg.core.batch.job.brawlstars
 
-import com.imstargg.client.brawlstars.BrawlStarsClient
-import com.imstargg.client.brawlstars.response.EventTypeResponse
-import com.imstargg.core.batch.support.alert.AlertCommand
-import com.imstargg.core.batch.support.alert.AlertManager
-import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
-import org.slf4j.LoggerFactory
+import com.imstargg.core.batch.job.brawlstars.task.BattleEventModeSyncTask
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.RunIdIncrementer
@@ -20,14 +15,11 @@ import org.springframework.transaction.PlatformTransactionManager
 class BattleEventModeSyncJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
-    private val brawlStarsClient: BrawlStarsClient,
-    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
-    private val alertManager: AlertManager,
+    private val task: BattleEventModeSyncTask,
 ) {
     companion object {
         const val JOB_NAME = "battleEventModeSyncJob"
         const val STEP_NAME = "battleEventModeSyncStep"
-        private val log = LoggerFactory.getLogger(BattleEventModeSyncJobConfig::class.java)
     }
 
     @Bean(JOB_NAME)
@@ -42,30 +34,8 @@ class BattleEventModeSyncJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet(
                 BrawlStarsApiTasklet(JOB_NAME) {
-                    log.info("[{}] 시작", JOB_NAME)
-                    val gameModes = brawlStarsClient.getGameModes().items
-                    val existingIds =
-                        battleEventModeJpaRepository
-                            .findAll()
-                            .map { it.brawlStarsId }
-                            .toSet()
-
-                    val newModes = gameModes.filter { it.id !in existingIds }
-                    alertNewModes(newModes)
-                    log.info("[{}] 완료 - 신규 모드: {}건", JOB_NAME, newModes.size)
+                    task.sync()
                 },
                 txManager,
             ).build()
-
-    private fun alertNewModes(newModes: List<EventTypeResponse>) {
-        if (newModes.isEmpty()) return
-        val content = newModes.joinToString("\n") { it.toString() }
-        alertManager.alert(
-            AlertCommand
-                .builder()
-                .title("[$JOB_NAME] 새로운 이벤트 모드 발견")
-                .content(content)
-                .build(),
-        )
-    }
 }
