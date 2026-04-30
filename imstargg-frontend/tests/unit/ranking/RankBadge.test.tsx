@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { RankBadge } from "@app/ranking/_components/RankBadge";
 
 describe("RankBadge", () => {
-  it("rank를 #N 형식으로 표시한다", () => {
+  it("rank를 숫자로 표시한다", () => {
     render(<RankBadge rank={1} rankChange={null} />);
-    expect(screen.getByText("#1")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 
   it("rankChange가 양수면 ▲N으로 표시한다", () => {

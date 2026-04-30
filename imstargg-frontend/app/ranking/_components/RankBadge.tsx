@@ -6,7 +6,7 @@ type Props = {
 export function RankBadge({ rank, rankChange }: Props) {
   return (
     <div className="flex items-center gap-1">
-      <span className="text-sm font-bold tabular-nums">#{rank}</span>
+      <span className="text-sm font-bold tabular-nums">{rank}</span>
       {rankChange !== null && <RankChangeIndicator change={rankChange} />}
     </div>
   );
