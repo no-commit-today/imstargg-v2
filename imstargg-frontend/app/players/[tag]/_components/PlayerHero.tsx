@@ -1,0 +1,80 @@
+"use client";
+
+import type { ReactNode } from "react";
+import Link from "next/link";
+import type { Player } from "@/domain/player/types";
+import { formatNumber } from "@/lib/format";
+import { Card } from "@/components/ui/card";
+import { PlayerAvatar } from "@/components/primitives/PlayerAvatar";
+import Trophy from "@/components/primitives/Trophy";
+import { RenewalButton } from "@/components/shared/RenewalButton";
+import { routes } from "@/config/routes";
+
+const STAT_NUM_CLASS =
+  "font-num font-bold text-[#14161B] tabular-nums [font-variant-numeric:tabular-nums]";
+
+export function PlayerHero({ player }: { player: Player }) {
+  return (
+    <Card className="flex flex-col gap-5 p-6 sm:p-7">
+      <header className="flex items-center gap-4 sm:gap-6">
+        <PlayerAvatar name={player.name} size={80} />
+        <div className="min-w-0 flex-1">
+          <h1
+            className="truncate text-2xl font-bold sm:text-3xl"
+            style={player.nameColor ? { color: player.nameColor } : undefined}
+          >
+            {player.name}
+          </h1>
+          <p className="font-mono text-sm text-[#5C6271]">{player.tag}</p>
+          <p className="mt-1 flex items-center gap-1.5 text-sm">
+            {player.club ? (
+              <>
+                <img src="/assets/club_league.png" alt="" width={16} height={16} />
+                <span className="text-[#5C6271]">클럽:</span>
+                <Link
+                  className="font-medium hover:underline"
+                  href={routes.club(player.club.tag)}
+                >
+                  {player.club.name}
+                </Link>
+                <span className="text-[#8A90A0]">→</span>
+              </>
+            ) : (
+              <span className="text-[#8A90A0]">소속 클럽 없음</span>
+            )}
+          </p>
+        </div>
+        <RenewalButton kind="player" tag={player.tag} />
+      </header>
+      <dl className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        <StatCell label="트로피">
+          <Trophy value={player.trophies} size={20} />
+        </StatCell>
+        <StatCell label="최고 트로피">
+          <Trophy value={player.highestTrophies} size={20} />
+        </StatCell>
+        <StatCell label="프레스티지">
+          <span className={STAT_NUM_CLASS}>{formatNumber(player.totalPrestigeLevel)}</span>
+        </StatCell>
+        <StatCell label="EXP Lv">
+          <span className={STAT_NUM_CLASS}>{formatNumber(player.expLevel)}</span>
+        </StatCell>
+        <StatCell label="3v3 승">
+          <span className={STAT_NUM_CLASS}>{formatNumber(player.victories3vs3)}</span>
+        </StatCell>
+        <StatCell label="솔로 승">
+          <span className={STAT_NUM_CLASS}>{formatNumber(player.victoriesSolo)}</span>
+        </StatCell>
+      </dl>
+    </Card>
+  );
+}
+
+function StatCell({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-md bg-[#F6F7FA] px-3 py-2">
+      <dt className="text-xs font-medium text-[#5C6271]">{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
