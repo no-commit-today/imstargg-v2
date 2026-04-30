@@ -1,9 +1,7 @@
 package com.imstargg.core.batch.job.statistics.task
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
@@ -23,7 +21,10 @@ class DailyBattleStatsAggregationTaskTest {
             calls.add("em.persist:${firstArg<Int>()}")
             Unit
         }
-        every { em.flush() } just Runs
+        every { em.flush() } answers {
+            calls.add("em.flush")
+            Unit
+        }
         every { em.clear() } answers {
             calls.add("em.clear")
             Unit
@@ -61,6 +62,7 @@ class DailyBattleStatsAggregationTaskTest {
             "em.persist:1",
             "em.persist:2",
             "em.persist:3",
+            "em.flush",
             "em.clear",
         )
     }

@@ -2,9 +2,7 @@ package com.imstargg.core.batch.job.statistics.task
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
 import com.imstargg.core.enums.WeekRange
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
@@ -28,7 +26,10 @@ class WeeklyEventBattleStatsAggregationTaskTest {
             calls.add("em.persist:${firstArg<Int>()}")
             Unit
         }
-        every { em.flush() } just Runs
+        every { em.flush() } answers {
+            calls.add("em.flush")
+            Unit
+        }
         every { em.clear() } answers {
             calls.add("em.clear")
             Unit
@@ -79,6 +80,7 @@ class WeeklyEventBattleStatsAggregationTaskTest {
             "additional:1",
             "em.persist:2",
             "additional:2",
+            "em.flush",
             "em.clear",
             "read:20:0",
             "em.clear",
@@ -86,6 +88,7 @@ class WeeklyEventBattleStatsAggregationTaskTest {
             "delete:20",
             "em.persist:3",
             "additional:3",
+            "em.flush",
             "em.clear",
         )
     }
