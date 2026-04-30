@@ -32,7 +32,7 @@ export function ClubContent({ tag, initialClub, initialRenewal }: Props) {
   const sorted = sortMembers(club.members);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-6 space-y-6">
+    <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-6">
       <ClubHeader club={club} tag={tag} />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <ClubMembers members={sorted} />

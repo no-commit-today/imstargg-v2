@@ -5,7 +5,7 @@ import type { ClubMember } from "@/domain/club/types";
 import type { ClubMemberRole } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { stripHash } from "@/lib/tag";
-import { formatNumber } from "@/lib/format";
+import Trophy from "@/components/primitives/Trophy";
 
 const ROLE_INFO: Record<ClubMemberRole, { label: string; color: string } | null> = {
   PRESIDENT: { label: "회장", color: "#FFC60A" },
@@ -74,12 +74,7 @@ export function ClubMembers({ members }: { members: ClubMember[] }) {
                 <span />
               )}
               <span className="num text-right text-sm font-extrabold">
-                <img
-                  src="/assets/trophy.png"
-                  alt=""
-                  className="mr-1 inline-block h-3 w-3 align-middle"
-                />
-                {formatNumber(m.trophies)}
+                <Trophy value={m.trophies} size={14} />
               </span>
               <Button
                 type="button"
