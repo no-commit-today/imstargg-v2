@@ -45,7 +45,7 @@ export function SortableHeader({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider ${
+      className={`inline-flex items-center gap-0.5 font-bold tracking-wider ${
         isActive ? "text-[#14161B]" : "text-[#5C6271] hover:text-[#14161B]"
       }`}
     >

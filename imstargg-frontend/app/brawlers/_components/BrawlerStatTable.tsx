@@ -58,20 +58,14 @@ export function BrawlerStatTable({ rows, sort, order, totalBattleCount }: Props)
         totalBattleCount={totalBattleCount}
       />
       <div className="rounded-lg border border-[#D8DCE5] bg-white">
-        <div className="grid grid-cols-[40px_minmax(0,1fr)_56px_72px_72px_72px_96px] items-center gap-2 border-b border-[#D8DCE5] bg-[#F6F7FA] px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#5C6271] sm:grid-cols-[40px_minmax(0,1fr)_56px_72px]">
-          <span>#</span>
+        <div className="grid grid-cols-[26px_minmax(0,1fr)_36px_42px_42px_42px_52px] items-center gap-1 border-b border-[#D8DCE5] bg-[#F6F7FA] px-2 py-2 text-[10px] font-bold tracking-wider text-[#5C6271] sm:grid-cols-[48px_minmax(0,1fr)_56px_72px_72px_72px_96px] sm:gap-2 sm:px-3 sm:text-[11px]">
+          <span>순위</span>
           <SortableHeader column="name" label="브롤러" currentSort={sort} currentOrder={order} />
           <SortableHeader column="tier" label="티어" currentSort={sort} currentOrder={order} />
           <SortableHeader column="winRate" label="승률" currentSort={sort} currentOrder={order} />
-          <span className="hidden sm:inline">
-            <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} />
-          </span>
-          <span className="hidden sm:inline">
-            <SortableHeader column="starPlayerRate" label="MVP" currentSort={sort} currentOrder={order} />
-          </span>
-          <span className="hidden sm:inline">
-            <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} />
-          </span>
+          <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} />
+          <SortableHeader column="starPlayerRate" label="스타률" currentSort={sort} currentOrder={order} />
+          <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} />
         </div>
         {sorted.length === 0 ? (
           <div className="px-4 py-12 text-center text-sm text-[#5C6271]">
