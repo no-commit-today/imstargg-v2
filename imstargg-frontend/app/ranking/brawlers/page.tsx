@@ -20,7 +20,7 @@ export default async function Page() {
   const brawlers = sortByName(list.content.map(toBrawler));
 
   return (
-    <main className="container mx-auto max-w-7xl space-y-4 px-4 py-8">
+    <>
       <h1 className="text-2xl font-bold">브롤러 랭킹</h1>
       <p className="text-sm text-muted-foreground">
         랭킹을 확인할 브롤러를 선택하세요.
@@ -47,6 +47,6 @@ export default async function Page() {
           </Link>
         ))}
       </div>
-    </main>
+    </>
   );
 }

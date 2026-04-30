@@ -34,7 +34,7 @@ export default async function Page({
   const rankings = dto.content.map(toClubRanking);
 
   return (
-    <main className="container mx-auto max-w-7xl space-y-4 px-4 py-8">
+    <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">
           {COUNTRY_LABELS[country]} 클럽 랭킹
@@ -42,6 +42,6 @@ export default async function Page({
         <CountrySelector current={country} />
       </div>
       <ClubRankingList rankings={rankings} />
-    </main>
+    </>
   );
 }
