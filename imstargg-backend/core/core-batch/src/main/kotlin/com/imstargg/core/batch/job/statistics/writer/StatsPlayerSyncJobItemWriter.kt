@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job.statistics
+package com.imstargg.core.batch.job.statistics.writer
 
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity

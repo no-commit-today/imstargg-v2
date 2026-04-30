@@ -1,22 +1,17 @@
 package com.imstargg.core.batch.job.statistics
 
+import com.imstargg.core.batch.job.statistics.task.StatsPlayerSyncFromRankingTask
+import com.imstargg.core.batch.job.statistics.writer.StatsPlayerSyncJobItemWriter
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
-import com.imstargg.core.enums.Country
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import jakarta.persistence.EntityManagerFactory
-import org.slf4j.LoggerFactory
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
@@ -39,10 +34,7 @@ class StatsPlayerSyncJobConfig(
     private val txManager: PlatformTransactionManager,
     private val entityManagerFactory: EntityManagerFactory,
     private val statsPlayerJpaRepository: StatsPlayerJpaRepository,
-    private val playerRankingJpaRepository: PlayerRankingJpaRepository,
-    private val playerRankingItemJpaRepository: PlayerRankingItemJpaRepository,
-    private val brawlerRankingJpaRepository: BrawlerRankingJpaRepository,
-    private val brawlerRankingItemJpaRepository: BrawlerRankingItemJpaRepository,
+    private val statsPlayerSyncFromRankingTask: StatsPlayerSyncFromRankingTask,
 ) {
     companion object {
         const val JOB_NAME = "statsPlayerSyncJob"
@@ -52,7 +44,6 @@ class StatsPlayerSyncJobConfig(
         const val RANK_BATTLE_STEP_NAME = "statsPlayerSyncFromRankBattleStep"
         const val RESULT_BATTLE_STEP_NAME = "statsPlayerSyncFromResultBattleStep"
         private const val CHUNK_SIZE = 1000
-        private val log = LoggerFactory.getLogger(StatsPlayerSyncJobConfig::class.java)
     }
 
     @Bean(DATE_PARAMETER_NAME)
@@ -82,54 +73,7 @@ class StatsPlayerSyncJobConfig(
     fun statsPlayerSyncFromRankingStep(): Step =
         StepBuilder(RANKING_STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
-                log.info("[{}] 시작", RANKING_JOB_NAME)
-                val playerRankingIds =
-                    Country.entries.mapNotNull { country ->
-                        playerRankingJpaRepository
-                            .findTopByCountryOrderByCollectedAtDesc(country)
-                            ?.id
-                    }
-                val brawlerRankingIds =
-                    brawlerRankingJpaRepository
-                        .findAllLatestPerCountryAndBrawler()
-                        .mapNotNull { it.id }
-
-                val allTags =
-                    buildList {
-                        if (playerRankingIds.isNotEmpty()) {
-                            addAll(
-                                playerRankingItemJpaRepository
-                                    .findAllByPlayerRankingIdIn(playerRankingIds)
-                                    .map { it.player.brawlStarsTag },
-                            )
-                        }
-                        if (brawlerRankingIds.isNotEmpty()) {
-                            addAll(
-                                brawlerRankingItemJpaRepository
-                                    .findAllByBrawlerRankingIdIn(brawlerRankingIds)
-                                    .map { it.player.brawlStarsTag },
-                            )
-                        }
-                    }.distinct()
-
-                var totalNew = 0
-                allTags.chunked(CHUNK_SIZE).forEach { batch ->
-                    val existingTags =
-                        statsPlayerJpaRepository
-                            .findAllByBrawlStarsTagIn(batch)
-                            .map { it.brawlStarsTag }
-                            .toSet()
-                    val newPlayers =
-                        batch
-                            .filter { it !in existingTags }
-                            .map { StatsPlayerEntity(brawlStarsTag = it) }
-                    if (newPlayers.isNotEmpty()) {
-                        statsPlayerJpaRepository.saveAll(newPlayers)
-                        totalNew += newPlayers.size
-                    }
-                }
-
-                log.info("[{}] 완료 - 대상 태그: {}건, 신규: {}건", RANKING_JOB_NAME, allTags.size, totalNew)
+                statsPlayerSyncFromRankingTask.sync()
                 RepeatStatus.FINISHED
             }, txManager)
             .build()
