@@ -26,21 +26,12 @@ export function PlayerRankingList({ rankings }: Props) {
               <div className="w-20 shrink-0">
                 <RankBadge rank={r.rank} rankChange={r.rankChange} />
               </div>
-              <div className="min-w-0 flex-1">
-                <div
-                  className="truncate font-bold"
-                  style={
-                    r.player.nameColor
-                      ? { color: hexFromColorCode(r.player.nameColor) }
-                      : undefined
-                  }
-                >
-                  {r.player.name}
-                </div>
+              <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                <span className="truncate font-bold">{r.player.name}</span>
                 {r.player.clubName && (
-                  <div className="truncate text-xs text-muted-foreground">
+                  <span className="truncate text-xs text-muted-foreground">
                     {r.player.clubName}
-                  </div>
+                  </span>
                 )}
               </div>
               <div className="shrink-0">
@@ -52,10 +43,4 @@ export function PlayerRankingList({ rankings }: Props) {
       ))}
     </ul>
   );
-}
-
-function hexFromColorCode(code: string): string {
-  // 백엔드 nameColor: "0xffXXXXXX" 형식 — 앞 4자(0x + alpha) 제거 후 # prefix
-  const m = /^0x[0-9a-fA-F]{2}([0-9a-fA-F]{6})$/.exec(code.trim());
-  return m ? `#${m[1]}` : "inherit";
 }
