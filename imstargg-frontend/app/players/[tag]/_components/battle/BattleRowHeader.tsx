@@ -1,4 +1,4 @@
-import BrawlerPortrait from "@/components/primitives/BrawlerPortrait";
+import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import PowerPill from "@/components/primitives/PowerPill";
 import { BattleResultBadge } from "./BattleResultBadge";
 import { BattleModeIcon } from "./BattleModeIcon";
@@ -48,8 +48,7 @@ function trophyChangeColor(n: number): string {
 
 export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
   const owner = findOwnerPlayer(battle, ownerTag);
-  const ownerBrawlerId =
-    owner?.brawler.brawler?.id != null ? String(owner.brawler.brawler.id) : "0";
+  const ownerBrawler = owner?.brawler.brawler ?? null;
   const modeText = battle.event?.modeName ?? modeLabel(battle.mode);
   const mapText = battle.event?.mapName ?? "알 수 없는 맵";
   const typeLabel = battle.type != null ? TYPE_LABELS[battle.type] : undefined;
@@ -88,7 +87,11 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
       </div>
       {owner && (
         <div className="battle-row-owner-brawler" style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          <BrawlerPortrait id={ownerBrawlerId} size={28} />
+          <BrawlerAvatar
+            name={ownerBrawler?.name ?? "?"}
+            imageUrl={ownerBrawler?.portraitImageUrl ?? null}
+            size={28}
+          />
           <PowerPill level={owner.brawler.power} />
         </div>
       )}

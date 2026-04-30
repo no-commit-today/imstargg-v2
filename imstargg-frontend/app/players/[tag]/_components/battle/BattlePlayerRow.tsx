@@ -1,5 +1,5 @@
 import Link from "next/link";
-import BrawlerPortrait from "@/components/primitives/BrawlerPortrait";
+import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import PowerPill from "@/components/primitives/PowerPill";
 import Trophy from "@/components/primitives/Trophy";
 import { isSameTag, toUrlPath } from "@/lib/tag";
@@ -15,9 +15,7 @@ interface Props {
 export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
   const isOwner = isSameTag(player.tag, ownerTag);
   const isStar = starPlayerTag != null && isSameTag(player.tag, starPlayerTag);
-  const brawlerId = player.brawler.brawler?.id != null
-    ? String(player.brawler.brawler.id)
-    : "0";
+  const playerBrawler = player.brawler.brawler;
 
   return (
     <div
@@ -31,7 +29,11 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
         borderRadius: 6,
       }}
     >
-      <BrawlerPortrait id={brawlerId} size={32} />
+      <BrawlerAvatar
+        name={playerBrawler?.name ?? "?"}
+        imageUrl={playerBrawler?.portraitImageUrl ?? null}
+        size={32}
+      />
       <div style={{ minWidth: 0 }}>
         <Link
           href={`/players/${toUrlPath(player.tag)}`}
