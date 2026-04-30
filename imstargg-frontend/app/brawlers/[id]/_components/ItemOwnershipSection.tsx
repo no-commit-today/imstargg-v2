@@ -1,6 +1,7 @@
 import type { Brawler } from "@/domain/brawler/types";
 import type { ItemOwnership, ItemOwnershipItem } from "@/domain/statistics/types";
 import type { BrawlerTrophyRange } from "@/domain/statistics/enums";
+import { buffyTypeLabel } from "@/domain/brawler/buffyTypeLabel";
 import { TrophyRangeSelector } from "@app/_components/statistics/TrophyRangeSelector";
 
 type Props = {
@@ -99,7 +100,7 @@ export function ItemOwnershipSection({ brawler, ownership, trophy }: Props) {
             <div className="rounded-lg border border-[#D8DCE5] bg-white p-3">
               <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#5C6271]">버피</h4>
               {ownership.buffies.map((b) => (
-                <ItemRow key={b.buffyType} name={b.buffyType} rate={b.ownershipRate} />
+                <ItemRow key={b.buffyType} name={buffyTypeLabel(b.buffyType)} rate={b.ownershipRate} />
               ))}
             </div>
           )}

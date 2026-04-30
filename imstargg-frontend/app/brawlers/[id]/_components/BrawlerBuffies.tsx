@@ -2,10 +2,7 @@
 
 import Image from "next/image";
 import type { BuffyResponse } from "@/api/types";
-
-const TYPE_LABEL: Record<string, string> = {
-  MYTHIC_GEAR: "미식 기어",
-};
+import { buffyTypeLabel } from "@/domain/brawler/buffyTypeLabel";
 
 export function BrawlerBuffies({ buffies }: { buffies: BuffyResponse[] }) {
   return (
@@ -13,7 +10,7 @@ export function BrawlerBuffies({ buffies }: { buffies: BuffyResponse[] }) {
       <h2 className="mb-3 text-sm font-bold">버피 ({buffies.length})</h2>
       <div className="flex flex-wrap gap-2">
         {buffies.map((b, i) => {
-          const label = TYPE_LABEL[b.type] ?? b.type;
+          const label = buffyTypeLabel(b.type);
           return (
             <div
               key={`${b.type}-${i}`}

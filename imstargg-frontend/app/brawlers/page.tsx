@@ -45,7 +45,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const rows = brawlers.map((b) => ({ brawler: b, stat: statById.get(b.id) ?? null }));
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 space-y-5">
+    <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="text-sm text-[#5C6271]">
           <span className="font-bold text-[#14161B]">{TIER_RANGE_LABELS[tierRange]}</span> 메타

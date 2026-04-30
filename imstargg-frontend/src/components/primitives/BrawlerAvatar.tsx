@@ -19,6 +19,7 @@ interface Props {
   size?: number;
   className?: string;
   showFrame?: boolean;
+  priority?: boolean;
 }
 
 export function BrawlerAvatar({
@@ -28,6 +29,7 @@ export function BrawlerAvatar({
   size = 48,
   className = "",
   showFrame = false,
+  priority = false,
 }: Props) {
   const frameColor = rarity ? RARITY_BORDER[rarity] : "#B4B9C7";
   const style: CSSProperties = {
@@ -51,6 +53,7 @@ export function BrawlerAvatar({
           width={size}
           height={size}
           unoptimized
+          priority={priority}
           className="h-full w-full object-cover"
         />
       </div>

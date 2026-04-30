@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Brawler } from "@/domain/brawler/types";
 import type { BrawlerResultStat } from "@/domain/statistics/types";
+import ClassIcon from "@/components/primitives/ClassIcon";
 import { TierBadge } from "@app/_components/statistics/TierBadge";
 import {
   CountCell,
@@ -32,6 +33,7 @@ export function BrawlerStatRow({ rank, brawler, stat }: Props) {
             className="h-8 w-8 rounded-md"
           />
         )}
+        <ClassIcon role={brawler.role} size={16} />
         <span className="truncate text-sm font-bold">{brawler.name}</span>
       </div>
       <div>{stat ? <TierBadge tier={stat.tier} /> : <TierBadge tier="D" />}</div>
