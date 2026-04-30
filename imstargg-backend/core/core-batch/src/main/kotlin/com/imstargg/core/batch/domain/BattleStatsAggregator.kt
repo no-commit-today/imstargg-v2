@@ -16,6 +16,12 @@ package com.imstargg.core.batch.domain
 interface BattleStatsAggregator<TBattle, TEntity> {
     fun aggregate(battle: TBattle)
 
+    /**
+     * 누적된 엔티티를 하나씩 전달한다.
+     *
+     * 기본 구현은 [toEntities]를 먼저 호출하므로 전체 엔티티 목록을 materialize한다.
+     * 대량 집계에서 [flushEntityChunks]를 메모리 경계로 사용하려면 구현체에서 이 메서드를 override해야 한다.
+     */
     fun forEachEntity(consumer: (TEntity) -> Unit) {
         toEntities().forEach(consumer)
     }
