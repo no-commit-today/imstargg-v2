@@ -16,5 +16,29 @@ package com.imstargg.core.batch.domain
 interface BattleStatsAggregator<TBattle, TEntity> {
     fun aggregate(battle: TBattle)
 
+    fun forEachEntity(consumer: (TEntity) -> Unit) {
+        toEntities().forEach(consumer)
+    }
+
+    fun flushEntityChunks(
+        chunkSize: Int,
+        flush: (List<TEntity>) -> Unit,
+    ) {
+        require(chunkSize > 0) { "chunkSize must be greater than 0" }
+
+        val buffer = ArrayList<TEntity>(chunkSize)
+        forEachEntity { entity ->
+            buffer.add(entity)
+            if (buffer.size == chunkSize) {
+                flush(buffer.toList())
+                buffer.clear()
+            }
+        }
+
+        if (buffer.isNotEmpty()) {
+            flush(buffer.toList())
+        }
+    }
+
     fun toEntities(): List<TEntity>
 }

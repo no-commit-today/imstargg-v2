@@ -14,6 +14,12 @@ class RankCountAccumulator<K> {
 
     fun <R> map(transform: (K, RankCountsEmbedded) -> R): List<R> = counts.map { (key, count) -> transform(key, count.toEmbedded()) }
 
+    fun forEach(consumer: (K, RankCountsEmbedded) -> Unit) {
+        counts.forEach { (key, count) ->
+            consumer(key, count.toEmbedded())
+        }
+    }
+
     private class RankCount {
         private val ranks = mutableMapOf<Int, Long>()
 

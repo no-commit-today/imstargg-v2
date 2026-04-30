@@ -15,6 +15,12 @@ class ResultCountAccumulator<K> {
 
     fun <R> map(transform: (K, ResultCountEmbedded) -> R): List<R> = counts.map { (key, count) -> transform(key, count.toEmbedded()) }
 
+    fun forEach(consumer: (K, ResultCountEmbedded) -> Unit) {
+        counts.forEach { (key, count) ->
+            consumer(key, count.toEmbedded())
+        }
+    }
+
     private class ResultCount {
         var victoryCount: Long = 0
         var defeatCount: Long = 0
