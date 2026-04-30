@@ -21,10 +21,21 @@ class BrawlerChangeDetectorTest {
             )
 
         // then
-        assertThat(result).hasSize(2)
-        assertThat(result)
-            .extracting("changeType")
-            .containsExactlyInAnyOrder(BrawlerChangeType.ADDED, BrawlerChangeType.REMOVED)
-        assertThat(result.map { it.itemJson }).containsExactlyInAnyOrder("item=1", "brawlStarsId=3")
+        assertThat(result).containsExactlyInAnyOrder(
+            BrawlerChange(
+                brawlerId = 16000000,
+                brawlerName = "Shelly",
+                changeType = BrawlerChangeType.ADDED,
+                itemType = BrawlerChangeItemType.GEAR,
+                itemJson = "item=1",
+            ),
+            BrawlerChange(
+                brawlerId = 16000000,
+                brawlerName = "Shelly",
+                changeType = BrawlerChangeType.REMOVED,
+                itemType = BrawlerChangeItemType.GEAR,
+                itemJson = "brawlStarsId=3",
+            ),
+        )
     }
 }
