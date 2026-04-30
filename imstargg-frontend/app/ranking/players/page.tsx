@@ -36,7 +36,7 @@ export default async function Page({
   const rankings = dto.content.map(toPlayerRanking);
 
   return (
-    <main className="container mx-auto max-w-3xl space-y-4 py-8">
+    <main className="container mx-auto max-w-7xl space-y-4 px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">
           {COUNTRY_LABELS[country]} 플레이어 랭킹

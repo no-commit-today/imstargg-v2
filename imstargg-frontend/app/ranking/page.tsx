@@ -29,7 +29,7 @@ const ITEMS = [
 
 export default function Page() {
   return (
-    <main className="container mx-auto max-w-3xl space-y-6 py-8">
+    <main className="container mx-auto max-w-7xl space-y-6 px-4 py-8">
       <h1 className="text-2xl font-bold">랭킹</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {ITEMS.map((item) => (

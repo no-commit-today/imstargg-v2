@@ -65,7 +65,7 @@ export default async function Page({
   const rankings = dto.content.map(toBrawlerRanking);
 
   return (
-    <main className="container mx-auto max-w-3xl space-y-4 py-8">
+    <main className="container mx-auto max-w-7xl space-y-4 px-4 py-8">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <BrawlerAvatar
