@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { fmtMinAgo } from "@/lib/data";
+import { formatMinutesAgo } from "@/lib/format";
 
 const RECENT_KEY = "imstargg.recentSearches";
 const RECENT_MAX = 8;
@@ -263,7 +263,7 @@ export default function TopNav() {
                     #{r.tag}
                   </span>
                   <span style={{ fontSize: 11, color: "var(--color-neutral-400)" }}>
-                    {now ? fmtMinAgo(Math.max(0, Math.floor((now - r.ts) / 60000))) : ""}
+                    {now ? formatMinutesAgo(Math.max(0, Math.floor((now - r.ts) / 60000))) : ""}
                   </span>
                   <button
                     onClick={(e) => {
