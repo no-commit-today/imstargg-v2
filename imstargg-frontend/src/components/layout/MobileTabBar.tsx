@@ -1,19 +1,30 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
+import { Calendar } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface Tab {
   route: string;
   label: string;
-  icon: string;
+  icon: ReactNode;
   match?: (r: string) => boolean;
 }
 
+const ASSET_ICON = (src: string) => (
+  <img src={src} alt="" width={20} height={20} />
+);
+
 const TABS: Tab[] = [
-  { route: "/", label: "홈", icon: "🏠", match: (r) => r === "/" || r.startsWith("/players/") },
-  { route: "/brawlers", label: "브롤러", icon: "⭐" },
-  { route: "/events", label: "이벤트", icon: "🗓️" },
-  { route: "/ranking", label: "랭킹", icon: "🏆" },
-  { route: "/clubs", label: "클럽", icon: "🛡️" },
+  {
+    route: "/",
+    label: "홈",
+    icon: ASSET_ICON("/assets/star.webp"),
+    match: (r) => r === "/" || r.startsWith("/players/"),
+  },
+  { route: "/brawlers", label: "브롤러", icon: ASSET_ICON("/assets/star_wings.webp") },
+  { route: "/events", label: "이벤트", icon: <Calendar size={20} strokeWidth={2.25} aria-hidden /> },
+  { route: "/ranking", label: "랭킹", icon: ASSET_ICON("/assets/trophy.png") },
+  { route: "/clubs", label: "클럽", icon: ASSET_ICON("/assets/club_league.png") },
 ];
 
 export default function MobileTabBar() {
