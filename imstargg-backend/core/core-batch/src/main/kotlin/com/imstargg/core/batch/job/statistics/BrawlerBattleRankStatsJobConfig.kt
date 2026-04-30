@@ -1,6 +1,7 @@
 package com.imstargg.core.batch.job.statistics
 
 import com.imstargg.core.batch.domain.BrawlerBattleRankStatsAggregator
+import com.imstargg.core.batch.job.statistics.task.DailyBattleStatsAggregationTask
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleRankStatsEntity.Companion.brawlerBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity.Companion.statsRankBattleEntity
@@ -12,6 +13,7 @@ import org.springframework.batch.core.job.parameters.DefaultJobParametersValidat
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -21,6 +23,7 @@ class BrawlerBattleRankStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val em: EntityManager,
+    private val aggregationTask: DailyBattleStatsAggregationTask,
 ) {
     companion object {
         const val JOB_NAME = "brawlerBattleRankStatsJob"
@@ -47,11 +50,11 @@ class BrawlerBattleRankStatsJobConfig(
     @JobScope
     fun brawlerBattleRankStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
-            .tasklet(
-                DailyBattleStatsTasklet(
+            .tasklet({ _, _ ->
+                aggregationTask.aggregate(
                     em = em,
                     jobName = JOB_NAME,
-                    dateSupplier = { dateJobParameter().date!! },
+                    date = dateJobParameter().date!!,
                     readPage = { queryFactory, date, lastId ->
                         queryFactory
                             .selectFrom(statsRankBattleEntity)
@@ -64,14 +67,15 @@ class BrawlerBattleRankStatsJobConfig(
                             .toList()
                     },
                     getId = { it.id!! },
-                    aggregatorFactory = { BrawlerBattleRankStatsAggregator() },
+                    aggregator = BrawlerBattleRankStatsAggregator(),
                     deleteExisting = { queryFactory, date ->
                         queryFactory
                             .delete(brawlerBattleRankStatsEntity)
                             .where(brawlerBattleRankStatsEntity.battleDate.eq(date))
                             .execute()
                     },
-                ),
-                txManager,
-            ).build()
+                )
+                RepeatStatus.FINISHED
+            }, txManager)
+            .build()
 }

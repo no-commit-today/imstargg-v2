@@ -12,6 +12,7 @@ dependencies {
     implementation("org.springframework:spring-web")
 
     // Test
+    testImplementation("io.github.openfeign:feign-core")
     testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

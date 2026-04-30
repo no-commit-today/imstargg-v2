@@ -61,15 +61,23 @@ class BrawlerBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBatt
         }
     }
 
-    override fun toEntities(): List<BrawlerBattleResultStatsEntity> =
-        resultCounts.map { key, resultCount ->
-            BrawlerBattleResultStatsEntity(
-                eventBrawlStarsId = key.eventBrawlStarsId,
-                tierRange = key.tierRange,
-                battleDate = key.battleDate,
-                brawlerBrawlStarsId = key.brawlerBrawlStarsId,
-                resultCount = resultCount,
-                starPlayerCount = starPlayerCounts[key],
+    override fun forEachEntity(consumer: (BrawlerBattleResultStatsEntity) -> Unit) {
+        resultCounts.forEach { key, resultCount ->
+            consumer(
+                BrawlerBattleResultStatsEntity(
+                    eventBrawlStarsId = key.eventBrawlStarsId,
+                    tierRange = key.tierRange,
+                    battleDate = key.battleDate,
+                    brawlerBrawlStarsId = key.brawlerBrawlStarsId,
+                    resultCount = resultCount,
+                    starPlayerCount = starPlayerCounts[key],
+                ),
             )
+        }
+    }
+
+    override fun toEntities(): List<BrawlerBattleResultStatsEntity> =
+        buildList {
+            forEachEntity { add(it) }
         }
 }

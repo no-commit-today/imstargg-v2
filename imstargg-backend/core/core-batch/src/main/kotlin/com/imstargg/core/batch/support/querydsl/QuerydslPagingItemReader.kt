@@ -11,6 +11,11 @@ import org.springframework.util.ClassUtils
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
+ * QueryDSL-backed paging item reader.
+ *
+ * Callers must provide a stable `orderBy`, preferably by primary key ascending.
+ * Offset paging without deterministic ordering can skip or duplicate rows between pages.
+ *
  * https://github.com/jojoldu/spring-batch-querydsl
  */
 open class QuerydslPagingItemReader<T : Any>(
