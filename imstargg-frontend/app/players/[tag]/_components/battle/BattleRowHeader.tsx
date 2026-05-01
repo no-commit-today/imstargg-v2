@@ -84,7 +84,7 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
             >
               {battle.type === "SOLO_RANKED" && (
                 <img
-                  src="/assets/ranked.png"
+                  src="/assets/icon_ranked_front.png"
                   alt=""
                   width={12}
                   height={12}

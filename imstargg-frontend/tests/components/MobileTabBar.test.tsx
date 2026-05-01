@@ -19,9 +19,9 @@ describe("MobileTabBar", () => {
     }
   });
 
-  it("랭킹 탭에 trophy.png 자산을 사용한다", () => {
+  it("랭킹 탭에 icon_trophy.png 자산을 사용한다", () => {
     const { container } = render(<MobileTabBar />);
     const imgs = Array.from(container.querySelectorAll("img"));
-    expect(imgs.some((i) => i.getAttribute("src") === "/assets/trophy.png")).toBe(true);
+    expect(imgs.some((i) => i.getAttribute("src") === "/assets/icon_trophy.png")).toBe(true);
   });
 });

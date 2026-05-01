@@ -29,7 +29,7 @@ export function PlayerHero({ player }: { player: Player }) {
           <p className="mt-1 flex items-center gap-1.5 text-sm">
             {player.club ? (
               <>
-                <img src="/assets/club_league.png" alt="" width={16} height={16} />
+                <img src="/assets/icon_club_league_masters.png" alt="" width={16} height={16} />
                 <span className="text-[#5C6271]">클럽:</span>
                 <Link
                   className="font-medium hover:underline"

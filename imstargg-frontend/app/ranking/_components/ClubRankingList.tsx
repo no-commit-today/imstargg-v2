@@ -28,7 +28,7 @@ export function ClubRankingList({ rankings }: Props) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 truncate font-bold">
-                  <img src="/assets/club_league.png" alt="" width={16} height={16} />
+                  <img src="/assets/icon_club_league_masters.png" alt="" width={16} height={16} />
                   {r.name}
                 </div>
                 <div className="text-xs text-muted-foreground">

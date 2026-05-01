@@ -23,7 +23,7 @@ export default function HomeScreen() {
           left: 0,
           right: 0,
           height: 480,
-          backgroundImage: "url(/assets/lobby_bg.webp)",
+          backgroundImage: "url(/assets/brawl_stars_lobby.webp)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           opacity: 0.08,

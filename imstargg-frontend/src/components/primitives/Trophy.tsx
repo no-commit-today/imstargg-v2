@@ -8,7 +8,7 @@ interface Props {
 export default function Trophy({ value, size = 14 }: Props) {
   return (
     <span className="trophy" style={{ fontSize: size }}>
-      <img src="/assets/trophy.png" alt="" style={{ width: size, height: size }} />
+      <img src="/assets/icon_trophy.png" alt="" style={{ width: size, height: size }} />
       <span>{formatNumber(value)}</span>
     </span>
   );

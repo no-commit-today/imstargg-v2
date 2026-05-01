@@ -23,7 +23,7 @@ export function ClubHeader({ club, tag }: { club: Club; tag: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr_240px] bg-[linear-gradient(135deg,#2A2E38,#1A1D24)] text-white">
         <div className="flex flex-col items-center justify-center gap-2 p-7 border-r border-white/5">
           <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#FFC60A,#FF8A1F)] shadow-[0_6px_20px_rgba(255,198,10,0.4)]">
-            <img src="/assets/club_league.png" alt="" className="h-16 w-16" />
+            <img src="/assets/icon_club_league_masters.png" alt="" className="h-16 w-16" />
           </div>
           <div className="font-mono text-xs text-white/70">{club.tag}</div>
         </div>
@@ -43,7 +43,7 @@ export function ClubHeader({ club, tag }: { club: Club; tag: string }) {
           </p>
 
           <div className="mt-4 flex flex-wrap gap-6">
-            <Stat label="총 트로피" value={formatNumber(club.trophies)} icon="trophy.png" />
+            <Stat label="총 트로피" value={formatNumber(club.trophies)} icon="icon_trophy.png" />
             <Stat label="멤버" value={`${memberCount}/30`} />
             <Stat label="필요 트로피" value={formatNumber(club.requiredTrophies)} />
             <Stat label="평균" value={formatNumber(avgTrophies)} />

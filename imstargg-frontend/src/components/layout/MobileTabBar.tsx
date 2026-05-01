@@ -18,13 +18,13 @@ const TABS: Tab[] = [
   {
     route: "/",
     label: "홈",
-    icon: ASSET_ICON("/assets/star.webp"),
+    icon: ASSET_ICON("/assets/Brawl Stars Star No Shadow.webp"),
     match: (r) => r === "/" || r.startsWith("/players/"),
   },
-  { route: "/brawlers", label: "브롤러", icon: ASSET_ICON("/assets/star_wings.webp") },
+  { route: "/brawlers", label: "브롤러", icon: ASSET_ICON("/assets/Brawl Stars Star Wings.webp") },
   { route: "/events", label: "이벤트", icon: <Calendar size={20} strokeWidth={2.25} aria-hidden /> },
-  { route: "/ranking", label: "랭킹", icon: ASSET_ICON("/assets/trophy.png") },
-  { route: "/clubs", label: "클럽", icon: ASSET_ICON("/assets/club_league.png") },
+  { route: "/ranking", label: "랭킹", icon: ASSET_ICON("/assets/icon_trophy.png") },
+  { route: "/clubs", label: "클럽", icon: ASSET_ICON("/assets/icon_club_league_masters.png") },
 ];
 
 export default function MobileTabBar() {
