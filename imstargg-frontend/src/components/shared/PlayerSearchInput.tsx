@@ -31,7 +31,6 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
   // The hydration risk (server renders [] vs client real data) outweighs the
   // cascading-render concern for a dropdown that only opens on user interaction.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecents(getRecents());
     setFavorites(getFavorites());
   }, []);
@@ -52,7 +51,6 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
 
   // Reset highlighted entry whenever the visible list or open state changes.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(-1);
   }, [open, recents, favorites, value]);
 

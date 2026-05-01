@@ -57,7 +57,7 @@ CDN(`cdn.imstargg.com`) 동적 자산은 `next/image` + `unoptimized` (이미 we
 
 ## 메타데이터 / OG image
 
-`src/lib/seo.ts` 의 `buildMetadata({ dynamicOg: true })` 는 `openGraph.images` / `twitter.images` 키를 객체에서 omit. Next.js 16.2.1 의 `mergeStaticMetadata` 는 source 가 `hasOwnProperty('images')` 면 file convention 을 skip 하므로, 동적 OG 카드를 적용하는 페이지는 반드시 이 옵션 + 같은 디렉토리에 `opengraph-image.tsx` / `twitter-image.tsx`. 공통 빌더는 `src/lib/og/`.
+`src/lib/seo.ts` 의 `buildMetadata({ dynamicOg: true })` 는 `openGraph.images` / `twitter.images` 키를 객체에서 omit. 동적 OG 카드를 적용하는 페이지는 반드시 이 옵션 + 같은 디렉토리에 `opengraph-image.tsx` / `twitter-image.tsx`. 공통 빌더는 `src/lib/og/`.
 
 ## 환경변수
 
