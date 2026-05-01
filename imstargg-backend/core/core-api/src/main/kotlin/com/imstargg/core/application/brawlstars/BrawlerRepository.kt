@@ -5,6 +5,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
+import com.imstargg.core.domain.brawlstars.brawler.Buffies
 import com.imstargg.core.domain.brawlstars.brawler.Buffy
 import com.imstargg.core.domain.brawlstars.brawler.Gadget
 import com.imstargg.core.domain.brawlstars.brawler.Gear
@@ -95,6 +96,21 @@ class BrawlerRepository(
         return brawlerEntities.map { brawlerEntity ->
             val brawlerId = brawlerEntity.brawlStarsId
 
+            val buffiesByType =
+                (buffiesByBrawlerId[brawlerId] ?: emptyList()).associate { buffyEntity ->
+                    buffyEntity.type to
+                        Buffy(
+                            type = buffyEntity.type,
+                            imageUrl = imagesByKey[buffyEntity.type.toImageType() to brawlerId]?.toImageUrl(),
+                        )
+                }
+            val buffies =
+                buffiesByType[BuffyType.GADGET]?.let { gadget ->
+                    val starPower = buffiesByType[BuffyType.STAR_POWER] ?: return@let null
+                    val hyperCharge = buffiesByType[BuffyType.HYPER_CHARGE] ?: return@let null
+                    Buffies(gadget = gadget, starPower = starPower, hyperCharge = hyperCharge)
+                }
+
             Brawler(
                 id = BrawlStarsId(brawlerId),
                 name = toMessages(brawlerNames[brawlerId]),
@@ -106,15 +122,12 @@ class BrawlerRepository(
                         .mapNotNull { gearsById[it.gearBrawlStarsId] }
                         .map { toGear(it, gearNames, imagesByKey) },
                 starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
-                hyperCharges = (hyperChargesByBrawlerId[brawlerId] ?: emptyList()).map { toHyperCharge(it, hyperChargeNames, imagesByKey) },
+                hyperCharge =
+                    (hyperChargesByBrawlerId[brawlerId] ?: emptyList())
+                        .firstOrNull()
+                        ?.let { toHyperCharge(it, hyperChargeNames, imagesByKey) },
                 portraitImageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.toImageUrl(),
-                buffies =
-                    (buffiesByBrawlerId[brawlerId] ?: emptyList()).map { buffyEntity ->
-                        Buffy(
-                            type = buffyEntity.type,
-                            imageUrl = imagesByKey[buffyEntity.type.toImageType() to brawlerId]?.toImageUrl(),
-                        )
-                    },
+                buffies = buffies,
             )
         }
     }

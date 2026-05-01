@@ -12,9 +12,9 @@ data class BrawlerResponse(
     val gadgets: List<GadgetResponse>,
     val gears: List<GearResponse>,
     val starPowers: List<StarPowerResponse>,
-    val hyperCharges: List<HyperChargeResponse>,
+    val hyperCharge: HyperChargeResponse?,
     val portraitImageUrl: String?,
-    val buffies: List<BuffyResponse>,
+    val buffies: BuffiesResponse?,
 ) {
     companion object {
         fun of(brawler: Brawler) =
@@ -26,9 +26,9 @@ data class BrawlerResponse(
                 gadgets = brawler.gadgets.map { GadgetResponse.of(it) },
                 gears = brawler.gears.map { GearResponse.of(it) },
                 starPowers = brawler.starPowers.map { StarPowerResponse.of(it) },
-                hyperCharges = brawler.hyperCharges.map { HyperChargeResponse.of(it) },
+                hyperCharge = brawler.hyperCharge?.let { HyperChargeResponse.of(it) },
                 portraitImageUrl = brawler.portraitImageUrl,
-                buffies = brawler.buffies.map { BuffyResponse(it.type, it.imageUrl) },
+                buffies = brawler.buffies?.let { BuffiesResponse.of(it) },
             )
     }
 }
