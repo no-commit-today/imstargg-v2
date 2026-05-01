@@ -17,9 +17,9 @@ const dtoBrawler = (overrides: Partial<BrawlerResponse> = {}): BrawlerResponse =
   gadgets: [dtoGadget()],
   gears: [],
   starPowers: [],
-  hyperCharges: [],
+  hyperCharge: null,
   portraitImageUrl: "https://cdn/shelly.png",
-  buffies: [],
+  buffies: null,
   ...overrides,
 });
 
@@ -51,13 +51,13 @@ describe("toBrawler", () => {
         gadgets: [dtoGadget({ id: 1 }), dtoGadget({ id: 2 })],
         starPowers: [dtoGadget({ id: 11 })],
         gears: [dtoGadget({ id: 21 })],
-        hyperCharges: [dtoGadget({ id: 31 })],
+        hyperCharge: dtoGadget({ id: 31 }),
       }),
     );
-    expect(b.gadgets.map((x) => x.id)).toEqual([1, 2]);
-    expect(b.starPowers.map((x) => x.id)).toEqual([11]);
-    expect(b.gears.map((x) => x.id)).toEqual([21]);
-    expect(b.hyperCharges.map((x) => x.id)).toEqual([31]);
+    expect(b.gadgets.map((x: { id: number }) => x.id)).toEqual([1, 2]);
+    expect(b.starPowers.map((x: { id: number }) => x.id)).toEqual([11]);
+    expect(b.gears.map((x: { id: number }) => x.id)).toEqual([21]);
+    expect(b.hyperCharge?.id).toBe(31);
   });
 
   it("preserves portraitImageUrl null", () => {

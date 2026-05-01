@@ -46,6 +46,12 @@ export interface BuffyResponse {
   imageUrl: string | null;
 }
 
+export interface BuffiesResponse {
+  gadget: BuffyResponse;
+  starPower: BuffyResponse;
+  hyperCharge: BuffyResponse;
+}
+
 export type Language = "ko" | "en" | string;
 export type MessagesResponse = Record<Language, string>;
 
@@ -62,9 +68,9 @@ export interface BrawlerResponse {
   gadgets: GadgetResponse[];
   gears: GearResponse[];
   starPowers: StarPowerResponse[];
-  hyperCharges: HyperChargeResponse[];
+  hyperCharge: HyperChargeResponse | null;
   portraitImageUrl: string | null;
-  buffies: BuffyResponse[];
+  buffies: BuffiesResponse | null;
 }
 
 export interface PlayerBrawlerResponse {
@@ -74,7 +80,9 @@ export interface PlayerBrawlerResponse {
   trophies: number;
   highestTrophies: number;
   prestigeLevel: number;
-  buffies: BuffyResponse[];
+  gadgetBuffy: BuffyResponse | null;
+  starPowerBuffy: BuffyResponse | null;
+  hyperChargeBuffy: BuffyResponse | null;
 }
 
 // === Renewal ===

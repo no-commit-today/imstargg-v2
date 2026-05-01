@@ -6,6 +6,12 @@ export interface BrawlerItem {
   imageUrl: string | null;
 }
 
+export interface Buffies {
+  gadget: BuffyResponse;
+  starPower: BuffyResponse;
+  hyperCharge: BuffyResponse;
+}
+
 export interface Brawler {
   id: number;
   name: string;
@@ -15,6 +21,6 @@ export interface Brawler {
   gadgets: BrawlerItem[];
   gears: BrawlerItem[];
   starPowers: BrawlerItem[];
-  hyperCharges: BrawlerItem[];
-  buffies: BuffyResponse[];
+  hyperCharge: BrawlerItem | null;
+  buffies: Buffies | null;
 }

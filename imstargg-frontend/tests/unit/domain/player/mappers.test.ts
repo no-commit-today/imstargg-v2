@@ -43,16 +43,18 @@ const brawlerDto: PlayerBrawlerResponse = {
     gadgets: [],
     gears: [],
     starPowers: [],
-    hyperCharges: [],
+    hyperCharge: null,
     portraitImageUrl: "https://img/shelly.png",
-    buffies: [],
+    buffies: null,
   },
   power: 11,
   rank: 30,
   trophies: 700,
   highestTrophies: 1200,
   prestigeLevel: 3,
-  buffies: [],
+  gadgetBuffy: null,
+  starPowerBuffy: null,
+  hyperChargeBuffy: null,
 };
 
 describe("toPlayerBrawler", () => {

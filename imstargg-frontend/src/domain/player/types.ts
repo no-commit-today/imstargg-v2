@@ -34,6 +34,8 @@ export interface PlayerBrawler {
   highestTrophies: number;
   prestigeLevel: number;
   portraitImageUrl: string | null;
-  buffies: BuffyResponse[];
+  gadgetBuffy: BuffyResponse | null;
+  starPowerBuffy: BuffyResponse | null;
+  hyperChargeBuffy: BuffyResponse | null;
   raw: BrawlerResponse | null;
 }

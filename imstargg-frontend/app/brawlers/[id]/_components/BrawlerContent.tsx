@@ -14,7 +14,7 @@ export function BrawlerContent({ initialBrawler }: { initialBrawler: Brawler }) 
     <section className="py-6 space-y-5">
       <BrawlerHero brawler={brawler} />
       <BrawlerItems brawler={brawler} />
-      {brawler.buffies.length > 0 && <BrawlerBuffies buffies={brawler.buffies} />}
+      {brawler.buffies && <BrawlerBuffies buffies={brawler.buffies} />}
     </section>
   );
 }

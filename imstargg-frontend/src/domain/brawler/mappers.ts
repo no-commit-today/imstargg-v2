@@ -32,7 +32,7 @@ export function toBrawler(dto: BrawlerResponse): Brawler {
     gadgets: dto.gadgets.map(toBrawlerItem),
     gears: dto.gears.map(toBrawlerItem),
     starPowers: dto.starPowers.map(toBrawlerItem),
-    hyperCharges: dto.hyperCharges.map(toBrawlerItem),
+    hyperCharge: dto.hyperCharge ? toBrawlerItem(dto.hyperCharge) : null,
     buffies: dto.buffies,
   };
 }

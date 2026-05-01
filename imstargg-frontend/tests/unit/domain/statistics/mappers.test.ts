@@ -17,9 +17,9 @@ const fakeBrawler = (id: number) => ({
   gadgets: [],
   gears: [],
   starPowers: [],
-  hyperCharges: [],
+  hyperCharge: null,
   portraitImageUrl: null,
-  buffies: [],
+  buffies: null,
 });
 
 describe("toBrawlerResultStatistics", () => {

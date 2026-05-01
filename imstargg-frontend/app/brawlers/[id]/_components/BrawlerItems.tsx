@@ -25,7 +25,7 @@ export function BrawlerItems({ brawler }: { brawler: Brawler }) {
       <Section title="가젯" items={brawler.gadgets} />
       <Section title="스타파워" items={brawler.starPowers} />
       <Section title="기어" items={brawler.gears} />
-      <Section title="하이퍼차지" items={brawler.hyperCharges} />
+      <Section title="하이퍼차지" items={brawler.hyperCharge ? [brawler.hyperCharge] : []} />
     </div>
   );
 }

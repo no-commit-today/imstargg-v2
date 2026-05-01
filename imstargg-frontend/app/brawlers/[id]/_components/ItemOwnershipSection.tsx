@@ -94,7 +94,9 @@ export function ItemOwnershipSection({ brawler, ownership, trophy }: Props) {
           <CategoryCard
             title="하이퍼차지"
             items={ownership.hyperCharges}
-            resolveName={(id) => findItemName(brawler, "hyperCharges", id)}
+            resolveName={(id) =>
+              brawler.hyperCharge?.id === id ? brawler.hyperCharge.name : `#${id}`
+            }
           />
           {ownership.buffies.length > 0 && (
             <div className="rounded-lg border border-[#D8DCE5] bg-white p-3">

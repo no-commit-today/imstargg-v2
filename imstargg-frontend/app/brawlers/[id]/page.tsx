@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const rarity = RARITY_LABEL_KO[brawler.rarity];
     return buildMetadata({
       title: `${brawler.name} | ImStarGG`,
-      description: `${brawler.name} — ${role} · ${rarity} · 가젯 ${brawler.gadgets.length} · 스타파워 ${brawler.starPowers.length} · 기어 ${brawler.gears.length} · 하이퍼차지 ${brawler.hyperCharges.length}.`,
+      description: `${brawler.name} — ${role} · ${rarity} · 가젯 ${brawler.gadgets.length} · 스타파워 ${brawler.starPowers.length} · 기어 ${brawler.gears.length} · 하이퍼차지 ${brawler.hyperCharge ? 1 : 0}.`,
       path: `/brawlers/${id}`,
       image: brawler.portraitImageUrl ?? undefined,
     });

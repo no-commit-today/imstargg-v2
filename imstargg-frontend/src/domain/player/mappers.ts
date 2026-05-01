@@ -36,7 +36,9 @@ export function toPlayerBrawler(dto: PlayerBrawlerResponse): PlayerBrawler {
     highestTrophies: dto.highestTrophies,
     prestigeLevel: dto.prestigeLevel,
     portraitImageUrl: b?.portraitImageUrl ?? null,
-    buffies: dto.buffies,
+    gadgetBuffy: dto.gadgetBuffy,
+    starPowerBuffy: dto.starPowerBuffy,
+    hyperChargeBuffy: dto.hyperChargeBuffy,
     raw: b ?? null,
   };
 }
