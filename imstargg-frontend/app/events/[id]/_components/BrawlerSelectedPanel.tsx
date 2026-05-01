@@ -59,7 +59,7 @@ export async function BrawlerSelectedPanel({
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <PairRankTable items={pair.content.map(toPairRankStat)} sort={pairSort} order={pairOrder} />
           <div className="rounded-lg border border-[#D8DCE5] bg-white px-4 py-8 text-center text-sm text-[#5C6271]">
-            적군 통계는 결과형 모드 전용입니다.
+            카운터는 결과형 모드 전용입니다.
           </div>
         </div>
       </section>

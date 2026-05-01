@@ -32,8 +32,8 @@ export const TIER_RANGE_LABELS: Record<StatsTierRange, string> = {
   TROPHY_1000_PLUS: "트로피 1,000+",
   TROPHY_2000_PLUS: "트로피 2,000+",
   TROPHY_3000_PLUS: "트로피 3,000+",
-  SOLO_RANK_MYTHIC_PLUS: "미식+",
-  SOLO_RANK_LEGENDARY_PLUS: "레전드+",
+  SOLO_RANK_MYTHIC_PLUS: "신화+",
+  SOLO_RANK_LEGENDARY_PLUS: "전설+",
   SOLO_RANK_MASTER_PLUS: "마스터+",
 };
 
@@ -54,6 +54,21 @@ export const TROPHY_RANGE_LABELS: Record<BrawlerTrophyRange, string> = {
   TROPHY_2000_PLUS: "2,000+",
   TROPHY_3000_PLUS: "3,000+",
 };
+
+/**
+ * 티어 셀렉터 좌측에 표시할 아이콘 이미지 경로.
+ * 트로피 구간은 trophy.png, 경쟁전 구간은 해당 랭크 배지.
+ */
+export const TIER_RANGE_ICONS: Record<StatsTierRange, string> = {
+  TROPHY_1000_PLUS: "/assets/trophy.png",
+  TROPHY_2000_PLUS: "/assets/trophy.png",
+  TROPHY_3000_PLUS: "/assets/trophy.png",
+  SOLO_RANK_MYTHIC_PLUS: "/assets/rank_mythic.webp",
+  SOLO_RANK_LEGENDARY_PLUS: "/assets/rank_legendary.webp",
+  SOLO_RANK_MASTER_PLUS: "/assets/rank_masters.webp",
+};
+
+export const TROPHY_RANGE_ICON = "/assets/trophy.png";
 
 export const DEFAULT_TIER_RANGE: StatsTierRange = "TROPHY_1000_PLUS";
 export const DEFAULT_DATE_RANGE: StatsDateRange = "SINCE_LAST_WEEK";

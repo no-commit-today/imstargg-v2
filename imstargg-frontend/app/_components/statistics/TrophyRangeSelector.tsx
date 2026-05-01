@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BRAWLER_TROPHY_RANGES,
   TROPHY_RANGE_LABELS,
+  TROPHY_RANGE_ICON,
   DEFAULT_TROPHY_RANGE,
   type BrawlerTrophyRange,
 } from "@/domain/statistics/enums";
@@ -36,12 +37,32 @@ export function TrophyRangeSelector({ trophy, paramName = "trophy" }: Props) {
   return (
     <Select value={trophy} onValueChange={(v) => navigate(v as BrawlerTrophyRange)}>
       <SelectTrigger className="w-28 text-sm">
-        <SelectValue>{TROPHY_RANGE_LABELS[trophy]}</SelectValue>
+        <SelectValue>
+          <span className="inline-flex items-center gap-1.5">
+            <img
+              src={TROPHY_RANGE_ICON}
+              alt=""
+              width={16}
+              height={16}
+              className="h-4 w-4 shrink-0 object-contain"
+            />
+            {TROPHY_RANGE_LABELS[trophy]}
+          </span>
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {BRAWLER_TROPHY_RANGES.map((t) => (
           <SelectItem key={t} value={t}>
-            {TROPHY_RANGE_LABELS[t]}
+            <span className="inline-flex items-center gap-1.5">
+              <img
+                src={TROPHY_RANGE_ICON}
+                alt=""
+                width={16}
+                height={16}
+                className="h-4 w-4 shrink-0 object-contain"
+              />
+              {TROPHY_RANGE_LABELS[t]}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

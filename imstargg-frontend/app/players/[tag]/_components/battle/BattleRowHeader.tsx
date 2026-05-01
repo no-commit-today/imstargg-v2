@@ -14,7 +14,7 @@ interface Props {
 }
 
 const TYPE_LABELS: Partial<Record<BattleType, string>> = {
-  SOLO_RANKED: "솔로 랭크",
+  SOLO_RANKED: "경쟁전",
   FRIENDLY: "친선",
   CHALLENGE: "챌린지",
   TOURNAMENT: "토너먼트",
@@ -73,12 +73,24 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
             <span
               className="pill"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3,
                 fontSize: 10,
                 padding: "2px 6px",
                 background: "#ECEEF3",
                 color: "#5C6271",
               }}
             >
+              {battle.type === "SOLO_RANKED" && (
+                <img
+                  src="/assets/ranked.png"
+                  alt=""
+                  width={12}
+                  height={12}
+                  style={{ width: 12, height: 12, objectFit: "contain" }}
+                />
+              )}
               {typeLabel}
             </span>
           )}
@@ -90,6 +102,7 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
           <BrawlerAvatar
             name={ownerBrawler?.name ?? "?"}
             imageUrl={ownerBrawler?.portraitImageUrl ?? null}
+            rarity={ownerBrawler?.rarity}
             size={28}
           />
           <PowerPill level={owner.brawler.power} />

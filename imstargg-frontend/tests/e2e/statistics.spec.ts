@@ -22,8 +22,8 @@ test("/brawlers/[id] 상세 통계가 모두 렌더된다", async ({ page }) => 
   const firstLink = page.locator('a[href^="/brawlers/"]').first();
   await firstLink.click();
   await expect(page.getByText("일별 트렌드")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("페어 통계")).toBeVisible();
-  await expect(page.getByText("적군 통계")).toBeVisible();
+  await expect(page.getByText("조합")).toBeVisible();
+  await expect(page.getByText("카운터")).toBeVisible();
   await expect(page.getByText("아이템 보유율")).toBeVisible();
 });
 
@@ -43,11 +43,11 @@ test("/events/[id] RESULT 모드: 행 클릭 시 brawlerId URL", async ({ page }
   await expect(page.getByText("선택한 브롤러 분석")).toBeVisible();
 });
 
-test("페어 표 헤더 클릭 시 정렬 URL 변경", async ({ page }) => {
+test("조합 표 헤더 클릭 시 정렬 URL 변경", async ({ page }) => {
   await page.goto("/brawlers");
   const firstLink = page.locator('a[href^="/brawlers/"]').first();
   await firstLink.click();
-  await expect(page.getByText("페어 통계")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("조합")).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: /^승률/ }).first().click();
   await expect(page).toHaveURL(/pairSort=WIN_RATE/);
 });
