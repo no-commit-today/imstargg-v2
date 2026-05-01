@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import type { PlayerBrawler } from "@/domain/player/types";
 import { formatNumber } from "@/lib/format";
 import { Card } from "@/components/ui/card";
+import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 
 export function PlayerBrawlers({ brawlers }: { brawlers: PlayerBrawler[] }) {
   if (brawlers.length === 0) {
@@ -15,17 +15,13 @@ export function PlayerBrawlers({ brawlers }: { brawlers: PlayerBrawler[] }) {
       {sorted.map((b) => (
         <li key={`${b.id}-${b.name}`}>
           <Card className="flex flex-col items-center gap-1 p-3 text-center text-sm">
-            {b.portraitImageUrl ? (
-              <Image
-                src={b.portraitImageUrl}
-                alt={b.name}
-                width={64}
-                height={64}
-                unoptimized
-              />
-            ) : (
-              <div className="h-16 w-16 rounded-full bg-muted" />
-            )}
+            <BrawlerAvatar
+              name={b.name}
+              imageUrl={b.portraitImageUrl}
+              rarity={b.rarity}
+              size={80}
+              showFrame
+            />
             <p className="font-medium">{b.name}</p>
             <p className="text-muted-foreground">
               파워 {b.power} · 🏆 {formatNumber(b.trophies)}

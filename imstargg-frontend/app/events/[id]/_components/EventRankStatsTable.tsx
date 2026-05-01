@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { BrawlerRankStat } from "@/domain/statistics/types";
 import type { SortOrder } from "@/domain/statistics/sort";
+import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import { SortableHeader } from "@app/_components/statistics/SortableHeader";
 import {
   AverageRankCell,
@@ -57,14 +57,13 @@ export function EventRankStatsTable({ items, sort, order, selectedBrawlerId }: P
             >
               <span className="text-sm font-bold text-[#5C6271] tabular-nums">{i + 1}</span>
               <div className="flex items-center gap-2 overflow-hidden">
-                {it.brawler?.portraitImageUrl && (
-                  <Image
-                    src={it.brawler.portraitImageUrl}
-                    alt={it.brawler.name}
-                    width={32}
-                    height={32}
-                    unoptimized
-                    className="h-8 w-8 rounded-md"
+                {it.brawler && (
+                  <BrawlerAvatar
+                    name={it.brawler.name}
+                    imageUrl={it.brawler.portraitImageUrl}
+                    rarity={it.brawler.rarity}
+                    size={32}
+                    className="shrink-0"
                   />
                 )}
                 <span className="truncate text-sm font-bold">{it.brawler?.name ?? "-"}</span>

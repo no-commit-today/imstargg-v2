@@ -32,6 +32,7 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
       <BrawlerAvatar
         name={playerBrawler?.name ?? "?"}
         imageUrl={playerBrawler?.portraitImageUrl ?? null}
+        rarity={playerBrawler?.rarity}
         size={32}
       />
       <div style={{ minWidth: 0 }}>

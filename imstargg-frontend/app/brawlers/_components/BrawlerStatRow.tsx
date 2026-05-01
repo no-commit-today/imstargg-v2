@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Brawler } from "@/domain/brawler/types";
 import type { BrawlerResultStat } from "@/domain/statistics/types";
+import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import ClassIcon from "@/components/primitives/ClassIcon";
 import { TierBadge } from "@app/_components/statistics/TierBadge";
 import {
@@ -23,16 +23,13 @@ export function BrawlerStatRow({ rank, brawler, stat }: Props) {
     >
       <span className="font-bold text-[#5C6271] tabular-nums">{rank}</span>
       <div className="flex min-w-0 items-center gap-1 overflow-hidden sm:gap-2">
-        {brawler.portraitImageUrl && (
-          <Image
-            src={brawler.portraitImageUrl}
-            alt={brawler.name}
-            width={32}
-            height={32}
-            unoptimized
-            className="h-6 w-6 shrink-0 rounded-md sm:h-8 sm:w-8"
-          />
-        )}
+        <BrawlerAvatar
+          name={brawler.name}
+          imageUrl={brawler.portraitImageUrl}
+          rarity={brawler.rarity}
+          size={32}
+          className="shrink-0"
+        />
         <span className="shrink-0">
           <ClassIcon role={brawler.role} size={12} />
         </span>

@@ -228,7 +228,7 @@ img { display: block; max-width: 100%; }
   display: inline-flex; align-items: center; justify-content: center;
   width: 18px; height: 18px;
   border-radius: 50%;
-  background: var(--cls-color, #888);
+  background: #3B404D;
   position: relative;
 }
 .class-icon img { width: 12px; height: 12px; filter: brightness(0) invert(1); }
