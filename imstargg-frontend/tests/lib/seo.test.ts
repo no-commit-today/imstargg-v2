@@ -15,9 +15,9 @@ describe("buildMetadata", () => {
     expect(Object.prototype.hasOwnProperty.call(meta.openGraph!, "images")).toBe(true);
     expect(Object.prototype.hasOwnProperty.call(meta.twitter!, "images")).toBe(true);
     expect(meta.openGraph!.images).toEqual([
-      { url: "/assets/logo-full.png", width: 1200, height: 630 },
+      { url: "/assets/logo-full.webp", width: 1200, height: 630 },
     ]);
-    expect(meta.twitter!.images).toEqual(["/assets/logo-full.png"]);
+    expect(meta.twitter!.images).toEqual(["/assets/logo-full.webp"]);
   });
 
   it("dynamicOg=true 일 때 openGraph 와 twitter 객체에서 images 키가 omit 된다", () => {

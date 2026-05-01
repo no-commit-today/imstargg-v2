@@ -4,7 +4,7 @@ import { env } from "@/config/env";
 const SITE = {
   name: "ImStarGG",
   url: env.NEXT_PUBLIC_SITE_URL,
-  defaultOgImage: "/assets/logo-full.png",
+  defaultOgImage: "/assets/logo-full.webp",
   locale: "ko_KR",
 } as const;
 

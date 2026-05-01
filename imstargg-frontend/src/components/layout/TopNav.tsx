@@ -132,7 +132,7 @@ export default function TopNav() {
           style={{ cursor: "pointer" }}
           title="ImStarGG"
         >
-          <img src="/assets/logo.png" alt="ImStarGG" style={{ height: 32 }} />
+          <img src="/assets/logo.webp" alt="ImStarGG" style={{ height: 32 }} />
         </a>
         <div className="topnav-links">
           <a
