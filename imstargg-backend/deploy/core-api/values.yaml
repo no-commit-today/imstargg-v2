@@ -1,9 +1,7 @@
 workload:
   kind: Deployment
-
 imagePullSecrets:
   - name: ecr-pull-secret
-
 deployment:
   replicaCount: 2
   image:
@@ -26,11 +24,9 @@ deployment:
       memory: 2Gi
     limits:
       memory: 2Gi
-
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
-
 service:
   enabled: true
   type: ClusterIP
@@ -39,7 +35,6 @@ service:
       port: 8080
       targetPort: http
       protocol: TCP
-
 ingress:
   enabled: true
   className: traefik
@@ -54,3 +49,8 @@ ingress:
     - secretName: core-api-tls
       hosts:
         - api.imstargg.com
+nct-chart:
+  deployment:
+    image:
+      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
+      tag: ba78cbe
