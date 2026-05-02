@@ -10,6 +10,10 @@ deployment:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
     tag: "267b951"
     pullPolicy: Always
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: prod
