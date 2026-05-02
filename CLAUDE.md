@@ -20,10 +20,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 imstargg-v2/
-├── imstargg-backend/      # Spring Boot + Kotlin 백엔드
-└── imstargg-frontend/     # Next.js + TypeScript 프론트엔드
+├── imstargg-backend/           # Spring Boot + Kotlin 백엔드
+│   └── core/
+│       ├── core-api            # 사용자용 REST API (프론트엔드: imstargg-frontend)
+│       ├── core-admin          # 관리자용 REST API (프론트엔드: imstargg-admin-frontend)
+│       ├── core-worker         # 백그라운드 워커 (배틀/플레이어 동기화 등)
+│       └── core-batch          # 배치 작업 (스케줄링/집계 등)
+├── imstargg-frontend/          # Next.js + TypeScript — core-api 클라이언트
+└── imstargg-admin-frontend/    # Next.js + TypeScript — core-admin 클라이언트
 ```
 
+**API 변경 시 동기화**: 백엔드 API 스펙(요청/응답 DTO, 경로, 상태코드 등)이 변경되면 대응되는 프론트엔드에 반드시 반영
+
+- `core-api` 변경 → `imstargg-frontend`
+- `core-admin` 변경 → `imstargg-admin-frontend`
+
 각 프로젝트의 상세 가이드는 하위 CLAUDE.md 참조:
+
 - `imstargg-backend/CLAUDE.md` - 백엔드 빌드, 테스트, 아키텍처
-- `imstargg-frontend/CLAUDE.md` - 프론트엔드 개발 가이드
+- `imstargg-frontend/CLAUDE.md` - 사용자 프론트엔드 개발 가이드
+- `imstargg-admin-frontend/CLAUDE.md` - 관리자 프론트엔드 개발 가이드
