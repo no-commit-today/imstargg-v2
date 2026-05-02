@@ -1,3 +1,5 @@
+version = "${property("coreAdminVersion")}"
+
 tasks.getByName("bootJar") { enabled = true }
 
 dependencies {

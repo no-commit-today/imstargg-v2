@@ -1,3 +1,5 @@
+version = "${property("coreBatchVersion")}"
+
 tasks.getByName("bootJar") {
     enabled = true
 }

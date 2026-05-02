@@ -1,3 +1,9 @@
+version = "${property("coreApiVersion")}"
+
+springBoot {
+    buildInfo()
+}
+
 tasks.getByName("bootJar") {
     enabled = true
 }

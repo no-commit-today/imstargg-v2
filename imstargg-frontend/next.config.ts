@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json";
 
 /**
  * E2E 테스트 시 prod CORS 정책을 우회하기 위해 Next.js 가 백엔드로의 프록시 역할을 한다.
@@ -9,6 +10,9 @@ import type { NextConfig } from "next";
 const PROXY_API_TARGET = process.env.PROXY_API_TARGET;
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
   async rewrites() {
     if (!PROXY_API_TARGET) return [];
     return [

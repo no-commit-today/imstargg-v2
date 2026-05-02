@@ -10,7 +10,6 @@ plugins {
 
 allprojects {
     group = "${property("projectGroup")}"
-    version = "${property("applicationVersion")}"
 
     repositories {
         mavenCentral()
