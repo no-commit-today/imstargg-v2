@@ -16,3 +16,7 @@ out/
 ### Git ###
 .worktree
 .worktrees/
+
+### Python ###
+__pycache__/
+*.py[cod]
