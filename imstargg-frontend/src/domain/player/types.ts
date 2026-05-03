@@ -1,4 +1,4 @@
-import type { BrawlerRarity, BrawlerRole, BuffyResponse } from "@/api/types";
+import type { BuffyResponse } from "@/api/types";
 import type { Brawler, BrawlerItem } from "@/domain/brawler/types";
 
 export interface PlayerClub {
@@ -52,5 +52,3 @@ export interface PlayerBrawler {
   buffies: PlayerBrawlerBuffies | null;
 }
 
-// Re-export for backward compatibility
-export type { BrawlerRarity, BrawlerRole };

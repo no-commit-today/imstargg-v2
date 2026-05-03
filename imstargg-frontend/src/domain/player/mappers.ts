@@ -6,11 +6,13 @@ import type {
   GearResponse,
   StarPowerResponse,
   HyperChargeResponse,
+  BuffyResponse,
 } from "@/api/types";
 import type {
   Player,
   PlayerBrawler,
   PlayerBrawlerOwnedItem,
+  PlayerBrawlerOwnedBuffy,
 } from "@/domain/player/types";
 import { toBrawler, toBrawlerItem } from "@/domain/brawler/mappers";
 
@@ -24,6 +26,12 @@ function toOwnedItem(
   dto: PlayerBrawlerItemResponse<AnyItemDto>,
 ): PlayerBrawlerOwnedItem {
   return { item: toBrawlerItem(dto.item), owned: dto.owned };
+}
+
+function toOwnedBuffy(
+  dto: PlayerBrawlerItemResponse<BuffyResponse>,
+): PlayerBrawlerOwnedBuffy {
+  return { item: dto.item, owned: dto.owned };
 }
 
 export function toPlayer(dto: PlayerResponse): Player {
@@ -58,9 +66,9 @@ export function toPlayerBrawler(dto: PlayerBrawlerResponse): PlayerBrawler {
     hyperCharge: dto.hyperCharge ? toOwnedItem(dto.hyperCharge) : null,
     buffies: dto.buffies
       ? {
-          gadget: { item: dto.buffies.gadget.item, owned: dto.buffies.gadget.owned },
-          starPower: { item: dto.buffies.starPower.item, owned: dto.buffies.starPower.owned },
-          hyperCharge: { item: dto.buffies.hyperCharge.item, owned: dto.buffies.hyperCharge.owned },
+          gadget: toOwnedBuffy(dto.buffies.gadget),
+          starPower: toOwnedBuffy(dto.buffies.starPower),
+          hyperCharge: toOwnedBuffy(dto.buffies.hyperCharge),
         }
       : null,
   };
