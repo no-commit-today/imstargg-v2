@@ -18,9 +18,17 @@ export interface Brawler {
   rarity: BrawlerRarity;
   role: BrawlerRole;
   portraitImageUrl: string | null;
+}
+
+export interface BrawlerItems {
   gadgets: BrawlerItem[];
   gears: BrawlerItem[];
   starPowers: BrawlerItem[];
   hyperCharge: BrawlerItem | null;
   buffies: Buffies | null;
+}
+
+export interface BrawlerDetail {
+  brawler: Brawler;
+  items: BrawlerItems;
 }

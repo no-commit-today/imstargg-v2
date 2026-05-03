@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brawlerApi } from "@/api/endpoints/brawler";
-import { toBrawler } from "@/domain/brawler/mappers";
+import { toBrawlerDetail } from "@/domain/brawler/mappers";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
@@ -22,12 +22,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
     const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
-    const brawler = toBrawler(dto);
+    const detail = toBrawlerDetail(dto);
+    const { brawler, items } = detail;
     const role = ROLE_LABEL_KO[brawler.role];
     const rarity = RARITY_LABEL_KO[brawler.rarity];
+    const hcCount = items.hyperCharge ? 1 : 0;
     return buildMetadata({
       title: `${brawler.name} | ImStarGG`,
-      description: `${brawler.name} — ${role} · ${rarity} · 가젯 ${brawler.gadgets.length} · 스타파워 ${brawler.starPowers.length} · 기어 ${brawler.gears.length} · 하이퍼차지 ${brawler.hyperCharge ? 1 : 0}.`,
+      description: `${brawler.name} — ${role} · ${rarity} · 가젯 ${items.gadgets.length} · 스타파워 ${items.starPowers.length} · 기어 ${items.gears.length} · 하이퍼차지 ${hcCount}.`,
       path: `/brawlers/${id}`,
       image: brawler.portraitImageUrl ?? undefined,
     });
@@ -50,18 +52,18 @@ export default async function BrawlerPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  let dto;
+  let detail;
   try {
-    dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
+    const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
+    detail = toBrawlerDetail(dto);
   } catch (e) {
     if (e instanceof NotFoundError) notFound();
     throw e;
   }
-  const brawler = toBrawler(dto);
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-10">
-      <BrawlerContent initialBrawler={brawler} />
-      <BrawlerStatsSection brawler={brawler} searchParams={sp} />
+      <BrawlerContent initialDetail={detail} />
+      <BrawlerStatsSection brawler={detail.brawler} items={detail.items} searchParams={sp} />
     </main>
   );
 }

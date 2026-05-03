@@ -1,6 +1,5 @@
-import type {
-  BrawlerRarity, BrawlerRole, BuffyResponse, BrawlerResponse,
-} from "@/api/types";
+import type { BrawlerRarity, BrawlerRole, BuffyResponse } from "@/api/types";
+import type { Brawler, BrawlerItem } from "@/domain/brawler/types";
 
 export interface PlayerClub {
   tag: string;
@@ -23,19 +22,35 @@ export interface Player {
   club: PlayerClub | null;
 }
 
+export interface PlayerBrawlerOwnedItem {
+  item: BrawlerItem;
+  owned: boolean;
+}
+
+export interface PlayerBrawlerOwnedBuffy {
+  item: BuffyResponse;
+  owned: boolean;
+}
+
+export interface PlayerBrawlerBuffies {
+  gadget: PlayerBrawlerOwnedBuffy;
+  starPower: PlayerBrawlerOwnedBuffy;
+  hyperCharge: PlayerBrawlerOwnedBuffy;
+}
+
 export interface PlayerBrawler {
-  id: number | null;
-  name: string;
-  rarity: BrawlerRarity | null;
-  role: BrawlerRole | null;
+  brawler: Brawler | null;
   power: number;
   rank: number;
   trophies: number;
   highestTrophies: number;
   prestigeLevel: number;
-  portraitImageUrl: string | null;
-  gadgetBuffy: BuffyResponse | null;
-  starPowerBuffy: BuffyResponse | null;
-  hyperChargeBuffy: BuffyResponse | null;
-  raw: BrawlerResponse | null;
+  gadgets: PlayerBrawlerOwnedItem[];
+  gears: PlayerBrawlerOwnedItem[];
+  starPowers: PlayerBrawlerOwnedItem[];
+  hyperCharge: PlayerBrawlerOwnedItem | null;
+  buffies: PlayerBrawlerBuffies | null;
 }
+
+// Re-export for backward compatibility
+export type { BrawlerRarity, BrawlerRole };

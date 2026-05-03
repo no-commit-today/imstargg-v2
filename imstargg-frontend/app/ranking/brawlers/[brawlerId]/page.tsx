@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brawlerApi } from "@/api/endpoints/brawler";
 import { rankingApi } from "@/api/endpoints/ranking";
-import { toBrawler } from "@/domain/brawler/mappers";
+import { toBrawlerDetail } from "@/domain/brawler/mappers";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toBrawlerRanking } from "@/domain/ranking/mappers";
 import { ApiError } from "@/api/errors";
@@ -23,7 +23,7 @@ async function loadBrawler(brawlerId: string) {
     const dto = await brawlerApi.get(idNum, {
       next: { revalidate: 86400 },
     });
-    return toBrawler(dto);
+    return toBrawlerDetail(dto).brawler;
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;

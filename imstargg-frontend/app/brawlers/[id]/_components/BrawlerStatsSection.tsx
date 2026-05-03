@@ -12,7 +12,7 @@ import {
   toItemOwnership,
   toPairResultStat,
 } from "@/domain/statistics/mappers";
-import type { Brawler } from "@/domain/brawler/types";
+import type { Brawler, BrawlerItems } from "@/domain/brawler/types";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
 import { DailyTrendChart } from "./DailyTrendChart";
 import { PairStatsTable } from "./PairStatsTable";
@@ -21,10 +21,11 @@ import { ItemOwnershipSection } from "./ItemOwnershipSection";
 
 type Props = {
   brawler: Brawler;
+  items: BrawlerItems;
   searchParams: Record<string, string | string[] | undefined>;
 };
 
-export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
+export async function BrawlerStatsSection({ brawler, items, searchParams }: Props) {
   const tier = parseTierRange(searchParams.tier);
   const date = parseDateRange(searchParams.date);
   const trophy = parseTrophyRange(searchParams.trophy);
@@ -81,7 +82,7 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
         <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} sort={enemySort} order={enemyOrder} />
       </div>
       <ItemOwnershipSection
-        brawler={brawler}
+        items={items}
         ownership={toItemOwnership(ownership)}
         trophy={trophy}
       />

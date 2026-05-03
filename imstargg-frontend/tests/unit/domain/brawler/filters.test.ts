@@ -8,11 +8,6 @@ const b = (overrides: Partial<Brawler> = {}): Brawler => ({
   rarity: "STARTING_BRAWLER",
   role: "DAMAGE_DEALER",
   portraitImageUrl: null,
-  gadgets: [],
-  gears: [],
-  starPowers: [],
-  hyperCharge: null,
-  buffies: null,
   ...overrides,
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Brawler, BrawlerItem } from "@/domain/brawler/types";
+import type { BrawlerItems, BrawlerItem } from "@/domain/brawler/types";
 import { BrawlerItemCard } from "./BrawlerItemCard";
 
 function Section({ title, items }: { title: string; items: BrawlerItem[] }) {
@@ -19,13 +19,13 @@ function Section({ title, items }: { title: string; items: BrawlerItem[] }) {
   );
 }
 
-export function BrawlerItems({ brawler }: { brawler: Brawler }) {
+export function BrawlerItems({ items }: { items: BrawlerItems }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Section title="가젯" items={brawler.gadgets} />
-      <Section title="스타파워" items={brawler.starPowers} />
-      <Section title="기어" items={brawler.gears} />
-      <Section title="하이퍼차지" items={brawler.hyperCharge ? [brawler.hyperCharge] : []} />
+      <Section title="가젯" items={items.gadgets} />
+      <Section title="스타파워" items={items.starPowers} />
+      <Section title="기어" items={items.gears} />
+      <Section title="하이퍼차지" items={items.hyperCharge ? [items.hyperCharge] : []} />
     </div>
   );
 }

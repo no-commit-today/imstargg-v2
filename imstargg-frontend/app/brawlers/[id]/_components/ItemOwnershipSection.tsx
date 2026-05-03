@@ -1,18 +1,21 @@
-import type { Brawler } from "@/domain/brawler/types";
+import type { BrawlerItems } from "@/domain/brawler/types";
 import type { ItemOwnership, ItemOwnershipItem } from "@/domain/statistics/types";
 import type { BrawlerTrophyRange } from "@/domain/statistics/enums";
 import { buffyTypeLabel } from "@/domain/brawler/buffyTypeLabel";
 import { TrophyRangeSelector } from "@app/_components/statistics/TrophyRangeSelector";
 
 type Props = {
-  brawler: Brawler;
+  items: BrawlerItems;
   ownership: ItemOwnership;
   trophy: BrawlerTrophyRange;
 };
 
-function findItemName(brawler: Brawler, key: keyof Brawler, itemId: number): string {
-  const list = brawler[key] as Array<{ id: number; name: string }>;
-  return list.find((x) => x.id === itemId)?.name ?? `#${itemId}`;
+function findItemName(
+  items: BrawlerItems,
+  key: "gears" | "gadgets" | "starPowers",
+  itemId: number,
+): string {
+  return items[key].find((x) => x.id === itemId)?.name ?? `#${itemId}`;
 }
 
 function ItemRow({
@@ -56,7 +59,7 @@ function CategoryCard({
   );
 }
 
-export function ItemOwnershipSection({ brawler, ownership, trophy }: Props) {
+export function ItemOwnershipSection({ items, ownership, trophy }: Props) {
   const isAllEmpty =
     ownership.gears.length === 0 &&
     ownership.gadgets.length === 0 &&
@@ -79,23 +82,23 @@ export function ItemOwnershipSection({ brawler, ownership, trophy }: Props) {
           <CategoryCard
             title="기어"
             items={ownership.gears}
-            resolveName={(id) => findItemName(brawler, "gears", id)}
+            resolveName={(id) => findItemName(items, "gears", id)}
           />
           <CategoryCard
             title="가젯"
             items={ownership.gadgets}
-            resolveName={(id) => findItemName(brawler, "gadgets", id)}
+            resolveName={(id) => findItemName(items, "gadgets", id)}
           />
           <CategoryCard
             title="스타파워"
             items={ownership.starPowers}
-            resolveName={(id) => findItemName(brawler, "starPowers", id)}
+            resolveName={(id) => findItemName(items, "starPowers", id)}
           />
           <CategoryCard
             title="하이퍼차지"
             items={ownership.hyperCharges}
             resolveName={(id) =>
-              brawler.hyperCharge?.id === id ? brawler.hyperCharge.name : `#${id}`
+              items.hyperCharge?.id === id ? items.hyperCharge.name : `#${id}`
             }
           />
           {ownership.buffies.length > 0 && (

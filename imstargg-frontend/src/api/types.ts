@@ -65,12 +65,31 @@ export interface BrawlerResponse {
   name: MessagesResponse;
   rarity: BrawlerRarity;
   role: BrawlerRole;
+  portraitImageUrl: string | null;
+}
+
+export interface BrawlerItemsResponse {
   gadgets: GadgetResponse[];
   gears: GearResponse[];
   starPowers: StarPowerResponse[];
   hyperCharge: HyperChargeResponse | null;
-  portraitImageUrl: string | null;
   buffies: BuffiesResponse | null;
+}
+
+export interface BrawlerDetailResponse {
+  brawler: BrawlerResponse;
+  items: BrawlerItemsResponse;
+}
+
+export interface PlayerBrawlerItemResponse<T> {
+  item: T;
+  owned: boolean;
+}
+
+export interface PlayerBrawlerBuffiesResponse {
+  gadget: PlayerBrawlerItemResponse<BuffyResponse>;
+  starPower: PlayerBrawlerItemResponse<BuffyResponse>;
+  hyperCharge: PlayerBrawlerItemResponse<BuffyResponse>;
 }
 
 export interface PlayerBrawlerResponse {
@@ -80,9 +99,11 @@ export interface PlayerBrawlerResponse {
   trophies: number;
   highestTrophies: number;
   prestigeLevel: number;
-  gadgetBuffy: BuffyResponse | null;
-  starPowerBuffy: BuffyResponse | null;
-  hyperChargeBuffy: BuffyResponse | null;
+  gadgets: PlayerBrawlerItemResponse<GadgetResponse>[];
+  gears: PlayerBrawlerItemResponse<GearResponse>[];
+  starPowers: PlayerBrawlerItemResponse<StarPowerResponse>[];
+  hyperCharge: PlayerBrawlerItemResponse<HyperChargeResponse> | null;
+  buffies: PlayerBrawlerBuffiesResponse | null;
 }
 
 // === Renewal ===

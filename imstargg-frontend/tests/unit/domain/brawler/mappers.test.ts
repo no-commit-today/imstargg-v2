@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { toBrawler, toBrawlerItem } from "@/domain/brawler/mappers";
-import type { BrawlerResponse, GadgetResponse } from "@/api/types";
+import { toBrawler, toBrawlerItem, toBrawlerItems, toBrawlerDetail } from "@/domain/brawler/mappers";
+import type { BrawlerResponse, BrawlerItemsResponse, BrawlerDetailResponse, GadgetResponse } from "@/api/types";
 
 const dtoGadget = (overrides: Partial<GadgetResponse> = {}): GadgetResponse => ({
   id: 23000001,
@@ -14,11 +14,15 @@ const dtoBrawler = (overrides: Partial<BrawlerResponse> = {}): BrawlerResponse =
   name: { ko: "셸리", en: "Shelly" },
   rarity: "STARTING_BRAWLER",
   role: "DAMAGE_DEALER",
-  gadgets: [dtoGadget()],
+  portraitImageUrl: "https://cdn/shelly.png",
+  ...overrides,
+});
+
+const dtoBrawlerItems = (overrides: Partial<BrawlerItemsResponse> = {}): BrawlerItemsResponse => ({
+  gadgets: [],
   gears: [],
   starPowers: [],
   hyperCharge: null,
-  portraitImageUrl: "https://cdn/shelly.png",
   buffies: null,
   ...overrides,
 });
@@ -45,22 +49,46 @@ describe("toBrawler", () => {
     expect(toBrawler(dtoBrawler({ name: { en: "Shelly" } })).name).toBe("Shelly");
   });
 
+  it("preserves portraitImageUrl null", () => {
+    expect(toBrawler(dtoBrawler({ portraitImageUrl: null })).portraitImageUrl).toBeNull();
+  });
+
+  it("maps rarity and role", () => {
+    const b = toBrawler(dtoBrawler());
+    expect(b.rarity).toBe("STARTING_BRAWLER");
+    expect(b.role).toBe("DAMAGE_DEALER");
+  });
+});
+
+describe("toBrawlerItems", () => {
   it("maps all item arrays through toBrawlerItem", () => {
-    const b = toBrawler(
-      dtoBrawler({
+    const items = toBrawlerItems(
+      dtoBrawlerItems({
         gadgets: [dtoGadget({ id: 1 }), dtoGadget({ id: 2 })],
         starPowers: [dtoGadget({ id: 11 })],
         gears: [dtoGadget({ id: 21 })],
         hyperCharge: dtoGadget({ id: 31 }),
       }),
     );
-    expect(b.gadgets.map((x: { id: number }) => x.id)).toEqual([1, 2]);
-    expect(b.starPowers.map((x: { id: number }) => x.id)).toEqual([11]);
-    expect(b.gears.map((x: { id: number }) => x.id)).toEqual([21]);
-    expect(b.hyperCharge?.id).toBe(31);
+    expect(items.gadgets.map((x) => x.id)).toEqual([1, 2]);
+    expect(items.starPowers.map((x) => x.id)).toEqual([11]);
+    expect(items.gears.map((x) => x.id)).toEqual([21]);
+    expect(items.hyperCharge?.id).toBe(31);
   });
 
-  it("preserves portraitImageUrl null", () => {
-    expect(toBrawler(dtoBrawler({ portraitImageUrl: null })).portraitImageUrl).toBeNull();
+  it("returns null hyperCharge when dto is null", () => {
+    expect(toBrawlerItems(dtoBrawlerItems()).hyperCharge).toBeNull();
+  });
+});
+
+describe("toBrawlerDetail", () => {
+  it("composes brawler and items", () => {
+    const dto: BrawlerDetailResponse = {
+      brawler: dtoBrawler(),
+      items: dtoBrawlerItems({ gadgets: [dtoGadget()] }),
+    };
+    const detail = toBrawlerDetail(dto);
+    expect(detail.brawler.name).toBe("셸리");
+    expect(detail.items.gadgets).toHaveLength(1);
   });
 });

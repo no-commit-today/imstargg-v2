@@ -40,41 +40,51 @@ const brawlerDto: PlayerBrawlerResponse = {
     name: { ko: "쉘리", en: "SHELLY" },
     rarity: "STARTING_BRAWLER",
     role: "DAMAGE_DEALER",
-    gadgets: [],
-    gears: [],
-    starPowers: [],
-    hyperCharge: null,
     portraitImageUrl: "https://img/shelly.png",
-    buffies: null,
   },
   power: 11,
   rank: 30,
   trophies: 700,
   highestTrophies: 1200,
   prestigeLevel: 3,
-  gadgetBuffy: null,
-  starPowerBuffy: null,
-  hyperChargeBuffy: null,
+  gadgets: [],
+  gears: [],
+  starPowers: [],
+  hyperCharge: null,
+  buffies: null,
 };
 
 describe("toPlayerBrawler", () => {
-  it("uses Korean name when present", () => {
+  it("maps brawler meta fields", () => {
     const b = toPlayerBrawler(brawlerDto);
-    expect(b.name).toBe("쉘리");
+    expect(b.brawler?.name).toBe("쉘리");
     expect(b.power).toBe(11);
-    expect(b.rarity).toBe("STARTING_BRAWLER");
-    expect(b.portraitImageUrl).toBe("https://img/shelly.png");
+    expect(b.brawler?.rarity).toBe("STARTING_BRAWLER");
+    expect(b.brawler?.portraitImageUrl).toBe("https://img/shelly.png");
   });
   it("falls back to English when ko missing", () => {
     const noKo = {
       ...brawlerDto,
       brawler: { ...brawlerDto.brawler!, name: { en: "SHELLY" } },
     };
-    expect(toPlayerBrawler(noKo).name).toBe("SHELLY");
+    expect(toPlayerBrawler(noKo).brawler?.name).toBe("SHELLY");
   });
   it("handles null brawler", () => {
     const b = toPlayerBrawler({ ...brawlerDto, brawler: null });
-    expect(b.id).toBeNull();
-    expect(b.name).toBe("(unknown)");
+    expect(b.brawler).toBeNull();
+  });
+  it("maps owned item collections", () => {
+    const withItems: PlayerBrawlerResponse = {
+      ...brawlerDto,
+      gadgets: [
+        { item: { id: 1, name: { ko: "가젯1" }, imageUrl: null }, owned: true },
+        { item: { id: 2, name: { ko: "가젯2" }, imageUrl: null }, owned: false },
+      ],
+    };
+    const b = toPlayerBrawler(withItems);
+    expect(b.gadgets).toHaveLength(2);
+    expect(b.gadgets[0].owned).toBe(true);
+    expect(b.gadgets[1].owned).toBe(false);
+    expect(b.gadgets[0].item.id).toBe(1);
   });
 });
