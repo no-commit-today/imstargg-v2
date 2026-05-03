@@ -1,12 +1,12 @@
 "use client";
 
-import type { BrawlerDetail } from "@/domain/brawler/types";
+import type { BrawlerWithItems } from "@/domain/brawler/types";
 import { useBrawler } from "@/hooks/queries/useBrawler";
 import { BrawlerHero } from "./BrawlerHero";
 import { BrawlerItems } from "./BrawlerItems";
 import { BrawlerBuffies } from "./BrawlerBuffies";
 
-export function BrawlerContent({ initialDetail }: { initialDetail: BrawlerDetail }) {
+export function BrawlerContent({ initialDetail }: { initialDetail: BrawlerWithItems }) {
   const { data: detail = initialDetail } = useBrawler(initialDetail.brawler.id, {
     initialData: initialDetail,
   });

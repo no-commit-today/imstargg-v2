@@ -28,7 +28,7 @@ export interface BrawlerItems {
   buffies: Buffies | null;
 }
 
-export interface BrawlerDetail {
+export interface BrawlerWithItems {
   brawler: Brawler;
   items: BrawlerItems;
 }

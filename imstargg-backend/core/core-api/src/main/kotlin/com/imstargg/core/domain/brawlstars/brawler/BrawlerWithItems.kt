@@ -1,6 +1,6 @@
 package com.imstargg.core.domain.brawlstars.brawler
 
-data class BrawlerDetail(
+data class BrawlerWithItems(
     val brawler: Brawler,
     val items: BrawlerItems,
 )

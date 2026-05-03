@@ -1,7 +1,7 @@
 import type {
   BrawlerResponse,
   BrawlerItemsResponse,
-  BrawlerDetailResponse,
+  BrawlerWithItemsResponse,
   GadgetResponse,
   GearResponse,
   StarPowerResponse,
@@ -11,7 +11,7 @@ import type {
   Brawler,
   BrawlerItem,
   BrawlerItems,
-  BrawlerDetail,
+  BrawlerWithItems,
 } from "@/domain/brawler/types";
 import { pickName } from "@/domain/i18n";
 
@@ -49,7 +49,7 @@ export function toBrawlerItems(dto: BrawlerItemsResponse): BrawlerItems {
   };
 }
 
-export function toBrawlerDetail(dto: BrawlerDetailResponse): BrawlerDetail {
+export function toBrawlerWithItems(dto: BrawlerWithItemsResponse): BrawlerWithItems {
   return {
     brawler: toBrawler(dto.brawler),
     items: toBrawlerItems(dto.items),

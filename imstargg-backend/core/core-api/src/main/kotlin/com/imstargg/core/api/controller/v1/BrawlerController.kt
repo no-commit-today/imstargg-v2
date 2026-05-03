@@ -1,8 +1,8 @@
 package com.imstargg.core.api.controller.v1
 
 import com.imstargg.core.api.controller.ListResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerDetailResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerWithItemsResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import org.springframework.http.ResponseEntity
@@ -26,9 +26,9 @@ class BrawlerController(
     @GetMapping("/v1/brawlers/{id}")
     fun getBrawler(
         @PathVariable id: Long,
-    ): ResponseEntity<BrawlerDetailResponse> {
-        val detail = brawlerService.getDetail(BrawlStarsId(id))
-        return ResponseEntity.ok(BrawlerDetailResponse.of(detail))
+    ): ResponseEntity<BrawlerWithItemsResponse> {
+        val brawlerWithItems = brawlerService.getBrawlerWithItems(BrawlStarsId(id))
+        return ResponseEntity.ok(BrawlerWithItemsResponse.of(brawlerWithItems))
     }
 
     @GetMapping("/v1/brawler/search")

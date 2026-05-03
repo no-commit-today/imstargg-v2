@@ -76,7 +76,7 @@ export interface BrawlerItemsResponse {
   buffies: BuffiesResponse | null;
 }
 
-export interface BrawlerDetailResponse {
+export interface BrawlerWithItemsResponse {
   brawler: BrawlerResponse;
   items: BrawlerItemsResponse;
 }

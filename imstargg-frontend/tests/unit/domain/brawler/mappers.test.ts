@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { toBrawler, toBrawlerItem, toBrawlerItems, toBrawlerDetail } from "@/domain/brawler/mappers";
-import type { BrawlerResponse, BrawlerItemsResponse, BrawlerDetailResponse, GadgetResponse } from "@/api/types";
+import { toBrawler, toBrawlerItem, toBrawlerItems, toBrawlerWithItems } from "@/domain/brawler/mappers";
+import type { BrawlerResponse, BrawlerItemsResponse, BrawlerWithItemsResponse, GadgetResponse } from "@/api/types";
 
 const dtoGadget = (overrides: Partial<GadgetResponse> = {}): GadgetResponse => ({
   id: 23000001,
@@ -81,13 +81,13 @@ describe("toBrawlerItems", () => {
   });
 });
 
-describe("toBrawlerDetail", () => {
+describe("toBrawlerWithItems", () => {
   it("composes brawler and items", () => {
-    const dto: BrawlerDetailResponse = {
+    const dto: BrawlerWithItemsResponse = {
       brawler: dtoBrawler(),
       items: dtoBrawlerItems({ gadgets: [dtoGadget()] }),
     };
-    const detail = toBrawlerDetail(dto);
+    const detail = toBrawlerWithItems(dto);
     expect(detail.brawler.name).toBe("셸리");
     expect(detail.items.gadgets).toHaveLength(1);
   });

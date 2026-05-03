@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brawlerApi } from "@/api/endpoints/brawler";
-import { toBrawlerDetail } from "@/domain/brawler/mappers";
+import { toBrawlerWithItems } from "@/domain/brawler/mappers";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
     const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
-    const detail = toBrawlerDetail(dto);
+    const detail = toBrawlerWithItems(dto);
     const { brawler, items } = detail;
     const role = ROLE_LABEL_KO[brawler.role];
     const rarity = RARITY_LABEL_KO[brawler.rarity];
@@ -55,7 +55,7 @@ export default async function BrawlerPage({
   let detail;
   try {
     const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
-    detail = toBrawlerDetail(dto);
+    detail = toBrawlerWithItems(dto);
   } catch (e) {
     if (e instanceof NotFoundError) notFound();
     throw e;
