@@ -124,7 +124,8 @@ class PlayerRepository(
         ownedHyperChargeIds: Set<Long>,
         ownedBuffyTypes: Set<BuffyType>,
     ): PlayerBrawler {
-        val hasCatalog = brawler != null && items != null
+        val safeItems = if (brawler != null && items != null) items else null
+
         return PlayerBrawler(
             brawler = brawler,
             power = entity.power,
@@ -133,40 +134,23 @@ class PlayerRepository(
             highestTrophies = entity.highestTrophies,
             prestigeLevel = entity.prestigeLevel,
             gadgets =
-                if (hasCatalog) {
-                    items!!.gadgets.map { PlayerBrawlerItem(it, it.id.value in ownedGadgetIds) }
-                } else {
-                    emptyList()
-                },
+                safeItems?.gadgets?.map { PlayerBrawlerItem(it, it.id.value in ownedGadgetIds) }
+                    ?: emptyList(),
             gears =
-                if (hasCatalog) {
-                    items!!.gears.map { PlayerBrawlerItem(it, it.id.value in ownedGearIds) }
-                } else {
-                    emptyList()
-                },
+                safeItems?.gears?.map { PlayerBrawlerItem(it, it.id.value in ownedGearIds) }
+                    ?: emptyList(),
             starPowers =
-                if (hasCatalog) {
-                    items!!.starPowers.map { PlayerBrawlerItem(it, it.id.value in ownedStarPowerIds) }
-                } else {
-                    emptyList()
-                },
+                safeItems?.starPowers?.map { PlayerBrawlerItem(it, it.id.value in ownedStarPowerIds) }
+                    ?: emptyList(),
             hyperCharge =
-                if (hasCatalog) {
-                    items!!.hyperCharge?.let { PlayerBrawlerItem(it, it.id.value in ownedHyperChargeIds) }
-                } else {
-                    null
-                },
+                safeItems?.hyperCharge?.let { PlayerBrawlerItem(it, it.id.value in ownedHyperChargeIds) },
             buffies =
-                if (hasCatalog) {
-                    items!!.buffies?.let {
-                        PlayerBrawlerBuffies(
-                            gadget = PlayerBrawlerItem(it.gadget, BuffyType.GADGET in ownedBuffyTypes),
-                            starPower = PlayerBrawlerItem(it.starPower, BuffyType.STAR_POWER in ownedBuffyTypes),
-                            hyperCharge = PlayerBrawlerItem(it.hyperCharge, BuffyType.HYPER_CHARGE in ownedBuffyTypes),
-                        )
-                    }
-                } else {
-                    null
+                safeItems?.buffies?.let {
+                    PlayerBrawlerBuffies(
+                        gadget = PlayerBrawlerItem(it.gadget, BuffyType.GADGET in ownedBuffyTypes),
+                        starPower = PlayerBrawlerItem(it.starPower, BuffyType.STAR_POWER in ownedBuffyTypes),
+                        hyperCharge = PlayerBrawlerItem(it.hyperCharge, BuffyType.HYPER_CHARGE in ownedBuffyTypes),
+                    )
                 },
         )
     }
