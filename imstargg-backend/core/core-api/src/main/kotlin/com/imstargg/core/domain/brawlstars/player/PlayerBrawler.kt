@@ -1,7 +1,10 @@
 package com.imstargg.core.domain.brawlstars.player
 
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
-import com.imstargg.core.enums.BuffyType
+import com.imstargg.core.domain.brawlstars.brawler.Gadget
+import com.imstargg.core.domain.brawlstars.brawler.Gear
+import com.imstargg.core.domain.brawlstars.brawler.HyperCharge
+import com.imstargg.core.domain.brawlstars.brawler.StarPower
 
 data class PlayerBrawler(
     val brawler: Brawler?,
@@ -10,5 +13,9 @@ data class PlayerBrawler(
     val trophies: Int,
     val highestTrophies: Int,
     val prestigeLevel: Int,
-    val buffies: Set<BuffyType>,
+    val gadgets: List<PlayerBrawlerItem<Gadget>>,
+    val gears: List<PlayerBrawlerItem<Gear>>,
+    val starPowers: List<PlayerBrawlerItem<StarPower>>,
+    val hyperCharge: PlayerBrawlerItem<HyperCharge>?,
+    val buffies: PlayerBrawlerBuffies?,
 )

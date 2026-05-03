@@ -3,15 +3,22 @@ package com.imstargg.core.application.brawlstars
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
+import com.imstargg.core.domain.brawlstars.brawler.BrawlerItems
 import com.imstargg.core.domain.brawlstars.player.Player
 import com.imstargg.core.domain.brawlstars.player.PlayerBrawler
+import com.imstargg.core.domain.brawlstars.player.PlayerBrawlerBuffies
+import com.imstargg.core.domain.brawlstars.player.PlayerBrawlerItem
 import com.imstargg.core.domain.brawlstars.player.PlayerClub
 import com.imstargg.core.enums.BuffyType
 import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerGadgetJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerGearJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerHyperChargeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerStarPowerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -21,6 +28,10 @@ import org.springframework.transaction.annotation.Transactional
 class PlayerRepository(
     private val playerJpaRepository: PlayerJpaRepository,
     private val playerBrawlerJpaRepository: PlayerBrawlerJpaRepository,
+    private val playerBrawlerGadgetJpaRepository: PlayerBrawlerGadgetJpaRepository,
+    private val playerBrawlerGearJpaRepository: PlayerBrawlerGearJpaRepository,
+    private val playerBrawlerStarPowerJpaRepository: PlayerBrawlerStarPowerJpaRepository,
+    private val playerBrawlerHyperChargeJpaRepository: PlayerBrawlerHyperChargeJpaRepository,
     private val playerBrawlerBuffyJpaRepository: PlayerBrawlerBuffyJpaRepository,
     private val brawlerRepositoryWithCache: BrawlerRepositoryWithCache,
 ) {
@@ -36,19 +47,49 @@ class PlayerRepository(
 
     fun findAllPlayerBrawler(tag: BrawlStarsTag): List<PlayerBrawler> {
         val playerEntity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return emptyList()
-        val brawlerEntities = playerBrawlerJpaRepository.findAllByPlayer(playerEntity)
+        val pbEntities = playerBrawlerJpaRepository.findAllByPlayer(playerEntity)
+        if (pbEntities.isEmpty()) return emptyList()
+
         val brawlers = brawlerRepositoryWithCache.findBrawlers()
+        val itemsByBrawlerId = brawlerRepositoryWithCache.findAllBrawlerItems()
 
-        val buffiesByBrawlerId =
+        val gadgetsByPbId =
+            playerBrawlerGadgetJpaRepository
+                .findAllByPlayerBrawlerIn(pbEntities)
+                .groupBy({ it.playerBrawler.id!! }, { it.gadgetBrawlStarsId })
+                .mapValues { (_, ids) -> ids.toSet() }
+        val gearsByPbId =
+            playerBrawlerGearJpaRepository
+                .findAllByPlayerBrawlerIn(pbEntities)
+                .groupBy({ it.playerBrawler.id!! }, { it.gearBrawlStarsId })
+                .mapValues { (_, ids) -> ids.toSet() }
+        val starPowersByPbId =
+            playerBrawlerStarPowerJpaRepository
+                .findAllByPlayerBrawlerIn(pbEntities)
+                .groupBy({ it.playerBrawler.id!! }, { it.starPowerBrawlStarsId })
+                .mapValues { (_, ids) -> ids.toSet() }
+        val hyperChargesByPbId =
+            playerBrawlerHyperChargeJpaRepository
+                .findAllByPlayerBrawlerIn(pbEntities)
+                .groupBy({ it.playerBrawler.id!! }, { it.hyperChargeBrawlStarsId })
+                .mapValues { (_, ids) -> ids.toSet() }
+        val buffiesByPbId =
             playerBrawlerBuffyJpaRepository
-                .findAllByPlayerBrawlerIn(brawlerEntities)
+                .findAllByPlayerBrawlerIn(pbEntities)
                 .groupBy({ it.playerBrawler.id!! }, { it.buffyType })
+                .mapValues { (_, types) -> types.toSet() }
 
-        return brawlerEntities.map { entity ->
+        return pbEntities.map { entity ->
+            val brawlerId = BrawlStarsId(entity.brawlerBrawlStarsId)
             toPlayerBrawler(
-                entity,
-                brawlers.find(BrawlStarsId(entity.brawlerBrawlStarsId)),
-                buffiesByBrawlerId[entity.id!!]?.toSet() ?: emptySet(),
+                entity = entity,
+                brawler = brawlers.find(brawlerId),
+                items = itemsByBrawlerId[brawlerId],
+                ownedGadgetIds = gadgetsByPbId[entity.id!!] ?: emptySet(),
+                ownedGearIds = gearsByPbId[entity.id!!] ?: emptySet(),
+                ownedStarPowerIds = starPowersByPbId[entity.id!!] ?: emptySet(),
+                ownedHyperChargeIds = hyperChargesByPbId[entity.id!!] ?: emptySet(),
+                ownedBuffyTypes = buffiesByPbId[entity.id!!] ?: emptySet(),
             )
         }
     }
@@ -76,15 +117,47 @@ class PlayerRepository(
     private fun toPlayerBrawler(
         entity: PlayerBrawlerEntity,
         brawler: Brawler?,
-        buffies: Set<BuffyType>,
-    ): PlayerBrawler =
-        PlayerBrawler(
+        items: BrawlerItems?,
+        ownedGadgetIds: Set<Long>,
+        ownedGearIds: Set<Long>,
+        ownedStarPowerIds: Set<Long>,
+        ownedHyperChargeIds: Set<Long>,
+        ownedBuffyTypes: Set<BuffyType>,
+    ): PlayerBrawler {
+        if (brawler == null || items == null) {
+            return PlayerBrawler(
+                brawler = brawler,
+                power = entity.power,
+                rank = entity.rank,
+                trophies = entity.trophies,
+                highestTrophies = entity.highestTrophies,
+                prestigeLevel = entity.prestigeLevel,
+                gadgets = emptyList(),
+                gears = emptyList(),
+                starPowers = emptyList(),
+                hyperCharge = null,
+                buffies = null,
+            )
+        }
+        return PlayerBrawler(
             brawler = brawler,
             power = entity.power,
             rank = entity.rank,
             trophies = entity.trophies,
             highestTrophies = entity.highestTrophies,
             prestigeLevel = entity.prestigeLevel,
-            buffies = buffies,
+            gadgets = items.gadgets.map { PlayerBrawlerItem(it, it.id.value in ownedGadgetIds) },
+            gears = items.gears.map { PlayerBrawlerItem(it, it.id.value in ownedGearIds) },
+            starPowers = items.starPowers.map { PlayerBrawlerItem(it, it.id.value in ownedStarPowerIds) },
+            hyperCharge = items.hyperCharge?.let { PlayerBrawlerItem(it, it.id.value in ownedHyperChargeIds) },
+            buffies =
+                items.buffies?.let {
+                    PlayerBrawlerBuffies(
+                        gadget = PlayerBrawlerItem(it.gadget, BuffyType.GADGET in ownedBuffyTypes),
+                        starPower = PlayerBrawlerItem(it.starPower, BuffyType.STAR_POWER in ownedBuffyTypes),
+                        hyperCharge = PlayerBrawlerItem(it.hyperCharge, BuffyType.HYPER_CHARGE in ownedBuffyTypes),
+                    )
+                },
         )
+    }
 }

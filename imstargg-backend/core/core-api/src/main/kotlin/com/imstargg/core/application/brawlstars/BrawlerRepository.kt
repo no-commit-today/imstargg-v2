@@ -5,6 +5,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
+import com.imstargg.core.domain.brawlstars.brawler.BrawlerItems
 import com.imstargg.core.domain.brawlstars.brawler.Buffies
 import com.imstargg.core.domain.brawlstars.brawler.Buffy
 import com.imstargg.core.domain.brawlstars.brawler.Gadget
@@ -48,6 +49,30 @@ class BrawlerRepository(
 ) {
     fun findAll(): List<Brawler> {
         val brawlerEntities = brawlerJpaRepository.findAll().toList()
+        val brawlerIds = brawlerEntities.map { it.brawlStarsId }
+        val brawlerNames =
+            messageJpaRepository
+                .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
+                .groupBy { it.brawlStarsId }
+        val portraits =
+            brawlStarsImageJpaRepository
+                .findAll()
+                .filter { it.type == BrawlStarsImageType.BRAWLER_PORTRAIT }
+                .associateBy { it.brawlStarsId }
+
+        return brawlerEntities.map { entity ->
+            Brawler(
+                id = BrawlStarsId(entity.brawlStarsId),
+                name = toMessages(brawlerNames[entity.brawlStarsId]),
+                rarity = entity.rarity,
+                role = entity.role,
+                portraitImageUrl = portraits[entity.brawlStarsId]?.toImageUrl(),
+            )
+        }
+    }
+
+    fun findAllBrawlerItems(): Map<BrawlStarsId, BrawlerItems> {
+        val brawlerEntities = brawlerJpaRepository.findAll().toList()
         val gadgetEntities = gadgetJpaRepository.findAll().toList()
         val starPowerEntities = starPowerJpaRepository.findAll().toList()
         val gearEntities = gearJpaRepository.findAll().toList()
@@ -60,10 +85,6 @@ class BrawlerRepository(
         val gearIds = gearEntities.map { it.brawlStarsId }
         val hyperChargeIds = hyperChargeEntities.map { it.brawlStarsId }
 
-        val brawlerNames =
-            messageJpaRepository
-                .findAllByTypeAndBrawlStarsIdIn(MessageType.BRAWLER_NAME, brawlerIds)
-                .groupBy { it.brawlStarsId }
         val gadgetNames =
             messageJpaRepository
                 .findAllByTypeAndBrawlStarsIdIn(MessageType.GADGET_NAME, gadgetIds)
@@ -83,17 +104,17 @@ class BrawlerRepository(
 
         val imagesByKey = brawlStarsImageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
 
-        val gearsByBrawlerId = brawlerGearEntities.groupBy { it.brawlerBrawlStarsId }
-
         val gadgetsByBrawlerId = gadgetEntities.groupBy { it.brawlerBrawlStarsId }
         val starPowersByBrawlerId = starPowerEntities.groupBy { it.brawlerBrawlStarsId }
         val hyperChargesByBrawlerId = hyperChargeEntities.groupBy { it.brawlerBrawlStarsId }
-        val buffiesByBrawlerId =
-            buffyJpaRepository.findAllByBrawlerBrawlStarsIdIn(brawlerIds).groupBy { it.brawlerBrawlStarsId }
-
+        val gearsByBrawlerId = brawlerGearEntities.groupBy { it.brawlerBrawlStarsId }
         val gearsById = gearEntities.associateBy { it.brawlStarsId }
+        val buffiesByBrawlerId =
+            buffyJpaRepository
+                .findAllByBrawlerBrawlStarsIdIn(brawlerIds)
+                .groupBy { it.brawlerBrawlStarsId }
 
-        return brawlerEntities.map { brawlerEntity ->
+        return brawlerEntities.associate { brawlerEntity ->
             val brawlerId = brawlerEntity.brawlStarsId
 
             val buffiesByType =
@@ -111,24 +132,22 @@ class BrawlerRepository(
                     Buffies(gadget = gadget, starPower = starPower, hyperCharge = hyperCharge)
                 }
 
-            Brawler(
-                id = BrawlStarsId(brawlerId),
-                name = toMessages(brawlerNames[brawlerId]),
-                rarity = brawlerEntity.rarity,
-                role = brawlerEntity.role,
-                gadgets = (gadgetsByBrawlerId[brawlerId] ?: emptyList()).map { toGadget(it, gadgetNames, imagesByKey) },
-                gears =
-                    (gearsByBrawlerId[brawlerId] ?: emptyList())
-                        .mapNotNull { gearsById[it.gearBrawlStarsId] }
-                        .map { toGear(it, gearNames, imagesByKey) },
-                starPowers = (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
-                hyperCharge =
-                    (hyperChargesByBrawlerId[brawlerId] ?: emptyList())
-                        .firstOrNull()
-                        ?.let { toHyperCharge(it, hyperChargeNames, imagesByKey) },
-                portraitImageUrl = imagesByKey[BrawlStarsImageType.BRAWLER_PORTRAIT to brawlerId]?.toImageUrl(),
-                buffies = buffies,
-            )
+            BrawlStarsId(brawlerId) to
+                BrawlerItems(
+                    gadgets =
+                        (gadgetsByBrawlerId[brawlerId] ?: emptyList()).map { toGadget(it, gadgetNames, imagesByKey) },
+                    gears =
+                        (gearsByBrawlerId[brawlerId] ?: emptyList())
+                            .mapNotNull { gearsById[it.gearBrawlStarsId] }
+                            .map { toGear(it, gearNames, imagesByKey) },
+                    starPowers =
+                        (starPowersByBrawlerId[brawlerId] ?: emptyList()).map { toStarPower(it, starPowerNames, imagesByKey) },
+                    hyperCharge =
+                        (hyperChargesByBrawlerId[brawlerId] ?: emptyList())
+                            .firstOrNull()
+                            ?.let { toHyperCharge(it, hyperChargeNames, imagesByKey) },
+                    buffies = buffies,
+                )
         }
     }
 
