@@ -25,8 +25,8 @@ class LocalAwsSqsInitializer(
         try {
             sqsAsyncClient.createQueue { it.queueName(queueName) }.join()
             log.info("SQS 큐 생성 완료: {}", queueName)
-        } catch (e: QueueNameExistsException) {
-            log.info("SQS 큐 이미 존재: {}", queueName, e)
+        } catch (_: QueueNameExistsException) {
+            log.info("SQS 큐 이미 존재: {}", queueName)
         }
     }
 }
