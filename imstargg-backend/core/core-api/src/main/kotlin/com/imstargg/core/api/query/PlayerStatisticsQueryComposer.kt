@@ -6,7 +6,7 @@ import com.imstargg.core.api.controller.v1.response.PlayerBrawlerRoleStatisticsR
 import com.imstargg.core.api.controller.v1.response.PlayerBrawlerStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.PlayerBrawlerStatisticsResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
-import com.imstargg.core.application.statistics.player.PlayerBrawlerStatsRepository
+import com.imstargg.core.application.statistics.player.PlayerBrawlerStatsService
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
 import com.imstargg.core.domain.statistics.ResultCount
@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 @Component
 class PlayerStatisticsQueryComposer(
-    private val playerBrawlerStatsRepository: PlayerBrawlerStatsRepository,
+    private val playerBrawlerStatsService: PlayerBrawlerStatsService,
     private val brawlerService: BrawlerService,
 ) {
     fun getRankedBrawlerStatistics(
@@ -73,8 +73,14 @@ class PlayerStatisticsQueryComposer(
         startBattleDate: LocalDate,
         endBattleDate: LocalDate,
     ): PlayerBrawlerStatisticsResponse {
-        val stats = playerBrawlerStatsRepository.find(playerTag, battleType, startBattleDate)
-        val items = stats?.items.orEmpty()
+        val stats =
+            playerBrawlerStatsService.get(
+                playerTag = playerTag,
+                battleType = battleType,
+                startBattleDate = startBattleDate,
+                endBattleDate = endBattleDate,
+            )
+        val items = stats.items
         val brawlers = Brawlers(brawlerService.getAll())
         val responseItems =
             items.map { item ->
@@ -101,8 +107,14 @@ class PlayerStatisticsQueryComposer(
         startBattleDate: LocalDate,
         endBattleDate: LocalDate,
     ): PlayerBrawlerRoleStatisticsResponse {
-        val stats = playerBrawlerStatsRepository.find(playerTag, battleType, startBattleDate)
-        val items = stats?.items.orEmpty()
+        val stats =
+            playerBrawlerStatsService.get(
+                playerTag = playerTag,
+                battleType = battleType,
+                startBattleDate = startBattleDate,
+                endBattleDate = endBattleDate,
+            )
+        val items = stats.items
         val roleByBrawlerId = brawlerService.getAll().associate { it.id to it.role }
         val countsByRole: Map<BrawlerRole, ResultCount> =
             items
