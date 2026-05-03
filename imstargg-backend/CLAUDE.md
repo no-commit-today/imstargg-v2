@@ -92,8 +92,9 @@ imstargg-backend/
 ### Cache Key Conventions
 
 - **Redis 키 컨벤션 준수**: 로컬 캐시(Caffeine)에서도 향후 Redis 전환을 고려하여 Redis 키 컨벤션(`:` 구분자) 사용
-- **버전 관리**: 캐시 키 앞에 버전 prefix 포함 (예: `v1:battleEventBrawlerResult:...`). 캐싱 객체의 형태가 변경되면 해당 키의 버전을 올려야 배포 시 역직렬화 오류 방지
-- **키 형식**: `cacheName::v{N}:keyPrefix:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+- **로컬 캐시는 버전 관리 불필요**: 현재 캐시 백엔드는 Caffeine(로컬). 프로세스 재시작 시 캐시가 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
+- **Redis 전환 시점에 버전 도입**: Redis 등 영속 캐시로 전환할 때 `v{N}:` prefix 를 도입한다. 그 시점에 캐싱 객체 형태 변경 시 버전을 올려 역직렬화 오류를 방지.
+- **키 형식**: `cacheName::keyPrefix:param1:param2:...` (예: `statistics::battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
 
 ### DB & Entity Conventions
 
