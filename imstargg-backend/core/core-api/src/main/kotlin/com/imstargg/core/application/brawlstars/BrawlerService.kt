@@ -22,7 +22,13 @@ class BrawlerService(
         val brawler = get(id)
         val items =
             brawlerRepositoryWithCache.findAllBrawlerItems()[id]
-                ?: BrawlerItems(emptyList(), emptyList(), emptyList(), null, null)
+                ?: BrawlerItems(
+                    gadgets = emptyList(),
+                    gears = emptyList(),
+                    starPowers = emptyList(),
+                    hyperCharge = null,
+                    buffies = null,
+                )
         return BrawlerDetail(brawler, items)
     }
 
