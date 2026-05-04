@@ -331,7 +331,8 @@ export type SoloRankTier =
   | "DIAMOND_1" | "DIAMOND_2" | "DIAMOND_3"
   | "MYTHIC_1" | "MYTHIC_2" | "MYTHIC_3"
   | "LEGENDARY_1" | "LEGENDARY_2" | "LEGENDARY_3"
-  | "MASTERS";
+  | "MASTER_1" | "MASTER_2" | "MASTER_3"
+  | "PRO";
 
 export interface BattlePlayerBrawlerResponse {
   brawler: BrawlerResponse | null;
