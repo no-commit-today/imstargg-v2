@@ -3,6 +3,7 @@ import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import PowerLevel from "@/components/primitives/PowerLevel";
 import RankTierIcon from "@/components/primitives/RankTierIcon";
 import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
+import StarIcon from "@/components/primitives/StarIcon";
 import { isSameTag, toUrlPath } from "@/lib/tag";
 import type { BattlePlayer } from "@/domain/battle/types";
 
@@ -51,7 +52,7 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
           }}
         >
           {player.name}
-          {isStar && <span style={{ marginLeft: 4, color: "#FFC60A" }}>★</span>}
+          {isStar && <StarIcon size={12} className="ml-1 inline-block align-middle" />}
         </Link>
         <div style={{ fontSize: 11, color: "#8A90A0", fontFamily: "var(--font-mono)" }}>
           {player.tag}

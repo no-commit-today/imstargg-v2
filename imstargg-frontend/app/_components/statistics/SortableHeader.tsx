@@ -1,11 +1,13 @@
 "use client";
 
+import { type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type SortOrder, toggleSortOrder } from "@/domain/statistics/sort";
 
 type Props = {
   column: string;
-  label: string;
+  label: ReactNode;
+  title?: string;
   currentSort: string;
   currentOrder: SortOrder;
   /** "" | "pair" | "enemy" — sort/order 파라미터 prefix. 비어 있으면 sort/order 직접 사용. */
@@ -20,6 +22,7 @@ function paramName(prefix: string | undefined, base: "sort" | "order"): string {
 export function SortableHeader({
   column,
   label,
+  title,
   currentSort,
   currentOrder,
   paramPrefix,
@@ -45,6 +48,7 @@ export function SortableHeader({
     <button
       type="button"
       onClick={onClick}
+      title={title}
       className={`inline-flex items-center gap-0.5 font-bold tracking-wider ${
         isActive ? "text-[#14161B]" : "text-[#5C6271] hover:text-[#14161B]"
       }`}

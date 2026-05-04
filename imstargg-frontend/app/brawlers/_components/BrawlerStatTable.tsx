@@ -7,6 +7,7 @@ import type { SortOrder } from "@/domain/statistics/sort";
 import { SortableHeader } from "@app/_components/statistics/SortableHeader";
 import { BrawlerStatRow } from "./BrawlerStatRow";
 import { BrawlerListHeader } from "./BrawlerListHeader";
+import StarIcon from "@/components/primitives/StarIcon";
 
 type Row = { brawler: Brawler; stat: BrawlerResultStat | null };
 
@@ -64,7 +65,7 @@ export function BrawlerStatTable({ rows, sort, order, totalBattleCount }: Props)
           <SortableHeader column="tier" label="티어" currentSort={sort} currentOrder={order} />
           <SortableHeader column="winRate" label="승률" currentSort={sort} currentOrder={order} />
           <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} />
-          <SortableHeader column="starPlayerRate" label="스타률" currentSort={sort} currentOrder={order} />
+          <SortableHeader column="starPlayerRate" label={<StarIcon />} title="스타플레이어 비율" currentSort={sort} currentOrder={order} />
           <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} />
         </div>
         {sorted.length === 0 ? (

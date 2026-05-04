@@ -10,6 +10,7 @@ import {
   CountCell,
   PercentCell,
 } from "@app/_components/statistics/StatNumberCell";
+import StarIcon from "@/components/primitives/StarIcon";
 
 type Props = {
   items: BrawlerResultStat[];
@@ -42,7 +43,7 @@ export function EventResultStatsTable({ items, sort, order, selectedBrawlerId }:
           <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} />
         </span>
         <span className="hidden sm:inline">
-          <SortableHeader column="starPlayerRate" label="MVP" currentSort={sort} currentOrder={order} />
+          <SortableHeader column="starPlayerRate" label={<StarIcon />} title="스타플레이어 비율" currentSort={sort} currentOrder={order} />
         </span>
         <span className="hidden sm:inline">
           <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} />
