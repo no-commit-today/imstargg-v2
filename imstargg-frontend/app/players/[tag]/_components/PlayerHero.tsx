@@ -9,6 +9,7 @@ import { PlayerAvatar } from "@/components/primitives/PlayerAvatar";
 import Trophy from "@/components/primitives/Trophy";
 import PlayerPrestigeBadge from "@/components/primitives/PlayerPrestigeBadge";
 import { RenewalButton } from "@/components/shared/RenewalButton";
+import { RenewalStatus } from "@/components/shared/RenewalStatus";
 import { routes } from "@/config/routes";
 
 const STAT_NUM_CLASS =
@@ -47,7 +48,10 @@ export function PlayerHero({ player }: { player: Player }) {
             )}
           </p>
         </div>
-        <RenewalButton kind="player" tag={player.tag} />
+        <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <RenewalStatus kind="player" tag={player.tag} />
+          <RenewalButton kind="player" tag={player.tag} />
+        </div>
       </header>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCell label="트로피">
