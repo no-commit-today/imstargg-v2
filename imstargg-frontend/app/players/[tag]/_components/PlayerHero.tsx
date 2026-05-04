@@ -22,7 +22,7 @@ export function PlayerHero({ player }: { player: Player }) {
         <PlayerAvatar name={player.name} size={80} />
         <div className="min-w-0 flex-1">
           <h1
-            className="flex items-center gap-2 truncate text-2xl font-bold sm:text-3xl"
+            className="flex items-center gap-2 text-2xl font-bold sm:text-3xl"
             style={player.nameColor ? { color: player.nameColor } : undefined}
           >
             <span className="truncate">{player.name}</span>
