@@ -34,6 +34,7 @@ function SlotGroup({
           owned={it.owned}
           gearRarity={kind === "gear" ? (it.item.rarity ?? undefined) : undefined}
           size={SIZE.item}
+          name={it.item.name}
           ariaLabel={`${label} ${it.item.name} ${it.owned ? "보유" : "미보유"}`}
         />
       ))}
@@ -48,6 +49,7 @@ function HyperChargeSlot({ hc }: { hc: PlayerBrawlerOwnedItem }) {
       imageUrl={hc.item.imageUrl}
       owned={hc.owned}
       size={SIZE.hc}
+      name={hc.item.name}
       ariaLabel={`하이퍼차지 ${hc.owned ? "보유" : "미보유"}`}
     />
   );
@@ -83,12 +85,18 @@ function BuffyGroup({ buffies }: { buffies: PlayerBrawlerBuffies }) {
 
 export function PlayerBrawlerOwnership({ pb }: { pb: PlayerBrawler }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      <SlotGroup items={pb.gadgets} kind="gadget" label="가젯" />
-      <SlotGroup items={pb.starPowers} kind="starPower" label="스타파워" />
-      <SlotGroup items={pb.gears} kind="gear" label="기어" />
-      {pb.buffies && <BuffyGroup buffies={pb.buffies} />}
-      {pb.hyperCharge && <HyperChargeSlot hc={pb.hyperCharge} />}
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-3">
+        <SlotGroup items={pb.gadgets} kind="gadget" label="가젯" />
+        <SlotGroup items={pb.starPowers} kind="starPower" label="스타파워" />
+      </div>
+      <div className="flex items-center gap-3">
+        <SlotGroup items={pb.gears} kind="gear" label="기어" />
+      </div>
+      <div className="flex items-center gap-3">
+        {pb.hyperCharge && <HyperChargeSlot hc={pb.hyperCharge} />}
+        {pb.buffies && <BuffyGroup buffies={pb.buffies} />}
+      </div>
     </div>
   );
 }
