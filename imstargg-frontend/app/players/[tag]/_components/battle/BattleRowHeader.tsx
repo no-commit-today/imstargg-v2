@@ -1,5 +1,5 @@
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
-import PowerPill from "@/components/primitives/PowerPill";
+import PowerLevel from "@/components/primitives/PowerLevel";
 import { BattleResultBadge } from "./BattleResultBadge";
 import { BattleModeIcon } from "./BattleModeIcon";
 import { modeLabel } from "@/domain/battle/modeLabels";
@@ -105,7 +105,7 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
             rarity={ownerBrawler?.rarity}
             size={28}
           />
-          <PowerPill level={owner.brawler.power} />
+          <PowerLevel level={owner.brawler.power} size={20} />
         </div>
       )}
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>

@@ -41,7 +41,3 @@ export function tierSegmentNumber(tier: SoloRankTier): string | null {
   return seg ?? null;
 }
 
-/** @deprecated Task 14 에서 caller (BattlePlayerRow) 가 사라지고 Task 15 에서 이 alias 삭제됨 */
-export function tierLabel(tier: SoloRankTier): string {
-  return tierSegmentNumber(tier) ?? "";
-}
