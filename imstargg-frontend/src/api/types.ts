@@ -304,6 +304,39 @@ export interface BrawlerItemOwnershipStatisticsResponse {
   buffies: BrawlerBuffyOwnershipStatisticsItemResponse[];
 }
 
+// === Player Statistics ===
+export interface PlayerBrawlerStatisticsItemResponse {
+  brawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  victoryCount: number;
+  defeatCount: number;
+  drawCount: number;
+  winRate: number;
+}
+
+export interface PlayerBrawlerStatisticsResponse {
+  startBattleDate: string;
+  endBattleDate: string;
+  totalBattleCount: number;
+  items: PlayerBrawlerStatisticsItemResponse[];
+}
+
+export interface PlayerBrawlerRoleStatisticsItemResponse {
+  role: BrawlerRole;
+  totalBattleCount: number;
+  victoryCount: number;
+  defeatCount: number;
+  drawCount: number;
+  winRate: number;
+}
+
+export interface PlayerBrawlerRoleStatisticsResponse {
+  startBattleDate: string;
+  endBattleDate: string;
+  totalBattleCount: number;
+  items: PlayerBrawlerRoleStatisticsItemResponse[];
+}
+
 // === Season ===
 export interface BrawlPassSeasonResponse {
   number: number;
