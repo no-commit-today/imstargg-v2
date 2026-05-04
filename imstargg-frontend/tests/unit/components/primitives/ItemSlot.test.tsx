@@ -24,11 +24,12 @@ describe("ItemSlot", () => {
     );
   });
 
-  it("hyperCharge 미보유는 base 를 흐리게 렌더한다", () => {
+  it("hyperCharge 미보유는 base 를 opacity + grayscale 로 렌더한다", () => {
     render(<ItemSlot kind="hyperCharge" imageUrl={null} owned={false} />);
     const img = screen.getByRole("img", { hidden: true });
     expect(img).toHaveAttribute("src", "/assets/hypercharge_base_empty.webp");
     expect(img.style.opacity).toBe("0.3");
+    expect(img.style.filter).toBe("grayscale(1)");
   });
 
   it("buffy 는 imageUrl 이 없으면 lucide 아이콘 fallback 을 렌더한다", () => {

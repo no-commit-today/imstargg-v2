@@ -39,7 +39,8 @@ export default function ItemSlot({
 
   if (owned) {
     const src = imageUrl ?? basePlaceholder(kind, gearRarity);
-    return <img src={src ?? ""} alt="" role="img" width={size} height={size} aria-label={ariaLabel} />;
+    if (!src) return null; // safety: 알려진 케이스에서는 도달 불가
+    return <img src={src} alt="" role="img" width={size} height={size} aria-label={ariaLabel} />;
   }
 
   const emptySrc = emptyPlaceholder(kind);
@@ -48,9 +49,10 @@ export default function ItemSlot({
   }
   // hyperCharge: empty 자산 부재 → base 를 흐리게
   const baseSrc = imageUrl ?? basePlaceholder(kind, gearRarity);
+  if (!baseSrc) return null; // safety
   return (
     <img
-      src={baseSrc ?? ""}
+      src={baseSrc}
       alt=""
       role="img"
       width={size}
