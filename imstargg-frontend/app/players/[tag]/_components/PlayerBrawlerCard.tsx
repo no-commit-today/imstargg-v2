@@ -3,7 +3,9 @@
 import type { PlayerBrawler } from "@/domain/player/types";
 import { Card } from "@/components/ui/card";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
-import { formatNumber } from "@/lib/format";
+import Trophy from "@/components/primitives/Trophy";
+import PowerLevel from "@/components/primitives/PowerLevel";
+import PrestigeBadge from "@/components/primitives/PrestigeBadge";
 import { PlayerBrawlerOwnership } from "./PlayerBrawlerOwnership";
 
 export function PlayerBrawlerCard({ pb }: { pb: PlayerBrawler }) {
@@ -18,9 +20,11 @@ export function PlayerBrawlerCard({ pb }: { pb: PlayerBrawler }) {
           showFrame
         />
         <p className="font-medium">{pb.brawler?.name ?? "Unknown"}</p>
-        <p className="text-muted-foreground text-xs">
-          파워 {pb.power} · 🏆 {formatNumber(pb.trophies)}
-        </p>
+        <div className="flex items-center justify-center gap-1.5">
+          <PowerLevel level={pb.power} size={20} />
+          <PrestigeBadge trophies={pb.trophies} size={18} />
+          <Trophy value={pb.trophies} size={14} />
+        </div>
       </div>
       <hr className="border-muted" />
       <PlayerBrawlerOwnership pb={pb} />
