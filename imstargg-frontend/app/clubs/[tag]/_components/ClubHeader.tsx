@@ -58,7 +58,7 @@ export function ClubHeader({ club, tag }: { club: Club; tag: string }) {
               {TYPE_LABEL[club.type]}
             </span>
           </div>
-          <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3 [&_span]:text-white/60">
+          <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3 [&>span]:text-white/60">
             <RenewalStatus kind="club" tag={tag} />
             <RenewalButton kind="club" tag={tag} />
           </div>
