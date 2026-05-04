@@ -14,8 +14,11 @@
 
 ### 1.1 아이템 placeholder 자산 매트릭스
 
-| Kind | Base placeholder<br/>(catalog 등재 + `imageUrl == null`) | Empty placeholder<br/>(플레이어 미보유) |
-|---|---|---|
+- **Base placeholder** = catalog 에 등재됐으나 `imageUrl == null` 인 fallback
+- **Empty placeholder** = 플레이어 미보유 슬롯
+
+| Kind | Base placeholder | Empty placeholder |
+| --- | --- | --- |
 | gadget | `gadget_base_empty.webp` | `gadget_empty.webp` |
 | gear (`SUPER_RARE`) | `gear_base_empty.webp` | `gear_empty.webp` |
 | gear (`EPIC`) | `gear_epic_super_base_empty.webp` | `gear_empty.webp` |
@@ -25,6 +28,7 @@
 | buffy | (자산 부재 → lucide `Zap`) | (자산 부재 → lucide `Zap` + `opacity: 0.3`) |
 
 명명 컨벤션:
+
 - `*_empty.webp` = 플레이어 **미보유** 슬롯
 - `*_base_empty.webp` = 카탈로그엔 등재됐으나 **`imageUrl == null`** 인 fallback
 
@@ -35,7 +39,7 @@
 플레이어 트로피 (사용자 단일 값):
 
 | 임계값 | 아이콘 |
-|---|---|
+| --- | --- |
 | `< 1000` | `icon_trophy.png` |
 | `>= 1000` | `icon_prestige_trophy_2.webp` |
 | `>= 3000` | `icon_prestige_trophy.webp` |
@@ -43,7 +47,7 @@
 브롤러 트로피 (각 PlayerBrawler):
 
 | 임계값 | 아이콘 | 오버레이 숫자 |
-|---|---|---|
+| --- | --- | --- |
 | `< 250` | `icon_trophy_brawler_wood.webp` | — |
 | `>= 250` | `icon_trophy_brawler_bronze.webp` | — |
 | `>= 500` | `icon_trophy_brawler_silver.webp` | — |
@@ -57,7 +61,7 @@
 base tier 별로 단일 자산 (1/2/3 segment 구분 없음):
 
 | Tier base | 자산 |
-|---|---|
+| --- | --- |
 | `BRONZE_*` | `icon_rank_sticker_bronze.webp` |
 | `SILVER_*` | `icon_rank_sticker_silver.webp` |
 | `GOLD_*` | `icon_rank_sticker_gold.webp` |
@@ -342,21 +346,24 @@ export default function ItemSlot({ kind, imageUrl, owned, gearRarity, size = 24,
 
 - `GearRarity` 신규 export: `export type GearRarity = "SUPER_RARE" | "EPIC" | "MYTHIC";`
 - `GearResponse` 보강:
-  ```ts
-  export interface GearResponse { id: number; name: MessagesResponse; rarity: GearRarity; imageUrl: string | null; }
-  ```
+
+```ts
+export interface GearResponse { id: number; name: MessagesResponse; rarity: GearRarity; imageUrl: string | null; }
+```
+
 - `SoloRankTier` 동기화 — 기존 `MASTERS` 단일 → 백엔드와 일치:
-  ```ts
-  export type SoloRankTier =
-    | "BRONZE_1" | "BRONZE_2" | "BRONZE_3"
-    | "SILVER_1" | "SILVER_2" | "SILVER_3"
-    | "GOLD_1" | "GOLD_2" | "GOLD_3"
-    | "DIAMOND_1" | "DIAMOND_2" | "DIAMOND_3"
-    | "MYTHIC_1" | "MYTHIC_2" | "MYTHIC_3"
-    | "LEGENDARY_1" | "LEGENDARY_2" | "LEGENDARY_3"
-    | "MASTER_1" | "MASTER_2" | "MASTER_3"
-    | "PRO";
-  ```
+
+```ts
+export type SoloRankTier =
+  | "BRONZE_1" | "BRONZE_2" | "BRONZE_3"
+  | "SILVER_1" | "SILVER_2" | "SILVER_3"
+  | "GOLD_1" | "GOLD_2" | "GOLD_3"
+  | "DIAMOND_1" | "DIAMOND_2" | "DIAMOND_3"
+  | "MYTHIC_1" | "MYTHIC_2" | "MYTHIC_3"
+  | "LEGENDARY_1" | "LEGENDARY_2" | "LEGENDARY_3"
+  | "MASTER_1" | "MASTER_2" | "MASTER_3"
+  | "PRO";
+```
 
 ### 3.2 `src/domain/brawler/types.ts` + `mappers.ts`
 
@@ -466,7 +473,7 @@ function pick(pb: PlayerBrawler, key: PlayerBrawlerSortKey): number | string {
 
 ### 4.1 `app/players/[tag]/_components/PlayerHero.tsx`
 
-**변경 전 → 변경 후 (요약)**
+#### 변경 요약
 
 - 6 stat cell → **4 stat cell** (트로피 / 최고 트로피 / 3v3 승 / 쇼다운 승)
 - `프레스티지` cell 제거 → 이름 옆 `<PlayerPrestigeBadge level={player.totalPrestigeLevel} />`
