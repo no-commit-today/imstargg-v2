@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import PowerLevel from "@/components/primitives/PowerLevel";
 import RankTierIcon from "@/components/primitives/RankTierIcon";
-import Trophy from "@/components/primitives/Trophy";
+import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
 import { isSameTag, toUrlPath } from "@/lib/tag";
 import type { BattlePlayer } from "@/domain/battle/types";
 
@@ -59,7 +59,7 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
       </div>
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         <PowerLevel level={player.brawler.power} size={18} />
-        {player.brawler.trophies != null && <Trophy value={player.brawler.trophies} size={12} />}
+        {player.brawler.trophies != null && <BrawlerTrophy value={player.brawler.trophies} size={12} />}
         {player.soloRankTier != null && <RankTierIcon tier={player.soloRankTier} size={16} />}
       </div>
     </div>

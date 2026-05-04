@@ -3,7 +3,7 @@
 import type { PlayerBrawler } from "@/domain/player/types";
 import { Card } from "@/components/ui/card";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
-import Trophy from "@/components/primitives/Trophy";
+import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
 import PowerLevel from "@/components/primitives/PowerLevel";
 import PrestigeBadge from "@/components/primitives/PrestigeBadge";
 import { PlayerBrawlerOwnership } from "./PlayerBrawlerOwnership";
@@ -23,7 +23,7 @@ export function PlayerBrawlerCard({ pb }: { pb: PlayerBrawler }) {
         <div className="flex items-center justify-center gap-1.5">
           <PowerLevel level={pb.power} size={20} />
           <PrestigeBadge trophies={pb.trophies} size={18} />
-          <Trophy value={pb.trophies} size={14} />
+          <BrawlerTrophy value={pb.trophies} size={14} />
         </div>
       </div>
       <hr className="border-muted" />
