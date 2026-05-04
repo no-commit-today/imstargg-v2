@@ -32,6 +32,9 @@ describe("tierSegmentNumber", () => {
 describe("tierColor", () => {
   it("기존 색 매핑을 유지한다", () => {
     expect(tierColor("BRONZE_1")).toBe("#C77545");
+    expect(tierColor("SILVER_2")).toBe("#9FAFC5");
+    expect(tierColor("GOLD_3")).toBe("#F2B93B");
+    expect(tierColor("DIAMOND_1")).toBe("#58D7E8");
     expect(tierColor("MYTHIC_3")).toBe("#B83BFF");
     expect(tierColor("LEGENDARY_2")).toBe("#FF3A3A");
   });
