@@ -44,30 +44,32 @@ describe("sortMembers", () => {
 });
 
 describe("trophyDistribution", () => {
-  it("buckets are 90k+, 80–90k, 70–80k, 60–70k, <60k in that order", () => {
+  it("buckets are 11 buckets from 200K+ down to <20K", () => {
     const result = trophyDistribution([]);
     expect(result.map((b) => b.label)).toEqual([
-      "90k+", "80–90k", "70–80k", "60–70k", "<60k",
+      "200K+", "180–200K", "160–180K", "140–160K", "120–140K",
+      "100–120K", "80–100K", "60–80K", "40–60K", "20–40K", "<20K",
     ]);
     expect(result.every((b) => b.count === 0)).toBe(true);
   });
 
-  it("counts boundary values: 60000→60–70k, 80000→80–90k, 90000→90k+", () => {
+  it("counts boundary values across new bucket boundaries", () => {
     const members = [
-      m({ trophies: 59999 }),
-      m({ trophies: 60000 }),
-      m({ trophies: 79999 }),
-      m({ trophies: 80000 }),
-      m({ trophies: 89999 }),
-      m({ trophies: 90000 }),
+      m({ trophies: 19999 }),    // <20K
+      m({ trophies: 20000 }),    // 20–40K
+      m({ trophies: 39999 }),    // 20–40K
+      m({ trophies: 40000 }),    // 40–60K
+      m({ trophies: 199999 }),   // 180–200K
+      m({ trophies: 200000 }),   // 200K+
+      m({ trophies: 250000 }),   // 200K+
     ];
     const counts = Object.fromEntries(
       trophyDistribution(members).map((b) => [b.label, b.count]),
     );
-    expect(counts["<60k"]).toBe(1);
-    expect(counts["60–70k"]).toBe(1);
-    expect(counts["70–80k"]).toBe(1);
-    expect(counts["80–90k"]).toBe(2);
-    expect(counts["90k+"]).toBe(1);
+    expect(counts["<20K"]).toBe(1);
+    expect(counts["20–40K"]).toBe(2);
+    expect(counts["40–60K"]).toBe(1);
+    expect(counts["180–200K"]).toBe(1);
+    expect(counts["200K+"]).toBe(2);
   });
 });

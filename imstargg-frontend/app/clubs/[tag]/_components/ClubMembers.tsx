@@ -6,6 +6,7 @@ import type { ClubMemberRole } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { stripHash } from "@/lib/tag";
 import Trophy from "@/components/primitives/Trophy";
+import { cn } from "@/lib/cn";
 
 const ROLE_INFO: Record<ClubMemberRole, { label: string; color: string } | null> = {
   PRESIDENT: { label: "회장", color: "#FFC60A" },
@@ -15,12 +16,12 @@ const ROLE_INFO: Record<ClubMemberRole, { label: string; color: string } | null>
   UNKNOWN: null,
 };
 
-export function ClubMembers({ members }: { members: ClubMember[] }) {
+export function ClubMembers({ members, className }: { members: ClubMember[]; className?: string }) {
   const router = useRouter();
   const goPlayer = (tag: string) => router.push(`/players/${stripHash(tag)}`);
 
   return (
-    <section className="card">
+    <section className={cn("card", className)}>
       <header className="card-head">
         <div className="card-title">멤버 ({members.length})</div>
       </header>

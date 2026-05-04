@@ -35,8 +35,8 @@ export function ClubContent({ tag, initialClub, initialRenewal }: Props) {
     <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-6">
       <ClubHeader club={club} tag={tag} />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <ClubMembers members={sorted} />
-        <ClubTrophyDistribution members={club.members} />
+        <ClubTrophyDistribution members={club.members} className="lg:order-2" />
+        <ClubMembers members={sorted} className="lg:order-1" />
       </div>
     </main>
   );
