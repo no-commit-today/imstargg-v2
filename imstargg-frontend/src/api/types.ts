@@ -304,6 +304,21 @@ export interface BrawlerItemOwnershipStatisticsResponse {
   buffies: BrawlerBuffyOwnershipStatisticsItemResponse[];
 }
 
+// === Season ===
+export interface BrawlPassSeasonResponse {
+  number: number;
+  startAt: string;
+  endAt: string;
+}
+
+export interface SoloRankSeasonResponse {
+  key: string;
+  number: number;
+  month: number;
+  startAt: string;
+  endAt: string;
+}
+
 // === Slice (offset/limit pagination) ===
 export interface SliceResponse<T> {
   content: T[];

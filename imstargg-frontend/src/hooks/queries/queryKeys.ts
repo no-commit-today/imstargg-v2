@@ -43,6 +43,11 @@ export const queryKeys = {
     clubs: (country: string) =>
       [...queryKeys.ranking.all, "clubs", country] as const,
   },
+  season: {
+    all: ["season"] as const,
+    brawlPass: () => [...queryKeys.season.all, "brawl-pass"] as const,
+    soloRank: () => [...queryKeys.season.all, "solo-rank"] as const,
+  },
   statistics: {
     all: ["statistics"] as const,
     brawlerResult: (params: Record<string, unknown>) =>
