@@ -1,9 +1,10 @@
-import type { BrawlerRarity, BrawlerRole, BuffyResponse } from "@/api/types";
+import type { BrawlerRarity, BrawlerRole, BuffyResponse, GearRarity } from "@/api/types";
 
 export interface BrawlerItem {
   id: number;
   name: string;
   imageUrl: string | null;
+  rarity: GearRarity | null;
 }
 
 export interface Buffies {

@@ -58,7 +58,7 @@ export type Language = "ko" | "en" | string;
 export type MessagesResponse = Record<Language, string>;
 
 export interface GadgetResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
-export interface GearResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
+export interface GearResponse { id: number; name: MessagesResponse; rarity: GearRarity; imageUrl: string | null; }
 export interface StarPowerResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
 export interface HyperChargeResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
 

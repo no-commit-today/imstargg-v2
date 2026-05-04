@@ -26,6 +26,7 @@ export function toBrawlerItem(dto: ItemDto): BrawlerItem {
     id: dto.id,
     name: pickName(dto.name),
     imageUrl: dto.imageUrl,
+    rarity: "rarity" in dto ? dto.rarity : null,
   };
 }
 

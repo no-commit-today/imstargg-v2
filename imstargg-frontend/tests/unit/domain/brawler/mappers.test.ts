@@ -1,11 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { toBrawler, toBrawlerItem, toBrawlerItems, toBrawlerWithItems } from "@/domain/brawler/mappers";
-import type { BrawlerResponse, BrawlerItemsResponse, BrawlerWithItemsResponse, GadgetResponse } from "@/api/types";
+import type { BrawlerResponse, BrawlerItemsResponse, BrawlerWithItemsResponse, GadgetResponse, GearResponse } from "@/api/types";
 
 const dtoGadget = (overrides: Partial<GadgetResponse> = {}): GadgetResponse => ({
   id: 23000001,
   name: { ko: "브롤스타즈터틀!", en: "Brawl Box Turtle" },
   imageUrl: "https://cdn/gadget.png",
+  ...overrides,
+});
+
+const dtoGear = (overrides: Partial<GearResponse> = {}): GearResponse => ({
+  id: 29000001,
+  name: { ko: "방어 기어", en: "Shield Gear" },
+  rarity: "SUPER_RARE",
+  imageUrl: "https://cdn/gear.png",
   ...overrides,
 });
 
@@ -33,10 +41,21 @@ describe("toBrawlerItem", () => {
     expect(item.name).toBe("브롤스타즈터틀!");
     expect(item.id).toBe(23000001);
     expect(item.imageUrl).toBe("https://cdn/gadget.png");
+    expect(item.rarity).toBeNull();
   });
 
   it("preserves null imageUrl", () => {
     expect(toBrawlerItem(dtoGadget({ imageUrl: null })).imageUrl).toBeNull();
+  });
+
+  it("gear DTO 의 rarity 를 패스스루한다", () => {
+    const dto = { id: 1, name: { ko: "기어" }, rarity: "EPIC" as const, imageUrl: null };
+    expect(toBrawlerItem(dto).rarity).toBe("EPIC");
+  });
+
+  it("gear 외 아이템은 rarity 가 null 이다", () => {
+    const dto = { id: 1, name: { ko: "가젯" }, imageUrl: null };
+    expect(toBrawlerItem(dto).rarity).toBeNull();
   });
 });
 
@@ -66,7 +85,7 @@ describe("toBrawlerItems", () => {
       dtoBrawlerItems({
         gadgets: [dtoGadget({ id: 1 }), dtoGadget({ id: 2 })],
         starPowers: [dtoGadget({ id: 11 })],
-        gears: [dtoGadget({ id: 21 })],
+        gears: [dtoGear({ id: 21 })],
         hyperCharge: dtoGadget({ id: 31 }),
       }),
     );

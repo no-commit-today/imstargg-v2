@@ -4,7 +4,7 @@ import { PlayerBrawlerOwnership } from "@/../app/players/[tag]/_components/Playe
 import type { PlayerBrawler } from "@/domain/player/types";
 
 const item = (id: number, owned: boolean) => ({
-  item: { id, name: `i${id}`, imageUrl: null },
+  item: { id, name: `i${id}`, imageUrl: null, rarity: null },
   owned,
 });
 
