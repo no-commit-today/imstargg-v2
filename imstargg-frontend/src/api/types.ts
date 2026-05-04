@@ -35,6 +35,8 @@ export type BrawlerRarity =
   | "STARTING_BRAWLER" | "RARE" | "SUPER_RARE" | "EPIC"
   | "MYTHIC" | "LEGENDARY" | "ULTRA_LEGENDARY";
 
+export type GearRarity = "SUPER_RARE" | "EPIC" | "MYTHIC";
+
 export type BrawlerRole =
   | "DAMAGE_DEALER" | "TANK" | "MARKSMAN" | "ASSASSIN"
   | "SUPPORT" | "CONTROLLER" | "ARTILLERY";
