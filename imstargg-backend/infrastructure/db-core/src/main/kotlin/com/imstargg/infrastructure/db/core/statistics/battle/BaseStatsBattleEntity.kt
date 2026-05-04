@@ -27,8 +27,6 @@ abstract class BaseStatsBattleEntity(
     val mode: String,
     @Column(name = "type", length = 65, updatable = false, nullable = false)
     val type: String,
-    @Column(name = "star_player_brawlstars_tag", length = 45, updatable = false)
-    val starPlayerBrawlStarsTag: String?,
     @Column(name = "player_brawlstars_tag", length = 45, updatable = false, nullable = false)
     val playerBrawlStarsTag: String,
     @JdbcTypeCode(SqlTypes.JSON)

@@ -32,7 +32,6 @@ class StatsRankBattleEntity(
     eventMap: String,
     mode: String,
     type: String,
-    starPlayerBrawlStarsTag: String?,
     playerBrawlStarsTag: String,
     teams: List<List<StatsBattleEntityTeamPlayer>>,
     @Column(name = "battle_rank", updatable = false, nullable = false)
@@ -45,7 +44,6 @@ class StatsRankBattleEntity(
         eventMap = eventMap,
         mode = mode,
         type = type,
-        starPlayerBrawlStarsTag = starPlayerBrawlStarsTag,
         playerBrawlStarsTag = playerBrawlStarsTag,
         teams = teams,
     ) {
