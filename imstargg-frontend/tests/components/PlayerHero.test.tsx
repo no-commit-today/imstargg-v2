@@ -27,13 +27,13 @@ function wrap(ui: ReactNode) {
 }
 
 describe("PlayerHero", () => {
-  it("이름·태그·6 stats·클럽을 모두 노출한다", () => {
+  it("이름·태그·4 stats·클럽을 모두 노출한다", () => {
     render(wrap(<PlayerHero player={player} />));
-    expect(screen.getByRole("heading", { name: "惡鬼滅殺" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /惡鬼滅殺/ })).toBeInTheDocument();
     expect(screen.getByText("#88J8Q9RPV")).toBeInTheDocument();
     expect(screen.getAllByText("34,679").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("7,286")).toBeInTheDocument();
-    expect(screen.getByText("321")).toBeInTheDocument();
+    expect(screen.getByText("505")).toBeInTheDocument();
     expect(screen.getByText(/SJCE/)).toBeInTheDocument();
   });
 

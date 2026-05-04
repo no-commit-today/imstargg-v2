@@ -14,7 +14,7 @@ function trophyIcon(value: number): string {
 export default function Trophy({ value, size = 14 }: Props) {
   return (
     <span className="trophy" style={{ fontSize: size }}>
-      <img src={trophyIcon(value)} alt="" role="img" style={{ width: size, height: size }} />
+      <img src={trophyIcon(value)} alt="" role="img" width={size} height={size} />
       <span>{formatNumber(value)}</span>
     </span>
   );
