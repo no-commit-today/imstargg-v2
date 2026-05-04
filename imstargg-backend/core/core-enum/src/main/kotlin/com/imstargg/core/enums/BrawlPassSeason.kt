@@ -38,6 +38,18 @@ class BrawlPassSeason(
             return season
         }
 
+        fun all(clock: Clock): List<BrawlPassSeason> {
+            val end = current(clock)
+            val list = mutableListOf<BrawlPassSeason>()
+            var s = createFirst()
+            while (s.number != end.number) {
+                list += s
+                s = s.next()
+            }
+            list += end
+            return list
+        }
+
         fun ofNumber(number: Int): BrawlPassSeason {
             require(number >= 1) { "number must be >= 1: $number" }
             var season = createFirst()

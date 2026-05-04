@@ -6,8 +6,8 @@ import java.time.OffsetDateTime
 import java.time.temporal.TemporalAdjusters
 
 class SoloRankSeason private constructor(
-    private val number: Int,
-    private val month: Int,
+    val number: Int,
+    val month: Int,
     val startAt: OffsetDateTime,
     val endAt: OffsetDateTime,
 ) {
@@ -55,6 +55,18 @@ class SoloRankSeason private constructor(
         }
 
         fun current(clock: Clock): SoloRankSeason = of(OffsetDateTime.now(clock))
+
+        fun all(clock: Clock): List<SoloRankSeason> {
+            val end = current(clock)
+            val list = mutableListOf<SoloRankSeason>()
+            var s = createFirst()
+            while (s.key != end.key) {
+                list += s
+                s = s.next()
+            }
+            list += end
+            return list
+        }
 
         fun ofKey(key: String): SoloRankSeason {
             val parts = key.split("-")

@@ -220,6 +220,19 @@ class BrawlPassSeasonTest {
         }
     }
 
+    @Nested
+    inner class All {
+        @Test
+        fun `반환 리스트의 크기는 current 시즌 number 와 같다`() {
+            val clock = fixedClock("2026-05-01T00:00:00+09:00")
+            val all = BrawlPassSeason.all(clock)
+            val current = BrawlPassSeason.current(clock)
+            assertThat(all).hasSize(current.number)
+            assertThat(all.last().number).isEqualTo(current.number)
+            assertThat(all.first().number).isEqualTo(1)
+        }
+    }
+
     private fun fixedClock(offsetDateTime: String): Clock {
         val odt = OffsetDateTime.parse(offsetDateTime)
         return Clock.fixed(odt.toInstant(), odt.offset)
