@@ -48,14 +48,9 @@ describe("toBrawlerItem", () => {
     expect(toBrawlerItem(dtoGadget({ imageUrl: null })).imageUrl).toBeNull();
   });
 
-  it("gear DTO 의 rarity 를 패스스루한다", () => {
-    const dto = { id: 1, name: { ko: "기어" }, rarity: "EPIC" as const, imageUrl: null };
-    expect(toBrawlerItem(dto).rarity).toBe("EPIC");
-  });
-
-  it("gear 외 아이템은 rarity 가 null 이다", () => {
-    const dto = { id: 1, name: { ko: "가젯" }, imageUrl: null };
-    expect(toBrawlerItem(dto).rarity).toBeNull();
+  it("toBrawlerItem 은 모든 종류에서 rarity 를 null 로 반환한다", () => {
+    expect(toBrawlerItem(dtoGadget()).rarity).toBeNull();
+    expect(toBrawlerItem(dtoGear({ rarity: "EPIC" })).rarity).toBeNull();
   });
 });
 
@@ -97,6 +92,28 @@ describe("toBrawlerItems", () => {
 
   it("returns null hyperCharge when dto is null", () => {
     expect(toBrawlerItems(dtoBrawlerItems()).hyperCharge).toBeNull();
+  });
+
+  it("toBrawlerItems 의 gears 는 DTO rarity 를 패스스루한다", () => {
+    const items = toBrawlerItems(
+      dtoBrawlerItems({
+        gears: [dtoGear({ id: 1, rarity: "MYTHIC" }), dtoGear({ id: 2, rarity: "EPIC" })],
+      }),
+    );
+    expect(items.gears.map((g) => g.rarity)).toEqual(["MYTHIC", "EPIC"]);
+  });
+
+  it("toBrawlerItems 의 gear 외 항목은 rarity 가 null 이다", () => {
+    const items = toBrawlerItems(
+      dtoBrawlerItems({
+        gadgets: [dtoGadget({ id: 1 })],
+        starPowers: [dtoGadget({ id: 2 })],
+        hyperCharge: dtoGadget({ id: 3 }),
+      }),
+    );
+    expect(items.gadgets[0].rarity).toBeNull();
+    expect(items.starPowers[0].rarity).toBeNull();
+    expect(items.hyperCharge?.rarity).toBeNull();
   });
 });
 

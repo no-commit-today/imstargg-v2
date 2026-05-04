@@ -87,4 +87,15 @@ describe("toPlayerBrawler", () => {
     expect(b.gadgets[1].owned).toBe(false);
     expect(b.gadgets[0].item.id).toBe(1);
   });
+  it("gears 의 rarity 를 도메인 모델에 패스스루한다", () => {
+    const withGears: PlayerBrawlerResponse = {
+      ...brawlerDto,
+      gears: [
+        { item: { id: 10, name: { ko: "기어1" }, rarity: "EPIC", imageUrl: null }, owned: true },
+        { item: { id: 11, name: { ko: "기어2" }, rarity: "MYTHIC", imageUrl: null }, owned: false },
+      ],
+    };
+    const b = toPlayerBrawler(withGears);
+    expect(b.gears.map((g) => g.item.rarity)).toEqual(["EPIC", "MYTHIC"]);
+  });
 });

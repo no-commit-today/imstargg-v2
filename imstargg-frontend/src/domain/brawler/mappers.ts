@@ -26,7 +26,7 @@ export function toBrawlerItem(dto: ItemDto): BrawlerItem {
     id: dto.id,
     name: pickName(dto.name),
     imageUrl: dto.imageUrl,
-    rarity: "rarity" in dto ? dto.rarity : null,
+    rarity: null,
   };
 }
 
@@ -43,7 +43,7 @@ export function toBrawler(dto: BrawlerResponse): Brawler {
 export function toBrawlerItems(dto: BrawlerItemsResponse): BrawlerItems {
   return {
     gadgets: dto.gadgets.map(toBrawlerItem),
-    gears: dto.gears.map(toBrawlerItem),
+    gears: dto.gears.map((g) => ({ ...toBrawlerItem(g), rarity: g.rarity })),
     starPowers: dto.starPowers.map(toBrawlerItem),
     hyperCharge: dto.hyperCharge ? toBrawlerItem(dto.hyperCharge) : null,
     buffies: dto.buffies,

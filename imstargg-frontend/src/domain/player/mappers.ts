@@ -61,7 +61,10 @@ export function toPlayerBrawler(dto: PlayerBrawlerResponse): PlayerBrawler {
     highestTrophies: dto.highestTrophies,
     prestigeLevel: dto.prestigeLevel,
     gadgets: dto.gadgets.map(toOwnedItem),
-    gears: dto.gears.map(toOwnedItem),
+    gears: dto.gears.map((it) => ({
+      item: { ...toBrawlerItem(it.item), rarity: it.item.rarity },
+      owned: it.owned,
+    })),
     starPowers: dto.starPowers.map(toOwnedItem),
     hyperCharge: dto.hyperCharge ? toOwnedItem(dto.hyperCharge) : null,
     buffies: dto.buffies
