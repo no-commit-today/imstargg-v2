@@ -7,6 +7,7 @@ import { formatNumber } from "@/lib/format";
 import { Card } from "@/components/ui/card";
 import { PlayerAvatar } from "@/components/primitives/PlayerAvatar";
 import Trophy from "@/components/primitives/Trophy";
+import PlayerPrestigeBadge from "@/components/primitives/PlayerPrestigeBadge";
 import { RenewalButton } from "@/components/shared/RenewalButton";
 import { routes } from "@/config/routes";
 
@@ -14,16 +15,18 @@ const STAT_NUM_CLASS =
   "font-num font-bold text-[#14161B] tabular-nums [font-variant-numeric:tabular-nums]";
 
 export function PlayerHero({ player }: { player: Player }) {
+  const showdownWins = player.victoriesSolo + player.victoriesDuo;
   return (
     <Card className="flex flex-col gap-5 p-6 sm:p-7">
       <header className="flex items-center gap-4 sm:gap-6">
         <PlayerAvatar name={player.name} size={80} />
         <div className="min-w-0 flex-1">
           <h1
-            className="truncate text-2xl font-bold sm:text-3xl"
+            className="flex items-center gap-2 truncate text-2xl font-bold sm:text-3xl"
             style={player.nameColor ? { color: player.nameColor } : undefined}
           >
-            {player.name}
+            <span className="truncate">{player.name}</span>
+            <PlayerPrestigeBadge level={player.totalPrestigeLevel} size={24} />
           </h1>
           <p className="font-mono text-sm text-[#5C6271]">{player.tag}</p>
           <p className="mt-1 flex items-center gap-1.5 text-sm">
@@ -46,24 +49,18 @@ export function PlayerHero({ player }: { player: Player }) {
         </div>
         <RenewalButton kind="player" tag={player.tag} />
       </header>
-      <dl className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCell label="트로피">
           <Trophy value={player.trophies} size={20} />
         </StatCell>
         <StatCell label="최고 트로피">
           <Trophy value={player.highestTrophies} size={20} />
         </StatCell>
-        <StatCell label="프레스티지">
-          <span className={STAT_NUM_CLASS}>{formatNumber(player.totalPrestigeLevel)}</span>
-        </StatCell>
-        <StatCell label="EXP Lv">
-          <span className={STAT_NUM_CLASS}>{formatNumber(player.expLevel)}</span>
-        </StatCell>
         <StatCell label="3v3 승">
           <span className={STAT_NUM_CLASS}>{formatNumber(player.victories3vs3)}</span>
         </StatCell>
-        <StatCell label="솔로 승">
-          <span className={STAT_NUM_CLASS}>{formatNumber(player.victoriesSolo)}</span>
+        <StatCell label="쇼다운 승">
+          <span className={STAT_NUM_CLASS}>{formatNumber(showdownWins)}</span>
         </StatCell>
       </dl>
     </Card>
