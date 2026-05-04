@@ -28,6 +28,15 @@ function toOwnedItem(
   return { item: toBrawlerItem(dto.item), owned: dto.owned };
 }
 
+function toOwnedGearItem(
+  dto: PlayerBrawlerItemResponse<GearResponse>,
+): PlayerBrawlerOwnedItem {
+  return {
+    item: { ...toBrawlerItem(dto.item), rarity: dto.item.rarity },
+    owned: dto.owned,
+  };
+}
+
 function toOwnedBuffy(
   dto: PlayerBrawlerItemResponse<BuffyResponse>,
 ): PlayerBrawlerOwnedBuffy {
@@ -61,10 +70,7 @@ export function toPlayerBrawler(dto: PlayerBrawlerResponse): PlayerBrawler {
     highestTrophies: dto.highestTrophies,
     prestigeLevel: dto.prestigeLevel,
     gadgets: dto.gadgets.map(toOwnedItem),
-    gears: dto.gears.map((it) => ({
-      item: { ...toBrawlerItem(it.item), rarity: it.item.rarity },
-      owned: it.owned,
-    })),
+    gears: dto.gears.map(toOwnedGearItem),
     starPowers: dto.starPowers.map(toOwnedItem),
     hyperCharge: dto.hyperCharge ? toOwnedItem(dto.hyperCharge) : null,
     buffies: dto.buffies

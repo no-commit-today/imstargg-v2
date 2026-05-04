@@ -97,5 +97,7 @@ describe("toPlayerBrawler", () => {
     };
     const b = toPlayerBrawler(withGears);
     expect(b.gears.map((g) => g.item.rarity)).toEqual(["EPIC", "MYTHIC"]);
+    expect(b.gears[0].owned).toBe(true);
+    expect(b.gears[1].owned).toBe(false);
   });
 });
