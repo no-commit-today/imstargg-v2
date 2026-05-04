@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { basePlaceholder, emptyPlaceholder } from "@/lib/itemPlaceholder";
+import { basePlaceholder } from "@/lib/itemPlaceholder";
 
 describe("basePlaceholder", () => {
   it("gadget 의 base placeholder 를 반환한다", () => {
@@ -26,18 +26,5 @@ describe("basePlaceholder", () => {
 
   it("buffy 는 자산이 없으므로 null 을 반환한다", () => {
     expect(basePlaceholder("buffy")).toBeNull();
-  });
-});
-
-describe("emptyPlaceholder", () => {
-  it("gadget/gear/starPower 의 empty placeholder 를 반환한다", () => {
-    expect(emptyPlaceholder("gadget")).toBe("/assets/gadget_empty.webp");
-    expect(emptyPlaceholder("gear")).toBe("/assets/gear_empty.webp");
-    expect(emptyPlaceholder("starPower")).toBe("/assets/starpower_empty.webp");
-  });
-
-  it("hyperCharge 와 buffy 는 empty 자산이 없으므로 null 을 반환한다", () => {
-    expect(emptyPlaceholder("hyperCharge")).toBeNull();
-    expect(emptyPlaceholder("buffy")).toBeNull();
   });
 });

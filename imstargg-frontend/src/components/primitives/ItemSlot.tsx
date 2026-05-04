@@ -1,6 +1,6 @@
 import { Zap } from "lucide-react";
 import type { GearRarity } from "@/api/types";
-import { basePlaceholder, emptyPlaceholder, type ItemKind } from "@/lib/itemPlaceholder";
+import { basePlaceholder, type ItemKind } from "@/lib/itemPlaceholder";
 
 interface Props {
   kind: ItemKind;
@@ -8,6 +8,7 @@ interface Props {
   owned: boolean;
   gearRarity?: GearRarity;
   size?: number;
+  name?: string;
   ariaLabel?: string;
 }
 
@@ -17,11 +18,15 @@ export default function ItemSlot({
   owned,
   gearRarity,
   size = 24,
+  name,
   ariaLabel,
 }: Props) {
+  const title = name || undefined;
+
   if (kind === "buffy" && !imageUrl) {
     return (
       <span
+        title={title}
         aria-label={ariaLabel}
         style={{
           width: size,
@@ -37,28 +42,19 @@ export default function ItemSlot({
     );
   }
 
-  if (owned) {
-    const src = imageUrl ?? basePlaceholder(kind, gearRarity);
-    if (!src) return null; // safety: 알려진 케이스에서는 도달 불가
-    return <img src={src} alt="" role="img" width={size} height={size} aria-label={ariaLabel} />;
-  }
+  const src = imageUrl ?? basePlaceholder(kind, gearRarity);
+  if (!src) return null;
 
-  const emptySrc = emptyPlaceholder(kind);
-  if (emptySrc) {
-    return <img src={emptySrc} alt="" role="img" width={size} height={size} aria-label={ariaLabel} />;
-  }
-  // hyperCharge: empty 자산 부재 → base 를 흐리게
-  const baseSrc = imageUrl ?? basePlaceholder(kind, gearRarity);
-  if (!baseSrc) return null; // safety
   return (
     <img
-      src={baseSrc}
+      src={src}
       alt=""
       role="img"
       width={size}
       height={size}
-      style={{ opacity: 0.3, filter: "grayscale(1)" }}
+      title={title}
       aria-label={ariaLabel}
+      style={owned ? undefined : { opacity: 0.3, filter: "grayscale(1)" }}
     />
   );
 }

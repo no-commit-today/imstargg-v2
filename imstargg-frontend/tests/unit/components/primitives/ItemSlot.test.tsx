@@ -16,12 +16,12 @@ describe("ItemSlot", () => {
     );
   });
 
-  it("미보유 + empty 자산이 있으면 empty placeholder 를 렌더한다", () => {
+  it("gadget 미보유는 base 를 opacity + grayscale 로 렌더한다", () => {
     render(<ItemSlot kind="gadget" imageUrl={null} owned={false} />);
-    expect(screen.getByRole("img", { hidden: true })).toHaveAttribute(
-      "src",
-      "/assets/gadget_empty.webp",
-    );
+    const img = screen.getByRole("img", { hidden: true });
+    expect(img).toHaveAttribute("src", "/assets/gadget_base_empty.webp");
+    expect(img.style.opacity).toBe("0.3");
+    expect(img.style.filter).toBe("grayscale(1)");
   });
 
   it("hyperCharge 미보유는 base 를 opacity + grayscale 로 렌더한다", () => {
@@ -44,5 +44,15 @@ describe("ItemSlot", () => {
       "src",
       "/assets/gear_epic_super_base_empty.webp",
     );
+  });
+
+  it("name prop 이 있으면 title 속성을 렌더한다", () => {
+    render(<ItemSlot kind="gadget" imageUrl="https://cdn/x.webp" owned name="가젯이름" />);
+    expect(screen.getByRole("img", { hidden: true })).toHaveAttribute("title", "가젯이름");
+  });
+
+  it("buffy 미보유는 lucide 아이콘 + opacity 0.3 으로 렌더한다", () => {
+    render(<ItemSlot kind="buffy" imageUrl={null} owned={false} ariaLabel="버피 가젯 미보유" />);
+    expect(screen.getByLabelText("버피 가젯 미보유")).toHaveStyle({ opacity: "0.3" });
   });
 });

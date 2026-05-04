@@ -18,17 +18,3 @@ export function basePlaceholder(kind: ItemKind, gearRarity?: GearRarity): string
       return null;
   }
 }
-
-export function emptyPlaceholder(kind: ItemKind): string | null {
-  switch (kind) {
-    case "gadget":
-      return "/assets/gadget_empty.webp";
-    case "gear":
-      return "/assets/gear_empty.webp";
-    case "starPower":
-      return "/assets/starpower_empty.webp";
-    case "hyperCharge":
-    case "buffy":
-      return null;
-  }
-}
