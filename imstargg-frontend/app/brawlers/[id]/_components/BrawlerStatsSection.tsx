@@ -1,15 +1,14 @@
 import { statisticsApi } from "@/api/endpoints/statistics";
+import { CACHE_SECONDS } from "@/config/cache";
 import {
   parseDateRange,
   parseTierRange,
-  parseTrophyRange,
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
 import { parseResultSortBy, parseSortOrder } from "@/domain/statistics/sort";
 import {
   toDailyResultStat,
   toEnemyResultStat,
-  toItemOwnership,
   toPairResultStat,
 } from "@/domain/statistics/mappers";
 import type { Brawler } from "@/domain/brawler/types";
@@ -17,7 +16,6 @@ import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector
 import { DailyTrendChart } from "./DailyTrendChart";
 import { PairStatsTable } from "./PairStatsTable";
 import { EnemyStatsTable } from "./EnemyStatsTable";
-import { ItemOwnershipSection } from "./ItemOwnershipSection";
 
 type Props = {
   brawler: Brawler;
@@ -27,16 +25,15 @@ type Props = {
 export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
   const tier = parseTierRange(searchParams.tier);
   const date = parseDateRange(searchParams.date);
-  const trophy = parseTrophyRange(searchParams.trophy);
   const pairSort = parseResultSortBy(searchParams.pairSort);
   const pairOrder = parseSortOrder(searchParams.pairOrder);
   const enemySort = parseResultSortBy(searchParams.enemySort);
   const enemyOrder = parseSortOrder(searchParams.enemyOrder);
 
-  const [daily, pair, enemy, ownership] = await Promise.all([
+  const [daily, pair, enemy] = await Promise.all([
     statisticsApi.daily(
       { brawlerId: brawler.id, tierRange: tier, dateRange: date },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.pairResult(
       {
@@ -46,7 +43,7 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
         sortBy: pairSort,
         sortOrder: pairOrder,
       },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.enemyResult(
       {
@@ -56,11 +53,7 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
         sortBy: enemySort,
         sortOrder: enemyOrder,
       },
-      { next: { revalidate: 600 } },
-    ),
-    statisticsApi.itemOwnership(
-      { brawlerId: brawler.id, trophyRange: trophy },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
 
@@ -80,11 +73,6 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
         <PairStatsTable items={pair.content.map(toPairResultStat)} sort={pairSort} order={pairOrder} />
         <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} sort={enemySort} order={enemyOrder} />
       </div>
-      <ItemOwnershipSection
-        brawler={brawler}
-        ownership={toItemOwnership(ownership)}
-        trophy={trophy}
-      />
     </section>
   );
 }

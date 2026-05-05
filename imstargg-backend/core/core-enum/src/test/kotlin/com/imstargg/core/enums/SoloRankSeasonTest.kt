@@ -239,6 +239,24 @@ class SoloRankSeasonTest {
         }
     }
 
+    @Nested
+    inner class All {
+        @Test
+        fun `첫 시즌 기간 중에는 첫 시즌 1개만 반환한다`() {
+            val clock = fixedClock("2025-03-15T12:00:00+09:00")
+            val result = SoloRankSeason.all(clock)
+            assertThat(result).hasSize(1)
+            assertThat(result[0].key).isEqualTo("1-1")
+        }
+
+        @Test
+        fun `시즌 2의 1개월차에는 1-1, 1-2, 1-3, 1-4, 2-1 5개를 순서대로 반환한다`() {
+            val clock = fixedClock("2025-08-01T12:00:00+09:00")
+            val result = SoloRankSeason.all(clock)
+            assertThat(result.map { it.key }).containsExactly("1-1", "1-2", "1-3", "1-4", "2-1")
+        }
+    }
+
     private fun fixedClock(offsetDateTime: String): Clock {
         val odt = OffsetDateTime.parse(offsetDateTime)
         return Clock.fixed(odt.toInstant(), odt.offset)

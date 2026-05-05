@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { renewalApi } from "@/api/endpoints/renewal";
 import { NotFoundError } from "@/api/errors";
 import { emptyRenewal } from "@/domain/renewal/empty";
@@ -33,7 +32,6 @@ export function useClubRenewal(tag: string) {
     const cur = renewalQuery.data?.progressing ?? false;
     if (prevProgressing.current && !cur) {
       qc.invalidateQueries({ queryKey: queryKeys.club.all });
-      toast.success("갱신 완료");
     }
     prevProgressing.current = cur;
   }, [renewalQuery.data?.progressing, qc]);
@@ -42,15 +40,14 @@ export function useClubRenewal(tag: string) {
     mutationFn: () => renewalApi.renewClub(tag),
     onSuccess: (data) => {
       qc.setQueryData(queryKeys.club.renewal(tag), data);
-      toast.info("갱신 요청됨");
     },
-    onError: () => toast.error("갱신 요청 실패"),
   });
 
   return {
     renewal: renewalQuery.data,
     progressing: renewalQuery.data?.progressing ?? false,
     canRenew: renewalQuery.data?.canRenew ?? false,
+    renewedAt: renewalQuery.data?.renewedAt ?? null,
     trigger: () => trigger.mutate(),
     triggering: trigger.isPending,
   };

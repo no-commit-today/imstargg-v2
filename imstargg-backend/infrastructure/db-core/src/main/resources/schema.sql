@@ -284,7 +284,6 @@ create table if not exists stats_rank_battle
     event_map                  varchar(65)   not null,
     mode                       varchar(65)   not null,
     type                       varchar(65)   not null,
-    star_player_brawlstars_tag varchar(45)   null,
     player_brawlstars_tag      varchar(45)   not null,
     battle_rank                int           not null,
     teams                      jsonb         not null,

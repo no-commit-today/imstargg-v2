@@ -1,9 +1,47 @@
 import type {
   PlayerResponse,
   PlayerBrawlerResponse,
+  PlayerBrawlerItemResponse,
+  GadgetResponse,
+  GearResponse,
+  StarPowerResponse,
+  HyperChargeResponse,
+  BuffyResponse,
 } from "@/api/types";
-import type { Player, PlayerBrawler } from "@/domain/player/types";
-import { pickName } from "@/domain/i18n";
+import type {
+  Player,
+  PlayerBrawler,
+  PlayerBrawlerOwnedItem,
+  PlayerBrawlerOwnedBuffy,
+} from "@/domain/player/types";
+import { toBrawler, toBrawlerItem } from "@/domain/brawler/mappers";
+
+type AnyItemDto =
+  | GadgetResponse
+  | GearResponse
+  | StarPowerResponse
+  | HyperChargeResponse;
+
+function toOwnedItem(
+  dto: PlayerBrawlerItemResponse<AnyItemDto>,
+): PlayerBrawlerOwnedItem {
+  return { item: toBrawlerItem(dto.item), owned: dto.owned };
+}
+
+function toOwnedGearItem(
+  dto: PlayerBrawlerItemResponse<GearResponse>,
+): PlayerBrawlerOwnedItem {
+  return {
+    item: { ...toBrawlerItem(dto.item), rarity: dto.item.rarity },
+    owned: dto.owned,
+  };
+}
+
+function toOwnedBuffy(
+  dto: PlayerBrawlerItemResponse<BuffyResponse>,
+): PlayerBrawlerOwnedBuffy {
+  return { item: dto.item, owned: dto.owned };
+}
 
 export function toPlayer(dto: PlayerResponse): Player {
   return {
@@ -24,21 +62,23 @@ export function toPlayer(dto: PlayerResponse): Player {
 }
 
 export function toPlayerBrawler(dto: PlayerBrawlerResponse): PlayerBrawler {
-  const b = dto.brawler;
   return {
-    id: b?.id ?? null,
-    name: pickName(b?.name),
-    rarity: b?.rarity ?? null,
-    role: b?.role ?? null,
+    brawler: dto.brawler ? toBrawler(dto.brawler) : null,
     power: dto.power,
     rank: dto.rank,
     trophies: dto.trophies,
     highestTrophies: dto.highestTrophies,
     prestigeLevel: dto.prestigeLevel,
-    portraitImageUrl: b?.portraitImageUrl ?? null,
-    gadgetBuffy: dto.gadgetBuffy,
-    starPowerBuffy: dto.starPowerBuffy,
-    hyperChargeBuffy: dto.hyperChargeBuffy,
-    raw: b ?? null,
+    gadgets: dto.gadgets.map(toOwnedItem),
+    gears: dto.gears.map(toOwnedGearItem),
+    starPowers: dto.starPowers.map(toOwnedItem),
+    hyperCharge: dto.hyperCharge ? toOwnedItem(dto.hyperCharge) : null,
+    buffies: dto.buffies
+      ? {
+          gadget: toOwnedBuffy(dto.buffies.gadget),
+          starPower: toOwnedBuffy(dto.buffies.starPower),
+          hyperCharge: toOwnedBuffy(dto.buffies.hyperCharge),
+        }
+      : null,
   };
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
-import PowerPill from "@/components/primitives/PowerPill";
-import Trophy from "@/components/primitives/Trophy";
+import PowerLevel from "@/components/primitives/PowerLevel";
+import RankTierIcon from "@/components/primitives/RankTierIcon";
+import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
+import StarIcon from "@/components/primitives/StarIcon";
 import { isSameTag, toUrlPath } from "@/lib/tag";
-import { tierColor, tierLabel } from "@/domain/battle/tierLabels";
 import type { BattlePlayer } from "@/domain/battle/types";
 
 interface Props {
@@ -51,34 +52,16 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
           }}
         >
           {player.name}
-          {isStar && <span style={{ marginLeft: 4, color: "#FFC60A" }}>★</span>}
+          {isStar && <StarIcon size={12} className="ml-1 inline-block align-middle" />}
         </Link>
         <div style={{ fontSize: 11, color: "#8A90A0", fontFamily: "var(--font-mono)" }}>
           {player.tag}
         </div>
       </div>
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-        <PowerPill level={player.brawler.power} />
-        {player.brawler.trophies != null && <Trophy value={player.brawler.trophies} size={12} />}
-        {player.soloRankTier != null && (
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              background: tierColor(player.soloRankTier),
-              color: "#FFFFFF",
-              fontFamily: "var(--font-num)",
-              fontWeight: 700,
-              fontSize: 9,
-              padding: "2px 4px",
-              borderRadius: 4,
-              letterSpacing: "0.02em",
-            }}
-            title={player.soloRankTier}
-          >
-            {tierLabel(player.soloRankTier)}
-          </span>
-        )}
+        <PowerLevel level={player.brawler.power} size={18} />
+        {player.brawler.trophies != null && <BrawlerTrophy value={player.brawler.trophies} size={12} />}
+        {player.soloRankTier != null && <RankTierIcon tier={player.soloRankTier} size={16} />}
       </div>
     </div>
   );

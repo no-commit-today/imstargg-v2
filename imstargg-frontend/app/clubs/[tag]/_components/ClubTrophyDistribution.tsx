@@ -2,13 +2,14 @@
 
 import type { ClubMember } from "@/domain/club/types";
 import { trophyDistribution } from "@/domain/club/members";
+import { cn } from "@/lib/cn";
 
-export function ClubTrophyDistribution({ members }: { members: ClubMember[] }) {
+export function ClubTrophyDistribution({ members, className }: { members: ClubMember[]; className?: string }) {
   const buckets = trophyDistribution(members);
   const total = members.length || 1;
 
   return (
-    <section className="card">
+    <section className={cn("card", className)}>
       <header className="card-head">
         <div className="card-title">트로피 분포</div>
       </header>

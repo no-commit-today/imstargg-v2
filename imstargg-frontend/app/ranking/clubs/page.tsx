@@ -6,8 +6,6 @@ import { buildMetadata } from "@/lib/seo";
 import { CountrySelector } from "@app/ranking/_components/CountrySelector";
 import { ClubRankingList } from "@app/ranking/_components/ClubRankingList";
 
-export const revalidate = 600;
-
 type SearchParams = Promise<{ country?: string }>;
 
 export async function generateMetadata({
@@ -30,7 +28,7 @@ export default async function Page({
   searchParams: SearchParams;
 }) {
   const country = parseCountry((await searchParams).country);
-  const dto = await rankingApi.clubs(country, { next: { revalidate: 600 } });
+  const dto = await rankingApi.clubs(country, { cache: "no-store" });
   const rankings = dto.content.map(toClubRanking);
 
   return (

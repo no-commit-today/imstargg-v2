@@ -1,43 +1,43 @@
 import type { SoloRankTier } from "@/api/types";
 
-const TIER_LABEL_PREFIX: Record<string, string> = {
-  BRONZE: "B",
-  SILVER: "S",
-  GOLD: "G",
-  DIAMOND: "D",
-  MYTHIC: "M",
-  LEGENDARY: "L",
+const TIER_BASE_COLOR: Record<string, string> = {
+  BRONZE: "#C77545",
+  SILVER: "#9FAFC5",
+  GOLD: "#F2B93B",
+  DIAMOND: "#58D7E8",
+  MYTHIC: "#B83BFF",
+  LEGENDARY: "#FF3A3A",
+  MASTER: "#FFD447",
+  PRO: "#FFD447",
 };
 
-const TIER_COLOR: Record<SoloRankTier, string> = {
-  BRONZE_1: "#C77545",
-  BRONZE_2: "#C77545",
-  BRONZE_3: "#C77545",
-  SILVER_1: "#9FAFC5",
-  SILVER_2: "#9FAFC5",
-  SILVER_3: "#9FAFC5",
-  GOLD_1: "#F2B93B",
-  GOLD_2: "#F2B93B",
-  GOLD_3: "#F2B93B",
-  DIAMOND_1: "#58D7E8",
-  DIAMOND_2: "#58D7E8",
-  DIAMOND_3: "#58D7E8",
-  MYTHIC_1: "#B83BFF",
-  MYTHIC_2: "#B83BFF",
-  MYTHIC_3: "#B83BFF",
-  LEGENDARY_1: "#FF3A3A",
-  LEGENDARY_2: "#FF3A3A",
-  LEGENDARY_3: "#FF3A3A",
-  MASTERS: "#FFD447",
+const TIER_BASE_STICKER: Record<string, string> = {
+  BRONZE: "/assets/icon_rank_sticker_bronze.webp",
+  SILVER: "/assets/icon_rank_sticker_silver.webp",
+  GOLD: "/assets/icon_rank_sticker_gold.webp",
+  DIAMOND: "/assets/icon_rank_sticker_diamond.webp",
+  MYTHIC: "/assets/icon_rank_sticker_mythic.webp",
+  LEGENDARY: "/assets/icon_rank_sticker_legendary.webp",
+  MASTER: "/assets/icon_rank_sticker_masters.webp",
+  PRO: "/assets/icon_rank_sticker_pro.webp",
 };
 
-export function tierLabel(tier: SoloRankTier): string {
-  if (tier === "MASTERS") return "MS";
-  const [base, num] = tier.split("_");
-  const prefix = TIER_LABEL_PREFIX[base] ?? base.slice(0, 1);
-  return `${prefix}${num ?? ""}`;
+function tierBase(tier: SoloRankTier): string {
+  if (tier === "PRO") return "PRO";
+  return tier.split("_")[0];
 }
 
 export function tierColor(tier: SoloRankTier): string {
-  return TIER_COLOR[tier];
+  return TIER_BASE_COLOR[tierBase(tier)];
 }
+
+export function tierStickerImage(tier: SoloRankTier): string {
+  return TIER_BASE_STICKER[tierBase(tier)];
+}
+
+export function tierSegmentNumber(tier: SoloRankTier): string | null {
+  if (tier === "PRO") return null;
+  const seg = tier.split("_")[1];
+  return seg ?? null;
+}
+

@@ -53,7 +53,6 @@ class ErrorLogger private constructor(
                     errorType,
                     errorType.message,
                     ex.message,
-                    ex,
                 )
         }
     }
@@ -62,7 +61,7 @@ class ErrorLogger private constructor(
         when (ex.errorType.logLevel) {
             LogLevel.ERROR -> log.error(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message, ex)
             LogLevel.WARN -> log.warn(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message, ex)
-            else -> log.info(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message, ex)
+            else -> log.info(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message)
         }
     }
 

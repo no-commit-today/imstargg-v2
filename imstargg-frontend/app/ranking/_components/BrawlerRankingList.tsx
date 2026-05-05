@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { toUrlPath } from "@/lib/tag";
 import type { BrawlerRanking } from "@/domain/ranking/types";
-import Trophy from "@/components/primitives/Trophy";
+import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
 import { RankBadge } from "@app/ranking/_components/RankBadge";
 
 type Props = {
@@ -35,7 +35,7 @@ export function BrawlerRankingList({ rankings }: Props) {
                 )}
               </div>
               <div className="shrink-0">
-                <Trophy value={r.trophies} size={16} />
+                <BrawlerTrophy value={r.trophies} size={16} />
               </div>
             </Card>
           </Link>

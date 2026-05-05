@@ -32,9 +32,10 @@ class StatsResultBattleEntity(
     eventMap: String,
     mode: String,
     type: String,
-    starPlayerBrawlStarsTag: String?,
     playerBrawlStarsTag: String,
     teams: List<List<StatsBattleEntityTeamPlayer>>,
+    @Column(name = "star_player_brawlstars_tag", length = 45, updatable = false)
+    val starPlayerBrawlStarsTag: String?,
     @Column(name = "result", length = 25, updatable = false, nullable = false)
     val result: String,
 ) : BaseStatsBattleEntity(
@@ -45,7 +46,6 @@ class StatsResultBattleEntity(
         eventMap = eventMap,
         mode = mode,
         type = type,
-        starPlayerBrawlStarsTag = starPlayerBrawlStarsTag,
         playerBrawlStarsTag = playerBrawlStarsTag,
         teams = teams,
     ) {

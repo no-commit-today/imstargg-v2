@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { eventApi } from "@/api/endpoints/event";
+import { CACHE_SECONDS } from "@/config/cache";
 import { toBattleEvent } from "@/domain/event/mappers";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
@@ -9,12 +10,10 @@ import { EventStatsSection } from "./_components/EventStatsSection";
 
 type Params = { params: Promise<{ id: string }> };
 
-export const revalidate = 3600;
-
 export async function generateStaticParams() {
   const [rotation, soloRank] = await Promise.all([
-    eventApi.rotation({ next: { revalidate: 3600 } }),
-    eventApi.soloRank({ next: { revalidate: 3600 } }),
+    eventApi.rotation({ next: { revalidate: CACHE_SECONDS.SEO_REFERENCE } }),
+    eventApi.soloRank({ next: { revalidate: CACHE_SECONDS.SEO_REFERENCE } }),
   ]);
   const ids = new Set<string>();
   for (const r of rotation.content) ids.add(String(r.event.id));
@@ -25,7 +24,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
-    const dto = await eventApi.get(id, { next: { revalidate: 3600 } });
+    const dto = await eventApi.get(id, { cache: "no-store" });
     const event = toBattleEvent(dto);
     const modeName = event.mode?.name ?? "이벤트";
     const resultLabel = event.mode?.resultType === "RANK" ? "순위형" : "결과형";
@@ -56,7 +55,7 @@ export default async function EventPage({
   const sp = await searchParams;
   let dto;
   try {
-    dto = await eventApi.get(id, { next: { revalidate: 3600 } });
+    dto = await eventApi.get(id, { cache: "no-store" });
   } catch (e) {
     if (e instanceof NotFoundError) notFound();
     throw e;

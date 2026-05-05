@@ -94,7 +94,6 @@ class StatsBattleAggregateApplier(
             eventMap = battle.event.map!!,
             mode = battle.mode!!,
             type = battle.type!!,
-            starPlayerBrawlStarsTag = battle.starPlayerBrawlStarsTag,
             playerBrawlStarsTag = battle.playerBrawlStarsTag,
             battleRank = battle.battleRank!!,
             teams = convertTeams(battle),

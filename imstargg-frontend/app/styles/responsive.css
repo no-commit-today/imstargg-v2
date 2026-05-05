@@ -8,15 +8,14 @@
      - Override fixed widths, grid-templates and inline-styled
        layouts via attribute / descendant selectors.
      - Convert PlayerPage two-column layout into stacked.
-     - Replace top-nav links with a mobile bottom tab bar.
+     - Replace mobile top-nav links with a drawer menu.
    ============================================================ */
 
 /* ===== Base: allow page to fit narrow viewports ===== */
 html, body { overflow-x: hidden; }
 .app { overflow-x: hidden; }
 
-/* Mobile tab bar — hidden by default, only shown on mobile */
-.mobile-tabbar { display: none; }
+.topnav-menu-button { display: none; color: #fff; }
 
 /* ===== Tablet & smaller ===== */
 @media (max-width: 959px) {
@@ -86,82 +85,19 @@ html, body { overflow-x: hidden; }
 @media (max-width: 639px) {
   /* ----- Top nav ----- */
   .topnav-inner {
-    height: 56px;
+    height: 52px;
     padding: 0 12px;
     gap: 10px;
   }
-  .topnav-logo img { height: 26px !important; }
-  /* Hide desktop link row; bottom tab bar replaces it */
+  .topnav-logo img { height: 24px !important; }
   .topnav-links { display: none !important; }
   .topnav-spacer { display: none; }
-  .topnav-search {
-    width: auto;
-    flex: 1;
-    padding: 6px 10px;
-  }
+  .topnav-desktop-search { display: none; }
+  .topnav-menu-button { display: inline-flex; margin-left: auto; }
+  .topnav-search { width: auto; padding: 6px 10px; }
   .topnav-search input { font-size: 14px; }
 
-  /* Search dropdown should be full-width under nav */
-  .topnav nav, .topnav-inner > div[style*="position: relative"] {
-    position: static !important;
-  }
-  .topnav-inner > div[style*="position: relative"] > div[style*="position: absolute"] {
-    left: 12px !important;
-    right: 12px !important;
-    width: auto !important;
-  }
-
-  /* ----- Mobile bottom tab bar ----- */
-  body { padding-bottom: 64px; }
-  body::after {
-    content: '';
-    position: fixed; left: 0; right: 0; bottom: 0;
-    height: 60px;
-    background: var(--color-neutral-900);
-    border-top: 2px solid var(--color-brand-yellow);
-    z-index: 60;
-    pointer-events: none;
-  }
-  /* Inject visual labels for nav routes via a fixed bar built in CSS */
-  /* (Functional nav still works through the search field; bottom bar is decorative
-     hash-anchor links that route via #/) */
-  .mobile-tabbar {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    height: 60px;
-    background: var(--color-neutral-900);
-    border-top: 2px solid var(--color-brand-yellow);
-    z-index: 70;
-    display: flex;
-    align-items: stretch;
-    justify-content: space-around;
-    padding: 0 4px;
-  }
-  .mobile-tabbar a {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    color: #C9C5BA;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    padding: 6px 2px;
-    border-radius: 8px;
-    transition: color 0.15s;
-  }
-  .mobile-tabbar a.active { color: var(--color-brand-yellow); }
-  .mobile-tabbar a:hover { color: #fff; }
-  .mobile-tabbar .tab-icon {
-    font-size: 18px;
-    line-height: 1;
-  }
-
-  /* Hide the decorative ::after when the real tab bar is rendered */
-  body:has(.mobile-tabbar)::after { display: none; }
+  body { padding-bottom: 0; }
 
   /* ----- Main padding ----- */
   .main {

@@ -1,0 +1,26 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="outerGradient" x1="24" y1="25" x2="105" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF42F4"/>
+      <stop offset="0.55" stop-color="#F50BCB"/>
+      <stop offset="1" stop-color="#C90096"/>
+    </linearGradient>
+    <radialGradient id="innerGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(62 55) rotate(90) scale(44)">
+      <stop offset="0" stop-color="#A914B7"/>
+      <stop offset="1" stop-color="#7C0F93"/>
+    </radialGradient>
+    <filter id="softShadow" x="7" y="11" width="112" height="111" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="3" dy="4" stdDeviation="0" flood-color="#0C0920" flood-opacity="1"/>
+    </filter>
+  </defs>
+
+  <path d="M64 18C88.85 18 109 38.15 109 63C109 87.85 88.85 108 64 108C39.15 108 19 87.85 19 63C19 38.15 39.15 18 64 18Z" fill="#12081B"/>
+  <path d="M66.5 20C91.35 20 111.5 40.15 111.5 65C111.5 89.85 91.35 110 66.5 110C41.65 110 21.5 89.85 21.5 65C21.5 40.15 41.65 20 66.5 20Z" fill="#111827" opacity="0.95"/>
+
+  <g filter="url(#softShadow)">
+    <circle cx="64" cy="63" r="47" fill="url(#outerGradient)" stroke="#121022" stroke-width="3"/>
+    <circle cx="64" cy="63" r="31" fill="url(#innerGradient)" stroke="#2B0D39" stroke-width="3"/>
+  </g>
+
+  <ellipse cx="39" cy="33" rx="9.3" ry="5.5" transform="rotate(-45 39 33)" fill="white" opacity="0.95"/>
+</svg>

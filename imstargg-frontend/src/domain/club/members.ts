@@ -25,11 +25,17 @@ export interface TrophyBucket {
 }
 
 const BUCKETS: ReadonlyArray<Omit<TrophyBucket, "count">> = [
-  { label: "90k+", min: 90000, max: null },
-  { label: "80–90k", min: 80000, max: 90000 },
-  { label: "70–80k", min: 70000, max: 80000 },
-  { label: "60–70k", min: 60000, max: 70000 },
-  { label: "<60k", min: 0, max: 60000 },
+  { label: "200K+",    min: 200000, max: null   },
+  { label: "180–200K", min: 180000, max: 200000 },
+  { label: "160–180K", min: 160000, max: 180000 },
+  { label: "140–160K", min: 140000, max: 160000 },
+  { label: "120–140K", min: 120000, max: 140000 },
+  { label: "100–120K", min: 100000, max: 120000 },
+  { label: "80–100K",  min: 80000,  max: 100000 },
+  { label: "60–80K",   min: 60000,  max: 80000  },
+  { label: "40–60K",   min: 40000,  max: 60000  },
+  { label: "20–40K",   min: 20000,  max: 40000  },
+  { label: "<20K",     min: 0,      max: 20000  },
 ];
 
 export function trophyDistribution(members: ClubMember[]): TrophyBucket[] {

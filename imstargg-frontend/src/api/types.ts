@@ -35,6 +35,8 @@ export type BrawlerRarity =
   | "STARTING_BRAWLER" | "RARE" | "SUPER_RARE" | "EPIC"
   | "MYTHIC" | "LEGENDARY" | "ULTRA_LEGENDARY";
 
+export type GearRarity = "SUPER_RARE" | "EPIC" | "MYTHIC";
+
 export type BrawlerRole =
   | "DAMAGE_DEALER" | "TANK" | "MARKSMAN" | "ASSASSIN"
   | "SUPPORT" | "CONTROLLER" | "ARTILLERY";
@@ -56,7 +58,7 @@ export type Language = "ko" | "en" | string;
 export type MessagesResponse = Record<Language, string>;
 
 export interface GadgetResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
-export interface GearResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
+export interface GearResponse { id: number; name: MessagesResponse; rarity: GearRarity; imageUrl: string | null; }
 export interface StarPowerResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
 export interface HyperChargeResponse { id: number; name: MessagesResponse; imageUrl: string | null; }
 
@@ -65,12 +67,31 @@ export interface BrawlerResponse {
   name: MessagesResponse;
   rarity: BrawlerRarity;
   role: BrawlerRole;
+  portraitImageUrl: string | null;
+}
+
+export interface BrawlerItemsResponse {
   gadgets: GadgetResponse[];
   gears: GearResponse[];
   starPowers: StarPowerResponse[];
   hyperCharge: HyperChargeResponse | null;
-  portraitImageUrl: string | null;
   buffies: BuffiesResponse | null;
+}
+
+export interface BrawlerWithItemsResponse {
+  brawler: BrawlerResponse;
+  items: BrawlerItemsResponse;
+}
+
+export interface PlayerBrawlerItemResponse<T> {
+  item: T;
+  owned: boolean;
+}
+
+export interface PlayerBrawlerBuffiesResponse {
+  gadget: PlayerBrawlerItemResponse<BuffyResponse>;
+  starPower: PlayerBrawlerItemResponse<BuffyResponse>;
+  hyperCharge: PlayerBrawlerItemResponse<BuffyResponse>;
 }
 
 export interface PlayerBrawlerResponse {
@@ -80,9 +101,11 @@ export interface PlayerBrawlerResponse {
   trophies: number;
   highestTrophies: number;
   prestigeLevel: number;
-  gadgetBuffy: BuffyResponse | null;
-  starPowerBuffy: BuffyResponse | null;
-  hyperChargeBuffy: BuffyResponse | null;
+  gadgets: PlayerBrawlerItemResponse<GadgetResponse>[];
+  gears: PlayerBrawlerItemResponse<GearResponse>[];
+  starPowers: PlayerBrawlerItemResponse<StarPowerResponse>[];
+  hyperCharge: PlayerBrawlerItemResponse<HyperChargeResponse> | null;
+  buffies: PlayerBrawlerBuffiesResponse | null;
 }
 
 // === Renewal ===
@@ -281,6 +304,54 @@ export interface BrawlerItemOwnershipStatisticsResponse {
   buffies: BrawlerBuffyOwnershipStatisticsItemResponse[];
 }
 
+// === Player Statistics ===
+export interface PlayerBrawlerStatisticsItemResponse {
+  brawler: BrawlerResponse | null;
+  totalBattleCount: number;
+  victoryCount: number;
+  defeatCount: number;
+  drawCount: number;
+  winRate: number;
+}
+
+export interface PlayerBrawlerStatisticsResponse {
+  startBattleDate: string;
+  endBattleDate: string;
+  totalBattleCount: number;
+  items: PlayerBrawlerStatisticsItemResponse[];
+}
+
+export interface PlayerBrawlerRoleStatisticsItemResponse {
+  role: BrawlerRole;
+  totalBattleCount: number;
+  victoryCount: number;
+  defeatCount: number;
+  drawCount: number;
+  winRate: number;
+}
+
+export interface PlayerBrawlerRoleStatisticsResponse {
+  startBattleDate: string;
+  endBattleDate: string;
+  totalBattleCount: number;
+  items: PlayerBrawlerRoleStatisticsItemResponse[];
+}
+
+// === Season ===
+export interface BrawlPassSeasonResponse {
+  number: number;
+  startAt: string;
+  endAt: string;
+}
+
+export interface SoloRankSeasonResponse {
+  key: string;
+  number: number;
+  month: number;
+  startAt: string;
+  endAt: string;
+}
+
 // === Slice (offset/limit pagination) ===
 export interface SliceResponse<T> {
   content: T[];
@@ -308,7 +379,8 @@ export type SoloRankTier =
   | "DIAMOND_1" | "DIAMOND_2" | "DIAMOND_3"
   | "MYTHIC_1" | "MYTHIC_2" | "MYTHIC_3"
   | "LEGENDARY_1" | "LEGENDARY_2" | "LEGENDARY_3"
-  | "MASTERS";
+  | "MASTER_1" | "MASTER_2" | "MASTER_3"
+  | "PRO";
 
 export interface BattlePlayerBrawlerResponse {
   brawler: BrawlerResponse | null;

@@ -11,6 +11,12 @@ export const queryKeys = {
       [...queryKeys.player.all, "renewal", normalizeTag(tag)] as const,
     battles: (tag: string) =>
       [...queryKeys.player.all, "battles", normalizeTag(tag)] as const,
+    statistics: {
+      brawler: (tag: string, battleType: string, season: string) =>
+        [...queryKeys.player.all, "statistics-brawler", normalizeTag(tag), battleType, season] as const,
+      role: (tag: string, battleType: string, season: string) =>
+        [...queryKeys.player.all, "statistics-role", normalizeTag(tag), battleType, season] as const,
+    },
   },
   club: {
     all: ["club"] as const,
@@ -42,6 +48,11 @@ export const queryKeys = {
       [...queryKeys.ranking.all, "brawlers", String(brawlerId), country] as const,
     clubs: (country: string) =>
       [...queryKeys.ranking.all, "clubs", country] as const,
+  },
+  season: {
+    all: ["season"] as const,
+    brawlPass: () => [...queryKeys.season.all, "brawl-pass"] as const,
+    soloRank: () => [...queryKeys.season.all, "solo-rank"] as const,
   },
   statistics: {
     all: ["statistics"] as const,

@@ -93,7 +93,6 @@ class BrawlerPairBattleRankStatsAggregatorTest {
             eventMap = "test-map",
             mode = "soloShowdown",
             type = BattleType.RANKED.code,
-            starPlayerBrawlStarsTag = null,
             playerBrawlStarsTag = players.first().brawlStarsTag,
             teams = listOf(players),
             battleRank = battleRank,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { eventApi } from "@/api/endpoints/event";
+import { CACHE_SECONDS } from "@/config/cache";
 import { toBattleEvent, toRotationEvent } from "@/domain/event/mappers";
 import { buildMetadata } from "@/lib/seo";
 import EventsListPage from "./_components/EventsListPage";
@@ -11,12 +12,10 @@ export const metadata: Metadata = buildMetadata({
   path: "/events",
 });
 
-export const revalidate = 600;
-
 export default async function Page() {
   const [rotationDto, soloRankDto] = await Promise.all([
-    eventApi.rotation({ next: { revalidate: 600 } }),
-    eventApi.soloRank({ next: { revalidate: 3600 } }),
+    eventApi.rotation({ cache: "no-store" }),
+    eventApi.soloRank({ next: { revalidate: CACHE_SECONDS.SHORT } }),
   ]);
   const initialRotation = rotationDto.content.map(toRotationEvent);
   const initialSoloRank = soloRankDto.content.map(toBattleEvent);

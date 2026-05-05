@@ -44,17 +44,15 @@ describe("RenewalButton (club) — 폴링 + 완료", () => {
     );
   });
 
-  it("갱신 클릭 → '갱신 요청됨' → 폴링 후 '갱신 완료' 토스트", async () => {
+  it("갱신 클릭 → 폴링 동안 비활성화되었다가 다시 활성화된다", async () => {
     renderWithProviders(<RenewalButton kind="club" tag={TAG} />);
 
     const button = await screen.findByRole("button", { name: /갱신/ });
     await waitFor(() => expect(button).not.toBeDisabled());
     await userEvent.click(button);
 
-    expect(await screen.findByText(/갱신 요청됨/)).toBeInTheDocument();
-    expect(
-      await screen.findByText(/갱신 완료/, {}, { timeout: 5000 }),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(button).toBeDisabled());
+    await waitFor(() => expect(button).not.toBeDisabled(), { timeout: 5000 });
   });
 });
 
@@ -103,9 +101,7 @@ describe("RenewalButton (club) — 첫 갱신 (renewal record 없음)", () => {
     await waitFor(() => expect(button).not.toBeDisabled());
     await userEvent.click(button);
 
-    expect(await screen.findByText(/갱신 요청됨/)).toBeInTheDocument();
-    expect(
-      await screen.findByText(/갱신 완료/, {}, { timeout: 5000 }),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(button).toBeDisabled());
+    await waitFor(() => expect(button).not.toBeDisabled(), { timeout: 5000 });
   });
 });

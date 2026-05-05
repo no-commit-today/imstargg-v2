@@ -10,10 +10,5 @@ data class Brawler(
     val name: Messages,
     val rarity: BrawlerRarity,
     val role: BrawlerRole,
-    val gadgets: List<Gadget>,
-    val gears: List<Gear>,
-    val starPowers: List<StarPower>,
-    val hyperCharge: HyperCharge?,
     val portraitImageUrl: String?,
-    val buffies: Buffies?,
 )

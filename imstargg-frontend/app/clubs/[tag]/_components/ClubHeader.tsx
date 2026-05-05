@@ -3,6 +3,7 @@
 import type { Club } from "@/domain/club/types";
 import type { ClubType } from "@/api/types";
 import { RenewalButton } from "@/components/shared/RenewalButton";
+import { RenewalStatus } from "@/components/shared/RenewalStatus";
 import { formatNumber } from "@/lib/format";
 
 const TYPE_LABEL: Record<ClubType, string> = {
@@ -57,7 +58,10 @@ export function ClubHeader({ club, tag }: { club: Club; tag: string }) {
               {TYPE_LABEL[club.type]}
             </span>
           </div>
-          <RenewalButton kind="club" tag={tag} />
+          <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3 [&>span]:text-white/60">
+            <RenewalStatus kind="club" tag={tag} />
+            <RenewalButton kind="club" tag={tag} />
+          </div>
         </div>
       </div>
     </section>

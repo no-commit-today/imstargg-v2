@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { brawlerApi } from "@/api/endpoints/brawler";
 import { statisticsApi } from "@/api/endpoints/statistics";
+import { CACHE_SECONDS } from "@/config/cache";
 import { toBrawler } from "@/domain/brawler/mappers";
 import { toBrawlerResultStatistics } from "@/domain/statistics/mappers";
 import {
@@ -20,7 +21,8 @@ export const metadata: Metadata = buildMetadata({
   path: "/brawlers",
 });
 
-export const revalidate = 600;
+// Primary brawler list can cache reference data, but statistics use a shorter fetch cache.
+export const revalidate = 60;
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -32,10 +34,10 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const order = parseSortOrder(sp.order);
 
   const [brawlersList, statsDto] = await Promise.all([
-    brawlerApi.list({ next: { revalidate: 86400 } }),
+    brawlerApi.list({ next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } }),
     statisticsApi.brawlerResult(
       { tierRange, dateRange },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
 

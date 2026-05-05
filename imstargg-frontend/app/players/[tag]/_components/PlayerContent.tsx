@@ -10,6 +10,7 @@ import type { RenewalResponse } from "@/api/types";
 import { PlayerHero } from "./PlayerHero";
 import { PlayerBrawlers } from "./PlayerBrawlers";
 import { PlayerBattles } from "./PlayerBattles";
+import { PlayerStatistics } from "./statistics/PlayerStatistics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Props = {
@@ -54,12 +55,21 @@ export function PlayerContent({
           >
             브롤러
           </TabsTrigger>
+          <TabsTrigger
+            value="statistics"
+            className="px-2 text-base font-semibold data-[state=active]:text-[#14161B]"
+          >
+            통계
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="battles">
           <PlayerBattles tag={tag} />
         </TabsContent>
         <TabsContent value="brawlers">
           <PlayerBrawlers brawlers={brawlers ?? []} />
+        </TabsContent>
+        <TabsContent value="statistics">
+          <PlayerStatistics tag={tag} />
         </TabsContent>
       </Tabs>
     </main>

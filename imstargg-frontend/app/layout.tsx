@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TopNav from "@/components/layout/TopNav";
-import MobileTabBar from "@/components/layout/MobileTabBar";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { env } from "@/config/env";
 import { buildMetadata } from "@/lib/seo";
+import { GoogleAdsenseScript } from "@/components/ads/GoogleAdsenseScript";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
@@ -16,15 +16,19 @@ export const metadata: Metadata = {
   }),
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="ko">
       <body>
+        <GoogleAdsenseScript />
         <QueryProvider>
           <div className="app">
             <TopNav />
             {children}
-            <MobileTabBar />
             <Toaster richColors position="top-center" />
           </div>
         </QueryProvider>

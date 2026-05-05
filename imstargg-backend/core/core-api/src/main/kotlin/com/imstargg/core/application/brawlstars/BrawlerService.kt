@@ -2,6 +2,8 @@ package com.imstargg.core.application.brawlstars
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
+import com.imstargg.core.domain.brawlstars.brawler.BrawlerItems
+import com.imstargg.core.domain.brawlstars.brawler.BrawlerWithItems
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
 import org.springframework.stereotype.Service
@@ -15,6 +17,20 @@ class BrawlerService(
             ?: throw CoreException(ErrorType.NOT_FOUND, "id=$id")
 
     fun getAll(): List<Brawler> = brawlerRepositoryWithCache.findAllBrawlers()
+
+    fun getBrawlerWithItems(id: BrawlStarsId): BrawlerWithItems {
+        val brawler = get(id)
+        val items =
+            brawlerRepositoryWithCache.findAllBrawlerItems()[id]
+                ?: BrawlerItems(
+                    gadgets = emptyList(),
+                    gears = emptyList(),
+                    starPowers = emptyList(),
+                    hyperCharge = null,
+                    buffies = null,
+                )
+        return BrawlerWithItems(brawler, items)
+    }
 
     fun search(name: String): List<Brawler> {
         val brawlers = brawlerRepositoryWithCache.findAllBrawlers()

@@ -1,11 +1,18 @@
 import type {
   BrawlerResponse,
+  BrawlerItemsResponse,
+  BrawlerWithItemsResponse,
   GadgetResponse,
   GearResponse,
   StarPowerResponse,
   HyperChargeResponse,
 } from "@/api/types";
-import type { Brawler, BrawlerItem } from "@/domain/brawler/types";
+import type {
+  Brawler,
+  BrawlerItem,
+  BrawlerItems,
+  BrawlerWithItems,
+} from "@/domain/brawler/types";
 import { pickName } from "@/domain/i18n";
 
 type ItemDto =
@@ -19,6 +26,7 @@ export function toBrawlerItem(dto: ItemDto): BrawlerItem {
     id: dto.id,
     name: pickName(dto.name),
     imageUrl: dto.imageUrl,
+    rarity: null,
   };
 }
 
@@ -29,10 +37,22 @@ export function toBrawler(dto: BrawlerResponse): Brawler {
     rarity: dto.rarity,
     role: dto.role,
     portraitImageUrl: dto.portraitImageUrl,
+  };
+}
+
+export function toBrawlerItems(dto: BrawlerItemsResponse): BrawlerItems {
+  return {
     gadgets: dto.gadgets.map(toBrawlerItem),
-    gears: dto.gears.map(toBrawlerItem),
+    gears: dto.gears.map((g) => ({ ...toBrawlerItem(g), rarity: g.rarity })),
     starPowers: dto.starPowers.map(toBrawlerItem),
     hyperCharge: dto.hyperCharge ? toBrawlerItem(dto.hyperCharge) : null,
     buffies: dto.buffies,
+  };
+}
+
+export function toBrawlerWithItems(dto: BrawlerWithItemsResponse): BrawlerWithItems {
+  return {
+    brawler: toBrawler(dto.brawler),
+    items: toBrawlerItems(dto.items),
   };
 }

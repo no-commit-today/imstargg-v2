@@ -20,8 +20,8 @@ class LocalAwsS3Initializer(
         try {
             s3Client.createBucket { it.bucket(properties.bucket) }
             log.info("S3 버킷 생성 완료: {}", properties.bucket)
-        } catch (e: BucketAlreadyOwnedByYouException) {
-            log.info("S3 버킷 이미 존재: {}", properties.bucket, e)
+        } catch (_: BucketAlreadyOwnedByYouException) {
+            log.info("S3 버킷 이미 존재: {}", properties.bucket)
         }
     }
 }

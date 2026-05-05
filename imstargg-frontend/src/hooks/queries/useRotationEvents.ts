@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { eventApi } from "@/api/endpoints/event";
+import { QUERY_STALE_TIME } from "@/config/cache";
 import { toRotationEvent } from "@/domain/event/mappers";
 import type { RotationEvent } from "@/domain/event/types";
 import { queryKeys } from "@/hooks/queries/queryKeys";
@@ -14,7 +15,7 @@ export function useRotationEvents(options?: { initialData?: RotationEvent[] }) {
     initialData: options?.initialData,
     // initialData를 즉시 stale로 간주하여 mount/focus 시 항상 최신 fetch 시도.
     initialDataUpdatedAt: 0,
-    staleTime: 30_000,
+    staleTime: QUERY_STALE_TIME.SHORT,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
     refetchInterval: (query) => {
