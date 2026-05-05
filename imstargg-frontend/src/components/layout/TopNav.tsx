@@ -1,6 +1,22 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import type { FormEvent } from "react";
+import { Menu, Search, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { formatMinutesAgo } from "@/lib/format";
 
 const RECENT_KEY = "imstargg.recentSearches";
@@ -10,6 +26,18 @@ interface RecentSearch {
   tag: string;
   ts: number;
 }
+
+interface NavItem {
+  href: string;
+  label: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { href: "/brawlers", label: "브롤러" },
+  { href: "/events", label: "이벤트" },
+  { href: "/ranking", label: "랭킹" },
+  { href: "/clubs", label: "클럽" },
+];
 
 function loadRecents(): RecentSearch[] {
   if (typeof window === "undefined") return [];
@@ -22,12 +50,14 @@ function loadRecents(): RecentSearch[] {
     return [];
   }
 }
+
 function saveRecents(list: RecentSearch[]) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(RECENT_KEY, JSON.stringify(list));
   } catch {}
 }
+
 function pushRecent(tag: string) {
   const cleaned = tag.trim().replace(/^#/, "").toUpperCase();
   if (!cleaned) return;
@@ -35,51 +65,188 @@ function pushRecent(tag: string) {
   list.unshift({ tag: cleaned, ts: Date.now() });
   saveRecents(list.slice(0, RECENT_MAX));
 }
+
 function removeRecent(tag: string) {
   saveRecents(loadRecents().filter((r) => r.tag !== tag));
 }
+
 function clearRecents() {
   saveRecents([]);
 }
 
-// External store wiring for recents — lets useSyncExternalStore drive renders
-// without setState-in-effect. We bump a version number on writes.
 const recentsListeners = new Set<() => void>();
 let recentsVersion = 0;
+
 function notifyRecents() {
   recentsVersion++;
   recentsListeners.forEach((fn) => fn());
 }
+
 function subscribeRecentsStore(fn: () => void) {
   recentsListeners.add(fn);
   return () => {
     recentsListeners.delete(fn);
   };
 }
+
 function getRecentsSnapshot(): number {
   return recentsVersion;
 }
+
 function getRecentsServerSnapshot(): number {
   return 0;
 }
 
 const syncedPathnames = new Set<string>();
 
+interface TopNavSearchProps {
+  className?: string;
+  emptyVariant?: "compact" | "desktop";
+  now: number;
+  onSubmitTag: (tag: string) => void;
+  recents: RecentSearch[];
+  search: string;
+  setSearch: (value: string) => void;
+  showRecents: boolean;
+  setShowRecents: (value: boolean) => void;
+}
+
+const TopNavSearch = forwardRef<HTMLDivElement, TopNavSearchProps>(
+  function TopNavSearch(
+    {
+      className = "",
+      emptyVariant = "desktop",
+      now,
+      onSubmitTag,
+      recents,
+      search,
+      setSearch,
+      showRecents,
+      setShowRecents,
+    },
+    ref,
+  ) {
+    const q = search.trim().replace(/^#/, "").toUpperCase();
+    const filteredRecents = q
+      ? recents.filter((r) => r.tag.includes(q))
+      : recents;
+
+    const submit = (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      onSubmitTag(search);
+    };
+
+    return (
+      <div ref={ref} className={`topnav-search-wrap ${className}`}>
+        <form className="topnav-search" onSubmit={submit}>
+          <Search aria-hidden="true" />
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setShowRecents(true);
+            }}
+            onFocus={() => setShowRecents(true)}
+            placeholder="#PLAYERTAG"
+          />
+          <button
+            type="submit"
+            className="topnav-search-submit"
+            aria-label="플레이어 검색"
+          >
+            <Search aria-hidden="true" />
+          </button>
+        </form>
+
+        {showRecents && filteredRecents.length > 0 && (
+          <div className="topnav-recents">
+            <div className="topnav-recents-head">
+              <span>최근 검색</span>
+              <button
+                type="button"
+                onClick={() => {
+                  clearRecents();
+                  notifyRecents();
+                }}
+                title="전체 삭제"
+              >
+                전체 삭제
+              </button>
+            </div>
+            {filteredRecents.map((r) => (
+              <div key={r.tag} className="topnav-recent-row">
+                <button
+                  type="button"
+                  className="topnav-recent-main"
+                  onClick={() => onSubmitTag(r.tag)}
+                >
+                  <Search aria-hidden="true" />
+                  <span>#{r.tag}</span>
+                  <time>
+                    {now
+                      ? formatMinutesAgo(
+                          Math.max(0, Math.floor((now - r.ts) / 60000)),
+                        )
+                      : ""}
+                  </time>
+                </button>
+                <button
+                  type="button"
+                  className="topnav-recent-delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeRecent(r.tag);
+                    notifyRecents();
+                  }}
+                  title="삭제"
+                  aria-label={`${r.tag} 삭제`}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {showRecents && filteredRecents.length === 0 && (
+          <div className="topnav-recents topnav-recents-empty">
+            {q || emptyVariant === "compact" ? (
+              "일치하는 최근 검색이 없어요."
+            ) : (
+              <>
+                아직 검색한 플레이어가 없어요.
+                <br />
+                상단에 #태그를 입력해 검색해보세요.
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
 export default function TopNav() {
   const router = useRouter();
   const pathname = usePathname() || "/";
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  // Subscribe to the recents external store (version-keyed); read fresh list each render.
-  useSyncExternalStore(subscribeRecentsStore, getRecentsSnapshot, getRecentsServerSnapshot);
-  const recents: RecentSearch[] = typeof window === "undefined" ? [] : loadRecents();
+  const [desktopRecentsOpen, setDesktopRecentsOpen] = useState(false);
+  const [drawerSearch, setDrawerSearch] = useState("");
+  const [drawerRecentsOpen, setDrawerRecentsOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const desktopSearchRef = useRef<HTMLDivElement>(null);
 
-  // "now" — lazy initialized once on the client for relative-time labels.
-  const [now] = useState<number>(() => (typeof window === "undefined" ? 0 : Date.now()));
+  useSyncExternalStore(
+    subscribeRecentsStore,
+    getRecentsSnapshot,
+    getRecentsServerSnapshot,
+  );
+  const recents: RecentSearch[] =
+    typeof window === "undefined" ? [] : loadRecents();
+  const [now] = useState<number>(() =>
+    typeof window === "undefined" ? 0 : Date.now(),
+  );
 
-  // Sync pathname-driven recent push without triggering a setState.
-  // Module-level dedup so the same path isn't pushed twice on re-renders.
   if (
     pathname.startsWith("/players/") &&
     !syncedPathnames.has(pathname) &&
@@ -92,234 +259,139 @@ export default function TopNav() {
   }
 
   useEffect(() => {
-    if (!open) return;
+    if (!desktopRecentsOpen) return;
     const onDoc = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      if (
+        desktopSearchRef.current &&
+        !desktopSearchRef.current.contains(e.target as Node)
+      ) {
+        setDesktopRecentsOpen(false);
+      }
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+  }, [desktopRecentsOpen]);
 
   const goToTag = useCallback(
-    (tag: string) => {
+    (tag: string, source: "desktop" | "drawer" = "desktop") => {
       const cleaned = tag.trim().replace(/^#/, "");
       if (!cleaned) return;
       pushRecent(cleaned);
       notifyRecents();
       router.push(`/players/${encodeURIComponent(cleaned)}`);
-      setSearch("");
-      setOpen(false);
+      if (source === "drawer") {
+        setDrawerSearch("");
+        setDrawerRecentsOpen(false);
+        setDrawerOpen(false);
+      } else {
+        setSearch("");
+        setDesktopRecentsOpen(false);
+      }
     },
     [router],
   );
 
-  const submit = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    goToTag(search);
+  const navigate = (href: string) => {
+    router.push(href);
+    setDrawerOpen(false);
   };
 
-  const isActive = (prefix: string) => pathname === prefix || pathname.startsWith(prefix + "/");
-
-  const q = search.trim().replace(/^#/, "").toUpperCase();
-  const filteredRecents = q ? recents.filter((r) => r.tag.includes(q)) : recents;
+  const isActive = (prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix + "/");
 
   return (
     <nav className="topnav">
       <div className="topnav-inner">
-        <a
+        <button
+          type="button"
           className="topnav-logo"
           onClick={() => router.push("/")}
-          style={{ cursor: "pointer" }}
           title="ImStarGG"
         >
-          <img src="/assets/logo.webp" alt="ImStarGG" style={{ height: 32 }} />
-        </a>
+          <img src="/assets/logo.webp" alt="ImStarGG" />
+        </button>
         <div className="topnav-links">
-          <a
-            className={`topnav-link ${isActive("/brawlers") ? "active" : ""}`}
-            onClick={() => router.push("/brawlers")}
-            style={{ cursor: "pointer" }}
-          >
-            브롤러
-          </a>
-          <a
-            className={`topnav-link ${isActive("/events") ? "active" : ""}`}
-            onClick={() => router.push("/events")}
-            style={{ cursor: "pointer" }}
-          >
-            이벤트
-          </a>
-          <a
-            className={`topnav-link ${isActive("/ranking") ? "active" : ""}`}
-            onClick={() => router.push("/ranking")}
-            style={{ cursor: "pointer" }}
-          >
-            랭킹
-          </a>
-          <a
-            className={`topnav-link ${isActive("/clubs") ? "active" : ""}`}
-            onClick={() => router.push("/clubs")}
-            style={{ cursor: "pointer" }}
-          >
-            클럽
-          </a>
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.href}
+              type="button"
+              className={`topnav-link ${isActive(item.href) ? "active" : ""}`}
+              onClick={() => router.push(item.href)}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
         <div className="topnav-spacer" />
 
-        <div ref={wrapRef} style={{ position: "relative" }}>
-          <form className="topnav-search" onSubmit={submit}>
-            <span style={{ color: "#8A90A0", fontSize: 13 }}>🔍</span>
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setOpen(true);
-              }}
-              onFocus={() => setOpen(true)}
-              placeholder="#PLAYERTAG"
-            />
-          </form>
+        <TopNavSearch
+          ref={desktopSearchRef}
+          className="topnav-desktop-search"
+          now={now}
+          onSubmitTag={(tag) => goToTag(tag, "desktop")}
+          recents={recents}
+          search={search}
+          setSearch={setSearch}
+          showRecents={desktopRecentsOpen}
+          setShowRecents={setDesktopRecentsOpen}
+        />
 
-          {open && filteredRecents.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                top: "calc(100% + 6px)",
-                right: 0,
-                width: 280,
-                background: "#fff",
-                border: "1px solid var(--color-neutral-200)",
-                borderRadius: 10,
-                boxShadow: "0 8px 28px rgba(20,24,32,0.12), 0 2px 6px rgba(20,24,32,0.06)",
-                overflow: "hidden",
-                zIndex: 100,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "8px 12px",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--color-neutral-500)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  borderBottom: "1px solid var(--color-neutral-100)",
-                  background: "var(--color-neutral-50)",
-                }}
-              >
-                <span>최근 검색</span>
-                <button
-                  onClick={() => {
-                    clearRecents();
-                    notifyRecents();
-                  }}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    padding: 0,
-                    color: "var(--color-neutral-500)",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    letterSpacing: 0,
-                    textTransform: "none",
-                  }}
-                  title="전체 삭제"
-                >
-                  전체 삭제
-                </button>
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <button
+            type="button"
+            className="topnav-menu-button"
+            aria-label="모바일 메뉴 열기"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Menu aria-hidden="true" />
+          </button>
+          <SheetContent
+            side="right"
+            className="topnav-drawer"
+            showCloseButton={false}
+          >
+            <SheetHeader className="topnav-drawer-header">
+              <div>
+                <SheetTitle>메뉴</SheetTitle>
+                <SheetDescription className="sr-only">
+                  주요 페이지와 플레이어 검색
+                </SheetDescription>
               </div>
-              {filteredRecents.map((r) => (
-                <div
-                  key={r.tag}
-                  onClick={() => goToTag(r.tag)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 12px",
-                    cursor: "pointer",
-                    borderBottom: "1px solid var(--color-neutral-100)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "var(--color-neutral-50)")
-                  }
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+              <button
+                type="button"
+                className="topnav-drawer-close"
+                aria-label="모바일 메뉴 닫기"
+                onClick={() => setDrawerOpen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </SheetHeader>
+            <TopNavSearch
+              className="topnav-search-drawer"
+              emptyVariant="compact"
+              now={now}
+              onSubmitTag={(tag) => goToTag(tag, "drawer")}
+              recents={recents}
+              search={drawerSearch}
+              setSearch={setDrawerSearch}
+              showRecents={drawerRecentsOpen}
+              setShowRecents={setDrawerRecentsOpen}
+            />
+            <div className="topnav-drawer-links">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.href}
+                  type="button"
+                  className={isActive(item.href) ? "active" : ""}
+                  aria-label={`${item.label} 페이지로 이동`}
+                  onClick={() => navigate(item.href)}
                 >
-                  <span style={{ color: "#8A90A0", fontSize: 14 }}>🕘</span>
-                  <span
-                    style={{
-                      flex: 1,
-                      fontFamily: "var(--font-num)",
-                      fontWeight: 700,
-                      fontSize: 13,
-                      color: "var(--color-neutral-800)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    #{r.tag}
-                  </span>
-                  <span style={{ fontSize: 11, color: "var(--color-neutral-400)" }}>
-                    {now ? formatMinutesAgo(Math.max(0, Math.floor((now - r.ts) / 60000))) : ""}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeRecent(r.tag);
-                      notifyRecents();
-                    }}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      padding: 4,
-                      color: "var(--color-neutral-400)",
-                      cursor: "pointer",
-                      fontSize: 14,
-                      lineHeight: 1,
-                      borderRadius: 4,
-                    }}
-                    title="삭제"
-                  >
-                    ✕
-                  </button>
-                </div>
+                  {item.label}
+                </button>
               ))}
             </div>
-          )}
-
-          {open && filteredRecents.length === 0 && (
-            <div
-              style={{
-                position: "absolute",
-                top: "calc(100% + 6px)",
-                right: 0,
-                width: 280,
-                background: "#fff",
-                border: "1px solid var(--color-neutral-200)",
-                borderRadius: 10,
-                boxShadow: "0 8px 28px rgba(20,24,32,0.12)",
-                padding: "18px 14px",
-                fontSize: 12,
-                color: "var(--color-neutral-500)",
-                textAlign: "center",
-                zIndex: 100,
-              }}
-            >
-              {q ? (
-                <>일치하는 최근 검색이 없어요.</>
-              ) : (
-                <>
-                  아직 검색한 플레이어가 없어요.
-                  <br />
-                  상단에 #태그를 입력해 검색해보세요.
-                </>
-              )}
-            </div>
-          )}
-        </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </nav>
   );

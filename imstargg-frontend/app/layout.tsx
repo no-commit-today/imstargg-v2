@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TopNav from "@/components/layout/TopNav";
-import MobileTabBar from "@/components/layout/MobileTabBar";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { env } from "@/config/env";
@@ -16,7 +15,11 @@ export const metadata: Metadata = {
   }),
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="ko">
       <body>
@@ -24,7 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="app">
             <TopNav />
             {children}
-            <MobileTabBar />
             <Toaster richColors position="top-center" />
           </div>
         </QueryProvider>

@@ -16,6 +16,7 @@ out/
 ### Git ###
 .worktree
 .worktrees/
+.superpowers/
 
 ### Python ###
 __pycache__/
