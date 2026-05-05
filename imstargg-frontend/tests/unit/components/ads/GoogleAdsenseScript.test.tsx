@@ -1,37 +1,49 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
-  normalizeGoogleAdsenseClient,
+  GOOGLE_ADSENSE_CLIENT,
+  GOOGLE_ADSENSE_SCRIPT_SRC,
+  GoogleAdsenseScript,
   shouldLoadGoogleAdsense,
 } from "@/components/ads/GoogleAdsenseScript";
 
 describe("shouldLoadGoogleAdsense", () => {
-  it("loads only in production with a client id", () => {
-    expect(
-      shouldLoadGoogleAdsense("production", "ca-pub-5084387143997125"),
-    ).toBe(true);
+  it("loads only in production", () => {
+    expect(shouldLoadGoogleAdsense("production")).toBe(true);
   });
 
   it("does not load in development", () => {
-    expect(
-      shouldLoadGoogleAdsense("development", "ca-pub-5084387143997125"),
-    ).toBe(false);
+    expect(shouldLoadGoogleAdsense("development")).toBe(false);
   });
 
   it("does not load in test", () => {
-    expect(shouldLoadGoogleAdsense("test", "ca-pub-5084387143997125")).toBe(
-      false,
-    );
-  });
-
-  it("does not load without a client id", () => {
-    expect(shouldLoadGoogleAdsense("production", "")).toBe(false);
+    expect(shouldLoadGoogleAdsense("test")).toBe(false);
   });
 });
 
-describe("normalizeGoogleAdsenseClient", () => {
-  it("trims whitespace around client ids", () => {
-    expect(
-      normalizeGoogleAdsenseClient("  ca-pub-5084387143997125\n"),
-    ).toBe("ca-pub-5084387143997125");
+describe("GoogleAdsenseScript", () => {
+  it("uses the configured publisher id directly", () => {
+    expect(GOOGLE_ADSENSE_CLIENT).toBe("ca-pub-5084387143997125");
+    expect(GOOGLE_ADSENSE_SCRIPT_SRC).toBe(
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5084387143997125",
+    );
+  });
+
+  it("loads before hydration in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+
+    try {
+      const script = GoogleAdsenseScript();
+
+      expect(script).not.toBeNull();
+      expect(script?.props).toMatchObject({
+        id: "google-adsense",
+        async: true,
+        strategy: "beforeInteractive",
+        src: GOOGLE_ADSENSE_SCRIPT_SRC,
+        crossOrigin: "anonymous",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

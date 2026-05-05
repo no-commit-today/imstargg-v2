@@ -21,7 +21,6 @@ export default defineConfig({
       NEXT_PUBLIC_API_BASE_URL: "https://core-api.test",
       NEXT_PUBLIC_SITE_URL: "https://imstargg.test",
       NEXT_PUBLIC_APP_VERSION: "0.0.0-test",
-      NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT: "ca-pub-5084387143997125",
     },
   },
 });
