@@ -247,16 +247,19 @@ export default function TopNav() {
     typeof window === "undefined" ? 0 : Date.now(),
   );
 
-  if (
-    pathname.startsWith("/players/") &&
-    !syncedPathnames.has(pathname) &&
-    typeof window !== "undefined"
-  ) {
+  useEffect(() => {
+    if (
+      !pathname.startsWith("/players/") ||
+      syncedPathnames.has(pathname) ||
+      typeof window === "undefined"
+    ) {
+      return;
+    }
     syncedPathnames.add(pathname);
     const tag = decodeURIComponent(pathname.slice("/players/".length));
     pushRecent(tag);
     notifyRecents();
-  }
+  }, [pathname]);
 
   useEffect(() => {
     if (!desktopRecentsOpen) return;

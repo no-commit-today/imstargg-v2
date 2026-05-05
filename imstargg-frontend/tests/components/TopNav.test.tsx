@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TopNav from "@/components/layout/TopNav";
 
@@ -60,5 +61,29 @@ describe("TopNav", () => {
         screen.queryByRole("dialog", { name: "메뉴" }),
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("syncs player paths into recents after render without React render-phase warnings", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    pathname = "/players/88J8Q9RPV";
+
+    renderToString(<TopNav />);
+    expect(window.localStorage.getItem("imstargg.recentSearches")).toBeNull();
+
+    render(<TopNav />);
+
+    await waitFor(() => {
+      const recents = JSON.parse(
+        window.localStorage.getItem("imstargg.recentSearches") ?? "[]",
+      );
+      expect(recents[0]?.tag).toBe("88J8Q9RPV");
+    });
+
+    expect(
+      consoleError.mock.calls.some((call) =>
+        String(call[0]).includes("Cannot update a component"),
+      ),
+    ).toBe(false);
+    consoleError.mockRestore();
   });
 });
