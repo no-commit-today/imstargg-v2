@@ -1,9 +1,7 @@
 workload:
   kind: CronJob
-
 imagePullSecrets:
   - name: ecr-pull-secret
-
 cronjob:
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
@@ -28,7 +26,6 @@ cronjob:
     limits:
       cpu: 1000m
       memory: 2Gi
-
 jobs:
   - name: partition-manage
     schedule: "0 2 * * *"
@@ -90,3 +87,5 @@ jobs:
     schedule: "0 9 * * *"
     args:
       - "java -jar /app/app.jar --job.name=statsPlayerSyncFromRankingJob"
+nct-chart:
+  cronjobs: []
