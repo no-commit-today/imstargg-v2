@@ -106,4 +106,48 @@ describe("buildBrawlerItemGroups", () => {
       ownership: { rate: 0.12, ownerCount: 12, totalCount: 100 },
     });
   });
+
+  it("handles null hyperCharge and still includes buffies when present", () => {
+    const groups = buildBrawlerItemGroups(
+      { ...items, hyperCharge: null },
+      emptyOwnership,
+    );
+
+    const thirdGroup = groups[2];
+
+    expect(thirdGroup.sections[0].items).toEqual([]);
+    expect(thirdGroup.sections[1].items.map((item) => item.key)).toEqual([
+      "buffy:GADGET",
+      "buffy:STAR_POWER",
+      "buffy:HYPER_CHARGE",
+    ]);
+  });
+
+  it("handles null buffies without throwing", () => {
+    const groups = buildBrawlerItemGroups(
+      { ...items, buffies: null },
+      emptyOwnership,
+    );
+
+    expect(groups[2].sections[1].items).toEqual([]);
+  });
+
+  it("handles partial runtime buffies without throwing", () => {
+    const partialItems = {
+      ...items,
+      buffies: {
+        starPower: { type: "STAR_POWER", imageUrl: "/buffy-star-power.webp" },
+      },
+    } as unknown as BrawlerItems;
+
+    const groups = buildBrawlerItemGroups(partialItems, emptyOwnership);
+
+    expect(groups[2].sections[1].items).toEqual([
+      expect.objectContaining({
+        key: "buffy:STAR_POWER",
+        kind: "buffy",
+        name: "스타파워",
+      }),
+    ]);
+  });
 });

@@ -13,8 +13,13 @@ const KIND_LABELS: Record<BrawlerDisplayItem["kind"], string> = {
   buffy: "버피",
 };
 
+function toOwnershipPercent(rate: number) {
+  if (!Number.isFinite(rate)) return 0;
+  return Math.min(100, Math.max(0, Math.round(rate * 100)));
+}
+
 function OwnershipBar({ rate }: { rate: number }) {
-  const pct = Math.round(rate * 100);
+  const pct = toOwnershipPercent(rate);
 
   return (
     <div className="flex items-center gap-2">

@@ -55,6 +55,10 @@ function findByBuffyType(items: BuffyOwnershipItem[], buffyType: string) {
   return items.find((item) => item.buffyType === buffyType);
 }
 
+function isBuffyResponse(value: BuffyResponse | undefined): value is BuffyResponse {
+  return Boolean(value && typeof value === "object" && typeof value.type === "string");
+}
+
 function toDisplayItem(
   kind: Exclude<BrawlerDisplayItemKind, "buffy">,
   item: BrawlerItem,
@@ -78,7 +82,7 @@ function toBuffyDisplayItem(
     key: `buffy:${buffy.type}`,
     kind: "buffy",
     name: buffyTypeLabel(buffy.type),
-    imageUrl: buffy.imageUrl,
+    imageUrl: buffy.imageUrl ?? null,
     ownership: toOwnership(ownership),
   };
 }
@@ -87,12 +91,14 @@ function toBuffyItems(items: BrawlerItems, ownership: ItemOwnership) {
   if (!items.buffies) return [];
 
   return [
-    items.buffies.gadget,
-    items.buffies.starPower,
-    items.buffies.hyperCharge,
-  ].map((buffy) =>
-    toBuffyDisplayItem(buffy, findByBuffyType(ownership.buffies, buffy.type)),
-  );
+    items.buffies?.gadget,
+    items.buffies?.starPower,
+    items.buffies?.hyperCharge,
+  ]
+    .filter(isBuffyResponse)
+    .map((buffy) =>
+      toBuffyDisplayItem(buffy, findByBuffyType(ownership.buffies, buffy.type)),
+    );
 }
 
 export function buildBrawlerItemGroups(
