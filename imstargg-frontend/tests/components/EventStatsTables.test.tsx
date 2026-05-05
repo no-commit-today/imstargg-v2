@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { EventResultStatsTable } from "@app/events/[id]/_components/EventResultStatsTable";
 import { EventRankStatsTable } from "@app/events/[id]/_components/EventRankStatsTable";
@@ -24,7 +24,7 @@ const brawler: Brawler = {
 };
 
 describe("EventStatsTables", () => {
-  it("결과형 통계 행은 모든 통계 셀을 한 줄 responsive grid 에 배치한다", () => {
+  it("결과형 통계 행은 승률·픽률·스타플레이어·전투수 셀을 모두 노출한다", () => {
     render(
       <EventResultStatsTable
         items={[
@@ -45,15 +45,13 @@ describe("EventStatsTables", () => {
     );
 
     const row = screen.getByRole("button", { name: /데미안/ });
-    expect(row).toHaveClass(
-      "grid-cols-[26px_minmax(0,1fr)_36px_42px_42px_42px_52px]",
-    );
-    expect(row).toHaveClass(
-      "sm:grid-cols-[48px_minmax(0,1fr)_56px_72px_72px_72px_96px]",
-    );
+    expect(within(row).getByText("71.3%")).toBeInTheDocument();
+    expect(within(row).getByText("3.0%")).toBeInTheDocument();
+    expect(within(row).getByText("27.6%")).toBeInTheDocument();
+    expect(within(row).getByText("275")).toBeInTheDocument();
   });
 
-  it("선택된 결과형 통계 행은 aria-pressed 와 행 강조선으로 표시한다", () => {
+  it("선택된 결과형 통계 행은 aria-pressed=true 로 표시된다", () => {
     render(
       <EventResultStatsTable
         items={[
@@ -73,12 +71,12 @@ describe("EventStatsTables", () => {
       />,
     );
 
-    const row = screen.getByRole("button", { pressed: true });
-    expect(row).toHaveClass("border-l-4", "border-l-[#FFC60A]");
-    expect(screen.queryByText("선택됨")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { pressed: true })).toHaveAccessibleName(
+      /데미안/,
+    );
   });
 
-  it("순위형 통계 행도 좁은 화면에서 압축된 한 줄 grid 를 사용한다", () => {
+  it("순위형 통계 행은 평균순위·전투수 셀을 노출하고 선택 상태를 aria-pressed 로 알린다", () => {
     render(
       <EventRankStatsTable
         items={[
@@ -95,7 +93,7 @@ describe("EventStatsTables", () => {
     );
 
     const row = screen.getByRole("button", { pressed: true });
-    expect(row).toHaveClass("grid-cols-[26px_minmax(0,1fr)_64px_52px]");
-    expect(row).toHaveClass("sm:grid-cols-[48px_minmax(0,1fr)_88px_96px]");
+    expect(within(row).getByText("2.14")).toBeInTheDocument();
+    expect(within(row).getByText("275")).toBeInTheDocument();
   });
 });
