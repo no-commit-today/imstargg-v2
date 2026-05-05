@@ -5,7 +5,7 @@ imagePullSecrets:
 cronjob:
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-    tag: "97e1951"
+    tag: "6d93019"
     pullPolicy: Always
   command:
     - /bin/sh
@@ -87,5 +87,3 @@ jobs:
     schedule: "0 9 * * *"
     args:
       - "java -jar /app/app.jar --job.name=statsPlayerSyncFromRankingJob"
-nct-chart:
-  cronjobs: []

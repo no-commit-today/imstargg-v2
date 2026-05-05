@@ -6,7 +6,7 @@ deployment:
   replicaCount: 2
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
-    tag: "267b951"
+    tag: "95bc05e"
     pullPolicy: Always
   ports:
     - name: http
@@ -49,8 +49,3 @@ ingress:
     - secretName: core-api-tls
       hosts:
         - api.imstargg.com
-nct-chart:
-  deployment:
-    image:
-      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
-      tag: 95bc05e
