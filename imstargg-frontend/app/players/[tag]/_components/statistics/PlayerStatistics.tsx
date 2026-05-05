@@ -47,8 +47,17 @@ export function PlayerStatistics({ tag }: { tag: string }) {
     tag, battleType, brawlPassSeasonNumber, soloRankSeasonKey,
   });
 
-  const brawlerItems = (brawlerQuery.data?.items ?? []).map(toPlayerBrawlerStat);
-  const roleItems = (roleQuery.data?.items ?? []).map(toPlayerBrawlerRoleStat);
+  const brawlerItems = useMemo(
+    () =>
+      (brawlerQuery.data?.items ?? [])
+        .map(toPlayerBrawlerStat)
+        .sort((a, b) => b.winRate - a.winRate),
+    [brawlerQuery.data],
+  );
+  const roleItems = useMemo(
+    () => (roleQuery.data?.items ?? []).map(toPlayerBrawlerRoleStat),
+    [roleQuery.data],
+  );
 
   return (
     <div className="space-y-4 py-4">
