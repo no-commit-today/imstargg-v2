@@ -1,20 +1,19 @@
 package com.imstargg.core.api.controller.v1
 
+import com.imstargg.CoreApiContextTest
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.ninjasquad.springmockk.MockkBean
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Clock
 
-@Tag("context")
-@WebMvcTest(StatisticsController::class)
+@AutoConfigureMockMvc
 class StatisticsControllerTest(
     @Autowired private val mockMvc: MockMvc,
-) {
+) : CoreApiContextTest() {
     @MockkBean(relaxed = true)
     private lateinit var statisticsQueryComposer: StatisticsQueryComposer
 

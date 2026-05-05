@@ -1,26 +1,21 @@
 package com.imstargg.core.api.controller.v1
 
-import com.imstargg.core.config.CorsProperties
+import com.imstargg.CoreApiContextTest
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 
-@Tag("context")
-@WebMvcTest(SeasonController::class)
+@AutoConfigureMockMvc
 class SeasonControllerTest(
     @Autowired private val mockMvc: MockMvc,
-) {
-    @MockkBean(relaxed = true)
-    private lateinit var corsProperties: CorsProperties
-
+) : CoreApiContextTest() {
     @MockkBean(relaxed = true)
     private lateinit var clock: Clock
 
