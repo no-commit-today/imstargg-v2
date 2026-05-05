@@ -1,9 +1,7 @@
 workload:
   kind: Deployment
-
 imagePullSecrets:
   - name: ecr-pull-secret
-
 deployment:
   replicaCount: 1
   image:
@@ -23,9 +21,12 @@ deployment:
       memory: 2Gi
     limits:
       memory: 2Gi
-
 service:
   enabled: false
-
 ingress:
   enabled: false
+nct-chart:
+  deployment:
+    image:
+      repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-worker
+      tag: 95bc05e
