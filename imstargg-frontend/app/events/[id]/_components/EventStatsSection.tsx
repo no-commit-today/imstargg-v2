@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { statisticsApi } from "@/api/endpoints/statistics";
+import { CACHE_SECONDS } from "@/config/cache";
 import {
   toBrawlerRankStat,
   toBrawlerResultStatistics,
@@ -36,7 +37,7 @@ export async function EventStatsSection({ event, searchParams }: Props) {
     const rankOrder = parseSortOrder(searchParams.order ?? "ASC");
     const main = await statisticsApi.brawlerRank(
       { eventId: event.id, tierRange: tier, dateRange: date },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     );
     const items = sortRankItems(main.content.map(toBrawlerRankStat), rankSort, rankOrder);
     return (
@@ -74,7 +75,7 @@ export async function EventStatsSection({ event, searchParams }: Props) {
   const order = parseSortOrder(searchParams.order);
   const main = await statisticsApi.brawlerResult(
     { eventId: event.id, tierRange: tier, dateRange: date },
-    { next: { revalidate: 600 } },
+    { next: { revalidate: CACHE_SECONDS.SHORT } },
   );
   const stats = toBrawlerResultStatistics(main);
   return (

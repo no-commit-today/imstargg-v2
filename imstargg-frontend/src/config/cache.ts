@@ -1,0 +1,10 @@
+export const CACHE_SECONDS = {
+  SHORT: 60,
+  BRAWLER_REFERENCE: 3600,
+  SEO_REFERENCE: 86400,
+} as const;
+
+export const QUERY_STALE_TIME = {
+  SHORT: 60_000,
+  BRAWLER_REFERENCE: 60 * 60_000,
+} as const;

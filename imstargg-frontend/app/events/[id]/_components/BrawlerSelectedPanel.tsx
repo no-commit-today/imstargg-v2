@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { statisticsApi } from "@/api/endpoints/statistics";
+import { CACHE_SECONDS } from "@/config/cache";
 import {
   toEnemyResultStat,
   toPairRankStat,
@@ -46,7 +47,7 @@ export async function BrawlerSelectedPanel({
     const pairSort = parseRankSortBy(searchParams.pairSort);
     const pair = await statisticsApi.pairRank(
       { eventId, brawlerId, tierRange: tier, dateRange: date, sortBy: pairSort, sortOrder: pairOrder },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     );
     return (
       <section className="space-y-3">
@@ -71,11 +72,11 @@ export async function BrawlerSelectedPanel({
   const [pair, enemy] = await Promise.all([
     statisticsApi.pairResult(
       { eventId, brawlerId, tierRange: tier, dateRange: date, sortBy: pairSort, sortOrder: pairOrder },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.enemyResult(
       { eventId, brawlerId, tierRange: tier, dateRange: date, sortBy: enemySort, sortOrder: enemyOrder },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
 

@@ -1,4 +1,5 @@
 import { statisticsApi } from "@/api/endpoints/statistics";
+import { CACHE_SECONDS } from "@/config/cache";
 import {
   parseDateRange,
   parseTierRange,
@@ -37,7 +38,7 @@ export async function BrawlerStatsSection({ brawler, items, searchParams }: Prop
   const [daily, pair, enemy, ownership] = await Promise.all([
     statisticsApi.daily(
       { brawlerId: brawler.id, tierRange: tier, dateRange: date },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.pairResult(
       {
@@ -47,7 +48,7 @@ export async function BrawlerStatsSection({ brawler, items, searchParams }: Prop
         sortBy: pairSort,
         sortOrder: pairOrder,
       },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.enemyResult(
       {
@@ -57,11 +58,11 @@ export async function BrawlerStatsSection({ brawler, items, searchParams }: Prop
         sortBy: enemySort,
         sortOrder: enemyOrder,
       },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.itemOwnership(
       { brawlerId: brawler.id, trophyRange: trophy },
-      { next: { revalidate: 600 } },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
 

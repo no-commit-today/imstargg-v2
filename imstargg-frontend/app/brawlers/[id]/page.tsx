@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brawlerApi } from "@/api/endpoints/brawler";
+import { CACHE_SECONDS } from "@/config/cache";
 import { toBrawlerWithItems } from "@/domain/brawler/mappers";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 import { NotFoundError } from "@/api/errors";
@@ -11,17 +12,17 @@ import { BrawlerStatsSection } from "./_components/BrawlerStatsSection";
 type Params = { params: Promise<{ id: string }> };
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export const revalidate = 600;
+export const revalidate = CACHE_SECONDS.SHORT;
 
 export async function generateStaticParams() {
-  const list = await brawlerApi.list({ next: { revalidate: 86400 } });
+  const list = await brawlerApi.list({ next: { revalidate: CACHE_SECONDS.SEO_REFERENCE } });
   return list.content.map((b) => ({ id: String(b.id) }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
-    const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
+    const dto = await brawlerApi.get(id, { next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } });
     const detail = toBrawlerWithItems(dto);
     const { brawler, items } = detail;
     const role = ROLE_LABEL_KO[brawler.role];
@@ -54,7 +55,7 @@ export default async function BrawlerPage({
   const sp = await searchParams;
   let detail;
   try {
-    const dto = await brawlerApi.get(id, { next: { revalidate: 86400 } });
+    const dto = await brawlerApi.get(id, { next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } });
     detail = toBrawlerWithItems(dto);
   } catch (e) {
     if (e instanceof NotFoundError) notFound();
