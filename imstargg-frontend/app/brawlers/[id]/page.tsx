@@ -12,7 +12,7 @@ import { BrawlerStatsSection } from "./_components/BrawlerStatsSection";
 type Params = { params: Promise<{ id: string }> };
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export const revalidate = CACHE_SECONDS.SHORT;
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const list = await brawlerApi.list({ next: { revalidate: CACHE_SECONDS.SEO_REFERENCE } });

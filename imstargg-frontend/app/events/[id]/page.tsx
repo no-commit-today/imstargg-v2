@@ -10,8 +10,6 @@ import { EventStatsSection } from "./_components/EventStatsSection";
 
 type Params = { params: Promise<{ id: string }> };
 
-export const dynamic = "force-dynamic";
-
 export async function generateStaticParams() {
   const [rotation, soloRank] = await Promise.all([
     eventApi.rotation({ next: { revalidate: CACHE_SECONDS.SEO_REFERENCE } }),

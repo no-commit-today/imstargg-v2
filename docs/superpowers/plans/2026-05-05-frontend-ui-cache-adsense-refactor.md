@@ -273,7 +273,7 @@ export const revalidate = 600;
 with:
 
 ```ts
-export const revalidate = CACHE_SECONDS.SHORT;
+export const revalidate = 60;
 ```
 
 Replace brawler reference fetches:
@@ -322,11 +322,7 @@ In `imstargg-frontend/app/events/page.tsx`, replace:
 export const revalidate = 600;
 ```
 
-with:
-
-```ts
-export const dynamic = "force-dynamic";
-```
+with no route-level segment config. Use explicit fetch-level cache options so `rotation` can be no-store while `soloRank` keeps its short positive cache window.
 
 Replace:
 
@@ -364,17 +360,13 @@ In `imstargg-frontend/app/events/[id]/page.tsx`, add:
 import { CACHE_SECONDS } from "@/config/cache";
 ```
 
-Replace:
+Remove:
 
 ```ts
 export const revalidate = 3600;
 ```
 
-with:
-
-```ts
-export const dynamic = "force-dynamic";
-```
+Use explicit fetch-level cache options so event detail can be no-store while static-param discovery and stats keep positive cache windows.
 
 Keep `generateStaticParams` using `CACHE_SECONDS.SEO_REFERENCE` for rotation/solo rank discovery:
 
@@ -419,17 +411,13 @@ In `imstargg-frontend/app/events/[id]/_components/BrawlerSelectedPanel.tsx`, add
 
 - [ ] **Step 10: Update ranking pages to no-store**
 
-In `imstargg-frontend/app/ranking/players/page.tsx`, replace:
+In `imstargg-frontend/app/ranking/players/page.tsx`, remove:
 
 ```ts
 export const revalidate = 600;
 ```
 
-with:
-
-```ts
-export const dynamic = "force-dynamic";
-```
+Use fetch-level `cache: "no-store"` for the ranking request instead of route-level `force-dynamic`.
 
 Replace:
 
@@ -445,7 +433,7 @@ with:
 const dto = await rankingApi.players(country, { cache: "no-store" });
 ```
 
-In `imstargg-frontend/app/ranking/clubs/page.tsx`, make the same `dynamic = "force-dynamic"` change and replace:
+In `imstargg-frontend/app/ranking/clubs/page.tsx`, make the same route segment config removal and replace:
 
 ```ts
 const dto = await rankingApi.clubs(country, { next: { revalidate: 600 } });
@@ -469,11 +457,7 @@ Replace:
 export const revalidate = 600;
 ```
 
-with:
-
-```ts
-export const dynamic = "force-dynamic";
-```
+with no route-level segment config. This page mixes cached brawler reference data with no-store ranking data, so preserve hybrid fetch semantics.
 
 Replace brawler reference fetch:
 

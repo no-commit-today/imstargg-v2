@@ -6,8 +6,6 @@ import { buildMetadata } from "@/lib/seo";
 import { CountrySelector } from "@app/ranking/_components/CountrySelector";
 import { PlayerRankingList } from "@app/ranking/_components/PlayerRankingList";
 
-export const dynamic = "force-dynamic";
-
 type SearchParams = Promise<{ country?: string }>;
 
 export async function generateMetadata({

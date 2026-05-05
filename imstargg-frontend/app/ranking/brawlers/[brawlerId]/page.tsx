@@ -12,8 +12,6 @@ import { buildMetadata } from "@/lib/seo";
 import { CountrySelector } from "@app/ranking/_components/CountrySelector";
 import { BrawlerRankingList } from "@app/ranking/_components/BrawlerRankingList";
 
-export const dynamic = "force-dynamic";
-
 type Params = Promise<{ brawlerId: string }>;
 type SearchParams = Promise<{ country?: string }>;
 

@@ -12,8 +12,6 @@ export const metadata: Metadata = buildMetadata({
   path: "/events",
 });
 
-export const dynamic = "force-dynamic";
-
 export default async function Page() {
   const [rotationDto, soloRankDto] = await Promise.all([
     eventApi.rotation({ cache: "no-store" }),

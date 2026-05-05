@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { env } from "@/config/env";
 import { NetworkError, toApiError } from "@/api/errors";
 
@@ -26,6 +27,7 @@ export async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T
   try {
     res = await fetch(url, init);
   } catch (e) {
+    unstable_rethrow(e);
     throw new NetworkError(path, e);
   }
   if (!res.ok) throw await toApiError(res, path);
