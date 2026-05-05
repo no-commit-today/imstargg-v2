@@ -53,4 +53,4 @@ nct-chart:
   deployment:
     image:
       repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
-      tag: ba78cbe
+      tag: 95bc05e
