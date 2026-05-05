@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brawlerApi } from "@/api/endpoints/brawler";
+import { statisticsApi } from "@/api/endpoints/statistics";
 import { CACHE_SECONDS } from "@/config/cache";
 import { toBrawlerWithItems } from "@/domain/brawler/mappers";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
+import { parseTrophyRange } from "@/domain/statistics/enums";
+import { toItemOwnership } from "@/domain/statistics/mappers";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { BrawlerContent } from "./_components/BrawlerContent";
@@ -53,6 +56,7 @@ export default async function BrawlerPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
+  const trophy = parseTrophyRange(sp.trophy);
   let detail;
   try {
     const dto = await brawlerApi.get(id, { next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } });
@@ -61,10 +65,18 @@ export default async function BrawlerPage({
     if (e instanceof NotFoundError) notFound();
     throw e;
   }
+
+  const ownership = toItemOwnership(
+    await statisticsApi.itemOwnership(
+      { brawlerId: detail.brawler.id, trophyRange: trophy },
+      { next: { revalidate: CACHE_SECONDS.SHORT } },
+    ),
+  );
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-10">
-      <BrawlerContent initialDetail={detail} />
-      <BrawlerStatsSection brawler={detail.brawler} items={detail.items} searchParams={sp} />
+      <BrawlerContent initialDetail={detail} ownership={ownership} trophy={trophy} />
+      <BrawlerStatsSection brawler={detail.brawler} searchParams={sp} />
     </main>
   );
 }
