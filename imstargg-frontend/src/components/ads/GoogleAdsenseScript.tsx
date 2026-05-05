@@ -1,31 +1,21 @@
 import Script from "next/script";
-import { env } from "@/config/env";
 
-export function normalizeGoogleAdsenseClient(
-  client: string | undefined,
-): string {
-  return client?.trim() ?? "";
-}
+export const GOOGLE_ADSENSE_CLIENT = "ca-pub-5084387143997125";
+export const GOOGLE_ADSENSE_SCRIPT_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${GOOGLE_ADSENSE_CLIENT}`;
 
-export function shouldLoadGoogleAdsense(
-  nodeEnv: string | undefined,
-  client: string | undefined,
-): boolean {
-  return nodeEnv === "production" && Boolean(client?.trim());
+export function shouldLoadGoogleAdsense(nodeEnv: string | undefined): boolean {
+  return nodeEnv === "production";
 }
 
 export function GoogleAdsenseScript() {
-  const client = normalizeGoogleAdsenseClient(
-    env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT,
-  );
-  if (!shouldLoadGoogleAdsense(process.env.NODE_ENV, client)) return null;
+  if (!shouldLoadGoogleAdsense(process.env.NODE_ENV)) return null;
 
   return (
     <Script
       id="google-adsense"
       async
-      strategy="afterInteractive"
-      src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
+      strategy="beforeInteractive"
+      src={GOOGLE_ADSENSE_SCRIPT_SRC}
       crossOrigin="anonymous"
     />
   );
