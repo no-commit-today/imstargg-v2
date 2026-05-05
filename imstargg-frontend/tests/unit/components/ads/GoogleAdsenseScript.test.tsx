@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { shouldLoadGoogleAdsense } from "@/components/ads/GoogleAdsenseScript";
+import {
+  normalizeGoogleAdsenseClient,
+  shouldLoadGoogleAdsense,
+} from "@/components/ads/GoogleAdsenseScript";
 
 describe("shouldLoadGoogleAdsense", () => {
   it("loads only in production with a client id", () => {
@@ -22,5 +25,13 @@ describe("shouldLoadGoogleAdsense", () => {
 
   it("does not load without a client id", () => {
     expect(shouldLoadGoogleAdsense("production", "")).toBe(false);
+  });
+});
+
+describe("normalizeGoogleAdsenseClient", () => {
+  it("trims whitespace around client ids", () => {
+    expect(
+      normalizeGoogleAdsenseClient("  ca-pub-5084387143997125\n"),
+    ).toBe("ca-pub-5084387143997125");
   });
 });

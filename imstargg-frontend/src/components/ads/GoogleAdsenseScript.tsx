@@ -1,6 +1,12 @@
 import Script from "next/script";
 import { env } from "@/config/env";
 
+export function normalizeGoogleAdsenseClient(
+  client: string | undefined,
+): string {
+  return client?.trim() ?? "";
+}
+
 export function shouldLoadGoogleAdsense(
   nodeEnv: string | undefined,
   client: string | undefined,
@@ -9,7 +15,9 @@ export function shouldLoadGoogleAdsense(
 }
 
 export function GoogleAdsenseScript() {
-  const client = env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT;
+  const client = normalizeGoogleAdsenseClient(
+    env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT,
+  );
   if (!shouldLoadGoogleAdsense(process.env.NODE_ENV, client)) return null;
 
   return (
