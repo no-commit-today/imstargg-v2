@@ -9,6 +9,7 @@ import {
   AverageRankCell,
   CountCell,
 } from "@app/_components/statistics/StatNumberCell";
+import { cn } from "@/lib/cn";
 
 type Props = {
   items: BrawlerRankStat[];
@@ -17,7 +18,15 @@ type Props = {
   selectedBrawlerId: number | null;
 };
 
-export function EventRankStatsTable({ items, sort, order, selectedBrawlerId }: Props) {
+const rankGrid =
+  "grid-cols-[26px_minmax(0,1fr)_64px_52px] sm:grid-cols-[48px_minmax(0,1fr)_88px_96px]";
+
+export function EventRankStatsTable({
+  items,
+  sort,
+  order,
+  selectedBrawlerId,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -32,11 +41,26 @@ export function EventRankStatsTable({ items, sort, order, selectedBrawlerId }: P
 
   return (
     <div className="rounded-lg border border-[#D8DCE5] bg-white">
-      <div className="grid grid-cols-[40px_minmax(0,1fr)_88px_96px] items-center gap-2 border-b border-[#D8DCE5] bg-[#F6F7FA] px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#5C6271]">
+      <div
+        className={cn(
+          "grid items-center gap-1 border-b border-[#D8DCE5] bg-[#F6F7FA] px-2 py-2 text-[11px] font-bold uppercase tracking-wider text-[#5C6271] sm:gap-2 sm:px-3",
+          rankGrid,
+        )}
+      >
         <span>#</span>
         <span>브롤러</span>
-        <SortableHeader column="averageRank" label="평균순위" currentSort={sort} currentOrder={order} />
-        <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} />
+        <SortableHeader
+          column="averageRank"
+          label="평균순위"
+          currentSort={sort}
+          currentOrder={order}
+        />
+        <SortableHeader
+          column="totalBattleCount"
+          label="전투수"
+          currentSort={sort}
+          currentOrder={order}
+        />
       </div>
       {items.length === 0 ? (
         <div className="px-4 py-12 text-center text-sm text-[#5C6271]">
@@ -50,13 +74,18 @@ export function EventRankStatsTable({ items, sort, order, selectedBrawlerId }: P
             <button
               key={`${id}-${i}`}
               type="button"
+              aria-pressed={isActive}
               onClick={() => id > 0 && toggleBrawler(id)}
-              className={`grid w-full grid-cols-[40px_minmax(0,1fr)_88px_96px] items-center gap-2 border-b border-[#ECEEF3] px-3 py-2 text-left hover:bg-[#F6F7FA] ${
-                isActive ? "bg-[#FFE082]/40 border-l-4 border-l-[#FFC60A]" : ""
-              }`}
+              className={cn(
+                "grid w-full items-center gap-1 border-b border-[#ECEEF3] px-2 py-2 text-left text-[11px] transition-colors hover:bg-[#F6F7FA] sm:gap-2 sm:px-3 sm:text-sm",
+                rankGrid,
+                isActive && "border-l-4 border-l-[#FFC60A] bg-[#FFE082]/40",
+              )}
             >
-              <span className="text-sm font-bold text-[#5C6271] tabular-nums">{i + 1}</span>
-              <div className="flex items-center gap-2 overflow-hidden">
+              <span className="font-bold text-[#5C6271] tabular-nums">
+                {i + 1}
+              </span>
+              <div className="flex min-w-0 items-center gap-1 overflow-hidden sm:gap-2">
                 {it.brawler && (
                   <BrawlerAvatar
                     name={it.brawler.name}
@@ -66,7 +95,9 @@ export function EventRankStatsTable({ items, sort, order, selectedBrawlerId }: P
                     className="shrink-0"
                   />
                 )}
-                <span className="truncate text-sm font-bold">{it.brawler?.name ?? "-"}</span>
+                <span className="truncate font-bold">
+                  {it.brawler?.name ?? "-"}
+                </span>
               </div>
               <AverageRankCell value={it.averageRank} />
               <CountCell value={it.totalBattleCount} />

@@ -11,6 +11,7 @@ import {
   PercentCell,
 } from "@app/_components/statistics/StatNumberCell";
 import StarIcon from "@/components/primitives/StarIcon";
+import { cn } from "@/lib/cn";
 
 type Props = {
   items: BrawlerResultStat[];
@@ -19,7 +20,15 @@ type Props = {
   selectedBrawlerId: number | null;
 };
 
-export function EventResultStatsTable({ items, sort, order, selectedBrawlerId }: Props) {
+const resultGrid =
+  "grid-cols-[26px_minmax(0,1fr)_36px_42px_42px_42px_52px] sm:grid-cols-[48px_minmax(0,1fr)_56px_72px_72px_72px_96px]";
+
+export function EventResultStatsTable({
+  items,
+  sort,
+  order,
+  selectedBrawlerId,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -34,19 +43,50 @@ export function EventResultStatsTable({ items, sort, order, selectedBrawlerId }:
 
   return (
     <div className="rounded-lg border border-[#D8DCE5] bg-white">
-      <div className="grid grid-cols-[40px_minmax(0,1fr)_56px_72px_72px_72px_96px] items-center gap-2 border-b border-[#D8DCE5] bg-[#F6F7FA] px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#5C6271] sm:grid-cols-[40px_minmax(0,1fr)_56px_72px]">
+      <div
+        className={cn(
+          "grid items-center gap-1 border-b border-[#D8DCE5] bg-[#F6F7FA] px-2 py-2 text-[11px] font-bold uppercase tracking-wider text-[#5C6271] sm:gap-2 sm:px-3",
+          resultGrid,
+        )}
+      >
         <span>#</span>
         <span>브롤러</span>
-        <SortableHeader column="tier" label="티어" currentSort={sort} currentOrder={order} />
-        <SortableHeader column="winRate" label="승률" currentSort={sort} currentOrder={order} />
-        <span className="hidden sm:inline">
-          <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} />
+        <SortableHeader
+          column="tier"
+          label="티어"
+          currentSort={sort}
+          currentOrder={order}
+        />
+        <SortableHeader
+          column="winRate"
+          label="승률"
+          currentSort={sort}
+          currentOrder={order}
+        />
+        <span>
+          <SortableHeader
+            column="pickRate"
+            label="픽률"
+            currentSort={sort}
+            currentOrder={order}
+          />
         </span>
-        <span className="hidden sm:inline">
-          <SortableHeader column="starPlayerRate" label={<StarIcon />} title="스타플레이어 비율" currentSort={sort} currentOrder={order} />
+        <span>
+          <SortableHeader
+            column="starPlayerRate"
+            label={<StarIcon />}
+            title="스타플레이어 비율"
+            currentSort={sort}
+            currentOrder={order}
+          />
         </span>
-        <span className="hidden sm:inline">
-          <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} />
+        <span>
+          <SortableHeader
+            column="totalBattleCount"
+            label="전투수"
+            currentSort={sort}
+            currentOrder={order}
+          />
         </span>
       </div>
       {items.length === 0 ? (
@@ -61,13 +101,18 @@ export function EventResultStatsTable({ items, sort, order, selectedBrawlerId }:
             <button
               key={`${id}-${i}`}
               type="button"
+              aria-pressed={isActive}
               onClick={() => id > 0 && toggleBrawler(id)}
-              className={`grid w-full grid-cols-[40px_minmax(0,1fr)_56px_72px_72px_72px_96px] items-center gap-2 border-b border-[#ECEEF3] px-3 py-2 text-left transition-colors hover:bg-[#F6F7FA] sm:grid-cols-[40px_minmax(0,1fr)_56px_72px] ${
-                isActive ? "bg-[#FFE082]/40 border-l-4 border-l-[#FFC60A]" : ""
-              }`}
+              className={cn(
+                "grid w-full items-center gap-1 border-b border-[#ECEEF3] px-2 py-2 text-left text-[11px] transition-colors hover:bg-[#F6F7FA] sm:gap-2 sm:px-3 sm:text-sm",
+                resultGrid,
+                isActive && "border-l-4 border-l-[#FFC60A] bg-[#FFE082]/40",
+              )}
             >
-              <span className="text-sm font-bold text-[#5C6271] tabular-nums">{i + 1}</span>
-              <div className="flex items-center gap-2 overflow-hidden">
+              <span className="font-bold text-[#5C6271] tabular-nums">
+                {i + 1}
+              </span>
+              <div className="flex min-w-0 items-center gap-1 overflow-hidden sm:gap-2">
                 {it.brawler && (
                   <BrawlerAvatar
                     name={it.brawler.name}
@@ -77,17 +122,19 @@ export function EventResultStatsTable({ items, sort, order, selectedBrawlerId }:
                     className="shrink-0"
                   />
                 )}
-                <span className="truncate text-sm font-bold">{it.brawler?.name ?? "-"}</span>
+                <span className="truncate font-bold">
+                  {it.brawler?.name ?? "-"}
+                </span>
               </div>
               <TierBadge tier={it.tier} />
               <PercentCell value={it.winRate} />
-              <span className="hidden sm:inline">
+              <span>
                 <PercentCell value={it.pickRate} />
               </span>
-              <span className="hidden sm:inline">
+              <span>
                 <PercentCell value={it.starPlayerRate} />
               </span>
-              <span className="hidden sm:inline">
+              <span>
                 <CountCell value={it.totalBattleCount} />
               </span>
             </button>
