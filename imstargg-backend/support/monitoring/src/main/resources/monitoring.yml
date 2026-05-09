@@ -4,7 +4,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus, info
+        include:
+          - prometheus
+          - info
+          - health
   info:
     build:
       enabled: true
