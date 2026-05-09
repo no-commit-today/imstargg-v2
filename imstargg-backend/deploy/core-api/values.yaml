@@ -27,9 +27,11 @@ deployment:
       memory: 2Gi
     limits:
       memory: 2Gi
+
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
+
 service:
   enabled: true
   type: ClusterIP
@@ -38,6 +40,11 @@ service:
       port: 8080
       targetPort: http
       protocol: TCP
+    - name: metrics
+      port: 9292
+      targetPort: metrics
+      protocol: TCP
+
 ingress:
   enabled: true
   className: traefik
