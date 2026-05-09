@@ -11,7 +11,7 @@
 <!--        <minimumBreadcrumbLevel>INFO</minimumBreadcrumbLevel>-->
 <!--    </appender>-->
 
-    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework" level="INFO"/>
     <logger name="com.imstargg" level="INFO"/>
 
     <root level="INFO">
