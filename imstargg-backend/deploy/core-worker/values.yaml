@@ -16,7 +16,10 @@ deployment:
   envFrom:
     - secretRef:
         name: core-worker-secret
-  ports: []
+  ports:
+    - name: metrics
+      containerPort: 9292
+      protocol: TCP
   resources:
     requests:
       cpu: 200m

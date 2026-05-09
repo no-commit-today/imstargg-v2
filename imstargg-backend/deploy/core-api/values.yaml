@@ -12,6 +12,9 @@ deployment:
     - name: http
       containerPort: 8080
       protocol: TCP
+    - name: metrics
+      containerPort: 9292
+      protocol: TCP
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: prod
