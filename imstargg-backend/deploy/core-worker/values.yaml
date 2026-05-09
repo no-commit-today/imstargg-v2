@@ -28,7 +28,13 @@ deployment:
       memory: 2Gi
 
 service:
-  enabled: false
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9292
+      targetPort: metrics
+      protocol: TCP
 
 ingress:
   enabled: false
