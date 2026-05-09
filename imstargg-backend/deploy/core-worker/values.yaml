@@ -1,14 +1,12 @@
 workload:
   kind: Deployment
-
 imagePullSecrets:
   - name: ecr-pull-secret
-
 deployment:
   replicaCount: 1
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-worker
-    tag: "6acb0bd"
+    tag: "c0cb6b1"
     pullPolicy: Always
   env:
     - name: SPRING_PROFILES_ACTIVE
@@ -26,7 +24,6 @@ deployment:
       memory: 2Gi
     limits:
       memory: 2Gi
-
 service:
   enabled: true
   type: ClusterIP

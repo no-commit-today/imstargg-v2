@@ -1,13 +1,11 @@
 workload:
   kind: CronJob
-
 imagePullSecrets:
   - name: ecr-pull-secret
-
 cronjob:
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-    tag: "97e1951"
+    tag: "6d93019"
     pullPolicy: Always
   command:
     - /bin/sh
@@ -28,7 +26,6 @@ cronjob:
     limits:
       cpu: 1000m
       memory: 2Gi
-
 jobs:
   - name: partition-manage
     schedule: "0 2 * * *"
