@@ -23,6 +23,7 @@ class FeedbackEntity(
     val email: String?,
     @Column(name = "ip_hash", updatable = false, nullable = false, length = 64)
     val ipHash: String,
+    checked: Boolean = false,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +31,7 @@ class FeedbackEntity(
     val id: Long? = null
 
     @Column(name = "checked", nullable = false)
-    var checked: Boolean = false
+    var checked: Boolean = checked
         protected set
 
     fun check() {
