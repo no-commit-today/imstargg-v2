@@ -24,8 +24,8 @@ class FeedbackController(
         val ip = clientIpResolver.resolve(httpRequest)
         val feedback =
             feedbackService.submit(
-                category = requireNotNull(request.category),
-                content = requireNotNull(request.content),
+                category = request.category,
+                content = request.content,
                 email = request.email,
                 ip = ip,
             )

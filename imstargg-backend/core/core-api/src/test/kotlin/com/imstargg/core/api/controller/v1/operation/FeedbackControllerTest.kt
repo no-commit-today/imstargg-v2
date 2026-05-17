@@ -79,4 +79,35 @@ class FeedbackControllerTest
                     status { isBadRequest() }
                 }
         }
+
+        @Test
+        fun `content가 2000자를 초과하면 400을 반환한다`() {
+            // given
+            val longContent = "a".repeat(2001)
+            val body = """{"category":"BUG","content":"$longContent"}"""
+
+            // when & then
+            mockMvc
+                .post("/v1/feedback") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = body
+                }.andExpect {
+                    status { isBadRequest() }
+                }
+        }
+
+        @Test
+        fun `category가 없으면 400을 반환한다`() {
+            // given
+            val body = """{"content":"내용"}"""
+
+            // when & then
+            mockMvc
+                .post("/v1/feedback") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = body
+                }.andExpect {
+                    status { isBadRequest() }
+                }
+        }
     }
