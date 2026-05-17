@@ -93,3 +93,30 @@ export interface Maintenance {
   endTime: string;
   createdAt: string | null;
 }
+
+export type FeedbackCategory = "BUG" | "FEATURE_REQUEST" | "ETC";
+
+export interface FeedbackItem {
+  id: number;
+  category: FeedbackCategory;
+  content: string;
+  email: string | null;
+  ipHash: string;
+  checked: boolean;
+  createdAt: string;
+}
+
+export interface FeedbackListResponse {
+  content: FeedbackItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface FeedbackSearchParams {
+  category?: FeedbackCategory;
+  checked?: boolean;
+  page?: number;
+  size?: number;
+}
