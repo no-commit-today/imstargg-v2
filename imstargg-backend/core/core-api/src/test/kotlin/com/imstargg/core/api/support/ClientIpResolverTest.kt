@@ -35,4 +35,18 @@ class ClientIpResolverTest {
         // then
         assertThat(ip).isEqualTo("9.9.9.9")
     }
+
+    @Test
+    fun `X-Forwarded-For 첫 토큰이 비어있으면 RemoteAddr를 반환한다`() {
+        // given
+        val request = mockk<HttpServletRequest>()
+        every { request.getHeader("X-Forwarded-For") } returns ", 10.0.0.1"
+        every { request.remoteAddr } returns "9.9.9.9"
+
+        // when
+        val ip = sut.resolve(request)
+
+        // then
+        assertThat(ip).isEqualTo("9.9.9.9")
+    }
 }

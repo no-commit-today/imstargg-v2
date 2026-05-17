@@ -8,7 +8,10 @@ class ClientIpResolver {
     fun resolve(request: HttpServletRequest): String {
         val forwarded = request.getHeader(HEADER_FORWARDED_FOR)
         if (!forwarded.isNullOrBlank()) {
-            return forwarded.substringBefore(',').trim()
+            val firstIp = forwarded.substringBefore(',').trim()
+            if (firstIp.isNotEmpty()) {
+                return firstIp
+            }
         }
         return request.remoteAddr
     }
