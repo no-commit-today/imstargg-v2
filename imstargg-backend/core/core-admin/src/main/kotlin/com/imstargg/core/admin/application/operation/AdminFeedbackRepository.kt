@@ -2,6 +2,7 @@ package com.imstargg.core.admin.application.operation
 
 import com.imstargg.core.enums.operation.FeedbackCategory
 import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
+import com.imstargg.infrastructure.db.core.operation.FeedbackJpaRepository
 import com.imstargg.infrastructure.db.core.operation.QFeedbackEntity.Companion.feedbackEntity
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class AdminFeedbackRepository(
     entityManager: EntityManager,
+    private val jpaRepository: FeedbackJpaRepository,
 ) {
     private val queryFactory = JPAQueryFactory(entityManager)
 
@@ -48,9 +50,5 @@ class AdminFeedbackRepository(
         return PageImpl(content, pageable, total)
     }
 
-    fun findById(id: Long): FeedbackEntity? =
-        queryFactory
-            .selectFrom(feedbackEntity)
-            .where(feedbackEntity.id.eq(id))
-            .fetchOne()
+    fun findById(id: Long): FeedbackEntity? = jpaRepository.findById(id).orElse(null)
 }
