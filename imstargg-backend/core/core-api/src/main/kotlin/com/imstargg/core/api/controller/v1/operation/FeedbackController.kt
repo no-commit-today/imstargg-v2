@@ -1,0 +1,34 @@
+package com.imstargg.core.api.controller.v1.operation
+
+import com.imstargg.core.api.controller.v1.response.operation.FeedbackCreateResponse
+import com.imstargg.core.api.support.ClientIpResolver
+import com.imstargg.core.application.operation.FeedbackService
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RestController
+
+@RestController
+class FeedbackController(
+    private val feedbackService: FeedbackService,
+    private val clientIpResolver: ClientIpResolver,
+) {
+    @PostMapping("/v1/feedback")
+    fun create(
+        @Valid @RequestBody request: FeedbackCreateRequest,
+        httpRequest: HttpServletRequest,
+    ): ResponseEntity<FeedbackCreateResponse> {
+        val ip = clientIpResolver.resolve(httpRequest)
+        val feedback =
+            feedbackService.submit(
+                category = requireNotNull(request.category),
+                content = requireNotNull(request.content),
+                email = request.email,
+                ip = ip,
+            )
+        return ResponseEntity.status(HttpStatus.CREATED).body(FeedbackCreateResponse.from(feedback))
+    }
+}
