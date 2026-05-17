@@ -24,11 +24,6 @@ storage:
     core:
       minimum-idle: 10
       maximum-pool-size: 10
-
-app:
-  operation:
-    feedback:
-      ip-salt: ${APP_OPERATION_FEEDBACK_IP_SALT:local-dev-salt-change-me}
 ---
 spring:
   config.activate.on-profile: local

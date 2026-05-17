@@ -38,6 +38,3 @@ app:
         club-queue-name: test-club-renewal
     cloudfront:
       baseUrl: http://localhost:4566/imstargg-images-local
-  operation:
-    feedback:
-      ip-salt: test-salt

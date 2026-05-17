@@ -36,7 +36,6 @@ class FeedbackControllerTest
                 .post("/v1/feedback") {
                     contentType = MediaType.APPLICATION_JSON
                     content = body
-                    header("X-Forwarded-For", "1.2.3.4")
                 }.andExpect {
                     status { isCreated() }
                     jsonPath("$.id") { exists() }
@@ -47,7 +46,6 @@ class FeedbackControllerTest
             assertThat(saved[0].category).isEqualTo(FeedbackCategory.BUG)
             assertThat(saved[0].content).isEqualTo("버그가 발생했어요")
             assertThat(saved[0].email).isEqualTo("user@example.com")
-            assertThat(saved[0].ipHash).hasSize(64)
         }
 
         @Test

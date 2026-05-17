@@ -13,7 +13,6 @@ class FeedbackEntityTest {
                 category = FeedbackCategory.BUG,
                 content = "버그 발생",
                 email = null,
-                ipHash = "abc",
             )
 
         // when
@@ -31,7 +30,6 @@ class FeedbackEntityTest {
                 category = FeedbackCategory.BUG,
                 content = "버그 발생",
                 email = null,
-                ipHash = "abc",
             )
         sut.check()
 

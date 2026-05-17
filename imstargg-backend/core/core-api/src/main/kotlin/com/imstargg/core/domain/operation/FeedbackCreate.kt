@@ -6,5 +6,4 @@ data class FeedbackCreate(
     val category: FeedbackCategory,
     val content: String,
     val email: String?,
-    val ipHash: String,
 )

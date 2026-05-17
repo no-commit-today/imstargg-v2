@@ -7,6 +7,5 @@ data class Feedback(
     val category: FeedbackCategory,
     val content: String,
     val email: String?,
-    val ipHash: String,
     val checked: Boolean,
 )

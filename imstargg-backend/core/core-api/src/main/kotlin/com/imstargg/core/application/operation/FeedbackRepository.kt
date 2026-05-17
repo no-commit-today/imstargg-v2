@@ -19,7 +19,6 @@ class FeedbackRepository(
                 category = command.category,
                 content = command.content,
                 email = command.email,
-                ipHash = command.ipHash,
             )
         val saved = jpaRepository.save(entity)
         return saved.toDomain()
@@ -31,7 +30,6 @@ class FeedbackRepository(
             category = category,
             content = content,
             email = email,
-            ipHash = ipHash,
             checked = checked,
         )
 }

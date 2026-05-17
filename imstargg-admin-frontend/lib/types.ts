@@ -101,7 +101,6 @@ export interface FeedbackItem {
   category: FeedbackCategory;
   content: string;
   email: string | null;
-  ipHash: string;
   checked: boolean;
   createdAt: string;
 }

@@ -21,8 +21,6 @@ class FeedbackEntity(
     val content: String,
     @Column(name = "email", updatable = false, length = 254)
     val email: String?,
-    @Column(name = "ip_hash", updatable = false, nullable = false, length = 64)
-    val ipHash: String,
     checked: Boolean = false,
 ) : BaseTimeEntity() {
     @Id

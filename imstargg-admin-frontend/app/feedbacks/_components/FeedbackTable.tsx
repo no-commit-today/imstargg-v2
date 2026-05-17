@@ -13,28 +13,6 @@ import type { FeedbackItem, FeedbackListResponse } from "@/lib/types";
 import { FeedbackCheckToggle } from "./FeedbackCheckToggle";
 import { FeedbackContentCell } from "./FeedbackContentCell";
 
-const GROUP_COLORS = [
-  "bg-amber-50",
-  "bg-rose-50",
-  "bg-sky-50",
-  "bg-emerald-50",
-  "bg-violet-50",
-];
-
-function groupColorsByIpHash(items: FeedbackItem[]): Map<string, string> {
-  const counts = new Map<string, number>();
-  items.forEach((it) => counts.set(it.ipHash, (counts.get(it.ipHash) ?? 0) + 1));
-  const result = new Map<string, string>();
-  let idx = 0;
-  counts.forEach((count, hash) => {
-    if (count > 1) {
-      result.set(hash, GROUP_COLORS[idx % GROUP_COLORS.length]);
-      idx++;
-    }
-  });
-  return result;
-}
-
 const CATEGORY_BADGE_CLASS: Record<FeedbackItem["category"], string> = {
   BUG: "bg-red-100 text-red-800 border-transparent",
   FEATURE_REQUEST: "bg-blue-100 text-blue-800 border-transparent",
@@ -52,8 +30,6 @@ interface Props {
 }
 
 export function FeedbackTable({ data }: Props) {
-  const groupBg = groupColorsByIpHash(data.content);
-
   return (
     <Table>
       <TableHeader>
@@ -63,12 +39,11 @@ export function FeedbackTable({ data }: Props) {
           <TableHead className="w-36">작성일시</TableHead>
           <TableHead>내용</TableHead>
           <TableHead className="w-48">이메일</TableHead>
-          <TableHead className="w-32">ipHash</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.content.map((row) => (
-          <TableRow key={row.id} className={groupBg.get(row.ipHash) ?? ""}>
+          <TableRow key={row.id}>
             <TableCell>
               <FeedbackCheckToggle id={row.id} initialChecked={row.checked} />
             </TableCell>
@@ -90,7 +65,6 @@ export function FeedbackTable({ data }: Props) {
                 "-"
               )}
             </TableCell>
-            <TableCell title={row.ipHash}>{row.ipHash.slice(0, 8)}</TableCell>
           </TableRow>
         ))}
       </TableBody>

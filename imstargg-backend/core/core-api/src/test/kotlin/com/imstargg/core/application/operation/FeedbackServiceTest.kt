@@ -10,14 +10,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class FeedbackServiceTest {
-    private val ipHasher = IpHasher(IpHasherProperties(ipSalt = "salt"))
     private val repository = mockk<FeedbackRepository>()
-    private val sut = FeedbackService(ipHasher, repository)
+    private val sut = FeedbackService(repository)
 
     @Test
-    fun `IP를 해시한 뒤 저장한다`() {
+    fun `요청한 값을 그대로 저장한다`() {
         // given
-        val expectedHash = ipHasher.hash("1.2.3.4")
         every { repository.save(any()) } answers {
             val cmd = firstArg<FeedbackCreate>()
             Feedback(
@@ -25,7 +23,6 @@ class FeedbackServiceTest {
                 category = cmd.category,
                 content = cmd.content,
                 email = cmd.email,
-                ipHash = cmd.ipHash,
                 checked = false,
             )
         }
@@ -36,19 +33,16 @@ class FeedbackServiceTest {
                 category = FeedbackCategory.BUG,
                 content = "버그",
                 email = "a@b.com",
-                ip = "1.2.3.4",
             )
 
         // then
         assertThat(result.id).isEqualTo(1L)
-        assertThat(result.ipHash).isEqualTo(expectedHash)
         verify {
             repository.save(
                 FeedbackCreate(
                     category = FeedbackCategory.BUG,
                     content = "버그",
                     email = "a@b.com",
-                    ipHash = expectedHash,
                 ),
             )
         }
@@ -64,7 +58,6 @@ class FeedbackServiceTest {
                 category = cmd.category,
                 content = cmd.content,
                 email = cmd.email,
-                ipHash = cmd.ipHash,
                 checked = false,
             )
         }
@@ -74,7 +67,6 @@ class FeedbackServiceTest {
             category = FeedbackCategory.BUG,
             content = "  버그 내용  ",
             email = null,
-            ip = "1.2.3.4",
         )
 
         // then
@@ -90,7 +82,7 @@ class FeedbackServiceTest {
         // given
         every { repository.save(any()) } answers {
             val cmd = firstArg<FeedbackCreate>()
-            Feedback(id = 1L, category = cmd.category, content = cmd.content, email = cmd.email, ipHash = cmd.ipHash, checked = false)
+            Feedback(id = 1L, category = cmd.category, content = cmd.content, email = cmd.email, checked = false)
         }
 
         // when
@@ -98,7 +90,6 @@ class FeedbackServiceTest {
             category = FeedbackCategory.BUG,
             content = "버그",
             email = "  ",
-            ip = "1.2.3.4",
         )
 
         // then

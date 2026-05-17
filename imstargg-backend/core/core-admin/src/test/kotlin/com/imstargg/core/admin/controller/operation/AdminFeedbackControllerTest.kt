@@ -36,7 +36,6 @@ class AdminFeedbackControllerTest
                     category = FeedbackCategory.BUG,
                     content = "버그 리포트",
                     email = null,
-                    ipHash = "a".repeat(64),
                 ),
             )
             feedbackJpaRepository.save(
@@ -44,7 +43,6 @@ class AdminFeedbackControllerTest
                     category = FeedbackCategory.FEATURE_REQUEST,
                     content = "기능 요청",
                     email = null,
-                    ipHash = "b".repeat(64),
                 ),
             )
 
@@ -68,7 +66,6 @@ class AdminFeedbackControllerTest
                         category = FeedbackCategory.BUG,
                         content = "체크 테스트",
                         email = null,
-                        ipHash = "c".repeat(64),
                         checked = false,
                     ),
                 )

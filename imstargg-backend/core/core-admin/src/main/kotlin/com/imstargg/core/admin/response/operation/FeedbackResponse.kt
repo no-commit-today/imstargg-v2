@@ -9,7 +9,6 @@ data class FeedbackResponse(
     val category: FeedbackCategory,
     val content: String,
     val email: String?,
-    val ipHash: String,
     val checked: Boolean,
     val createdAt: Instant,
 ) {
@@ -20,7 +19,6 @@ data class FeedbackResponse(
                 category = entity.category,
                 content = entity.content,
                 email = entity.email,
-                ipHash = entity.ipHash,
                 checked = entity.checked,
                 createdAt = requireNotNull(entity.createdAt),
             )
