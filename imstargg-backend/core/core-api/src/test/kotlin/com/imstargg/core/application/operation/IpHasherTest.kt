@@ -1,6 +1,7 @@
 package com.imstargg.core.application.operation
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.Test
 
 class IpHasherTest {
@@ -47,5 +48,17 @@ class IpHasherTest {
 
         // then
         assertThat(a).isNotEqualTo(b)
+    }
+
+    @Test
+    fun `salt가 공백이면 초기화에 실패한다`() {
+        // when
+        val ex =
+            catchThrowableOfType(IllegalArgumentException::class.java) {
+                IpHasher(IpHasherProperties(ipSalt = "  "))
+            }
+
+        // then
+        assertThat(ex).isNotNull()
     }
 }
