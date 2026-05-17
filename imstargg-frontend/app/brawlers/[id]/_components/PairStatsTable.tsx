@@ -14,13 +14,26 @@ type Props = {
   order: SortOrder;
 };
 
+function pairRail(winRate: number): "win" | "neutral" | "loss" {
+  if (winRate >= 0.55) return "win";
+  if (winRate >= 0.5)  return "neutral";
+  return "loss";
+}
+
+function pairTone(winRate: number): "win" | "neutral" | "loss" {
+  return pairRail(winRate);
+}
+
 export function PairStatsTable({ items, sort, order }: Props) {
   return (
-    <div className="rounded-lg border border-[#D8DCE5] bg-white">
-      <div className="border-b border-[#D8DCE5] bg-[#F6F7FA] px-3 py-2">
-        <h3 className="text-sm font-bold">조합</h3>
+    <div className="data-table">
+      <div className="data-table-toolbar">
+        <h3 className="text-sm font-bold flex items-center gap-2">
+          <span aria-hidden>🤝</span> 조합
+        </h3>
+        <span className="text-[11px] text-[#5C6271]">함께 픽됐을 때의 승률</span>
       </div>
-      <div className="grid grid-cols-[28px_minmax(0,1fr)_44px_44px_56px] items-center gap-1 border-b border-[#D8DCE5] px-2 py-2 text-[10px] font-bold tracking-wider text-[#5C6271] sm:grid-cols-[48px_minmax(0,1fr)_72px_72px_96px] sm:gap-2 sm:px-3 sm:text-[11px]">
+      <div className="data-table-head grid grid-cols-[28px_minmax(0,1fr)_44px_56px_56px] items-center gap-1 sm:grid-cols-[48px_minmax(0,1fr)_72px_88px_96px] sm:gap-2">
         <span>순위</span>
         <span>조합 브롤러</span>
         <SortableHeader column="PICK_RATE" label="픽률" currentSort={sort} currentOrder={order} paramPrefix="pair" />
@@ -35,7 +48,8 @@ export function PairStatsTable({ items, sort, order }: Props) {
             <Link
               key={`${it.pairBrawler.id}-${i}`}
               href={`/brawlers/${it.pairBrawler.id}`}
-              className="grid grid-cols-[28px_minmax(0,1fr)_44px_44px_56px] items-center gap-1 border-b border-[#ECEEF3] px-2 py-2 text-[11px] hover:bg-[#F6F7FA] sm:grid-cols-[48px_minmax(0,1fr)_72px_72px_96px] sm:gap-2 sm:px-3 sm:text-sm"
+              data-rail={pairRail(it.winRate)}
+              className="data-row grid grid-cols-[28px_minmax(0,1fr)_44px_56px_56px] items-center gap-1 text-[13px] sm:grid-cols-[48px_minmax(0,1fr)_72px_88px_96px] sm:gap-2 sm:text-sm"
             >
               <span className="font-bold text-[#5C6271] tabular-nums">{i + 1}</span>
               <div className="flex min-w-0 items-center gap-1 overflow-hidden sm:gap-2">
@@ -43,13 +57,13 @@ export function PairStatsTable({ items, sort, order }: Props) {
                   name={it.pairBrawler.name}
                   imageUrl={it.pairBrawler.portraitImageUrl}
                   rarity={it.pairBrawler.rarity}
-                  size={28}
+                  size={32}
                   className="shrink-0"
                 />
                 <span className="truncate font-bold">{it.pairBrawler.name}</span>
               </div>
               <PercentCell value={it.pickRate} />
-              <PercentCell value={it.winRate} />
+              <PercentCell value={it.winRate} gauge gaugeTone={pairTone(it.winRate)} />
               <CountCell value={it.totalBattleCount} />
             </Link>
           ) : null,
