@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import TopNav from "@/components/layout/TopNav";
 import SiteFooter from "@/components/layout/site-footer";
+import { FeedbackDialogMount } from "@/components/layout/FeedbackDialogMount";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { env } from "@/config/env";
@@ -32,6 +33,7 @@ export default function RootLayout({
             {children}
             <SiteFooter />
             <Toaster richColors position="top-center" />
+            <FeedbackDialogMount />
           </div>
         </QueryProvider>
       </body>
