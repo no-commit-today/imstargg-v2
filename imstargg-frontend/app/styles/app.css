@@ -555,3 +555,14 @@ img { display: block; max-width: 100%; }
   .data-row:hover { transform: none; }
   .win-gauge-fill { transition: none; }
 }
+
+/* ===== Tier badge hover ===== */
+.tier-badge {
+  transition: transform var(--dur-base) var(--ease-pop);
+  transform-origin: center;
+}
+.tier-badge:hover { transform: rotate(-4deg) scale(1.08); }
+@media (prefers-reduced-motion: reduce) {
+  .tier-badge { transition: none; }
+  .tier-badge:hover { transform: none; }
+}
