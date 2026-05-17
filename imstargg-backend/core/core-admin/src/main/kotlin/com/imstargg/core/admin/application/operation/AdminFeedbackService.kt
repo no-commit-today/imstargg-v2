@@ -4,8 +4,10 @@ import com.imstargg.core.enums.operation.FeedbackCategory
 import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 class AdminFeedbackService(
@@ -26,7 +28,7 @@ class AdminFeedbackService(
     ) {
         val entity =
             repository.findById(id)
-                ?: throw IllegalArgumentException("Feedback not found: id=$id")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found: id=$id")
         if (checked) entity.check() else entity.uncheck()
     }
 }
