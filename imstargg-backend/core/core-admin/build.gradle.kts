@@ -11,4 +11,5 @@ dependencies {
     implementation(project(":infrastructure:aws-s3"))
 
     testImplementation(testFixtures(project(":infrastructure:db-core")))
+    testImplementation("org.springframework.boot:spring-boot-webmvc-test")
 }
