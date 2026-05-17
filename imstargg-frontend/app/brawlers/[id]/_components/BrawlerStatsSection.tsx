@@ -61,8 +61,8 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
     <section className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold">통계</h2>
-          <p className="text-xs text-[#5C6271]">
+          <h2 className="section-title">통계</h2>
+          <p className="ml-[14px] text-xs text-[#5C6271]">
             {TIER_RANGE_LABELS[tier]} 기준
           </p>
         </div>
