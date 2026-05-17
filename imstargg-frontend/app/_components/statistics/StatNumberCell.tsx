@@ -25,7 +25,7 @@ export function PercentCell({ value, fractionDigits = 1, gauge, gaugeTone = "win
   return (
     <span className="win-gauge">
       {text}
-      <span className="win-gauge-track" aria-hidden>
+      <span className="win-gauge-track hidden sm:inline-block" aria-hidden>
         <span
           className="win-gauge-fill"
           data-tone={gaugeTone === "win" ? undefined : gaugeTone}

@@ -20,6 +20,11 @@ const RARITY_BG: Record<BrawlerRarity, string> = {
 export function BrawlerHero({ brawler }: { brawler: Brawler }) {
   const meta = ROLE_META[brawler.role];
   const rarityColor = RARITY_BG[brawler.rarity] ?? "#B4B9C7";
+  const isLightGradient = brawler.role === "ARTILLERY" || brawler.role === "SUPPORT";
+  const nameTextColor = isLightGradient ? "text-[#14161B]" : "text-white";
+  const nameFilter = isLightGradient
+    ? "drop-shadow(0 2px 0 rgba(255,255,255,0.7))"
+    : "drop-shadow(0 4px 8px rgba(0,0,0,0.45)) drop-shadow(0 2px 0 rgba(0,0,0,0.45))";
 
   return (
     <section
@@ -47,7 +52,10 @@ export function BrawlerHero({ brawler }: { brawler: Brawler }) {
           />
         </div>
         <div className="flex-1 text-center sm:text-left">
-          <h1 className="font-display text-4xl leading-tight tracking-[-0.01em] text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] drop-shadow-[0_2px_0_rgba(0,0,0,0.45)] sm:text-6xl">
+          <h1
+            className={`font-display text-4xl leading-tight tracking-[-0.01em] ${nameTextColor} sm:text-6xl`}
+            style={{ filter: nameFilter }}
+          >
             {brawler.name}
           </h1>
           <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
