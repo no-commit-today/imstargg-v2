@@ -1,12 +1,13 @@
 "use client";
 
+import type { BrawlerRarity } from "@/api/types";
 import type { Brawler } from "@/domain/brawler/types";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import ClassIcon from "@/components/primitives/ClassIcon";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
 import { ROLE_META } from "@/domain/brawler/roleMeta";
 
-const RARITY_BG: Record<string, string> = {
+const RARITY_BG: Record<BrawlerRarity, string> = {
   STARTING_BRAWLER: "#B4B9C7",
   RARE: "#2BD576",
   SUPER_RARE: "#3DE0FF",
@@ -46,7 +47,7 @@ export function BrawlerHero({ brawler }: { brawler: Brawler }) {
           />
         </div>
         <div className="flex-1 text-center sm:text-left">
-          <h1 className="font-display text-4xl leading-tight tracking-[-0.01em] text-white drop-shadow-[0_2px_0_rgba(0,0,0,0.45)] sm:text-6xl">
+          <h1 className="font-display text-4xl leading-tight tracking-[-0.01em] text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] drop-shadow-[0_2px_0_rgba(0,0,0,0.45)] sm:text-6xl">
             {brawler.name}
           </h1>
           <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
