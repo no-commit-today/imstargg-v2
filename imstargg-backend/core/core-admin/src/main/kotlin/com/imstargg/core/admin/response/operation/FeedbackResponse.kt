@@ -14,7 +14,7 @@ data class FeedbackResponse(
     val createdAt: Instant,
 ) {
     companion object {
-        fun from(entity: FeedbackEntity): FeedbackResponse =
+        fun of(entity: FeedbackEntity): FeedbackResponse =
             FeedbackResponse(
                 id = requireNotNull(entity.id),
                 category = entity.category,

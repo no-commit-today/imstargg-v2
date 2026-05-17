@@ -8,5 +8,7 @@ data class FeedbackSearchRequest(
     val page: Int = 0,
     val size: Int = 20,
 ) {
+    fun normalizedPage(): Int = page.coerceAtLeast(0)
+
     fun normalizedSize(): Int = size.coerceIn(1, 100)
 }

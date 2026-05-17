@@ -24,10 +24,10 @@ class AdminFeedbackController(
             service.search(
                 category = request.category,
                 checked = request.checked,
-                page = request.page,
+                page = request.normalizedPage(),
                 size = request.normalizedSize(),
             )
-        return ResponseEntity.ok(FeedbackListResponse.from(page))
+        return ResponseEntity.ok(FeedbackListResponse.of(page))
     }
 
     @PutMapping("/feedbacks/{id}/check")

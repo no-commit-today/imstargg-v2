@@ -29,6 +29,6 @@ class FeedbackController(
                 email = request.email,
                 ip = ip,
             )
-        return ResponseEntity.status(HttpStatus.CREATED).body(FeedbackCreateResponse.from(feedback))
+        return ResponseEntity.status(HttpStatus.CREATED).body(FeedbackCreateResponse.of(feedback))
     }
 }

@@ -6,6 +6,6 @@ data class FeedbackCreateResponse(
     val id: Long,
 ) {
     companion object {
-        fun from(feedback: Feedback): FeedbackCreateResponse = FeedbackCreateResponse(id = feedback.id)
+        fun of(feedback: Feedback): FeedbackCreateResponse = FeedbackCreateResponse(id = feedback.id)
     }
 }

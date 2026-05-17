@@ -11,9 +11,9 @@ data class FeedbackListResponse(
     val totalPages: Int,
 ) {
     companion object {
-        fun from(page: Page<FeedbackEntity>): FeedbackListResponse =
+        fun of(page: Page<FeedbackEntity>): FeedbackListResponse =
             FeedbackListResponse(
-                content = page.content.map(FeedbackResponse::from),
+                content = page.content.map(FeedbackResponse::of),
                 page = page.number,
                 size = page.size,
                 totalElements = page.totalElements,
