@@ -47,6 +47,10 @@ spring:
 app:
   alert:
     type: NO_OPS
+  schedule:
+    feedback-digest:
+      enabled: ${APP_SCHEDULE_FEEDBACK_DIGEST_ENABLED:false}
+      cron: ${APP_SCHEDULE_FEEDBACK_DIGEST_CRON:0 0 21 * * *}
 
 ---
 spring:
