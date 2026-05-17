@@ -777,3 +777,19 @@ create table if not exists player_brawler_stats_item
 );
 create unique index if not exists uk_player_brawler_stats_item
     on player_brawler_stats_item (player_brawler_stats_id, brawler_brawlstars_id);
+
+-- feedback table
+create table if not exists feedback
+(
+    id         bigserial    primary key,
+    category   varchar(32)  not null,
+    content    text         not null,
+    email      varchar(254),
+    ip_hash    varchar(64)  not null,
+    checked    boolean      not null default false,
+    created_at timestamp    not null,
+    updated_at timestamp    not null
+);
+create index if not exists idx_feedback_created_at on feedback (created_at desc);
+create index if not exists idx_feedback_checked    on feedback (checked);
+create index if not exists idx_feedback_ip_hash    on feedback (ip_hash);
