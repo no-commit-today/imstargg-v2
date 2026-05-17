@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { FeedbackFooterLink } from "@/components/layout/FeedbackFooterLink";
 
 export default function SiteFooter() {
   return (
@@ -17,6 +18,9 @@ export default function SiteFooter() {
         </div>
         <div className="text-neutral-500 text-xs">
           <p>이메일: {siteConfig.email}</p>
+          <p className="mt-1">
+            <FeedbackFooterLink />
+          </p>
         </div>
         <div className="text-neutral-500 text-xs space-y-1">
           <p>ImStarGG는 Supercell과 무관한 비공식 팬 사이트입니다.</p>

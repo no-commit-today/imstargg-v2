@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { FormEvent } from "react";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, MessageSquare, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Sheet,
@@ -18,6 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { formatMinutesAgo } from "@/lib/format";
+import { useFeedbackDialog } from "@/hooks/use-feedback-dialog";
 
 const RECENT_KEY = "imstargg.recentSearches";
 const RECENT_MAX = 8;
@@ -299,6 +300,8 @@ export default function TopNav() {
     setDrawerOpen(false);
   };
 
+  const { setOpen: setFeedbackOpen } = useFeedbackDialog();
+
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
 
@@ -326,6 +329,16 @@ export default function TopNav() {
           ))}
         </div>
         <div className="topnav-spacer" />
+
+        <button
+          type="button"
+          onClick={() => setFeedbackOpen(true)}
+          className="topnav-link"
+          aria-label="의견 보내기"
+        >
+          <MessageSquare className="h-4 w-4" aria-hidden="true" />
+          <span className="hidden sm:inline">피드백</span>
+        </button>
 
         <TopNavSearch
           ref={desktopSearchRef}
@@ -392,6 +405,16 @@ export default function TopNav() {
                   {item.label}
                 </button>
               ))}
+              <button
+                type="button"
+                aria-label="의견 보내기"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  setFeedbackOpen(true);
+                }}
+              >
+                피드백
+              </button>
             </div>
           </SheetContent>
         </Sheet>
