@@ -787,8 +787,8 @@ create table if not exists feedback
     email      varchar(254),
     ip_hash    varchar(64)  not null,
     checked    boolean      not null default false,
-    created_at timestamp    not null,
-    updated_at timestamp    not null
+    created_at timestamptz  not null default now(),
+    updated_at timestamptz  not null default now()
 );
 create index if not exists idx_feedback_created_at on feedback (created_at desc);
 create index if not exists idx_feedback_checked    on feedback (checked);
