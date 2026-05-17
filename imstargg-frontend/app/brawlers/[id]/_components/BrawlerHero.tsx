@@ -3,28 +3,71 @@
 import type { Brawler } from "@/domain/brawler/types";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import ClassIcon from "@/components/primitives/ClassIcon";
-import { Badge } from "@/components/ui/badge";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
+import { ROLE_META } from "@/domain/brawler/roleMeta";
+
+const RARITY_BG: Record<string, string> = {
+  STARTING_BRAWLER: "#B4B9C7",
+  RARE: "#2BD576",
+  SUPER_RARE: "#3DE0FF",
+  EPIC: "#9146FF",
+  MYTHIC: "#FF3A3A",
+  LEGENDARY: "#FFC60A",
+  ULTRA_LEGENDARY: "#FF8A1F",
+};
 
 export function BrawlerHero({ brawler }: { brawler: Brawler }) {
+  const meta = ROLE_META[brawler.role];
+  const rarityColor = RARITY_BG[brawler.rarity] ?? "#B4B9C7";
+
   return (
-    <section className="flex flex-col items-center gap-4 rounded-lg border bg-card p-6 sm:flex-row sm:gap-6">
-      <BrawlerAvatar
-        name={brawler.name}
-        imageUrl={brawler.portraitImageUrl}
-        rarity={brawler.rarity}
-        size={140}
-        showFrame
-        priority
+    <section
+      className="relative overflow-hidden rounded-[18px] border-2 border-[#14161B] bg-white"
+      style={{ boxShadow: "var(--shadow-sticker-lg)" }}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(135deg, ${meta.colorStart} 0%, ${meta.colorEnd} 100%)`,
+          clipPath: "polygon(0 0, 62% 0, 52% 100%, 0 100%)",
+        }}
+        aria-hidden
       />
-      <div className="flex-1 text-center sm:text-left">
-        <h1 className="font-display text-3xl tracking-[0.02em]">{brawler.name}</h1>
-        <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
-          <Badge variant="secondary" className="inline-flex items-center gap-1.5">
-            <ClassIcon role={brawler.role} size={16} />
-            {ROLE_LABEL_KO[brawler.role]}
-          </Badge>
-          <Badge variant="outline">{RARITY_LABEL_KO[brawler.rarity]}</Badge>
+      <div className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-7">
+        <div className="flex justify-center sm:justify-start">
+          <BrawlerAvatar
+            name={brawler.name}
+            imageUrl={brawler.portraitImageUrl}
+            rarity={brawler.rarity}
+            size={180}
+            showFrame
+            priority
+            className="border-[3px] border-[#14161B] shadow-[0_4px_0_0_rgba(0,0,0,0.4)]"
+          />
+        </div>
+        <div className="flex-1 text-center sm:text-left">
+          <h1 className="font-display text-4xl leading-tight tracking-[-0.01em] text-white drop-shadow-[0_2px_0_rgba(0,0,0,0.45)] sm:text-6xl">
+            {brawler.name}
+          </h1>
+          <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+            <span
+              className="pill dark inline-flex items-center gap-1.5"
+              style={{ boxShadow: "0 3px 0 0 rgba(0,0,0,0.35)" }}
+            >
+              <ClassIcon role={brawler.role} size={14} />
+              {ROLE_LABEL_KO[brawler.role]}
+            </span>
+            <span
+              className="pill inline-flex items-center"
+              style={{
+                background: rarityColor,
+                color: "#14161B",
+                boxShadow: "0 3px 0 0 rgba(0,0,0,0.35)",
+              }}
+            >
+              {RARITY_LABEL_KO[brawler.rarity]}
+            </span>
+          </div>
         </div>
       </div>
     </section>
