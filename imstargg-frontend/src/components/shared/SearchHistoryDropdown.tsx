@@ -127,21 +127,43 @@ function Section({
                   role="menuitem"
                   onClick={onSelect}
                   style={{
-                    flex: 1, display: "flex", alignItems: "center", gap: 8,
-                    padding: "6px 8px", borderRadius: 6, color: "#14161B",
-                    textDecoration: "none", fontSize: 13,
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 8px",
+                    borderRadius: 6,
+                    color: "#14161B",
+                    textDecoration: "none",
+                    fontSize: 13,
                   }}
                 >
                   <span
                     style={{
-                      fontSize: 10, fontWeight: 700, color: "#5C6271",
-                      textTransform: "uppercase", minWidth: 36,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: "#5C6271",
+                      textTransform: "uppercase",
+                      minWidth: 36,
                     }}
                   >
                     {e.kind === "player" ? "PLAYER" : "CLUB"}
                   </span>
-                  <span style={{ fontFamily: "var(--font-mono)" }}>{e.tag}</span>
-                  {e.name && <span style={{ color: "#5C6271" }}>· {e.name}</span>}
+                  <span style={{ fontWeight: 700 }}>{e.name}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", color: "#5C6271" }}>
+                    {e.tag}
+                  </span>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontFamily: "var(--font-num)",
+                      fontWeight: 700,
+                      color: "#14161B",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {e.trophies.toLocaleString()} 🏆
+                  </span>
                 </Link>
                 <button
                   type="button"
