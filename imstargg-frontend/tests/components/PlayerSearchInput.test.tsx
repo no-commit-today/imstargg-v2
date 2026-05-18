@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
-import { addRecent, getRecents } from "@/lib/searchHistory";
+import { addRecent } from "@/lib/searchHistory";
 import { toggleFavorite } from "@/lib/favorites";
 
 const pushMock = vi.fn();
@@ -27,7 +27,7 @@ describe("PlayerSearchInput", () => {
   });
 
   it("최근 검색이 있으면 포커스 시 드롭다운 노출", () => {
-    addRecent({ kind: "player", tag: "#ABC" });
+    addRecent({ kind: "player", tag: "#ABC", name: "야옹이", trophies: 50000 });
     render(<PlayerSearchInput />);
     fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
     expect(screen.getByRole("menu")).toBeInTheDocument();
@@ -35,24 +35,23 @@ describe("PlayerSearchInput", () => {
   });
 
   it("즐겨찾기가 있으면 즐겨찾기 섹션 노출", () => {
-    toggleFavorite({ kind: "player", tag: "#FAV" });
+    toggleFavorite({ kind: "player", tag: "#FAV", name: "즐찾이", trophies: 10000 });
     render(<PlayerSearchInput />);
     fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
     expect(screen.getByText("즐겨찾기")).toBeInTheDocument();
     expect(screen.getByText("#FAV")).toBeInTheDocument();
   });
 
-  it("폼 제출 성공 시 최근 검색에 추가됨", () => {
+  it("폼 제출 성공 시 라우터로 이동 (v2: 태그만으로 addRecent 미호출)", () => {
     render(<PlayerSearchInput />);
     const input = screen.getByLabelText("플레이어 태그 입력") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "#88J8Q9RPV" } });
     fireEvent.submit(input.closest("form")!);
     expect(pushMock).toHaveBeenCalledWith("/players/%2388J8Q9RPV");
-    expect(getRecents()[0].tag).toBe("#88J8Q9RPV");
   });
 
   it("드롭다운 항목 별표 클릭 시 즐겨찾기 토글", () => {
-    addRecent({ kind: "player", tag: "#X" });
+    addRecent({ kind: "player", tag: "#X", name: "엑스", trophies: 1000 });
     render(<PlayerSearchInput />);
     fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
     const starBtn = screen.getByLabelText("즐겨찾기에 추가");
@@ -61,7 +60,7 @@ describe("PlayerSearchInput", () => {
   });
 
   it("최근 항목 클릭 시 라우터 이동", () => {
-    addRecent({ kind: "player", tag: "#XYZ" });
+    addRecent({ kind: "player", tag: "#XYZ", name: "엑스와이지", trophies: 5000 });
     render(<PlayerSearchInput />);
     fireEvent.focus(screen.getByLabelText("플레이어 태그 입력"));
     const link = screen.getByRole("menuitem", { name: /XYZ/ });

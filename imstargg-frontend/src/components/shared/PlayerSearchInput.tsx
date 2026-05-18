@@ -13,7 +13,6 @@ import {
   clearRecents,
   getRecents,
   type SearchEntry,
-  type SearchEntryKind,
 } from "@/lib/searchHistory";
 import { getFavorites, isFavorite as readIsFavorite, toggleFavorite } from "@/lib/favorites";
 import { SearchHistoryDropdown } from "@/components/shared/SearchHistoryDropdown";
@@ -63,12 +62,11 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
       toast.error("올바른 플레이어 태그를 입력해 주세요. 예: #88J8Q9RPV");
       return;
     }
-    addRecent({ kind: "player", tag: trimmed });
     setOpen(false);
     router.push(routes.player(trimmed));
   }
 
-  function handleToggleFavorite(entry: { kind: SearchEntryKind; tag: string }) {
+  function handleToggleFavorite(entry: Omit<SearchEntry, "addedAt">) {
     toggleFavorite(entry);
     refresh();
   }
@@ -92,7 +90,7 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
     } else if (e.key === "Enter" && activeIndex >= 0) {
       e.preventDefault();
       const entry = flatEntries[activeIndex];
-      addRecent({ kind: entry.kind, tag: entry.tag });
+      addRecent({ kind: entry.kind, tag: entry.tag, name: entry.name, trophies: entry.trophies });
       setOpen(false);
       router.push(entry.kind === "player" ? routes.player(entry.tag) : routes.club(entry.tag));
     }

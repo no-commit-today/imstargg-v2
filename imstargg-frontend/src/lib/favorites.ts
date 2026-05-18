@@ -1,7 +1,7 @@
 import { normalizeTag } from "@/lib/tag";
 import type { SearchEntry, SearchEntryKind } from "@/lib/searchHistory";
 
-const FAVORITES_KEY = "imstargg.search.favorites";
+const FAVORITES_KEY = "imstargg.search.favorites.v2";
 export const FAVORITES_LIMIT = 50;
 
 function isBrowser(): boolean {
@@ -14,9 +14,19 @@ function readArray(): SearchEntry[] {
   if (raw == null) return [];
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as SearchEntry[];
-    window.localStorage.removeItem(FAVORITES_KEY);
-    return [];
+    if (!Array.isArray(parsed)) {
+      window.localStorage.removeItem(FAVORITES_KEY);
+      return [];
+    }
+    return parsed.filter(
+      (e): e is SearchEntry =>
+        e != null &&
+        (e.kind === "player" || e.kind === "club") &&
+        typeof e.tag === "string" &&
+        typeof e.name === "string" &&
+        typeof e.trophies === "number" &&
+        typeof e.addedAt === "number",
+    );
   } catch {
     window.localStorage.removeItem(FAVORITES_KEY);
     return [];

@@ -9,7 +9,7 @@ interface Props {
   favorites: SearchEntry[];
   activeIndex: number; // -1 = nothing active. 0..favorites.length-1 = fav, beyond = recents
   onSelect?: () => void;
-  onToggleFavorite: (entry: Pick<SearchEntry, "kind" | "tag">) => void;
+  onToggleFavorite: (entry: Omit<SearchEntry, "addedAt">) => void;
   onClearRecents: () => void;
   isFavorite: (kind: SearchEntryKind, tag: string) => boolean;
 }
@@ -91,7 +91,7 @@ function Section({
   entries: SearchEntry[];
   activeIndex: number;
   onSelect?: () => void;
-  onToggleFavorite: (entry: Pick<SearchEntry, "kind" | "tag">) => void;
+  onToggleFavorite: (entry: Omit<SearchEntry, "addedAt">) => void;
   isFavorite: (kind: SearchEntryKind, tag: string) => boolean;
   rightAction?: React.ReactNode;
 }) {
@@ -141,7 +141,7 @@ function Section({
                     {e.kind === "player" ? "PLAYER" : "CLUB"}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)" }}>{e.tag}</span>
-                  {e.label && <span style={{ color: "#5C6271" }}>· {e.label}</span>}
+                  {e.name && <span style={{ color: "#5C6271" }}>· {e.name}</span>}
                 </Link>
                 <button
                   type="button"
@@ -150,7 +150,7 @@ function Section({
                   onClick={(ev) => {
                     ev.preventDefault();
                     ev.stopPropagation();
-                    onToggleFavorite({ kind: e.kind, tag: e.tag });
+                    onToggleFavorite({ kind: e.kind, tag: e.tag, name: e.name, trophies: e.trophies });
                   }}
                   style={{
                     background: "none", border: "none",
