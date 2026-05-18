@@ -122,11 +122,11 @@ fun search(q: String, offset: Int, limit: Int): SearchPage<T> {
 ### 4.3 DB 마이그레이션 (Flyway)
 
 ```sql
--- V{next}__add_player_club_name_search_index.sql
-CREATE INDEX idx_player__lower_name
+-- V260518__add_player_club_name_search_index.sql
+CREATE INDEX IF NOT EXISTS ix_player__lower_name
   ON player (LOWER(name) varchar_pattern_ops);
 
-CREATE INDEX idx_club__lower_name
+CREATE INDEX IF NOT EXISTS ix_club__lower_name
   ON club (LOWER(name) varchar_pattern_ops);
 ```
 
