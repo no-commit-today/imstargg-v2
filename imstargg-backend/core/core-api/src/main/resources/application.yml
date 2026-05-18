@@ -3,10 +3,10 @@ spring:
   profiles:
     active: local
     group:
-      local:     [db, aws-sqs]
-      local-dev: [db, aws-sqs]
-      dev:       [db, aws-sqs]
-      prod:      [db, aws-sqs]
+      local:     [db, aws-sqs, redis]
+      local-dev: [db, aws-sqs, redis]
+      dev:       [db, aws-sqs, redis]
+      prod:      [db, aws-sqs, redis]
 
   config.import:
     - logging.yml
