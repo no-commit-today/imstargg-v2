@@ -56,7 +56,9 @@
 
 ### 4.1 API
 
-#### `GET /v1/players/search`
+> **경로 컨벤션**: `imstargg-backend/CLAUDE.md` 에 따라 ID 가 뒤따르지 않는 경로는 단수형. 따라서 `/v1/player/search`, `/v1/club/search`.
+
+#### `GET /v1/player/search`
 
 | 파라미터 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
@@ -67,19 +69,15 @@
 **응답** `PlayerSearchResponse`
 ```json
 {
-  "results": [
-    {
-      "tag": "#2U8CVLQQ9",
-      "name": "야옹이",
-      "trophies": 52000,
-      "club": { "tag": "#XYZ", "name": "Star Force" }   // null 가능
-    }
-  ],
+  "results": [ /* PlayerResponse 그대로 재사용 */ ],
   "hasNext": true
 }
 ```
 
-#### `GET /v1/clubs/search`
+- `results` 항목은 기존 `PlayerResponse` 를 그대로 사용 (단건 조회 API 와 동일 구조).
+- 검색 결과에 직접 사용하지 않는 필드(`victories3vs3` 등)도 포함되지만, 타입 일관성 이득이 더 큼.
+
+#### `GET /v1/club/search`
 
 | 파라미터 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
@@ -90,12 +88,13 @@
 **응답** `ClubSearchResponse`
 ```json
 {
-  "results": [
-    { "tag": "#XYZ", "name": "Star Force", "trophies": 1200000, "memberCount": 30 }
-  ],
+  "results": [ /* ClubResponse 그대로 재사용 (members 포함) */ ],
   "hasNext": true
 }
 ```
+
+- `results` 항목은 기존 `ClubResponse` 를 그대로 사용. 단건 조회와 동일 구조.
+- `members: List<ClubMemberResponse>` 가 포함되어 페이로드가 무겁다 — limit=20 × 멤버 30명 = 최대 600 객체. 위험 섹션 참조.
 
 ### 4.2 검색 로직
 
@@ -141,7 +140,7 @@ CREATE INDEX idx_club__lower_name
   - JPA `@Query(nativeQuery = true)` 또는 QueryDSL 둘 다 가능. 기존 패턴 따름.
 - `PlayerSearchService` / `ClubSearchService` 신설 (or 기존 PlayerService/ClubService 확장)
 - `PlayerController` / `ClubController` 에 `searchPlayers` / `searchClubs` 핸들러 추가
-- 응답 DTO: `PlayerSearchResponse`, `ClubSearchResponse`, `PlayerSearchItem`, `ClubSearchItem`
+- 응답 DTO: **신규는 `PlayerSearchResponse`, `ClubSearchResponse` 두 개만**. 항목은 기존 `PlayerResponse` / `ClubResponse` 그대로 재사용
 
 ### 4.5 검증 / 에러
 
@@ -335,7 +334,7 @@ type SearchEntry = {
 
 ```
 사용자 타이핑 → debounce(250ms)
-  → GET /v1/{players|clubs}/search?q=...&offset=0&limit=5
+  → GET /v1/{player|club}/search?q=...&offset=0&limit=5
   → 드롭다운 렌더 (키보드 네비 가능)
   → 항목 선택 → addRecent() → router.push(/{players|clubs}/{tag})
 ```
@@ -345,10 +344,12 @@ type SearchEntry = {
 ```
 Enter 누름 (선택 항목 없음)
   → router.push(/{players|clubs}/search?q=...)
-  → 결과 페이지에서 GET /v1/{players|clubs}/search?q=...&offset=0&limit=20
+  → 결과 페이지에서 GET /v1/{player|club}/search?q=...&offset=0&limit=20
   → 결과 항목 클릭 → addRecent() → 상세 페이지로
   → 또는 RenewalCard 사용 → POST renewal
 ```
+
+> Backend API 는 단수형(`/v1/player/search`), Frontend 라우트는 복수형(`/players/search`). 두 도메인의 컨벤션이 다르므로 의도적으로 구분.
 
 ### 갱신 카드
 
@@ -371,7 +372,7 @@ Enter 누름 (선택 항목 없음)
 | `ClubSearchService.kt` (또는 ClubService 확장) | 신규 |
 | `PlayerController.kt` | `/search` 엔드포인트 추가 |
 | `ClubController.kt` | `/search` 엔드포인트 추가 |
-| `PlayerSearchResponse.kt`, `ClubSearchResponse.kt` | 신규 DTO |
+| `PlayerSearchResponse.kt`, `ClubSearchResponse.kt` | 신규 DTO (results 항목은 기존 `PlayerResponse` / `ClubResponse` 재사용) |
 | 통합 테스트 | 신규 |
 
 ### Frontend
@@ -396,6 +397,7 @@ Enter 누름 (선택 항목 없음)
 ## 8. 위험 / 고려사항
 
 - **인덱스 효율**: `LOWER(name) varchar_pattern_ops` 인덱스는 prefix 매칭에 한정. 운영 EXPLAIN 으로 사용 확인 필요. row 수에 따라 성능 평가.
+- **`ClubResponse` 페이로드 부담**: 검색 결과에 `members: List<ClubMemberResponse>` 가 포함되어 limit=20 시 최대 600 멤버 객체 전송. N+1 회피 위해 ClubResponse 변환 시 멤버 fetch 가 단일 쿼리/배치 쿼리로 이루어지는지 반드시 확인. 운영 응답 사이즈/지연 모니터링 후 슬림 응답 분리 고려.
 - **트래픽 폭증**: 라이브 검색은 타이핑마다 API 호출. 디바운스 250ms + 최소 2자 정책으로 완화하지만, 필요 시 백엔드 캐시 또는 rate limit 검토.
 - **localStorage 마이그레이션**: v2 키 도입으로 기존 사용자는 검색 내역이 사라짐. 일회성 UX 저하지만 단순함을 우선.
 - **검색 정렬의 동률 처리**: 트로피 같은 플레이어가 다수일 때 결과 페이지 사이 일관성을 위해 `tag ASC` tie-break 필수.
