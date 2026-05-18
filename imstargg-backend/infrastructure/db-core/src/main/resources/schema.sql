@@ -791,5 +791,5 @@ create table if not exists feedback
     created_at timestamptz  not null default now(),
     updated_at timestamptz  not null default now()
 );
-create index if not exists idx_feedback_created_at on feedback (created_at desc);
-create index if not exists idx_feedback_checked    on feedback (checked);
+create index if not exists ix_feedback__createdat on feedback (created_at desc);
+create index if not exists ix_feedback__checked    on feedback (checked);
