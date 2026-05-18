@@ -49,8 +49,13 @@ class ClubRepository(
             )
         val hasNext = entities.size > offsetLimit.limit
         val pageEntities = entities.take(offsetLimit.limit)
-        val membersByClub = pageEntities.associateWith { clubMemberJpaRepository.findAllByClub(it) }
-        val content = pageEntities.map { toClub(it, membersByClub.getValue(it)) }
+        val membersByClubId =
+            if (pageEntities.isEmpty()) {
+                emptyMap()
+            } else {
+                clubMemberJpaRepository.findAllByClubIn(pageEntities).groupBy { it.club.id }
+            }
+        val content = pageEntities.map { toClub(it, membersByClubId[it.id] ?: emptyList()) }
         return Slice(content = content, hasNext = hasNext)
     }
 
