@@ -353,12 +353,6 @@ export interface SoloRankSeasonResponse {
   endAt: string;
 }
 
-// === Slice (offset/limit pagination) ===
-export interface SliceResponse<T> {
-  content: T[];
-  hasNext: boolean;
-}
-
 // === Battle ===
 export type BattleMode =
   | "KNOCKOUT" | "GEM_GRAB" | "HEIST" | "HOT_ZONE" | "SIEGE" | "BOUNTY"

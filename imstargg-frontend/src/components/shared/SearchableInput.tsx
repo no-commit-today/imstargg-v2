@@ -26,7 +26,6 @@ export interface SearchableInputResult {
 }
 
 interface Props {
-  kind: SearchEntryKind;
   placeholder: string;
   inputAriaLabel: string;
   buttonAriaLabel: string;
@@ -38,7 +37,6 @@ interface Props {
 }
 
 export function SearchableInput({
-  kind: _kind,
   placeholder,
   inputAriaLabel,
   buttonAriaLabel,

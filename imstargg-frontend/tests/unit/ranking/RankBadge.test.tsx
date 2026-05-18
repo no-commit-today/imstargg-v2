@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { RankBadge } from "@app/ranking/_components/RankBadge";
+import { RankBadge } from "@/components/ranking/RankBadge";
 
 describe("RankBadge", () => {
   it("rank를 숫자로 표시한다", () => {

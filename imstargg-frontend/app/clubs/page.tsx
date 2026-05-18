@@ -4,8 +4,8 @@ import { ClubSearchInput } from "@app/clubs/_components/ClubSearchInput";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toClubRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
-import { CountrySelector } from "@app/ranking/_components/CountrySelector";
-import { ClubRankingList } from "@app/ranking/_components/ClubRankingList";
+import { CountrySelector } from "@/components/ranking/CountrySelector";
+import { ClubRankingList } from "@/components/ranking/ClubRankingList";
 
 type SearchParams = Promise<{ country?: string }>;
 

@@ -32,7 +32,6 @@ function renderClubResult(item: SearchableInputResult) {
 export function ClubSearchInput({ defaultValue = "" }: { defaultValue?: string }) {
   return (
     <SearchableInput
-      kind="club"
       placeholder="클럽 이름 또는 #태그"
       inputAriaLabel="클럽 이름 또는 태그 입력"
       buttonAriaLabel="클럽 검색"

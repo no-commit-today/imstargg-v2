@@ -36,7 +36,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/brawlers", label: "브롤러" },
   { href: "/events", label: "이벤트" },
-  { href: "/ranking", label: "랭킹" },
+  { href: "/players", label: "플레이어" },
   { href: "/clubs", label: "클럽" },
 ];
 

@@ -28,6 +28,10 @@ class PlayerService(
             throw CoreException(ErrorType.INVALID_REQUEST, "query is blank")
         }
         return if (trimmed.startsWith("#")) {
+            // Malformed tag → empty result (not 500). Tag detail page handles its own NOT_FOUND.
+            if (!BrawlStarsTag.isValid(trimmed)) {
+                return Slice(content = emptyList(), hasNext = false)
+            }
             val player = playerRepository.searchByTag(BrawlStarsTag(trimmed))
             Slice(content = listOfNotNull(player), hasNext = false)
         } else {

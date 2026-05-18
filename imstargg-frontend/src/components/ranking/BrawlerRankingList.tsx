@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { toUrlPath } from "@/lib/tag";
 import type { BrawlerRanking } from "@/domain/ranking/types";
 import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
-import { RankBadge } from "@app/ranking/_components/RankBadge";
+import { RankBadge } from "@/components/ranking/RankBadge";
 
 type Props = {
   rankings: BrawlerRanking[];

@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { rankingApi } from "@/api/endpoints/ranking";
-import { CountrySelector } from "@app/ranking/_components/CountrySelector";
-import { BrawlerRankingList } from "@app/ranking/_components/BrawlerRankingList";
+import { CountrySelector } from "@/components/ranking/CountrySelector";
+import { BrawlerRankingList } from "@/components/ranking/BrawlerRankingList";
 import { parseCountry } from "@/domain/ranking/country";
 import { toBrawlerRanking } from "@/domain/ranking/mappers";
 

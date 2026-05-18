@@ -36,7 +36,7 @@ describe("TopNav", () => {
       screen.getByRole("button", { name: "이벤트 페이지로 이동" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "랭킹 페이지로 이동" }),
+      screen.getByRole("button", { name: "플레이어 페이지로 이동" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "클럽 페이지로 이동" }),

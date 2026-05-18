@@ -32,7 +32,6 @@ function renderPlayerResult(item: SearchableInputResult) {
 export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string }) {
   return (
     <SearchableInput
-      kind="player"
       placeholder="플레이어 이름 또는 #태그"
       inputAriaLabel="플레이어 이름 또는 태그 입력"
       buttonAriaLabel="플레이어 검색"
