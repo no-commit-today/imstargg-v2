@@ -30,7 +30,7 @@ describe("TopNav", () => {
     ).toBeGreaterThan(0);
     expect(screen.getByText("브롤러")).toBeInTheDocument();
     expect(screen.getByText("이벤트")).toBeInTheDocument();
-    expect(screen.getByText("랭킹")).toBeInTheDocument();
+    expect(screen.getByText("플레이어")).toBeInTheDocument();
     expect(screen.getByText("클럽")).toBeInTheDocument();
   });
 
