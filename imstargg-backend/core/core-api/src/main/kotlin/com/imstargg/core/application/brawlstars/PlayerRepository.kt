@@ -47,10 +47,7 @@ class PlayerRepository(
         return toPlayer(entity)
     }
 
-    fun searchByTag(tag: BrawlStarsTag): Player? {
-        val entity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
-        return toPlayer(entity)
-    }
+    fun searchByTag(tag: BrawlStarsTag): Player? = find(tag)
 
     fun searchByName(
         namePrefix: String,
