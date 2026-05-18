@@ -24,6 +24,7 @@ create table if not exists player
     updated_at                            timestamptz  not null default now()
 );
 create unique index if not exists uk_player__brawlstarstag on player (brawlstars_tag);
+create index if not exists ix_player__lower_name on player (lower(name) varchar_pattern_ops);
 
 -- player brawler table
 create table if not exists player_brawler
@@ -112,6 +113,7 @@ create table if not exists club
     updated_at           timestamptz  not null default now()
 );
 create unique index if not exists uk_club__brawlstarstag on club (brawlstars_tag);
+create index if not exists ix_club__lower_name on club (lower(name) varchar_pattern_ops);
 
 -- club member table
 create table if not exists club_member
