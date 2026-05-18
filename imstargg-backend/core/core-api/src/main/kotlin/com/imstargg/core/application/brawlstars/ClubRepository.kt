@@ -1,5 +1,7 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.player.Club
@@ -30,6 +32,26 @@ class ClubRepository(
         val clubEntity = clubJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
         val memberEntities = clubMemberJpaRepository.findAllByClub(clubEntity)
         return toClub(clubEntity, memberEntities)
+    }
+
+    fun searchByTag(tag: BrawlStarsTag): Club? = find(tag)
+
+    fun searchByName(
+        namePrefix: String,
+        offsetLimit: OffsetLimit,
+    ): Slice<Club> {
+        val pattern = namePrefix.lowercase() + "%"
+        val entities =
+            clubJpaRepository.findAllByLowerNamePrefix(
+                pattern = pattern,
+                offset = offsetLimit.offset,
+                limit = offsetLimit.limit + 1,
+            )
+        val hasNext = entities.size > offsetLimit.limit
+        val pageEntities = entities.take(offsetLimit.limit)
+        val membersByClub = pageEntities.associateWith { clubMemberJpaRepository.findAllByClub(it) }
+        val content = pageEntities.map { toClub(it, membersByClub.getValue(it)) }
+        return Slice(content = content, hasNext = hasNext)
     }
 
     private fun toClub(
