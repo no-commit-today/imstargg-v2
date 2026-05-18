@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.cache.RedisCacheConfiguration
 import org.springframework.data.redis.cache.RedisCacheManager
+import org.springframework.data.redis.cache.RedisCacheWriter
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializationContext
@@ -65,7 +66,7 @@ class CacheConfig : CachingConfigurer {
                     RedisSerializationContext.SerializationPair.fromSerializer(serializer),
                 ).disableCachingNullValues()
         return RedisCacheManager
-            .builder(connectionFactory)
+            .builder(RedisCacheWriter.lockingRedisCacheWriter(connectionFactory))
             .cacheDefaults(statisticsConfig)
             .initialCacheNames(setOf(CacheNames.STATISTICS))
             .build()
