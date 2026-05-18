@@ -1,5 +1,7 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.player.Club
 import com.imstargg.core.error.CoreException
@@ -13,4 +15,20 @@ class ClubService(
     fun get(tag: BrawlStarsTag): Club =
         clubRepository.find(tag)
             ?: throw CoreException(ErrorType.NOT_FOUND, "tag=$tag")
+
+    fun search(
+        query: String,
+        offsetLimit: OffsetLimit,
+    ): Slice<Club> {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            throw CoreException(ErrorType.INVALID_REQUEST, "query is blank")
+        }
+        return if (trimmed.startsWith("#")) {
+            val club = clubRepository.searchByTag(BrawlStarsTag(trimmed))
+            Slice(content = listOfNotNull(club), hasNext = false)
+        } else {
+            clubRepository.searchByName(trimmed, offsetLimit)
+        }
+    }
 }
