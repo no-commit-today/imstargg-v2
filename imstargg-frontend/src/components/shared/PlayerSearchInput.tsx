@@ -2,7 +2,10 @@
 
 import Trophy from "@/components/primitives/Trophy";
 import { SearchableInput } from "@/components/shared/SearchableInput";
-import type { SearchableInputResult } from "@/components/shared/SearchableInput";
+import type {
+  SearchableInputResult,
+  SearchableInputVariant,
+} from "@/components/shared/SearchableInput";
 import { playerApi } from "@/api/endpoints/player";
 
 const LIVE_LIMIT = 5;
@@ -29,7 +32,13 @@ function renderPlayerResult(item: SearchableInputResult) {
   );
 }
 
-export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string }) {
+export function PlayerSearchInput({
+  defaultValue = "",
+  variant = "default",
+}: {
+  defaultValue?: string;
+  variant?: SearchableInputVariant;
+}) {
   return (
     <SearchableInput
       placeholder="플레이어 이름 또는 #태그"
@@ -40,6 +49,7 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
       renderResult={renderPlayerResult}
       toDetailHref={(item) => `/players/${item.tag.replace(/^#/, "")}`}
       toSearchHref={(q) => `/players/search?q=${encodeURIComponent(q)}`}
+      variant={variant}
     />
   );
 }

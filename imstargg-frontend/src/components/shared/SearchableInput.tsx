@@ -25,6 +25,8 @@ export interface SearchableInputResult {
   trophies: number;
 }
 
+export type SearchableInputVariant = "default" | "topnav";
+
 interface Props {
   placeholder: string;
   inputAriaLabel: string;
@@ -34,6 +36,7 @@ interface Props {
   renderResult: (item: SearchableInputResult, active: boolean) => React.ReactNode;
   toDetailHref: (item: SearchableInputResult) => string;
   toSearchHref: (q: string) => string;
+  variant?: SearchableInputVariant;
 }
 
 export function SearchableInput({
@@ -45,6 +48,7 @@ export function SearchableInput({
   renderResult,
   toDetailHref,
   toSearchHref,
+  variant = "default",
 }: Props) {
   const router = useRouter();
   const [value, setValue] = useState(defaultValue);
@@ -168,28 +172,48 @@ export function SearchableInput({
     }
   }
 
+  const wrapperStyle: React.CSSProperties =
+    variant === "topnav"
+      ? { position: "relative" }
+      : { position: "relative", width: "100%", maxWidth: 448 };
+  const wrapperClassName = variant === "topnav" ? "topnav-search-wrap" : undefined;
+
+  const commonInputProps = {
+    value,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value),
+    onFocus: () => setOpen(true),
+    onKeyDown: handleKeyDown,
+    placeholder,
+    spellCheck: false,
+    "aria-label": inputAriaLabel,
+    role: "combobox" as const,
+    "aria-expanded": open,
+    "aria-haspopup": "menu" as const,
+    "aria-controls": "search-dropdown",
+  };
+
   return (
-    <div ref={wrapperRef} style={{ position: "relative", width: "100%", maxWidth: 448 }}>
-      <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
-        <Input
-          type="text"
-          inputMode="text"
-          spellCheck={false}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onFocus={() => setOpen(true)}
-          onKeyDown={handleKeyDown}
-          aria-label={inputAriaLabel}
-          role="combobox"
-          aria-expanded={open}
-          aria-haspopup="menu"
-          aria-controls="search-dropdown"
-        />
-        <Button type="submit" size="default" aria-label={buttonAriaLabel}>
-          <Search className="size-4" />
-        </Button>
-      </form>
+    <div ref={wrapperRef} className={wrapperClassName} style={wrapperStyle}>
+      {variant === "topnav" ? (
+        <form onSubmit={handleSubmit} className="topnav-search">
+          <Search aria-hidden="true" />
+          <input type="text" inputMode="text" {...commonInputProps} />
+          <button
+            type="submit"
+            className="topnav-search-submit"
+            aria-label={buttonAriaLabel}
+          >
+            <Search aria-hidden="true" />
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+          <Input type="text" inputMode="text" {...commonInputProps} />
+          <Button type="submit" size="default" aria-label={buttonAriaLabel}>
+            <Search className="size-4" />
+          </Button>
+        </form>
+      )}
       {open && (
         <div id="search-dropdown">
           {showingLive ? (
@@ -198,6 +222,7 @@ export function SearchableInput({
               activeIndex={activeIndex}
               renderResult={renderResult}
               onSelect={handleSelectLive}
+              variant={variant}
             />
           ) : (
             <SearchHistoryDropdown
@@ -208,6 +233,7 @@ export function SearchableInput({
               onToggleFavorite={handleToggleFavorite}
               onClearRecents={handleClearRecents}
               isFavorite={readIsFavorite}
+              variant={variant}
             />
           )}
         </div>
@@ -216,35 +242,59 @@ export function SearchableInput({
   );
 }
 
+function dropdownPositionStyle(variant: SearchableInputVariant): React.CSSProperties {
+  if (variant === "topnav") {
+    return {
+      position: "absolute",
+      top: "100%",
+      right: 0,
+      marginTop: 6,
+      width: 320,
+      maxWidth: "calc(100vw - 24px)",
+      background: "#fff",
+      border: "1px solid #D8DCE5",
+      borderRadius: 12,
+      boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
+      zIndex: 100,
+    };
+  }
+  return {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    marginTop: 4,
+    background: "#fff",
+    border: "1px solid #D8DCE5",
+    borderRadius: 12,
+    boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
+    zIndex: 50,
+  };
+}
+
 function LiveResultsDropdown({
   items,
   activeIndex,
   renderResult,
   onSelect,
+  variant,
 }: {
   items: Array<{ entry: SearchableInputResult; href: string }>;
   activeIndex: number;
   renderResult: (item: SearchableInputResult, active: boolean) => React.ReactNode;
   onSelect: (item: SearchableInputResult) => void;
+  variant: SearchableInputVariant;
 }) {
+  const baseStyle = dropdownPositionStyle(variant);
   if (items.length === 0) {
     return (
       <div
         role="menu"
         style={{
-          position: "absolute",
-          top: "100%",
-          left: 0,
-          right: 0,
-          marginTop: 4,
-          background: "#fff",
-          border: "1px solid #D8DCE5",
-          borderRadius: 12,
-          boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
+          ...baseStyle,
           padding: 12,
           color: "#8A90A0",
           fontSize: 13,
-          zIndex: 50,
         }}
       >
         검색 결과가 없습니다
@@ -255,17 +305,8 @@ function LiveResultsDropdown({
     <ul
       role="menu"
       style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        right: 0,
-        marginTop: 4,
-        background: "#fff",
-        border: "1px solid #D8DCE5",
-        borderRadius: 12,
-        boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
+        ...baseStyle,
         padding: 8,
-        zIndex: 50,
         maxHeight: 360,
         overflowY: "auto",
         listStyle: "none",
