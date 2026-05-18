@@ -5,6 +5,11 @@ export interface ListResponse<T> {
   content: T[];
 }
 
+export interface SliceResponse<T> {
+  content: T[];
+  hasNext: boolean;
+}
+
 // === Player ===
 export interface PlayerResponse {
   tag: string;
