@@ -9,9 +9,6 @@ import type {
   BrawlerResultStatisticsResponse,
   BrawlerTrophyRangeDto,
   ListResponse,
-  RankStatsSortByDto,
-  ResultStatsSortByDto,
-  SortOrderDto,
   StatsDateRangeDto,
   StatsTierRangeDto,
 } from "@/api/types";
@@ -43,8 +40,6 @@ export interface PairResultParams {
   tierRange: StatsTierRangeDto;
   dateRange: StatsDateRangeDto;
   eventId?: number;
-  sortBy?: ResultStatsSortByDto;
-  sortOrder?: SortOrderDto;
 }
 
 export interface PairRankParams {
@@ -52,8 +47,6 @@ export interface PairRankParams {
   brawlerId: number;
   tierRange: StatsTierRangeDto;
   dateRange: StatsDateRangeDto;
-  sortBy?: RankStatsSortByDto;
-  sortOrder?: SortOrderDto;
 }
 
 export interface EnemyResultParams {
@@ -61,8 +54,6 @@ export interface EnemyResultParams {
   tierRange: StatsTierRangeDto;
   dateRange: StatsDateRangeDto;
   eventId?: number;
-  sortBy?: ResultStatsSortByDto;
-  sortOrder?: SortOrderDto;
 }
 
 export interface DailyParams {

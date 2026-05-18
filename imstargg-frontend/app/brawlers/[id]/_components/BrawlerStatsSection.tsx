@@ -5,7 +5,11 @@ import {
   parseTierRange,
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
-import { parseResultSortBy, parseSortOrder } from "@/domain/statistics/sort";
+import {
+  parseResultSortBy,
+  parseSortOrder,
+  sortResultStats,
+} from "@/domain/statistics/sort";
 import {
   toDailyResultStat,
   toEnemyResultStat,
@@ -40,8 +44,6 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
         brawlerId: brawler.id,
         tierRange: tier,
         dateRange: date,
-        sortBy: pairSort,
-        sortOrder: pairOrder,
       },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
@@ -50,12 +52,21 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
         brawlerId: brawler.id,
         tierRange: tier,
         dateRange: date,
-        sortBy: enemySort,
-        sortOrder: enemyOrder,
       },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
+
+  const pairItems = sortResultStats(
+    pair.content.map(toPairResultStat),
+    pairSort,
+    pairOrder,
+  );
+  const enemyItems = sortResultStats(
+    enemy.content.map(toEnemyResultStat),
+    enemySort,
+    enemyOrder,
+  );
 
   return (
     <section className="space-y-4">
@@ -70,8 +81,8 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
       </div>
       <DailyTrendChart items={daily.content.map(toDailyResultStat)} />
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <PairStatsTable items={pair.content.map(toPairResultStat)} sort={pairSort} order={pairOrder} />
-        <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} sort={enemySort} order={enemyOrder} />
+        <PairStatsTable items={pairItems} sort={pairSort} order={pairOrder} />
+        <EnemyStatsTable items={enemyItems} sort={enemySort} order={enemyOrder} />
       </div>
     </section>
   );

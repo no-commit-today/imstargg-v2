@@ -14,13 +14,9 @@ import com.imstargg.core.application.brawlstars.BrawlerService
 import com.imstargg.core.application.statistics.BattleRankStatisticsService
 import com.imstargg.core.application.statistics.BattleResultStatisticsService
 import com.imstargg.core.application.statistics.BrawlerItemOwnershipStatisticsService
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
 import com.imstargg.core.enums.BrawlerTrophyRange
-import com.imstargg.core.enums.RankStatsSortBy
-import com.imstargg.core.enums.ResultStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Component
@@ -50,8 +46,6 @@ class StatisticsQueryComposer(
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        sortBy: ResultStatsSortBy,
-        sortOrder: SortOrder,
     ): List<BrawlerPairResultStatisticsItemResponse> {
         val brawlers = brawlers()
         val statistics =
@@ -61,9 +55,6 @@ class StatisticsQueryComposer(
                 pairBrawlerId = pairBrawlerId,
                 tierRange = tierRange,
                 dateRange = dateRange,
-                sortBy = sortBy,
-                sortOrder = sortOrder,
-                offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
         return statistics.items.map { item ->
             BrawlerPairResultStatisticsItemResponse(
@@ -81,8 +72,6 @@ class StatisticsQueryComposer(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        sortBy: ResultStatsSortBy,
-        sortOrder: SortOrder,
     ): List<BrawlerEnemyResultStatisticsItemResponse> {
         val brawlers = brawlers()
         val statistics =
@@ -91,9 +80,6 @@ class StatisticsQueryComposer(
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 dateRange = dateRange,
-                sortBy = sortBy,
-                sortOrder = sortOrder,
-                offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
         return statistics.items.map { item ->
             BrawlerEnemyResultStatisticsItemResponse(
@@ -134,8 +120,6 @@ class StatisticsQueryComposer(
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        sortBy: RankStatsSortBy,
-        sortOrder: SortOrder,
     ): List<BrawlerPairRankStatisticsResponse> {
         val brawlers = brawlers()
         val statistics =
@@ -145,9 +129,6 @@ class StatisticsQueryComposer(
                 pairBrawlerId = pairBrawlerId,
                 tierRange = tierRange,
                 dateRange = dateRange,
-                sortBy = sortBy,
-                sortOrder = sortOrder,
-                offsetLimit = DEFAULT_OFFSET_LIMIT,
             )
         return statistics.items.map { item ->
             BrawlerPairRankStatisticsResponse(
@@ -181,8 +162,4 @@ class StatisticsQueryComposer(
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())
 
     private fun Brawlers.toBrawlerResponse(id: BrawlStarsId): BrawlerResponse? = find(id)?.let { BrawlerResponse.of(it) }
-
-    companion object {
-        private val DEFAULT_OFFSET_LIMIT = OffsetLimit(offset = 0, limit = 50)
-    }
 }

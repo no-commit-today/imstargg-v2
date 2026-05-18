@@ -1,14 +1,11 @@
 package com.imstargg.core.application.statistics
 
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
 import com.imstargg.core.domain.statistics.BrawlerPairResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.domain.statistics.ResultCount
-import com.imstargg.core.enums.ResultStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
@@ -55,21 +52,14 @@ class BattleResultStatisticsRepository(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): List<BrawlerEnemyResultCount> =
         enemyBattleResultJpaRepository
-            .findPagedByConditions(
+            .findAllByConditions(
                 eventBrawlStarsId = eventId?.value,
                 brawlerBrawlStarsId = brawlerId.value,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
-                sortOrder = sortOrder,
-                offset = offsetLimit.offset.toLong(),
-                limit = offsetLimit.limit.toLong(),
             ).map { projection ->
                 BrawlerEnemyResultCount(
                     brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
@@ -120,22 +110,15 @@ class BattleResultStatisticsRepository(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): List<BrawlerPairResultCount> =
         pairBattleResultJpaRepository
-            .findPagedByConditions(
+            .findAllByConditions(
                 eventBrawlStarsId = eventId?.value,
                 brawlerBrawlStarsId = brawlerId.value,
                 pairBrawlerBrawlStarsId = pairBrawlerId?.value,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortBy = sortField,
-                sortOrder = sortOrder,
-                offset = offsetLimit.offset.toLong(),
-                limit = offsetLimit.limit.toLong(),
             ).map { projection ->
                 BrawlerPairResultCount(
                     brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),

@@ -42,3 +42,43 @@ export function parseSortOrder(value: unknown): SortOrder {
 export function toggleSortOrder(order: SortOrder): SortOrder {
   return order === "ASC" ? "DESC" : "ASC";
 }
+
+function sortSign(order: SortOrder): number {
+  return order === "DESC" ? -1 : 1;
+}
+
+export function sortResultStats<T extends { pickRate: number; winRate: number }>(
+  items: T[],
+  sortBy: ResultStatsSortBy,
+  order: SortOrder,
+): T[] {
+  const sign = sortSign(order);
+  return [...items].sort((a, b) => {
+    switch (sortBy) {
+      case "WIN_RATE":
+        return (a.winRate - b.winRate) * sign;
+      case "PICK_RATE":
+      default:
+        return (a.pickRate - b.pickRate) * sign;
+    }
+  });
+}
+
+export function sortRankStats<
+  T extends { averageRank: number; totalBattleCount: number },
+>(
+  items: T[],
+  sortBy: RankStatsSortBy,
+  order: SortOrder,
+): T[] {
+  const sign = sortSign(order);
+  return [...items].sort((a, b) => {
+    switch (sortBy) {
+      case "AVERAGE_RANK":
+        return (a.averageRank - b.averageRank) * sign;
+      case "PICK_RATE":
+      default:
+        return (a.totalBattleCount - b.totalBattleCount) * sign;
+    }
+  });
+}

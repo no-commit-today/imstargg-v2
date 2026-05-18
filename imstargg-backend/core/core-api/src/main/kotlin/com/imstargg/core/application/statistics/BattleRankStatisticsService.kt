@@ -1,11 +1,8 @@
 package com.imstargg.core.application.statistics
 
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerPairRankStatistics
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
-import com.imstargg.core.enums.RankStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
@@ -33,9 +30,6 @@ class BattleRankStatisticsService(
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        sortBy: RankStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): BrawlerPairRankStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         val counts =
@@ -46,9 +40,6 @@ class BattleRankStatisticsService(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortBy,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
             )
         return BrawlerPairRankStatistics(
             totalBattleCount = counts.totalBattleCount,

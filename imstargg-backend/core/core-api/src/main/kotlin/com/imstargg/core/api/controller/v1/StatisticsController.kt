@@ -11,9 +11,6 @@ import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsRespo
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.BrawlerTrophyRange
-import com.imstargg.core.enums.RankStatsSortBy
-import com.imstargg.core.enums.ResultStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.http.ResponseEntity
@@ -49,8 +46,6 @@ class StatisticsController(
         @RequestParam(required = false) pairBrawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
-        @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
-        @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
     ): ResponseEntity<ListResponse<BrawlerPairResultStatisticsItemResponse>> {
         val responses =
             statisticsQueryComposer.getBrawlerPairResultStatistics(
@@ -59,8 +54,6 @@ class StatisticsController(
                 pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
                 tierRange = tierRange,
                 dateRange = dateRange,
-                sortBy = sortBy,
-                sortOrder = sortOrder,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }
@@ -71,8 +64,6 @@ class StatisticsController(
         @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
-        @RequestParam(defaultValue = "PICK_RATE") sortBy: ResultStatsSortBy,
-        @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
     ): ResponseEntity<ListResponse<BrawlerEnemyResultStatisticsItemResponse>> {
         val responses =
             statisticsQueryComposer.getEnemyResultStatistics(
@@ -80,8 +71,6 @@ class StatisticsController(
                 brawlerId = BrawlStarsId(brawlerId),
                 tierRange = tierRange,
                 dateRange = dateRange,
-                sortBy = sortBy,
-                sortOrder = sortOrder,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }
@@ -108,8 +97,6 @@ class StatisticsController(
         @RequestParam(required = false) pairBrawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
-        @RequestParam(defaultValue = "PICK_RATE") sortBy: RankStatsSortBy,
-        @RequestParam(defaultValue = "DESC") sortOrder: SortOrder,
     ): ResponseEntity<ListResponse<BrawlerPairRankStatisticsResponse>> {
         val responses =
             statisticsQueryComposer.getBrawlerPairRankStatistics(
@@ -118,8 +105,6 @@ class StatisticsController(
                 pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
                 tierRange = tierRange,
                 dateRange = dateRange,
-                sortBy = sortBy,
-                sortOrder = sortOrder,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }

@@ -1,11 +1,8 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.enums.RankStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -30,9 +27,7 @@ class BattleRankStatisticsRepositoryWithCache(
         cacheNames = [CacheNames.STATISTICS],
         key =
             "'pairRank:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #sortField + ':' + #sortOrder" +
-                " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findBrawlerPairRank(
@@ -42,9 +37,6 @@ class BattleRankStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: RankStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): BrawlerPairRankCounts {
         val items =
             battleRankStatisticsRepository.findBrawlerPairRankCounts(
@@ -54,9 +46,6 @@ class BattleRankStatisticsRepositoryWithCache(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
             )
         val totalBattleCount =
             battleRankStatisticsRepository.countPairRankTotalBattleCount(

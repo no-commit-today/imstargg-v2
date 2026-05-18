@@ -1,13 +1,10 @@
 package com.imstargg.core.application.statistics
 
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerPairResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
-import com.imstargg.core.enums.ResultStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
@@ -40,9 +37,6 @@ class BattleResultStatisticsService(
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        sortBy: ResultStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): BrawlerPairResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         val counts =
@@ -53,9 +47,6 @@ class BattleResultStatisticsService(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortBy,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
             )
         return BrawlerPairResultStatistics.create(counts.totalBattleCount, counts.totalElementCount, counts.items)
     }
@@ -65,9 +56,6 @@ class BattleResultStatisticsService(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-        sortBy: ResultStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): BrawlerEnemyResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         val counts =
@@ -77,9 +65,6 @@ class BattleResultStatisticsService(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortBy,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
             )
         return BrawlerEnemyResultStatistics.create(
             counts.totalBattleCount,

@@ -226,10 +226,6 @@ export type StatsDateRangeDto =
 export type BrawlerTrophyRangeDto =
   | "TROPHY_500_PLUS" | "TROPHY_1000_PLUS" | "TROPHY_2000_PLUS" | "TROPHY_3000_PLUS";
 
-export type ResultStatsSortByDto = "PICK_RATE" | "WIN_RATE";
-export type RankStatsSortByDto = "PICK_RATE" | "AVERAGE_RANK";
-export type SortOrderDto = "ASC" | "DESC";
-
 export interface BrawlerResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
   totalBattleCount: number;

@@ -1,12 +1,9 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
-import com.imstargg.core.enums.ResultStatsSortBy
-import com.imstargg.core.enums.SortOrder
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -38,9 +35,7 @@ class BattleResultStatisticsRepositoryWithCache(
         cacheNames = [CacheNames.STATISTICS],
         key =
             "'enemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
-                " + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #sortField + ':' + #sortOrder" +
-                " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+                " + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findBrawlerEnemyResult(
@@ -49,9 +44,6 @@ class BattleResultStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): BrawlerEnemyResultCounts {
         val items =
             battleResultStatisticsRepository.findBrawlerEnemyResultCounts(
@@ -60,9 +52,6 @@ class BattleResultStatisticsRepositoryWithCache(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
             )
         val totalBattleCount =
             battleResultStatisticsRepository.countEnemyResultTotalBattleCount(
@@ -91,9 +80,7 @@ class BattleResultStatisticsRepositoryWithCache(
         cacheNames = [CacheNames.STATISTICS],
         key =
             "'pairResult:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #sortField + ':' + #sortOrder" +
-                " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findBrawlerPairResult(
@@ -103,9 +90,6 @@ class BattleResultStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: ResultStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
     ): BrawlerPairResultCounts {
         val items =
             battleResultStatisticsRepository.findBrawlerPairResultCounts(
@@ -115,9 +99,6 @@ class BattleResultStatisticsRepositoryWithCache(
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortField = sortField,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
             )
         val totalBattleCount =
             battleResultStatisticsRepository.countPairResultTotalBattleCount(
