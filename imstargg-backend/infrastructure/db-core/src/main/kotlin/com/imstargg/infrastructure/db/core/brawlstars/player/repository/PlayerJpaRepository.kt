@@ -6,6 +6,8 @@ import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 
 interface PlayerJpaRepository : JpaRepository<PlayerEntity, Long> {
     fun findByBrawlStarsTag(brawlStarsTag: String): PlayerEntity?
@@ -19,5 +21,20 @@ interface PlayerJpaRepository : JpaRepository<PlayerEntity, Long> {
         status: PlayerStatus,
         id: Long,
         pageable: Pageable,
+    ): List<PlayerEntity>
+
+    @Query(
+        nativeQuery = true,
+        value = """
+            select * from player
+            where lower(name) like :pattern
+            order by trophies desc, brawlstars_tag asc
+            offset :offset limit :limit
+        """,
+    )
+    fun findAllByLowerNamePrefix(
+        @Param("pattern") pattern: String,
+        @Param("offset") offset: Int,
+        @Param("limit") limit: Int,
     ): List<PlayerEntity>
 }
