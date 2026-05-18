@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Handshake } from "lucide-react";
 import type { PairResultStat } from "@/domain/statistics/types";
 import type { SortOrder, ResultStatsSortBy } from "@/domain/statistics/sort";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
@@ -29,7 +30,8 @@ export function PairStatsTable({ items, sort, order }: Props) {
     <div className="data-table">
       <div className="data-table-toolbar">
         <h3 className="text-sm font-bold flex items-center gap-2">
-          <span aria-hidden>🤝</span> 조합
+          <Handshake size={16} aria-hidden className="text-[#2BD576]" />
+          조합
         </h3>
         <span className="text-[11px] text-[#5C6271]">함께 픽됐을 때의 승률</span>
       </div>

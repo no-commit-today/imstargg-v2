@@ -7,12 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import type {
   BrawlPassSeasonResponse,
   SoloRankSeasonResponse,
 } from "@/api/types";
 import type { PlayerStatBattleType } from "@/hooks/queries/usePlayerStatistics";
+
+const TOGGLE_OPTIONS: { value: PlayerStatBattleType; label: string }[] = [
+  { value: "RANKED", label: "트로피전" },
+  { value: "SOLO_RANKED", label: "경쟁전" },
+];
 
 interface Props {
   battleType: PlayerStatBattleType;
@@ -37,21 +41,31 @@ export function PlayerStatisticsControls({
 }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="flex rounded-md border border-[#D8DCE5] bg-white p-0.5">
-        <Button
-          variant={battleType === "RANKED" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => onBattleTypeChange("RANKED")}
-        >
-          랭크전
-        </Button>
-        <Button
-          variant={battleType === "SOLO_RANKED" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => onBattleTypeChange("SOLO_RANKED")}
-        >
-          경쟁전
-        </Button>
+      <div
+        role="tablist"
+        aria-label="전투 유형"
+        className="inline-flex rounded-md border border-[#B4B9C7] bg-white p-1 shadow-[0_1px_2px_rgba(20,22,27,0.06)]"
+      >
+        {TOGGLE_OPTIONS.map((opt) => {
+          const active = battleType === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-pressed={active}
+              onClick={() => onBattleTypeChange(opt.value)}
+              className={
+                active
+                  ? "rounded px-3 py-1 text-sm font-bold bg-[#FFC60A] text-[#14161B] shadow-[0_1px_0_#E8A900] transition"
+                  : "rounded px-3 py-1 text-sm font-bold text-[#5C6271] hover:bg-[#F6F7FA] hover:text-[#14161B] transition"
+              }
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
 
       {battleType === "RANKED" ? (

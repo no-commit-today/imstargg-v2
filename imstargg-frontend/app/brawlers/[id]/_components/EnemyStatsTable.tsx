@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Swords } from "lucide-react";
 import type { EnemyResultStat } from "@/domain/statistics/types";
 import type { SortOrder, ResultStatsSortBy } from "@/domain/statistics/sort";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
@@ -35,7 +36,8 @@ export function EnemyStatsTable({ items, sort, order }: Props) {
     <div className="data-table">
       <div className="data-table-toolbar">
         <h3 className="text-sm font-bold flex items-center gap-2">
-          <span aria-hidden>⚔️</span> 카운터
+          <Swords size={16} aria-hidden className="text-[#FF3A3A]" />
+          카운터
         </h3>
         <span className="text-[11px] text-[#5C6271]">적 픽일 때의 적 승률</span>
       </div>

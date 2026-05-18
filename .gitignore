@@ -21,3 +21,6 @@ out/
 ### Python ###
 __pycache__/
 *.py[cod]
+
+### Playwright ###
+.playwright-mcp
