@@ -349,7 +349,7 @@ class PlayerRepositorySearchTest(
 
 - [ ] **Step 2: 테스트 실행하여 컴파일 실패 확인**
 
-Run: `cd imstargg-backend && ./gradlew :core:core-api:contextTest --tests "com.imstargg.core.application.brawlstars.PlayerRepositorySearchTest"`
+Run: `cd imstargg-backend && ./gradlew :core:core-api:test --tests "com.imstargg.core.application.brawlstars.PlayerRepositorySearchTest"`
 Expected: FAIL — `searchByTag`, `searchByName` 메서드 정의 없음 (컴파일 에러)
 
 - [ ] **Step 3: PlayerRepository 에 검색 메서드 구현**
@@ -388,7 +388,7 @@ import com.imstargg.core.domain.Slice
 
 - [ ] **Step 4: 테스트 실행 → PASS 확인**
 
-Run: `cd imstargg-backend && ./gradlew :core:core-api:contextTest --tests "com.imstargg.core.application.brawlstars.PlayerRepositorySearchTest"`
+Run: `cd imstargg-backend && ./gradlew :core:core-api:test --tests "com.imstargg.core.application.brawlstars.PlayerRepositorySearchTest"`
 Expected: PASS
 
 - [ ] **Step 5: ktlint 통과 확인**
@@ -503,7 +503,7 @@ class ClubRepositorySearchTest(
 
 - [ ] **Step 2: 컴파일 실패 확인**
 
-Run: `cd imstargg-backend && ./gradlew :core:core-api:contextTest --tests "com.imstargg.core.application.brawlstars.ClubRepositorySearchTest"`
+Run: `cd imstargg-backend && ./gradlew :core:core-api:test --tests "com.imstargg.core.application.brawlstars.ClubRepositorySearchTest"`
 Expected: FAIL — `searchByTag`, `searchByName` 메서드 정의 없음
 
 - [ ] **Step 3: ClubRepository 에 검색 메서드 구현**
@@ -545,7 +545,7 @@ import com.imstargg.core.domain.Slice
 
 - [ ] **Step 4: 테스트 실행 → PASS 확인**
 
-Run: `cd imstargg-backend && ./gradlew :core:core-api:contextTest --tests "com.imstargg.core.application.brawlstars.ClubRepositorySearchTest"`
+Run: `cd imstargg-backend && ./gradlew :core:core-api:test --tests "com.imstargg.core.application.brawlstars.ClubRepositorySearchTest"`
 Expected: PASS
 
 - [ ] **Step 5: ktlint 통과 확인**
@@ -820,10 +820,12 @@ git commit -m "feat(core-api): add GET /v1/{player|club}/search endpoints"
 
 **Files:** (없음 — 검증 단계)
 
-- [ ] **Step 1: contextTest 전체 실행**
+- [ ] **Step 1: 통합 테스트 전체 실행**
 
-Run: `cd imstargg-backend && ./gradlew :core:core-api:contextTest`
+Run: `cd imstargg-backend && ./gradlew :core:core-api:test`
 Expected: PASS — 신규 두 테스트 클래스 포함, 모든 기존 테스트 통과
+
+> Note: 빌드 스크립트의 `contextTest` task 는 현재 `NO-SOURCE` 로 실행되지 않음 (testClassesDirs/classpath 미지정). 기본 `test` task 가 모든 context-tagged 테스트도 실행하므로 그대로 사용. 별도 후속 작업으로 빌드 스크립트 정리.
 
 - [ ] **Step 2: unitTest 도 실행**
 
