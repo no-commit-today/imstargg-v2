@@ -23,6 +23,11 @@ interface PlayerJpaRepository : JpaRepository<PlayerEntity, Long> {
         pageable: Pageable,
     ): List<PlayerEntity>
 
+    /**
+     * Prefix search on `lower(name)` — caller passes `"<lowercased input>%"`.
+     * Native query to keep the SQL shape stable and guarantee the
+     * `ix_player__lower_name` (`lower(name) varchar_pattern_ops`) index is hit.
+     */
     @Query(
         nativeQuery = true,
         value = """
