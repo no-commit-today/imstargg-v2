@@ -1,5 +1,7 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
@@ -43,6 +45,27 @@ class PlayerRepository(
     fun find(tag: BrawlStarsTag): Player? {
         val entity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
         return toPlayer(entity)
+    }
+
+    fun searchByTag(tag: BrawlStarsTag): Player? {
+        val entity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
+        return toPlayer(entity)
+    }
+
+    fun searchByName(
+        namePrefix: String,
+        offsetLimit: OffsetLimit,
+    ): Slice<Player> {
+        val pattern = namePrefix.lowercase() + "%"
+        val entities =
+            playerJpaRepository.findAllByLowerNamePrefix(
+                pattern = pattern,
+                offset = offsetLimit.offset,
+                limit = offsetLimit.limit + 1,
+            )
+        val hasNext = entities.size > offsetLimit.limit
+        val content = entities.take(offsetLimit.limit).map { toPlayer(it) }
+        return Slice(content = content, hasNext = hasNext)
     }
 
     fun findAllPlayerBrawler(tag: BrawlStarsTag): List<PlayerBrawler> {
