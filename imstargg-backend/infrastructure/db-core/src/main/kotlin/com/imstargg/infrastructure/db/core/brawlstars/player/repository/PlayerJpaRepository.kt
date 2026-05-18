@@ -34,7 +34,7 @@ interface PlayerJpaRepository : JpaRepository<PlayerEntity, Long> {
             select * from player
             where lower(name) like :pattern
             order by trophies desc, brawlstars_tag asc
-            offset :offset limit :limit
+            limit :limit offset :offset
         """,
     )
     fun findAllByLowerNamePrefix(

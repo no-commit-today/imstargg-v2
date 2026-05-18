@@ -24,7 +24,7 @@ interface ClubJpaRepository : JpaRepository<ClubEntity, Long> {
             select * from club
             where lower(name) like :pattern
             order by trophies desc, brawlstars_tag asc
-            offset :offset limit :limit
+            limit :limit offset :offset
         """,
     )
     fun findAllByLowerNamePrefix(
