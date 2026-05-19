@@ -7,14 +7,16 @@
 
 ## 1. 목적
 
-`core-batch` statistics 배치에서 step 시작부터 종료까지 유지되는 긴 트랜잭션을 제거한다. 현재 daily/weekly battle statistics job은 `StepBuilder(...).tasklet(..., txManager)` 형태라 읽기, 집계, 기존 집계 삭제, 새 집계 저장이 하나의 step transaction에 묶인다. `EntityManager.flush()`와 `clear()`를 호출해도 commit은 step 종료 시점까지 지연된다.
+`core-batch` statistics 배치에서 step 시작부터 종료까지 유지되는 긴 DB 트랜잭션을 제거한다. 현재 daily/weekly battle statistics job은 `StepBuilder(...).tasklet(..., txManager)` 형태라 읽기, 집계, 기존 집계 삭제, 새 집계 저장이 하나의 tasklet step transaction에 묶인다. `EntityManager.flush()`와 `clear()`를 호출해도 commit은 step 종료 시점까지 지연된다.
 
 이번 변경의 목표는 다음과 같다.
 
 - DB lock 보유 시간과 MVCC vacuum 지연 가능성을 줄인다.
 - 대량 delete/insert rollback 비용을 줄인다.
 - 실패 시 이미 완료된 작은 단위는 유지하고, 재실행으로 최종 상태를 복구한다.
-- 현재 tasklet, aggregator, query lambda 구조를 가능한 한 유지한다.
+- Spring Batch는 job metadata, parameter, 실행 이력, 실패 상태 관리를 위한 실행 프레임으로 유지한다.
+- statistics 집계 step은 DB transaction manager를 전달하지 않는 tasklet step으로 구성한다.
+- 현재 aggregator와 query lambda 구조를 가능한 한 유지한다.
 - 트랜잭션 경계 관리가 각 job config에 흩어지지 않게 공통 컴포넌트로 표현한다.
 
 ## 2. 범위
@@ -57,9 +59,43 @@
 
 재실행 시 각 처리 단위는 기존 집계를 다시 삭제하고 새 집계를 삽입한다. 집계 테이블에는 자연키 unique index가 있으므로 같은 단위의 반복 실행은 최종 결과 관점에서 멱등적이어야 한다.
 
-### 3.3 선택한 접근
+### 3.3 Spring Batch 유지 여부
 
-tasklet 구조는 유지하되, step 전체 transaction 대신 내부 처리 단위를 `TransactionTemplate`으로 짧게 commit한다.
+Spring Batch는 유지한다. 이 프로젝트의 statistics job은 Kubernetes CronJob 전제로 실행되더라도 다음 Batch 기능을 계속 활용한다.
+
+- job parameter 검증과 실행 식별
+- job/step 실행 이력과 실패 상태 기록
+- 실패한 job의 운영 재실행 모델
+- 기존 `core-batch` job wiring, context test, 모듈 경계
+
+다만 Spring Batch를 "모든 데이터 처리 transaction을 맡기는 도구"로 쓰지는 않는다. statistics aggregation은 Spring Batch가 제공하는 실행 프레임 안에서 애플리케이션 task가 명시적으로 transaction 단위를 관리한다.
+
+### 3.4 Tasklet step 유지 여부
+
+statistics aggregation은 tasklet step으로 유지한다.
+
+이 배치는 `item -> process -> write` 흐름이 아니라 다음 흐름을 가진다.
+
+```text
+many battles/pages -> in-memory aggregate -> replace aggregate rows
+```
+
+Spring Batch의 chunk-oriented step은 item을 읽고 commit interval마다 chunk를 writer에 전달하고 commit하는 모델이다. 현재 statistics 알고리즘은 전체 또는 event 단위 입력을 집계한 뒤 결과 row set을 교체하므로 chunk-oriented step에 억지로 맞추면 aggregator lifecycle, event grouping, 최종 flush 시점이 오히려 복잡해진다.
+
+따라서 tasklet step이 더 자연스럽다. 단, DB transaction manager를 전달한 tasklet step은 부적합하다. Spring Batch 6.0.2에는 `StepBuilder.tasklet(tasklet)` 오버로드가 있고, transaction manager를 명시하지 않으면 `TaskletStep`은 resourceless transaction manager를 기본 사용한다. statistics tasklet은 이 형태를 사용해 step 자체가 DB transaction을 열지 않게 한다.
+
+```kotlin
+StepBuilder(STEP_NAME, jobRepository)
+    .tasklet { _, _ ->
+        task.aggregate(...)
+        RepeatStatus.FINISHED
+    }
+    .build()
+```
+
+### 3.5 선택한 접근
+
+tasklet 구조는 유지하되, tasklet step에는 DB transaction manager를 전달하지 않는다. 실제 DB 변경은 내부 replace 처리 단위를 `TransactionTemplate`으로 짧게 commit한다.
 
 선택하지 않은 접근:
 
@@ -68,7 +104,7 @@ tasklet 구조는 유지하되, step 전체 transaction 대신 내부 처리 단
 
 ## 4. 현재 문제
 
-### 4.1 Battle statistics tasklet의 step-wide transaction
+### 4.1 DB transaction manager를 전달한 TaskletStep
 
 daily/weekly statistics job은 다음 형태로 구성되어 있다.
 
@@ -81,7 +117,9 @@ StepBuilder(STEP_NAME, jobRepository)
     .build()
 ```
 
-이 구조에서는 `aggregate()` 내부의 모든 읽기와 쓰기가 step transaction에 참여한다. `DailyBattleStatsAggregationTask`와 `WeeklyEventBattleStatsAggregationTask`는 페이지 단위로 읽고 `em.clear()`를 호출하지만, transaction 자체는 step 종료까지 유지된다.
+Spring Batch `TaskletStep`은 tasklet 호출을 transaction으로 감싼다. 위처럼 DB `txManager`를 전달하면 `aggregate()` 내부의 모든 읽기와 쓰기가 하나의 DB transaction에 참여한다. `DailyBattleStatsAggregationTask`와 `WeeklyEventBattleStatsAggregationTask`는 페이지 단위로 읽고 `em.clear()`를 호출하지만, transaction 자체는 step 종료까지 유지된다.
+
+문제의 핵심은 tasklet step 자체가 아니라 **tasklet step에 DB transaction manager를 전달한 것**이다.
 
 ### 4.2 Flush/clear와 commit의 혼동
 
@@ -139,7 +177,7 @@ class BatchTransactionExecutor(
 
 구현은 Spring의 `TransactionTemplate`을 사용한다. task나 writer가 `@Transactional`에 의존하지 않고, 어느 블록이 commit 단위인지 코드에서 직접 보이게 한다.
 
-전파 정책은 반드시 짧은 독립 transaction이어야 한다. `TransactionTemplate` 기본값인 `PROPAGATION_REQUIRED`를 그대로 사용하면 tasklet step에 남아 있는 outer transaction에 합류할 수 있으므로, 구현에서는 `PROPAGATION_REQUIRES_NEW`를 명시한다. 더 좋은 형태는 statistics tasklet step 자체가 DB transaction을 열지 않도록 구성하는 것이지만, Spring Batch API상 transaction manager 전달이 필요한 경우에도 writer helper의 transaction은 outer transaction과 독립적으로 commit되어야 한다.
+전파 정책은 짧은 독립 transaction이어야 한다. 정상 설계에서는 statistics tasklet step이 DB transaction을 열지 않으므로 outer DB transaction이 없다. 그래도 `BatchTransactionExecutor`는 `PROPAGATION_REQUIRES_NEW`를 명시해 replace 단위가 항상 독립 commit이라는 정책을 코드로 고정한다. 이는 tasklet step의 긴 transaction을 우회하기 위한 장치가 아니라, 나중에 다른 DB transaction 안에서 실수로 호출되더라도 replace가 합류하지 않게 하는 방어선이다.
 
 ### 5.3 `StatsAggregationReplacer`
 
@@ -233,11 +271,26 @@ statistics tasklet step은 더 이상 step 전체 transaction에 의존하지 �
 
 - battle statistics job config에서 `EntityManager` field를 제거한다.
 - tasklet body는 task 호출만 수행한다.
-- Spring Batch 버전에서 transaction manager 없는 tasklet step 구성이 지원되면 `tasklet(..., txManager)`를 제거한다.
-- Spring Batch API상 transaction manager 전달이 필요하면 DB transaction을 만들지 않는 step transaction manager를 사용한다.
-- 어쩔 수 없이 기존 `txManager`를 step에 전달하더라도 read/write용 `EntityManager`는 helper가 직접 생성하고, write helper는 `PROPAGATION_REQUIRES_NEW`로 outer transaction에 합류하지 않는다.
+- Spring Batch 6.0.2의 `StepBuilder.tasklet(tasklet)` 오버로드를 사용하고, statistics tasklet step에는 DB `txManager`를 전달하지 않는다.
+- tasklet step은 Spring Batch의 기본 `ResourcelessTransactionManager`를 사용하게 둔다.
+- read/write용 `EntityManager`는 task/helper가 명시적으로 생성하고 닫는다.
+- write helper는 `PROPAGATION_REQUIRES_NEW`로 replace 단위 독립 commit을 보장한다.
 
-최종 구현은 사용 중인 Spring Batch 버전에 맞춰 가장 단순하고 명확한 형태를 선택한다.
+금지하는 형태:
+
+```kotlin
+StepBuilder(STEP_NAME, jobRepository)
+    .tasklet(tasklet, txManager)
+    .build()
+```
+
+사용할 형태:
+
+```kotlin
+StepBuilder(STEP_NAME, jobRepository)
+    .tasklet(tasklet)
+    .build()
+```
 
 ## 6. Error handling
 
@@ -275,6 +328,7 @@ statistics tasklet step은 더 이상 step 전체 transaction에 의존하지 �
 - 정상 실행 시 action result를 반환한다.
 - 예외 발생 시 예외가 전파된다.
 - action에 `EntityManager`와 `JPAQueryFactory`가 전달된다.
+- `PROPAGATION_REQUIRES_NEW`가 설정되어 replace transaction이 독립 commit 정책을 가진다는 점을 확인한다.
 
 ### 7.2 Context tests
 
@@ -286,6 +340,7 @@ statistics tasklet step은 더 이상 step 전체 transaction에 의존하지 �
 - weekly battle statistics job config
 - ownership statistics job config
 - 새 support component bean
+- statistics tasklet step이 DB transaction manager를 전달하지 않는 형태로 생성되는지 확인한다.
 
 ### 7.3 Verification commands
 
@@ -311,15 +366,16 @@ DB schema migration은 필요하지 않다. 기존 통계 테이블과 자연키
 
 내부 동작 변화:
 
-- step-wide transaction 의존을 제거한다.
+- statistics tasklet step에서 DB transaction manager 의존을 제거한다.
 - write commit 단위가 명시적으로 작아진다.
 - `EntityManager` 주입 범위가 줄어든다.
 - `@Transactional` 대신 batch-local transaction helper를 사용한다.
-- write helper는 accidental outer transaction 합류를 막기 위해 `PROPAGATION_REQUIRES_NEW`를 사용한다.
+- write helper는 accidental outer DB transaction 합류를 막기 위해 `PROPAGATION_REQUIRES_NEW`를 사용한다.
 
 ## 9. Acceptance criteria
 
 - statistics battle aggregation job에서 read/aggregate 전체를 감싸는 장기 transaction이 사라진다.
+- statistics tasklet step은 DB `txManager`를 전달하지 않는 `tasklet(tasklet)` 형태로 구성된다.
 - daily replace는 `date` 단위로 commit된다.
 - weekly replace는 `(weekRange, eventId)` 단위로 commit된다.
 - ownership stats replace는 table 단위 또는 더 작은 명시 단위로 commit된다.
@@ -327,3 +383,10 @@ DB schema migration은 필요하지 않다. 기존 통계 테이블과 자연키
 - 기존 aggregation 결과의 의미가 바뀌지 않는다.
 - 실패 시 job은 실패하고, 같은 parameter 재실행으로 최종 상태를 복구할 수 있다.
 - 테스트가 짧은 transaction helper와 replace 순서를 검증한다.
+
+## 10. References
+
+- Spring Batch 6.0.2 local source: `TaskletStep` wraps each tasklet call in a transaction and defaults to `ResourcelessTransactionManager` when no transaction manager is set.
+- Spring Batch 6.0.2 local source: `StepBuilder.tasklet(Tasklet)` exists and does not require a `PlatformTransactionManager`.
+- Spring Batch reference: chunk-oriented processing is the common item/chunk/write model and commits after each chunk.
+- Spring Batch reference: `TaskletStep` is intended for custom step work such as stored procedure calls, scripts, SQL updates, or non-item-oriented tasks.
