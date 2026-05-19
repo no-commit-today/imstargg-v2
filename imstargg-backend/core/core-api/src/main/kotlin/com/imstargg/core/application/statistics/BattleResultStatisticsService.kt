@@ -102,6 +102,14 @@ class BattleResultStatisticsService(
             ).map { BrawlerResultDailyStatistics.create(it) }
     }
 
+    /**
+     * 조회 범위의 총 게임 수를 도출한다.
+     *
+     * Pair / Enemy 통계의 분모도 동일한 게임 수를 사용하므로 항상
+     * `brawler_battle_result_stats` (Result 슬롯) + `SlotsPerGame.forResult` 로 계산한다.
+     * 수학적으로 `pair_slot/forPair == enemy_slot/forEnemy == result_slot/forResult == game_count`
+     * 가 보장되므로 Result 테이블을 단일 진실 출처로 사용하는 것이 더 단순하다.
+     */
     private fun computeTotalBattleCount(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
