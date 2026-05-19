@@ -3,6 +3,7 @@ package com.imstargg.infrastructure.db.core.brawlstars.event
 import com.imstargg.DbCoreContextTest
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import com.imstargg.infrastructure.db.core.test.fixture.BattleEventModeEntityFixture.Companion.aBattleEventModeEntity
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.Test
@@ -12,6 +13,9 @@ class BattleEventModeEntityTest : DbCoreContextTest() {
     @Autowired
     private lateinit var repository: BattleEventModeJpaRepository
 
+    @Autowired
+    private lateinit var entityManager: EntityManager
+
     @Test
     fun `playerCounts jsonb round-trip 보존`() {
         // given
@@ -20,6 +24,7 @@ class BattleEventModeEntityTest : DbCoreContextTest() {
         // when
         val saved = repository.save(sut)
         repository.flush()
+        entityManager.clear()
         val reloaded = repository.findById(saved.id!!).orElseThrow()
 
         // then
@@ -53,6 +58,6 @@ class BattleEventModeEntityTest : DbCoreContextTest() {
             }
 
         // then
-        assertThat(ex).hasMessageContaining(">= 1")
+        assertThat(ex).hasMessageContaining("playerCounts")
     }
 }

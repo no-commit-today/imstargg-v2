@@ -44,7 +44,7 @@ class BattleEventModeEntity(
      *
      * 예시:
      *  - 3v3: [3, 3]
-     *  - Solo Showdown: [1] * 10
+     *  - Solo Showdown: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] (10팀 × 1명)
      *  - Duels (1v1): [1, 1]
      *  - 비대칭(가상): [1, 5]
      *
@@ -72,7 +72,7 @@ class BattleEventModeEntity(
 
     private fun validatePlayerCounts(counts: List<Int>) {
         require(counts.isNotEmpty()) { "playerCounts must not be empty" }
-        require(counts.all { it >= 1 }) { "every team size must be >= 1" }
+        require(counts.all { it >= 1 }) { "playerCounts: every team size must be >= 1, but got $counts" }
     }
 
     companion object {
