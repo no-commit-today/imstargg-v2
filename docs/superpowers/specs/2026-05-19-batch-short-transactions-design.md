@@ -17,7 +17,7 @@
 - Spring Batch는 job metadata, parameter, 실행 이력, 실패 상태 관리를 위한 실행 프레임으로 유지한다.
 - statistics 집계 step은 DB transaction manager를 전달하지 않는 tasklet step으로 구성한다.
 - 현재 aggregator와 query lambda 구조를 가능한 한 유지한다.
-- 트랜잭션 경계 관리가 각 job config에 흩어지지 않게 공통 컴포넌트로 표현한다.
+- 독립 transaction 실행 규칙은 얇은 공통 helper로 고정하되, 집계 교체 흐름은 각 task/writer 안에 명확히 드러낸다.
 
 ## 2. 범위
 
@@ -33,7 +33,7 @@
 - `BrawlerItemOwnershipStatsJobConfig`
 - `BrawlerItemOwnershipStatsTask`
 - `BrawlerItemOwnershipStatsWriter`
-- 짧은 transaction 실행과 집계 테이블 교체를 위한 `core-batch` support component
+- 짧은 JPA transaction block 실행을 위한 얇은 `core-batch` support component
 - 관련 단위 테스트와 context wiring 테스트
 
 포함하지 않는다.
@@ -95,7 +95,7 @@ StepBuilder(STEP_NAME, jobRepository)
 
 ### 3.5 선택한 접근
 
-tasklet 구조는 유지하되, tasklet step에는 DB transaction manager를 전달하지 않는다. 실제 DB 변경은 내부 replace 처리 단위를 `TransactionTemplate`으로 짧게 commit한다.
+tasklet 구조는 유지하되, tasklet step에는 DB transaction manager를 전달하지 않는다. 실제 DB 변경은 task/writer 내부의 replace 처리 단위를 얇은 JPA transaction runner로 감싸 짧게 commit한다.
 
 선택하지 않은 접근:
 
@@ -151,61 +151,63 @@ flush and clear after each chunk
 commit transaction
 ```
 
-### 5.2 `BatchTransactionExecutor`
+### 5.2 `JpaBatchTransactionRunner`
 
-`core-batch` support package에 짧은 transaction 실행 컴포넌트를 둔다.
+`core-batch` support package에 짧은 JPA transaction block을 실행하는 얇은 컴포넌트를 둔다. 이 helper는 replace 도메인을 알지 않는다. delete, persist, chunking, flush 순서는 각 task/writer가 직접 표현한다.
 
 책임:
 
-- `PlatformTransactionManager`와 `EntityManagerFactory`를 사용해 transaction을 시작한다.
-- transaction 안에서 사용할 새 `EntityManager`와 `JPAQueryFactory`를 제공한다.
+- `PlatformTransactionManager`와 `TransactionTemplate`으로 독립 transaction을 시작한다.
+- transaction 안에서 사용할 transaction-bound `EntityManager`와 `JPAQueryFactory`를 제공한다.
 - 정상 완료 시 commit, 예외 발생 시 rollback한다.
-- transaction 종료 후 `EntityManager`를 닫는다.
+- `PROPAGATION_REQUIRES_NEW`를 명시해 replace 단위 독립 commit 정책을 고정한다.
 
 예상 형태:
 
 ```kotlin
-class BatchTransactionExecutor(
+class JpaBatchTransactionRunner(
     private val txManager: PlatformTransactionManager,
-    private val entityManagerFactory: EntityManagerFactory,
+    private val entityManager: EntityManager,
 ) {
-    fun <T> execute(
+    fun <T> run(
         action: (EntityManager, JPAQueryFactory) -> T,
     ): T
 }
 ```
 
-구현은 Spring의 `TransactionTemplate`을 사용한다. task나 writer가 `@Transactional`에 의존하지 않고, 어느 블록이 commit 단위인지 코드에서 직접 보이게 한다.
+구현은 Spring의 `TransactionTemplate`을 사용한다. `EntityManager`는 `EntityManagerFactory.createEntityManager()`로 직접 새로 만들지 않고, Spring이 transaction에 바인딩해주는 shared `EntityManager` proxy를 사용한다. 직접 만든 `EntityManager`는 Spring transaction에 자연스럽게 묶이지 않을 수 있어 transaction boundary를 다시 흐릴 위험이 있다.
 
-전파 정책은 짧은 독립 transaction이어야 한다. 정상 설계에서는 statistics tasklet step이 DB transaction을 열지 않으므로 outer DB transaction이 없다. 그래도 `BatchTransactionExecutor`는 `PROPAGATION_REQUIRES_NEW`를 명시해 replace 단위가 항상 독립 commit이라는 정책을 코드로 고정한다. 이는 tasklet step의 긴 transaction을 우회하기 위한 장치가 아니라, 나중에 다른 DB transaction 안에서 실수로 호출되더라도 replace가 합류하지 않게 하는 방어선이다.
+task나 writer가 `@Transactional`에 의존하지 않고, 어느 블록이 commit 단위인지 코드에서 직접 보이게 한다.
 
-### 5.3 `StatsAggregationReplacer`
+전파 정책은 짧은 독립 transaction이어야 한다. 정상 설계에서는 statistics tasklet step이 DB transaction을 열지 않으므로 outer DB transaction이 없다. 그래도 `JpaBatchTransactionRunner`는 `PROPAGATION_REQUIRES_NEW`를 명시해 replace 단위가 항상 독립 commit이라는 정책을 코드로 고정한다. 이는 tasklet step의 긴 transaction을 우회하기 위한 장치가 아니라, 나중에 다른 DB transaction 안에서 실수로 호출되더라도 replace가 합류하지 않게 하는 방어선이다.
 
-집계 테이블의 `delete + insert chunks` 패턴을 공통화한다.
+### 5.3 `StatsAggregationReplacer`는 만들지 않는다
 
-책임:
+집계 테이블 교체를 별도 `StatsAggregationReplacer` 컴포넌트로 추상화하지 않는다.
 
-- `BatchTransactionExecutor` 안에서 replace를 수행한다.
-- 호출자가 제공한 `deleteExisting` callback을 먼저 실행한다.
-- `BattleStatsAggregator.flushEntityChunks(BATCH_SIZE)`를 사용해 결과 entity를 chunk 단위로 저장한다.
-- chunk마다 `persist`, `persistAdditional`, `flush`, `clear`를 실행한다.
+이유:
 
-예상 형태:
+- daily, weekly, ownership의 replace 단위와 저장 callback이 서로 다르다.
+- `deleteExisting`, `entities`, `persist`, `persistAdditional`을 전부 람다로 받는 컴포넌트는 실질적으로 람다 배선기가 된다.
+- `delete -> flushEntityChunks -> persist -> flush/clear` 흐름은 각 task/writer의 핵심 도메인 흐름이므로, 호출부에 직접 보이는 편이 이해하기 쉽다.
+- 공통화는 transaction 시작/commit/rollback 정책에만 적용한다.
+
+예상 사용 형태:
 
 ```kotlin
-class StatsAggregationReplacer(
-    private val transactionExecutor: BatchTransactionExecutor,
-) {
-    fun <TEntity : Any> replace(
-        deleteExisting: (JPAQueryFactory) -> Unit,
-        entities: ((List<TEntity>) -> Unit) -> Unit,
-        persist: (EntityManager, TEntity) -> Unit,
-        persistAdditional: (EntityManager, TEntity) -> Unit = { _, _ -> },
-    )
+transactionRunner.run { em, queryFactory ->
+    deleteExisting(queryFactory, date)
+
+    aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->
+        batch.forEach { persist(em, it) }
+        totalEntities += batch.size
+        em.flush()
+        em.clear()
+    }
 }
 ```
 
-실제 구현에서는 호출부 가독성을 우선해 generic signature를 조정할 수 있다. 중요한 것은 delete와 insert가 같은 짧은 transaction 안에 있고, 이 helper 밖으로 긴 transaction이 새지 않는 것이다.
+위처럼 transaction boundary는 공통 helper가 맡고, replace 절차는 task/writer에 남긴다.
 
 ### 5.4 Daily battle statistics flow
 
@@ -218,7 +220,7 @@ class StatsAggregationReplacer(
 3. page를 aggregator에 누적
 4. read용 persistence context clear
 5. 모든 page 처리 후 read용 `EntityManager` close
-6. `StatsAggregationReplacer`로 `date` 단위 replace transaction 실행
+6. `JpaBatchTransactionRunner.run` 안에서 `date` 단위 `delete + insert chunks` 실행
 7. 완료 로그 기록
 
 job config는 `EntityManager` 주입을 제거하고, read query lambda와 delete lambda만 전달한다.
@@ -233,7 +235,7 @@ job config는 `EntityManager` 주입을 제거하고, read query lambda와 delet
 2. weekRange별 distinct event ids 조회
 3. eventId별 aggregator 생성
 4. 해당 `(weekRange, eventId)` battle pages 조회와 집계
-5. event 하나의 집계가 끝나면 `StatsAggregationReplacer`로 `(weekRange, eventId)` 단위 replace transaction 실행
+5. event 하나의 집계가 끝나면 `JpaBatchTransactionRunner.run` 안에서 `(weekRange, eventId)` 단위 `delete + insert chunks` 실행
 6. 다음 event 진행
 7. read용 `EntityManager` close
 
@@ -243,7 +245,7 @@ job config는 `EntityManager` 주입을 제거하고, read query lambda와 delet
 
 `BrawlerItemOwnershipStatsTask`의 read/accumulate 흐름은 유지한다. `BrawlerItemOwnershipStatsReader`는 이미 자체 `EntityManager`를 만들어 page 단위로 읽으므로 긴 write transaction을 만들지 않는다.
 
-`BrawlerItemOwnershipStatsWriter`는 `@Transactional`을 제거하고 `BatchTransactionExecutor` 또는 전용 replace helper를 사용한다.
+`BrawlerItemOwnershipStatsWriter`는 `@Transactional`을 제거하고 `JpaBatchTransactionRunner`를 사용한다. table별 delete/save 흐름은 writer 내부에 둔다.
 
 권장 처리 단위:
 
@@ -273,7 +275,8 @@ statistics tasklet step은 더 이상 step 전체 transaction에 의존하지 �
 - tasklet body는 task 호출만 수행한다.
 - Spring Batch 6.0.2의 `StepBuilder.tasklet(tasklet)` 오버로드를 사용하고, statistics tasklet step에는 DB `txManager`를 전달하지 않는다.
 - tasklet step은 Spring Batch의 기본 `ResourcelessTransactionManager`를 사용하게 둔다.
-- read/write용 `EntityManager`는 task/helper가 명시적으로 생성하고 닫는다.
+- read용 `EntityManager`는 task가 명시적으로 생성하고 닫는다.
+- write용 `EntityManager`는 `JpaBatchTransactionRunner`가 transaction-bound shared proxy로 제공한다.
 - write helper는 `PROPAGATION_REQUIRES_NEW`로 replace 단위 독립 commit을 보장한다.
 
 금지하는 형태:
@@ -321,9 +324,9 @@ StepBuilder(STEP_NAME, jobRepository)
 
 - table별 delete와 chunk save 순서를 확인한다.
 - chunk마다 clear가 호출되는지 확인한다.
-- transaction executor가 table 단위로 호출되는지 확인한다.
+- transaction runner가 table 단위로 호출되는지 확인한다.
 
-`BatchTransactionExecutorTest` 또는 helper 단위 테스트:
+`JpaBatchTransactionRunnerTest` 또는 helper 단위 테스트:
 
 - 정상 실행 시 action result를 반환한다.
 - 예외 발생 시 예외가 전파된다.
@@ -369,7 +372,7 @@ DB schema migration은 필요하지 않다. 기존 통계 테이블과 자연키
 - statistics tasklet step에서 DB transaction manager 의존을 제거한다.
 - write commit 단위가 명시적으로 작아진다.
 - `EntityManager` 주입 범위가 줄어든다.
-- `@Transactional` 대신 batch-local transaction helper를 사용한다.
+- `@Transactional` 대신 얇은 batch-local JPA transaction runner를 사용한다.
 - write helper는 accidental outer DB transaction 합류를 막기 위해 `PROPAGATION_REQUIRES_NEW`를 사용한다.
 
 ## 9. Acceptance criteria
@@ -380,6 +383,7 @@ DB schema migration은 필요하지 않다. 기존 통계 테이블과 자연키
 - weekly replace는 `(weekRange, eventId)` 단위로 commit된다.
 - ownership stats replace는 table 단위 또는 더 작은 명시 단위로 commit된다.
 - replace transaction은 step transaction에 합류하지 않고 독립적으로 commit된다.
+- `StatsAggregationReplacer` 같은 람다 중심 replace 추상화는 만들지 않는다.
 - 기존 aggregation 결과의 의미가 바뀌지 않는다.
 - 실패 시 job은 실패하고, 같은 parameter 재실행으로 최종 상태를 복구할 수 있다.
 - 테스트가 짧은 transaction helper와 replace 순서를 검증한다.
