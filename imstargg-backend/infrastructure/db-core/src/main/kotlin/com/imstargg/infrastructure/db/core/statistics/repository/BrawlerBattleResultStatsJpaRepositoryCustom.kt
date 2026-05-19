@@ -10,4 +10,18 @@ interface BrawlerBattleResultStatsJpaRepositoryCustom {
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<BrawlerResultProjection>
+
+    fun findEventTotalSlotSums(
+        eventBrawlStarsId: Long?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<EventSlotSumProjection>
+
+    fun findGroupedByEventAndBrawler(
+        eventBrawlStarsId: Long?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerEventResultProjection>
 }
