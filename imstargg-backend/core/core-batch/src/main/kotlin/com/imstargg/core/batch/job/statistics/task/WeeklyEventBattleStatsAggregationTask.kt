@@ -2,16 +2,20 @@ package com.imstargg.core.batch.job.statistics.task
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
 import com.imstargg.core.batch.job.statistics.BattleStatsConstants
+import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.imstargg.core.enums.WeekRange
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
-class WeeklyEventBattleStatsAggregationTask {
+class WeeklyEventBattleStatsAggregationTask(
+    private val entityManagerFactory: EntityManagerFactory,
+    private val transactionRunner: JpaBatchTransactionRunner,
+) {
     fun <TBattle, TEntity : Any> aggregate(
-        em: EntityManager,
         jobName: String,
         weekRanges: List<WeekRange>,
         readDistinctEventIds: (JPAQueryFactory, WeekRange) -> List<Long>,
@@ -23,29 +27,34 @@ class WeeklyEventBattleStatsAggregationTask {
         persistAdditional: (EntityManager, TEntity) -> Unit = { _, _ -> },
     ) {
         log.info("[{}] 주간 범위 {}개 처리 시작", jobName, weekRanges.size)
-        val queryFactory = JPAQueryFactory(em)
 
-        for (weekRange in weekRanges) {
-            processWeekRange(
-                em = em,
-                jobName = jobName,
-                queryFactory = queryFactory,
-                weekRange = weekRange,
-                readDistinctEventIds = readDistinctEventIds,
-                readPage = readPage,
-                getId = getId,
-                aggregatorFactory = aggregatorFactory,
-                deleteExisting = deleteExisting,
-                persist = persist,
-                persistAdditional = persistAdditional,
-            )
+        val readEm = entityManagerFactory.createEntityManager()
+        try {
+            val readQueryFactory = JPAQueryFactory(readEm)
+            for (weekRange in weekRanges) {
+                processWeekRange(
+                    readEm = readEm,
+                    jobName = jobName,
+                    readQueryFactory = readQueryFactory,
+                    weekRange = weekRange,
+                    readDistinctEventIds = readDistinctEventIds,
+                    readPage = readPage,
+                    getId = getId,
+                    aggregatorFactory = aggregatorFactory,
+                    deleteExisting = deleteExisting,
+                    persist = persist,
+                    persistAdditional = persistAdditional,
+                )
+            }
+        } finally {
+            readEm.close()
         }
     }
 
     private fun <TBattle, TEntity : Any> processWeekRange(
-        em: EntityManager,
+        readEm: EntityManager,
         jobName: String,
-        queryFactory: JPAQueryFactory,
+        readQueryFactory: JPAQueryFactory,
         weekRange: WeekRange,
         readDistinctEventIds: (JPAQueryFactory, WeekRange) -> List<Long>,
         readPage: (JPAQueryFactory, WeekRange, Long, Long) -> List<TBattle>,
@@ -55,7 +64,7 @@ class WeeklyEventBattleStatsAggregationTask {
         persist: (EntityManager, TEntity) -> Unit,
         persistAdditional: (EntityManager, TEntity) -> Unit,
     ) {
-        val eventIds = readDistinctEventIds(queryFactory, weekRange)
+        val eventIds = readDistinctEventIds(readQueryFactory, weekRange)
         log.info(
             "[{}] 이벤트 {}개 처리 시작 - weekRange: {} ~ {}",
             jobName,
@@ -72,24 +81,26 @@ class WeeklyEventBattleStatsAggregationTask {
 
             var lastId = 0L
             while (true) {
-                val battles = readPage(queryFactory, weekRange, lastId, eventId)
+                val battles = readPage(readQueryFactory, weekRange, lastId, eventId)
                 if (battles.isEmpty()) break
                 totalRead += battles.size
                 battles.forEach { aggregator.aggregate(it) }
                 lastId = getId(battles.last())
-                em.clear()
+                readEm.clear()
             }
 
-            deleteExisting(queryFactory, weekRange, eventId)
+            transactionRunner.run { writeEm, writeQueryFactory ->
+                deleteExisting(writeQueryFactory, weekRange, eventId)
 
-            aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->
-                batch.forEach {
-                    persist(em, it)
-                    persistAdditional(em, it)
+                aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->
+                    batch.forEach {
+                        persist(writeEm, it)
+                        persistAdditional(writeEm, it)
+                    }
+                    totalEntities += batch.size
+                    writeEm.flush()
+                    writeEm.clear()
                 }
-                totalEntities += batch.size
-                em.flush()
-                em.clear()
             }
         }
 

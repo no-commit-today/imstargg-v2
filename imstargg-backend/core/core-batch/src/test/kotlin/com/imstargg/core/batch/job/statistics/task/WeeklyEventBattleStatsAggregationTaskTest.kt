@@ -1,43 +1,77 @@
 package com.imstargg.core.batch.job.statistics.task
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
+import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.imstargg.core.enums.WeekRange
 import io.mockk.every
 import io.mockk.mockk
 import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionStatus
 import java.time.LocalDate
 
 class WeeklyEventBattleStatsAggregationTaskTest {
     @Test
-    fun `주간 이벤트별 전투를 페이지 단위로 읽고 부가 저장 콜백을 함께 실행한다`() {
+    fun `주간 이벤트별 전투를 읽고 이벤트 단위 짧은 transaction 으로 집계를 교체한다`() {
         // given
-        val em = mockk<EntityManager>()
+        val entityManagerFactory = mockk<EntityManagerFactory>()
+        val readEm = mockk<EntityManager>()
+        val writeEm = mockk<EntityManager>()
+        val txManager = mockk<PlatformTransactionManager>()
+        val txStatus = mockk<TransactionStatus>(relaxed = true)
         val calls = mutableListOf<String>()
-        val sut = WeeklyEventBattleStatsAggregationTask()
+        val transactionRunner = JpaBatchTransactionRunner(txManager, writeEm)
+        val sut =
+            WeeklyEventBattleStatsAggregationTask(
+                entityManagerFactory = entityManagerFactory,
+                transactionRunner = transactionRunner,
+            )
         val weekRange =
             WeekRange(
                 start = LocalDate.of(2026, 4, 27),
                 end = LocalDate.of(2026, 4, 30),
             )
         val aggregators = mutableListOf<StreamingAggregator>()
-        every { em.persist(any()) } answers {
-            calls.add("em.persist:${firstArg<Int>()}")
+        every { entityManagerFactory.createEntityManager() } returns readEm
+        every { readEm.clear() } answers {
+            calls.add("readEm.clear")
             Unit
         }
-        every { em.flush() } answers {
-            calls.add("em.flush")
+        every { readEm.close() } answers {
+            calls.add("readEm.close")
             Unit
         }
-        every { em.clear() } answers {
-            calls.add("em.clear")
+        every {
+            txManager.getTransaction(
+                match { it.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW },
+            )
+        } answers {
+            calls.add("tx.begin")
+            txStatus
+        }
+        every { txManager.commit(txStatus) } answers {
+            calls.add("tx.commit")
+            Unit
+        }
+        every { writeEm.persist(any()) } answers {
+            calls.add("writeEm.persist:${firstArg<Int>()}")
+            Unit
+        }
+        every { writeEm.flush() } answers {
+            calls.add("writeEm.flush")
+            Unit
+        }
+        every { writeEm.clear() } answers {
+            calls.add("writeEm.clear")
             Unit
         }
 
         // when
         sut.aggregate(
-            em = em,
             jobName = "testWeeklyJob",
             weekRanges = listOf(weekRange),
             readDistinctEventIds = { _, requestedWeekRange ->
@@ -73,23 +107,28 @@ class WeeklyEventBattleStatsAggregationTaskTest {
         assertThat(calls).containsExactly(
             "events:2026-04-27",
             "read:10:0",
-            "em.clear",
+            "readEm.clear",
             "read:10:2",
+            "tx.begin",
             "delete:10",
-            "em.persist:1",
+            "writeEm.persist:1",
             "additional:1",
-            "em.persist:2",
+            "writeEm.persist:2",
             "additional:2",
-            "em.flush",
-            "em.clear",
+            "writeEm.flush",
+            "writeEm.clear",
+            "tx.commit",
             "read:20:0",
-            "em.clear",
+            "readEm.clear",
             "read:20:3",
+            "tx.begin",
             "delete:20",
-            "em.persist:3",
+            "writeEm.persist:3",
             "additional:3",
-            "em.flush",
-            "em.clear",
+            "writeEm.flush",
+            "writeEm.clear",
+            "tx.commit",
+            "readEm.close",
         )
     }
 

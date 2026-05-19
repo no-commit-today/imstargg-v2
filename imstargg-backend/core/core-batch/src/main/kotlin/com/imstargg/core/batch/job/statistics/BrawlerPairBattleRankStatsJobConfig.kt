@@ -6,7 +6,6 @@ import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.enums.StatsWeekRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerPairBattleRankStatsEntity.Companion.brawlerPairBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity.Companion.statsRankBattleEntity
-import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -23,7 +22,6 @@ import org.springframework.transaction.PlatformTransactionManager
 class BrawlerPairBattleRankStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
-    private val em: EntityManager,
     private val aggregationTask: WeeklyEventBattleStatsAggregationTask,
 ) {
     companion object {
@@ -53,7 +51,6 @@ class BrawlerPairBattleRankStatsJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
                 aggregationTask.aggregate(
-                    em = em,
                     jobName = JOB_NAME,
                     weekRanges = StatsWeekRange.currentAndPrevious(dateJobParameter().date!!),
                     readDistinctEventIds = { queryFactory, weekRange ->
