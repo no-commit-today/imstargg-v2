@@ -1,10 +1,12 @@
 package com.imstargg.core.application.statistics
 
+import com.imstargg.core.application.brawlstars.BattleEventService
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerPairResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
+import com.imstargg.core.domain.statistics.SlotsPerGame
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
@@ -14,6 +16,7 @@ import java.time.Clock
 class BattleResultStatisticsService(
     private val clock: Clock,
     private val resultRepository: BattleResultStatisticsRepositoryWithCache,
+    private val battleEventService: BattleEventService,
 ) {
     fun getBrawlerResultStatistics(
         eventId: BrawlStarsId?,
@@ -21,14 +24,18 @@ class BattleResultStatisticsService(
         dateRange: StatsDateRange,
     ): BrawlerResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        val counts =
-            resultRepository.findBrawlerResultCounts(
+        val rows =
+            resultRepository.findBrawlerEventResultCounts(
                 eventId = eventId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
             )
-        return BrawlerResultStatistics.create(counts)
+        val slotsPerGameByEvent =
+            battleEventService
+                .findModesByEventIds(rows.map { it.eventId }.distinct())
+                .mapValues { (_, mode) -> SlotsPerGame.forResult(mode.playerCounts) }
+        return BrawlerResultStatistics.create(rows = rows, slotsPerGameByEvent = slotsPerGameByEvent)
     }
 
     fun getBrawlerPairResultStatistics(

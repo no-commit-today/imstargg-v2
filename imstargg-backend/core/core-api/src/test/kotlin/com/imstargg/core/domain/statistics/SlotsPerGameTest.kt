@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class SlotsPerGameTest {
     @Nested
-    inner class forResult {
+    inner class ForResult {
         @Test
         fun `3v3 은 6 슬롯`() {
             assertThat(SlotsPerGame.forResult(listOf(3, 3))).isEqualTo(6)
@@ -24,7 +24,7 @@ class SlotsPerGameTest {
     }
 
     @Nested
-    inner class forPair {
+    inner class ForPair {
         @Test
         fun `3v3 은 12 페어 슬롯`() {
             assertThat(SlotsPerGame.forPair(listOf(3, 3))).isEqualTo(12)
@@ -42,7 +42,7 @@ class SlotsPerGameTest {
     }
 
     @Nested
-    inner class forEnemy {
+    inner class ForEnemy {
         @Test
         fun `3v3 은 18 매치업 슬롯`() {
             assertThat(SlotsPerGame.forEnemy(listOf(3, 3))).isEqualTo(18)

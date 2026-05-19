@@ -22,31 +22,6 @@ class BattleResultStatisticsRepository(
     private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
     private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
 ) {
-    fun findBrawlerResultCounts(
-        eventId: BrawlStarsId?,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): List<BrawlerResultCount> =
-        battleResultJpaRepository
-            .findGroupedByBrawler(
-                eventBrawlStarsId = eventId?.value,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            ).map { projection ->
-                BrawlerResultCount(
-                    brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
-                    resultCount =
-                        ResultCount(
-                            victoryCount = projection.victoryCount,
-                            defeatCount = projection.defeatCount,
-                            drawCount = projection.drawCount,
-                        ),
-                    starPlayerCount = projection.starPlayerCount,
-                )
-            }
-
     fun findBrawlerEventResultCounts(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,

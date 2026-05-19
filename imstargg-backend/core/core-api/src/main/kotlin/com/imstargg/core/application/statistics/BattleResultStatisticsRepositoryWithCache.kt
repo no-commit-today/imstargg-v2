@@ -2,7 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.statistics.BrawlerResultCount
+import com.imstargg.core.domain.statistics.BrawlerEventResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
@@ -15,16 +15,16 @@ class BattleResultStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'brawlerEventResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
-    fun findBrawlerResultCounts(
+    fun findBrawlerEventResultCounts(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerResultCount> =
-        battleResultStatisticsRepository.findBrawlerResultCounts(
+    ): List<BrawlerEventResultCount> =
+        battleResultStatisticsRepository.findBrawlerEventResultCounts(
             eventId = eventId,
             tierRange = tierRange,
             startDate = startDate,

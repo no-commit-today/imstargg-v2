@@ -8,18 +8,19 @@ import org.junit.jupiter.api.Test
 
 class BrawlerResultStatisticsTest {
     @Nested
-    inner class create {
+    inner class Create {
         @Test
         fun `단일 3v3 이벤트의 픽률은 게임 수 분모로 계산된다`() {
             // given: 3v3 이벤트 100게임 → 600 슬롯, 브롤러 A 가 300 슬롯
             val eventId = BrawlStarsId(1L)
             val brawlerA = BrawlStarsId(10L)
             val brawlerB = BrawlStarsId(11L)
-            val rows = listOf(
-                BrawlerEventResultCount(eventId, brawlerA, ResultCount(150, 150, 0), 30),
-                BrawlerEventResultCount(eventId, brawlerB, ResultCount(150, 150, 0), 30),
-                BrawlerEventResultCount(eventId, BrawlStarsId(12L), ResultCount(150, 150, 0), 60),
-            )
+            val rows =
+                listOf(
+                    BrawlerEventResultCount(eventId, brawlerA, ResultCount(150, 150, 0), 30),
+                    BrawlerEventResultCount(eventId, brawlerB, ResultCount(150, 150, 0), 30),
+                    BrawlerEventResultCount(eventId, BrawlStarsId(12L), ResultCount(150, 150, 0), 60),
+                )
             val slotsPerGameByEvent = mapOf(eventId to 6)
 
             // when
@@ -39,12 +40,13 @@ class BrawlerResultStatisticsTest {
             val event3v3 = BrawlStarsId(1L)
             val eventSolo = BrawlStarsId(2L)
             val brawler = BrawlStarsId(10L)
-            val rows = listOf(
-                BrawlerEventResultCount(event3v3, brawler, ResultCount(60, 0, 0), 0),
-                BrawlerEventResultCount(event3v3, BrawlStarsId(99L), ResultCount(150, 150, 0), 0),
-                BrawlerEventResultCount(eventSolo, brawler, ResultCount(50, 0, 0), 0),
-                BrawlerEventResultCount(eventSolo, BrawlStarsId(99L), ResultCount(225, 225, 0), 0),
-            )
+            val rows =
+                listOf(
+                    BrawlerEventResultCount(event3v3, brawler, ResultCount(60, 0, 0), 0),
+                    BrawlerEventResultCount(event3v3, BrawlStarsId(99L), ResultCount(150, 150, 0), 0),
+                    BrawlerEventResultCount(eventSolo, brawler, ResultCount(50, 0, 0), 0),
+                    BrawlerEventResultCount(eventSolo, BrawlStarsId(99L), ResultCount(225, 225, 0), 0),
+                )
             val slotsPerGameByEvent = mapOf(event3v3 to 6, eventSolo to 10)
 
             // when
@@ -61,15 +63,17 @@ class BrawlerResultStatisticsTest {
         fun `slotsPerGameByEvent에 누락된 이벤트가 있으면 예외`() {
             // given
             val eventId = BrawlStarsId(1L)
-            val rows = listOf(
-                BrawlerEventResultCount(eventId, BrawlStarsId(10L), ResultCount(1, 0, 0), 0),
-            )
+            val rows =
+                listOf(
+                    BrawlerEventResultCount(eventId, BrawlStarsId(10L), ResultCount(1, 0, 0), 0),
+                )
             val slotsPerGameByEvent = emptyMap<BrawlStarsId, Int>()
 
             // when
-            val ex = catchThrowableOfType(IllegalStateException::class.java) {
-                BrawlerResultStatistics.create(rows, slotsPerGameByEvent)
-            }
+            val ex =
+                catchThrowableOfType(IllegalStateException::class.java) {
+                    BrawlerResultStatistics.create(rows, slotsPerGameByEvent)
+                }
 
             // then
             assertThat(ex).hasMessageContaining("playerCounts")

@@ -32,7 +32,8 @@ data class BrawlerResultStatistics(
             }
 
             val totalBattleCount: Long =
-                rows.groupBy { it.eventId }
+                rows
+                    .groupBy { it.eventId }
                     .map { (eventId, eventRows) ->
                         val eventSlotSum = eventRows.sumOf { it.resultCount.totalCount }
                         val slotsPerGame =
@@ -42,7 +43,8 @@ data class BrawlerResultStatistics(
                     }.sum()
 
             val brawlerAggregates =
-                rows.groupBy { it.brawlerId }
+                rows
+                    .groupBy { it.brawlerId }
                     .map { (brawlerId, brawlerRows) ->
                         BrawlerResultCount(
                             brawlerId = brawlerId,
@@ -73,12 +75,5 @@ data class BrawlerResultStatistics(
                 items = items.sortedByDescending { it.tierScore.value },
             )
         }
-
-        @Deprecated("Use create(rows, slotsPerGameByEvent). Removed in Task 9.", level = DeprecationLevel.WARNING)
-        fun create(counts: List<BrawlerResultCount>): BrawlerResultStatistics =
-            create(
-                counts.map { BrawlerEventResultCount(BrawlStarsId(0L), it.brawlerId, it.resultCount, it.starPlayerCount) },
-                mapOf(BrawlStarsId(0L) to 1),
-            )
     }
 }
