@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
+import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.imstargg.core.enums.BrawlerTrophyRange
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerBuffyOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGadgetOwnershipStatsJpaRepository
@@ -15,6 +16,9 @@ import io.mockk.verify
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionStatus
 
 class BrawlerItemOwnershipStatsWriterTest {
     private val gearRepository = mockk<BrawlerGearOwnershipStatsJpaRepository>()
@@ -22,7 +26,9 @@ class BrawlerItemOwnershipStatsWriterTest {
     private val starPowerRepository = mockk<BrawlerStarPowerOwnershipStatsJpaRepository>()
     private val hyperChargeRepository = mockk<BrawlerHyperChargeOwnershipStatsJpaRepository>()
     private val buffyRepository = mockk<BrawlerBuffyOwnershipStatsJpaRepository>()
+    private val txManager = mockk<PlatformTransactionManager>()
     private val entityManager = mockk<EntityManager>()
+    private val transactionRunner = JpaBatchTransactionRunner(txManager, entityManager)
     private val sut =
         BrawlerItemOwnershipStatsWriter(
             gearRepository = gearRepository,
@@ -30,13 +36,19 @@ class BrawlerItemOwnershipStatsWriterTest {
             starPowerRepository = starPowerRepository,
             hyperChargeRepository = hyperChargeRepository,
             buffyRepository = buffyRepository,
-            entityManager = entityManager,
+            transactionRunner = transactionRunner,
         )
 
     @Test
-    fun `기존 집계를 삭제한 뒤 chunk 단위로 flush 하고 영속성 컨텍스트를 비운다`() {
+    fun `테이블별 짧은 transaction 에서 기존 집계를 삭제한 뒤 chunk 단위로 flush 하고 영속성 컨텍스트를 비운다`() {
         // given
         val gearBatches = mutableListOf<List<BrawlerGearOwnershipStatsEntity>>()
+        every {
+            txManager.getTransaction(
+                match { it.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW },
+            )
+        } answers { mockk<TransactionStatus>(relaxed = true) }
+        every { txManager.commit(any()) } just Runs
         every { gearRepository.deleteAllInBatch() } just Runs
         every { gadgetRepository.deleteAllInBatch() } just Runs
         every { starPowerRepository.deleteAllInBatch() } just Runs
@@ -68,6 +80,12 @@ class BrawlerItemOwnershipStatsWriterTest {
         verify(exactly = 1) { hyperChargeRepository.deleteAllInBatch() }
         verify(exactly = 1) { buffyRepository.deleteAllInBatch() }
         verify(exactly = 2) { entityManager.clear() }
+        verify(exactly = 5) {
+            txManager.getTransaction(
+                match { it.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW },
+            )
+        }
+        verify(exactly = 5) { txManager.commit(any()) }
         assertThat(gearBatches.map { it.size }).containsExactly(1000, 1)
     }
 
