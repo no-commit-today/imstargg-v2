@@ -68,6 +68,7 @@ class BattleEventService(
                 names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
                 iconImageUrl = imagesByBrawlStarsId[mode.brawlStarsId]?.let { "${cloudFrontProperties.baseUrl}/${it.storedName}" },
                 resultType = mode.resultType,
+                playerCounts = mode.playerCounts,
             )
         }
     }
@@ -92,6 +93,17 @@ class BattleEventService(
             battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
                 ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
         entity.changeResultType(resultType)
+    }
+
+    @Transactional
+    fun updateModePlayerCounts(
+        brawlStarsId: Long,
+        playerCounts: List<Int>,
+    ) {
+        val entity =
+            battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
+                ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
+        entity.changePlayerCounts(playerCounts)
     }
 
     @Transactional
