@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
+import com.imstargg.core.domain.statistics.BrawlerEventResultCount
 import com.imstargg.core.domain.statistics.BrawlerPairResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
@@ -43,6 +44,51 @@ class BattleResultStatisticsRepository(
                             drawCount = projection.drawCount,
                         ),
                     starPlayerCount = projection.starPlayerCount,
+                )
+            }
+
+    fun findBrawlerEventResultCounts(
+        eventId: BrawlStarsId?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<BrawlerEventResultCount> =
+        battleResultJpaRepository
+            .findGroupedByEventAndBrawler(
+                eventBrawlStarsId = eventId?.value,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            ).map { projection ->
+                BrawlerEventResultCount(
+                    eventId = BrawlStarsId(projection.eventBrawlStarsId),
+                    brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
+                    resultCount =
+                        ResultCount(
+                            victoryCount = projection.victoryCount,
+                            defeatCount = projection.defeatCount,
+                            drawCount = projection.drawCount,
+                        ),
+                    starPlayerCount = projection.starPlayerCount,
+                )
+            }
+
+    fun findEventTotalSlotSums(
+        eventId: BrawlStarsId?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<EventTotalSlotSum> =
+        battleResultJpaRepository
+            .findEventTotalSlotSums(
+                eventBrawlStarsId = eventId?.value,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            ).map { projection ->
+                EventTotalSlotSum(
+                    eventId = BrawlStarsId(projection.eventBrawlStarsId),
+                    totalSlotCount = projection.totalSlotCount,
                 )
             }
 
