@@ -94,21 +94,6 @@ class BattleResultStatisticsRepository(
                 )
             }
 
-    fun countEnemyResultTotalBattleCount(
-        eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        enemyBattleResultJpaRepository.countTotalBattleCount(
-            eventBrawlStarsId = eventId?.value,
-            brawlerBrawlStarsId = brawlerId.value,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
-
     fun countEnemyResultBy(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
@@ -152,21 +137,6 @@ class BattleResultStatisticsRepository(
                         ),
                 )
             }
-
-    fun countPairResultTotalBattleCount(
-        eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        pairBattleResultJpaRepository.countTotalBattleCount(
-            eventBrawlStarsId = eventId?.value,
-            brawlerBrawlStarsId = brawlerId.value,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
 
     fun countPairResultBy(
         eventId: BrawlStarsId?,

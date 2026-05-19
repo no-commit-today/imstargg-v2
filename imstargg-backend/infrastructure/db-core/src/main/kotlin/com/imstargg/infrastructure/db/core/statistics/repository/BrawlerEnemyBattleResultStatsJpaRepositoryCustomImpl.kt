@@ -47,24 +47,6 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
             }
     }
 
-    override fun countTotalBattleCount(
-        eventBrawlStarsId: Long?,
-        brawlerBrawlStarsId: Long,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        queryFactory
-            .select(brawlerEnemyBattleResultStatsEntity.resultCount.totalCount.sumLong())
-            .from(brawlerEnemyBattleResultStatsEntity)
-            .where(
-                eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
-                brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
-                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
-            ).fetchOne() ?: 0L
-
     override fun countDistinctEnemyBrawlers(
         eventBrawlStarsId: Long?,
         brawlerBrawlStarsId: Long,

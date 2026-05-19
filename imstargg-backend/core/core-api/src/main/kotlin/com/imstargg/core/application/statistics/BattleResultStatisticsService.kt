@@ -11,6 +11,7 @@ import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
 import java.time.Clock
+import java.time.LocalDate
 
 @Service
 class BattleResultStatisticsService(
@@ -46,8 +47,8 @@ class BattleResultStatisticsService(
         dateRange: StatsDateRange,
     ): BrawlerPairResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        val counts =
-            resultRepository.findBrawlerPairResult(
+        val raw =
+            resultRepository.findBrawlerPairResultRaw(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 pairBrawlerId = pairBrawlerId,
@@ -55,7 +56,12 @@ class BattleResultStatisticsService(
                 startDate = startDate,
                 endDate = endDate,
             )
-        return BrawlerPairResultStatistics.create(counts.totalBattleCount, counts.totalElementCount, counts.items)
+        val totalBattleCount = computeTotalBattleCount(eventId, tierRange, startDate, endDate)
+        return BrawlerPairResultStatistics.create(
+            totalBattleCount = totalBattleCount,
+            totalElementCount = raw.totalElementCount,
+            counts = raw.items,
+        )
     }
 
     fun getEnemyResultStatistics(
@@ -65,18 +71,19 @@ class BattleResultStatisticsService(
         dateRange: StatsDateRange,
     ): BrawlerEnemyResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        val counts =
-            resultRepository.findBrawlerEnemyResult(
+        val raw =
+            resultRepository.findBrawlerEnemyResultRaw(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
             )
+        val totalBattleCount = computeTotalBattleCount(eventId, tierRange, startDate, endDate)
         return BrawlerEnemyResultStatistics.create(
-            counts.totalBattleCount,
-            counts.totalElementCount,
-            counts.items,
+            totalBattleCount = totalBattleCount,
+            totalElementCount = raw.totalElementCount,
+            counts = raw.items,
         )
     }
 
@@ -93,5 +100,25 @@ class BattleResultStatisticsService(
                 startDate = startDate,
                 endDate = endDate,
             ).map { BrawlerResultDailyStatistics.create(it) }
+    }
+
+    private fun computeTotalBattleCount(
+        eventId: BrawlStarsId?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): Long {
+        val eventSlotSums =
+            resultRepository.findEventTotalSlotSums(
+                eventId = eventId,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        val modes = battleEventService.findModesByEventIds(eventSlotSums.map { it.eventId }.distinct())
+        return eventSlotSums.sumOf { sum ->
+            val mode = modes[sum.eventId] ?: error("playerCounts missing for event=${sum.eventId}")
+            sum.totalSlotCount / SlotsPerGame.forResult(mode.playerCounts)
+        }
     }
 }
