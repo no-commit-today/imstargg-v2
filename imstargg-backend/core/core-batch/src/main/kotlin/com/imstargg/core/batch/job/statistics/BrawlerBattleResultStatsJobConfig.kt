@@ -5,7 +5,6 @@ import com.imstargg.core.batch.job.statistics.task.DailyBattleStatsAggregationTa
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsEntity.Companion.brawlerBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
-import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -16,13 +15,10 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class BrawlerBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
-    private val txManager: PlatformTransactionManager,
-    private val em: EntityManager,
     private val aggregationTask: DailyBattleStatsAggregationTask,
 ) {
     companion object {
@@ -52,7 +48,6 @@ class BrawlerBattleResultStatsJobConfig(
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
                 aggregationTask.aggregate(
-                    em = em,
                     jobName = JOB_NAME,
                     date = dateJobParameter().date!!,
                     readPage = { queryFactory, date, lastId ->
@@ -76,6 +71,6 @@ class BrawlerBattleResultStatsJobConfig(
                     },
                 )
                 RepeatStatus.FINISHED
-            }, txManager)
+            })
             .build()
 }

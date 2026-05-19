@@ -2,16 +2,20 @@ package com.imstargg.core.batch.job.statistics.task
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
 import com.imstargg.core.batch.job.statistics.BattleStatsConstants
+import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component
-class DailyBattleStatsAggregationTask {
+class DailyBattleStatsAggregationTask(
+    private val entityManagerFactory: EntityManagerFactory,
+    private val transactionRunner: JpaBatchTransactionRunner,
+) {
     fun <TBattle, TEntity : Any> aggregate(
-        em: EntityManager,
         jobName: String,
         date: LocalDate,
         readPage: (JPAQueryFactory, LocalDate, Long) -> List<TBattle>,
@@ -20,28 +24,35 @@ class DailyBattleStatsAggregationTask {
         deleteExisting: (JPAQueryFactory, LocalDate) -> Unit,
         persist: (EntityManager, TEntity) -> Unit = { entityManager, entity -> entityManager.persist(entity) },
     ) {
-        val queryFactory = JPAQueryFactory(em)
-
         var lastId = 0L
         var totalRead = 0L
-        while (true) {
-            val battles = readPage(queryFactory, date, lastId)
-            if (battles.isEmpty()) break
-            totalRead += battles.size
-            battles.forEach { aggregator.aggregate(it) }
-            lastId = getId(battles.last())
-            em.clear()
-            log.debug("[{}] 읽기 진행 - date: {}, 누적: {}건", jobName, date, totalRead)
+
+        val readEm = entityManagerFactory.createEntityManager()
+        try {
+            val readQueryFactory = JPAQueryFactory(readEm)
+            while (true) {
+                val battles = readPage(readQueryFactory, date, lastId)
+                if (battles.isEmpty()) break
+                totalRead += battles.size
+                battles.forEach { aggregator.aggregate(it) }
+                lastId = getId(battles.last())
+                readEm.clear()
+                log.debug("[{}] 읽기 진행 - date: {}, 누적: {}건", jobName, date, totalRead)
+            }
+        } finally {
+            readEm.close()
         }
 
-        deleteExisting(queryFactory, date)
-
         var totalEntities = 0L
-        aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->
-            batch.forEach { persist(em, it) }
-            totalEntities += batch.size
-            em.flush()
-            em.clear()
+        transactionRunner.run { em, queryFactory ->
+            deleteExisting(queryFactory, date)
+
+            aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->
+                batch.forEach { persist(em, it) }
+                totalEntities += batch.size
+                em.flush()
+                em.clear()
+            }
         }
 
         log.info(

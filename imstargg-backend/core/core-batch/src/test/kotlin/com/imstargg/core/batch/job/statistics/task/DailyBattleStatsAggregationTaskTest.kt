@@ -1,38 +1,68 @@
 package com.imstargg.core.batch.job.statistics.task
 
 import com.imstargg.core.batch.domain.BattleStatsAggregator
+import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import io.mockk.every
 import io.mockk.mockk
 import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionStatus
 import java.time.LocalDate
 
 class DailyBattleStatsAggregationTaskTest {
     @Test
-    fun `일별 전투를 페이지 단위로 읽고 스트리밍 집계 엔티티를 저장한다`() {
+    fun `일별 전투를 모두 읽은 뒤 날짜 단위 짧은 transaction 으로 집계를 교체한다`() {
         // given
-        val em = mockk<EntityManager>()
+        val entityManagerFactory = mockk<EntityManagerFactory>()
+        val readEm = mockk<EntityManager>()
+        val writeEm = mockk<EntityManager>()
+        val txManager = mockk<PlatformTransactionManager>()
+        val txStatus = mockk<TransactionStatus>(relaxed = true)
         val calls = mutableListOf<String>()
-        val sut = DailyBattleStatsAggregationTask()
+        val transactionRunner = JpaBatchTransactionRunner(txManager, writeEm)
+        val sut = DailyBattleStatsAggregationTask(entityManagerFactory, transactionRunner)
         val date = LocalDate.of(2026, 4, 30)
         val aggregator = StreamingAggregator()
-        every { em.persist(any()) } answers {
-            calls.add("em.persist:${firstArg<Int>()}")
+        every { entityManagerFactory.createEntityManager() } returns readEm
+        every { readEm.clear() } answers {
+            calls.add("readEm.clear")
             Unit
         }
-        every { em.flush() } answers {
-            calls.add("em.flush")
+        every { readEm.close() } answers {
+            calls.add("readEm.close")
             Unit
         }
-        every { em.clear() } answers {
-            calls.add("em.clear")
+        every {
+            txManager.getTransaction(
+                match { it.propagationBehavior == TransactionDefinition.PROPAGATION_REQUIRES_NEW },
+            )
+        } answers {
+            calls.add("tx.begin")
+            txStatus
+        }
+        every { txManager.commit(txStatus) } answers {
+            calls.add("tx.commit")
+            Unit
+        }
+        every { writeEm.persist(any()) } answers {
+            calls.add("writeEm.persist:${firstArg<Int>()}")
+            Unit
+        }
+        every { writeEm.flush() } answers {
+            calls.add("writeEm.flush")
+            Unit
+        }
+        every { writeEm.clear() } answers {
+            calls.add("writeEm.clear")
             Unit
         }
 
         // when
         sut.aggregate(
-            em = em,
             jobName = "testDailyJob",
             date = date,
             readPage = { _, _, lastId ->
@@ -54,16 +84,19 @@ class DailyBattleStatsAggregationTaskTest {
         assertThat(aggregator.aggregatedIds).containsExactly(1L, 2L, 3L)
         assertThat(calls).containsExactly(
             "read:0",
-            "em.clear",
+            "readEm.clear",
             "read:2",
-            "em.clear",
+            "readEm.clear",
             "read:3",
+            "readEm.close",
+            "tx.begin",
             "delete:2026-04-30",
-            "em.persist:1",
-            "em.persist:2",
-            "em.persist:3",
-            "em.flush",
-            "em.clear",
+            "writeEm.persist:1",
+            "writeEm.persist:2",
+            "writeEm.persist:3",
+            "writeEm.flush",
+            "writeEm.clear",
+            "tx.commit",
         )
     }
 
