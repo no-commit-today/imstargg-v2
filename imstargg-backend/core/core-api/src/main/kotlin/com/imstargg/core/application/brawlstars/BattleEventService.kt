@@ -2,6 +2,7 @@ package com.imstargg.core.application.brawlstars
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
+import com.imstargg.core.domain.brawlstars.event.BattleEventMode
 import com.imstargg.core.domain.brawlstars.event.RotationBattleEvent
 import com.imstargg.core.enums.SoloRankSeason
 import com.imstargg.core.error.CoreException
@@ -31,4 +32,15 @@ class BattleEventService(
     }
 
     fun search(name: String): List<BattleEvent> = battleEventRepository.searchByMapName(name)
+
+    /**
+     * 여러 이벤트 ID 에 대해 한 번에 mode 정보를 조회한다.
+     *
+     * 결과형 통계 픽률 계산에서 event 단위 slotsPerGame 환산에 사용된다.
+     * 결과 Map은 mode 정보가 존재하는 이벤트만 포함한다 (mode 미연결 이벤트는 제외).
+     */
+    fun findModesByEventIds(eventIds: Collection<BrawlStarsId>): Map<BrawlStarsId, BattleEventMode> =
+        eventIds.toSet()
+            .mapNotNull { id -> battleEventRepositoryWithCache.find(id)?.mode?.let { id to it } }
+            .toMap()
 }
