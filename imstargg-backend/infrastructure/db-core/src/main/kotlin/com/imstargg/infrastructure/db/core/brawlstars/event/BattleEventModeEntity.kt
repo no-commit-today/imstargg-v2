@@ -11,6 +11,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(
@@ -25,6 +27,7 @@ class BattleEventModeEntity(
     @Column(name = "brawlstars_name", updatable = false, nullable = false)
     val brawlStarsName: String,
     resultType: BattleEventResultType = BattleEventResultType.RESULT,
+    playerCounts: List<Int> = DEFAULT_PLAYER_COUNTS,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,12 +39,47 @@ class BattleEventModeEntity(
     var resultType: BattleEventResultType = resultType
         protected set
 
+    /**
+     * 각 팀의 인원 수 리스트. 결과형 통계의 픽률 계산에서 게임 수 도출에 사용된다.
+     *
+     * 예시:
+     *  - 3v3: [3, 3]
+     *  - Solo Showdown: [1] * 10
+     *  - Duels (1v1): [1, 1]
+     *  - 비대칭(가상): [1, 5]
+     *
+     * Rank 모드(`BattleEventResultType.RANK`)에서도 의미는 동일하지만,
+     * Rank 통계 엔티티(`BrawlerBattleRankStatsEntity`)는 본인 팀 슬롯만 집계하므로
+     * 이 값으로 게임 수를 환산할 수 없다.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "player_counts", columnDefinition = "jsonb", nullable = false)
+    var playerCounts: List<Int> = playerCounts
+        protected set
+
+    init {
+        validatePlayerCounts(playerCounts)
+    }
+
     fun changeResultType(newType: BattleEventResultType) {
         this.resultType = newType
+    }
+
+    fun changePlayerCounts(newCounts: List<Int>) {
+        validatePlayerCounts(newCounts)
+        this.playerCounts = newCounts
+    }
+
+    private fun validatePlayerCounts(counts: List<Int>) {
+        require(counts.isNotEmpty()) { "playerCounts must not be empty" }
+        require(counts.all { it >= 1 }) { "every team size must be >= 1" }
     }
 
     companion object {
         // API 응답에서 name이 null인 경우 사용
         const val UNKNOWN_NAME = "UNKNOWN"
+
+        /** 절대다수의 모드가 3v3 이므로 기본값. 마이그레이션과 일치. */
+        val DEFAULT_PLAYER_COUNTS: List<Int> = listOf(3, 3)
     }
 }
