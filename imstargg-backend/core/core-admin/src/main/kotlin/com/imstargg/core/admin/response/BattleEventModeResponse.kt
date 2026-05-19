@@ -9,4 +9,5 @@ data class BattleEventModeResponse(
     val names: Map<Language, String>,
     val iconImageUrl: String?,
     val resultType: BattleEventResultType,
+    val playerCounts: List<Int>,
 )

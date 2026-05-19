@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
+import com.imstargg.core.domain.statistics.BrawlerEventResultCount
 import com.imstargg.core.domain.statistics.BrawlerPairResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
@@ -21,20 +22,21 @@ class BattleResultStatisticsRepository(
     private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
     private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
 ) {
-    fun findBrawlerResultCounts(
+    fun findBrawlerEventResultCounts(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerResultCount> =
+    ): List<BrawlerEventResultCount> =
         battleResultJpaRepository
-            .findGroupedByBrawler(
+            .findGroupedByEventAndBrawler(
                 eventBrawlStarsId = eventId?.value,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
             ).map { projection ->
-                BrawlerResultCount(
+                BrawlerEventResultCount(
+                    eventId = BrawlStarsId(projection.eventBrawlStarsId),
                     brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
                     resultCount =
                         ResultCount(
@@ -43,6 +45,25 @@ class BattleResultStatisticsRepository(
                             drawCount = projection.drawCount,
                         ),
                     starPlayerCount = projection.starPlayerCount,
+                )
+            }
+
+    fun findEventTotalSlotSums(
+        eventId: BrawlStarsId?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<EventTotalSlotSum> =
+        battleResultJpaRepository
+            .findEventTotalSlotSums(
+                eventBrawlStarsId = eventId?.value,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            ).map { projection ->
+                EventTotalSlotSum(
+                    eventId = BrawlStarsId(projection.eventBrawlStarsId),
+                    totalSlotCount = projection.totalSlotCount,
                 )
             }
 
@@ -72,21 +93,6 @@ class BattleResultStatisticsRepository(
                         ),
                 )
             }
-
-    fun countEnemyResultTotalBattleCount(
-        eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        enemyBattleResultJpaRepository.countTotalBattleCount(
-            eventBrawlStarsId = eventId?.value,
-            brawlerBrawlStarsId = brawlerId.value,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
 
     fun countEnemyResultBy(
         eventId: BrawlStarsId?,
@@ -131,21 +137,6 @@ class BattleResultStatisticsRepository(
                         ),
                 )
             }
-
-    fun countPairResultTotalBattleCount(
-        eventId: BrawlStarsId?,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        pairBattleResultJpaRepository.countTotalBattleCount(
-            eventBrawlStarsId = eventId?.value,
-            brawlerBrawlStarsId = brawlerId.value,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
 
     fun countPairResultBy(
         eventId: BrawlStarsId?,

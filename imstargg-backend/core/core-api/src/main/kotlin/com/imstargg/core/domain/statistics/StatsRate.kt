@@ -9,6 +9,12 @@ object StatsRate {
         return if (total > 0) victoryCount.toDouble() / total else 0.0
     }
 
+    /**
+     * 픽률 = 슬롯(브롤러 등장) 수 / 전투(게임) 수.
+     *
+     * 분모 `totalBattleCount` 는 **게임 수** 여야 한다 (이전에는 슬롯 합으로 잘못 사용됨 — 2026-05-19 정정).
+     * 슬롯 합 ↔ 게임 수 환산은 `SlotsPerGame` 참조.
+     */
     fun pickRate(
         battleCount: Long,
         totalBattleCount: Long,

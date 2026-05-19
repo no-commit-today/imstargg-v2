@@ -9,4 +9,6 @@ data class BattleEventMode(
     val name: Messages,
     val iconImageUrl: String?,
     val resultType: BattleEventResultType,
+    /** 각 팀의 인원 수. 결과형 통계 픽률 계산의 분모(게임 수) 환산에 사용. */
+    val playerCounts: List<Int>,
 )

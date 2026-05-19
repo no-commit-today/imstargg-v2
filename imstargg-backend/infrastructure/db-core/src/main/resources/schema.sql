@@ -343,6 +343,7 @@ create table if not exists battle_event_mode
     brawlstars_id        bigint       not null,
     brawlstars_name      varchar(255) not null,
     result_type          varchar(20)  not null default 'RESULT',
+    player_counts        jsonb        not null default '[3, 3]'::jsonb,
     created_at           timestamptz  not null default now(),
     updated_at           timestamptz  not null default now()
 );

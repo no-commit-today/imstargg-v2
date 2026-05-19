@@ -13,14 +13,6 @@ interface BrawlerPairBattleResultStatsJpaRepositoryCustom {
         endDate: LocalDate,
     ): List<BrawlerPairResultProjection>
 
-    fun countTotalBattleCount(
-        eventBrawlStarsId: Long?,
-        brawlerBrawlStarsId: Long,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long
-
     fun countDistinctPairBrawlers(
         eventBrawlStarsId: Long?,
         brawlerBrawlStarsId: Long,

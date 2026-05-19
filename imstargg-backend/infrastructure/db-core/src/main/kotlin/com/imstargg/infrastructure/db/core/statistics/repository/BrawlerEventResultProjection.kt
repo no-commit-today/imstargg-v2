@@ -1,6 +1,7 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
-data class BrawlerResultProjection(
+data class BrawlerEventResultProjection(
+    val eventBrawlStarsId: Long,
     val brawlerBrawlStarsId: Long,
     val victoryCount: Long,
     val defeatCount: Long,

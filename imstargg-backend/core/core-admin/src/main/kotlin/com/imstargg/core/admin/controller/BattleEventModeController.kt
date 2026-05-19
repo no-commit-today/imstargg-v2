@@ -3,6 +3,7 @@ package com.imstargg.core.admin.controller
 import com.imstargg.core.admin.application.BattleEventService
 import com.imstargg.core.admin.controller.support.toImageUpdate
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
+import com.imstargg.core.admin.request.BattleEventModePlayerCountsUpdateRequest
 import com.imstargg.core.admin.request.BattleEventModeResultTypeUpdateRequest
 import com.imstargg.core.admin.request.MessagesUpdateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
@@ -55,6 +56,15 @@ class BattleEventModeController(
         @RequestBody request: BattleEventModeResultTypeUpdateRequest,
     ): ResponseEntity<Unit> {
         battleEventService.updateModeResultType(brawlStarsId, request.resultType)
+        return ResponseEntity.ok().build()
+    }
+
+    @PutMapping("/event-modes/{brawlStarsId}/player-counts")
+    fun updatePlayerCounts(
+        @PathVariable brawlStarsId: Long,
+        @RequestBody request: BattleEventModePlayerCountsUpdateRequest,
+    ): ResponseEntity<Unit> {
+        battleEventService.updateModePlayerCounts(brawlStarsId, request.playerCounts)
         return ResponseEntity.ok().build()
     }
 }

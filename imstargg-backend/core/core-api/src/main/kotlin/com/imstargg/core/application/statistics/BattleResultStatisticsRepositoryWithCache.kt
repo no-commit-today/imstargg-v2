@@ -2,7 +2,9 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.statistics.BrawlerResultCount
+import com.imstargg.core.domain.statistics.BrawlerEnemyResultCount
+import com.imstargg.core.domain.statistics.BrawlerEventResultCount
+import com.imstargg.core.domain.statistics.BrawlerPairResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
@@ -15,16 +17,16 @@ class BattleResultStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'brawlerEventResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
-    fun findBrawlerResultCounts(
+    fun findBrawlerEventResultCounts(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerResultCount> =
-        battleResultStatisticsRepository.findBrawlerResultCounts(
+    ): List<BrawlerEventResultCount> =
+        battleResultStatisticsRepository.findBrawlerEventResultCounts(
             eventId = eventId,
             tierRange = tierRange,
             startDate = startDate,
@@ -34,27 +36,19 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'enemyResult:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+            "'enemyResultRaw:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
                 " + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
-    fun findBrawlerEnemyResult(
+    fun findBrawlerEnemyResultRaw(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): BrawlerEnemyResultCounts {
+    ): RawCounts<BrawlerEnemyResultCount> {
         val items =
             battleResultStatisticsRepository.findBrawlerEnemyResultCounts(
-                eventId = eventId,
-                brawlerId = brawlerId,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            )
-        val totalBattleCount =
-            battleResultStatisticsRepository.countEnemyResultTotalBattleCount(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
@@ -69,41 +63,29 @@ class BattleResultStatisticsRepositoryWithCache(
                 startDate = startDate,
                 endDate = endDate,
             )
-        return BrawlerEnemyResultCounts(
-            items = items,
-            totalBattleCount = totalBattleCount,
-            totalElementCount = totalElementCount,
-        )
+        return RawCounts(items = items, totalElementCount = totalElementCount)
     }
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'pairResult:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
+            "'pairResultRaw:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
                 " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
-    fun findBrawlerPairResult(
+    fun findBrawlerPairResultRaw(
         eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): BrawlerPairResultCounts {
+    ): RawCounts<BrawlerPairResultCount> {
         val items =
             battleResultStatisticsRepository.findBrawlerPairResultCounts(
                 eventId = eventId,
                 brawlerId = brawlerId,
                 pairBrawlerId = pairBrawlerId,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            )
-        val totalBattleCount =
-            battleResultStatisticsRepository.countPairResultTotalBattleCount(
-                eventId = eventId,
-                brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
@@ -117,12 +99,26 @@ class BattleResultStatisticsRepositoryWithCache(
                 startDate = startDate,
                 endDate = endDate,
             )
-        return BrawlerPairResultCounts(
-            items = items,
-            totalBattleCount = totalBattleCount,
-            totalElementCount = totalElementCount,
-        )
+        return RawCounts(items = items, totalElementCount = totalElementCount)
     }
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key = "'eventSlotSums:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
+    )
+    fun findEventTotalSlotSums(
+        eventId: BrawlStarsId?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): List<EventTotalSlotSum> =
+        battleResultStatisticsRepository.findEventTotalSlotSums(
+            eventId = eventId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],

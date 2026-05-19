@@ -87,6 +87,7 @@ class BattleEventRepository(
                     name = toMessages(modeNameMessages),
                     iconImageUrl = modeIconImage?.toImageUrl(),
                     resultType = modeEntity.resultType,
+                    playerCounts = modeEntity.playerCounts,
                 )
             }
 
@@ -110,6 +111,7 @@ class BattleEventRepository(
                     name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
                     iconImageUrl = modeIconImages[modeEntity.brawlStarsId]?.toImageUrl(),
                     resultType = modeEntity.resultType,
+                    playerCounts = modeEntity.playerCounts,
                 )
             }
         return BattleEvent(

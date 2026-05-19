@@ -22,6 +22,6 @@ storage:
   datasource:
     core:
       driver-class-name: org.h2.Driver
-      jdbc-url: jdbc:h2:mem:test-db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+      jdbc-url: "jdbc:h2:mem:test-db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE DOMAIN IF NOT EXISTS JSONB AS JSON"
       username: sa
       password:
