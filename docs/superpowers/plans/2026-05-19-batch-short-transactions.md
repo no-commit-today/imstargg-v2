@@ -50,7 +50,7 @@ All Gradle commands in this plan are run from `/Users/chodyoungrae/Projects/imst
 - Create: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/support/transaction/JpaBatchTransactionRunner.kt`
 - Create: `imstargg-backend/core/core-batch/src/test/kotlin/com/imstargg/core/batch/support/transaction/JpaBatchTransactionRunnerTest.kt`
 
-- [ ] **Step 1: Write the failing runner test**
+- [x] **Step 1: Write the failing runner test**
 
 Create `imstargg-backend/core/core-batch/src/test/kotlin/com/imstargg/core/batch/support/transaction/JpaBatchTransactionRunnerTest.kt`:
 
@@ -120,7 +120,7 @@ class JpaBatchTransactionRunnerTest {
 }
 ```
 
-- [ ] **Step 2: Run the runner test to verify it fails**
+- [x] **Step 2: Run the runner test to verify it fails**
 
 Run:
 
@@ -130,7 +130,7 @@ Run:
 
 Expected: FAIL because `JpaBatchTransactionRunner` does not exist.
 
-- [ ] **Step 3: Implement `JpaBatchTransactionRunner`**
+- [x] **Step 3: Implement `JpaBatchTransactionRunner`**
 
 Create `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/support/transaction/JpaBatchTransactionRunner.kt`:
 
@@ -161,7 +161,7 @@ class JpaBatchTransactionRunner(
 }
 ```
 
-- [ ] **Step 4: Run the runner test to verify it passes**
+- [x] **Step 4: Run the runner test to verify it passes**
 
 Run:
 
@@ -171,7 +171,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/support/transaction/JpaBatchTransactionRunner.kt \
@@ -185,7 +185,7 @@ git commit -m "feat(batch): add JPA batch transaction runner"
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/task/DailyBattleStatsAggregationTask.kt`
 - Modify: `imstargg-backend/core/core-batch/src/test/kotlin/com/imstargg/core/batch/job/statistics/task/DailyBattleStatsAggregationTaskTest.kt`
 
-- [ ] **Step 1: Replace the daily aggregation test with a transaction-boundary test**
+- [x] **Step 1: Replace the daily aggregation test with a transaction-boundary test**
 
 Update `DailyBattleStatsAggregationTaskTest.kt` to this shape:
 
@@ -318,7 +318,7 @@ class DailyBattleStatsAggregationTaskTest {
 }
 ```
 
-- [ ] **Step 2: Run the daily test to verify it fails**
+- [x] **Step 2: Run the daily test to verify it fails**
 
 Run:
 
@@ -328,7 +328,7 @@ Run:
 
 Expected: FAIL because `DailyBattleStatsAggregationTask` still requires `em` as an aggregate argument and has no constructor dependencies.
 
-- [ ] **Step 3: Refactor `DailyBattleStatsAggregationTask`**
+- [x] **Step 3: Refactor `DailyBattleStatsAggregationTask`**
 
 Replace `DailyBattleStatsAggregationTask.kt` with:
 
@@ -420,7 +420,7 @@ class DailyBattleStatsAggregationTask(
 }
 ```
 
-- [ ] **Step 4: Run the daily test to verify it passes**
+- [x] **Step 4: Run the daily test to verify it passes**
 
 Run:
 
@@ -430,7 +430,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/task/DailyBattleStatsAggregationTask.kt \
@@ -444,7 +444,7 @@ git commit -m "refactor(batch): shorten daily statistics transactions"
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/task/WeeklyEventBattleStatsAggregationTask.kt`
 - Modify: `imstargg-backend/core/core-batch/src/test/kotlin/com/imstargg/core/batch/job/statistics/task/WeeklyEventBattleStatsAggregationTaskTest.kt`
 
-- [ ] **Step 1: Replace the weekly aggregation test with an event-level transaction test**
+- [x] **Step 1: Replace the weekly aggregation test with an event-level transaction test**
 
 Update `WeeklyEventBattleStatsAggregationTaskTest.kt` so the main test uses separate read/write entity managers and verifies transaction boundaries:
 
@@ -603,7 +603,7 @@ class WeeklyEventBattleStatsAggregationTaskTest {
 }
 ```
 
-- [ ] **Step 2: Run the weekly test to verify it fails**
+- [x] **Step 2: Run the weekly test to verify it fails**
 
 Run:
 
@@ -613,7 +613,7 @@ Run:
 
 Expected: FAIL because `WeeklyEventBattleStatsAggregationTask` still requires `em` as an aggregate argument and has no constructor dependencies.
 
-- [ ] **Step 3: Refactor `WeeklyEventBattleStatsAggregationTask`**
+- [x] **Step 3: Refactor `WeeklyEventBattleStatsAggregationTask`**
 
 Change the class constructor and aggregate method to own the read `EntityManager` and use `JpaBatchTransactionRunner` for each event replace:
 
@@ -678,7 +678,7 @@ transactionRunner.run { writeEm, writeQueryFactory ->
 
 Use parameter name `readEm` instead of `em` in `processWeekRange`, and keep the final log unchanged.
 
-- [ ] **Step 4: Run the weekly test to verify it passes**
+- [x] **Step 4: Run the weekly test to verify it passes**
 
 Run:
 
@@ -688,7 +688,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/task/WeeklyEventBattleStatsAggregationTask.kt \
@@ -705,7 +705,7 @@ git commit -m "refactor(batch): shorten weekly statistics transactions"
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerPairBattleRankStatsJobConfig.kt`
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerEnemyBattleResultStatsJobConfig.kt`
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerItemOwnershipStatsJobConfig.kt`
-- [ ] **Step 1: Run the source guard to verify current long-transaction wiring is present**
+- [x] **Step 1: Run the source guard to verify current long-transaction wiring is present**
 
 Run:
 
@@ -721,7 +721,7 @@ rg -n "tasklet\\(\\{.*txManager|tasklet\\([^\\n]+txManager|private val txManager
 
 Expected: matches are printed for the current `txManager`, `EntityManager`, `em = em`, and `tasklet(..., txManager)` usages.
 
-- [ ] **Step 2: Update daily battle stats job configs**
+- [x] **Step 2: Update daily battle stats job configs**
 
 In `BrawlerBattleResultStatsJobConfig.kt`:
 
@@ -767,7 +767,7 @@ fun brawlerBattleResultStatsStep(): Step =
 
 In `BrawlerBattleRankStatsJobConfig.kt`, apply the same constructor/import/tasklet changes. The aggregate call should use `statsRankBattleEntity` and `BrawlerBattleRankStatsAggregator()` with no `em` argument.
 
-- [ ] **Step 3: Update weekly battle stats job configs**
+- [x] **Step 3: Update weekly battle stats job configs**
 
 In each weekly config (`BrawlerPairBattleResultStatsJobConfig.kt`, `BrawlerPairBattleRankStatsJobConfig.kt`, `BrawlerEnemyBattleResultStatsJobConfig.kt`):
 
@@ -831,7 +831,7 @@ fun brawlerPairBattleResultStatsStep(): Step =
 
 Keep each existing config's entity, aggregator, and delete target unchanged.
 
-- [ ] **Step 4: Update ownership stats job config**
+- [x] **Step 4: Update ownership stats job config**
 
 In `BrawlerItemOwnershipStatsJobConfig.kt`:
 
@@ -852,7 +852,7 @@ fun brawlerItemOwnershipStatsStep(): Step =
         }.build()
 ```
 
-- [ ] **Step 5: Run the source guard and context load to verify the config change**
+- [x] **Step 5: Run the source guard and context load to verify the config change**
 
 Run:
 
@@ -876,7 +876,7 @@ Then run:
 
 Expected: PASS. This verifies the six job configs still wire into the Spring context after removing constructor dependencies and changing the tasklet builder overload.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/BrawlerBattleResultStatsJobConfig.kt \
@@ -894,7 +894,7 @@ git commit -m "refactor(batch): use resourceless statistics tasklet steps"
 - Modify: `imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/ownership/BrawlerItemOwnershipStatsWriter.kt`
 - Modify: `imstargg-backend/core/core-batch/src/test/kotlin/com/imstargg/core/batch/job/statistics/ownership/BrawlerItemOwnershipStatsWriterTest.kt`
 
-- [ ] **Step 1: Update ownership writer test for table-level transactions**
+- [x] **Step 1: Update ownership writer test for table-level transactions**
 
 Update the test setup to construct an actual `JpaBatchTransactionRunner` with mocked transaction manager and write entity manager:
 
@@ -945,7 +945,7 @@ import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 ```
 
-- [ ] **Step 2: Run ownership writer test to verify it fails**
+- [x] **Step 2: Run ownership writer test to verify it fails**
 
 Run:
 
@@ -955,7 +955,7 @@ Run:
 
 Expected: FAIL because `BrawlerItemOwnershipStatsWriter` does not accept `JpaBatchTransactionRunner`.
 
-- [ ] **Step 3: Refactor `BrawlerItemOwnershipStatsWriter`**
+- [x] **Step 3: Refactor `BrawlerItemOwnershipStatsWriter`**
 
 Remove `@Transactional` and the `EntityManager` constructor dependency. Inject `JpaBatchTransactionRunner` and replace each table in its own transaction:
 
@@ -1017,7 +1017,7 @@ class BrawlerItemOwnershipStatsWriter(
 }
 ```
 
-- [ ] **Step 4: Run ownership writer test to verify it passes**
+- [x] **Step 4: Run ownership writer test to verify it passes**
 
 Run:
 
@@ -1027,7 +1027,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/job/statistics/ownership/BrawlerItemOwnershipStatsWriter.kt \
@@ -1040,7 +1040,7 @@ git commit -m "refactor(batch): replace ownership stats in short transactions"
 **Files:**
 - No source files expected beyond previous tasks.
 
-- [ ] **Step 1: Run focused statistics tests**
+- [x] **Step 1: Run focused statistics tests**
 
 Run:
 
@@ -1053,7 +1053,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 2: Run core-batch context test**
+- [x] **Step 2: Run core-batch context test**
 
 Run:
 
@@ -1063,7 +1063,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 3: Run ktlint check for touched Kotlin files**
+- [x] **Step 3: Run ktlint check for touched Kotlin files**
 
 Run:
 
@@ -1073,7 +1073,7 @@ Run:
 
 Expected: PASS. If this task name is unavailable in the module, run repository-level `./gradlew ktlintCheck` instead.
 
-- [ ] **Step 4: Inspect remaining transaction-manager usage in statistics tasklet jobs**
+- [x] **Step 4: Inspect remaining transaction-manager usage in statistics tasklet jobs**
 
 Run:
 
@@ -1084,7 +1084,7 @@ rg -n "tasklet\\(\\{.*txManager|tasklet\\([^\\n]+txManager|private val txManager
 
 Expected: no matches in the six statistics job configs covered by this plan. Matches in `StatsPlayerSyncJobConfig` are acceptable because that job uses chunk-oriented steps and is out of this plan's scope.
 
-- [ ] **Step 5: Commit any verification-only fixes**
+- [x] **Step 5: Commit any verification-only fixes**
 
 If formatting or import cleanup changed files, commit them:
 
