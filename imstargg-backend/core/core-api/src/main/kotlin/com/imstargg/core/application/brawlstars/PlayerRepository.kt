@@ -47,22 +47,28 @@ class PlayerRepository(
         return toPlayer(entity)
     }
 
-    fun searchByTag(tag: BrawlStarsTag): Player? = find(tag)
+    fun searchByTag(
+        tagPrefix: BrawlStarsTag,
+        offsetLimit: OffsetLimit,
+    ): Slice<Player> {
+        val slice =
+            playerJpaRepository.findAllByBrawlStarsTagStartingWithOrderByTrophiesDescBrawlStarsTagAsc(
+                brawlStarsTag = tagPrefix.value,
+                pageable = offsetLimit.toPageable(),
+            )
+        return Slice.from(slice.map { toPlayer(it) })
+    }
 
     fun searchByName(
         namePrefix: String,
         offsetLimit: OffsetLimit,
     ): Slice<Player> {
-        val pattern = namePrefix.lowercase() + "%"
-        val entities =
-            playerJpaRepository.findAllByLowerNamePrefix(
-                pattern = pattern,
-                offset = offsetLimit.offset,
-                limit = offsetLimit.limit + 1,
+        val slice =
+            playerJpaRepository.findAllByNameStartingWithOrderByTrophiesDescBrawlStarsTagAsc(
+                name = namePrefix,
+                pageable = offsetLimit.toPageable(),
             )
-        val hasNext = entities.size > offsetLimit.limit
-        val content = entities.take(offsetLimit.limit).map { toPlayer(it) }
-        return Slice(content = content, hasNext = hasNext)
+        return Slice.from(slice.map { toPlayer(it) })
     }
 
     fun findAllPlayerBrawler(tag: BrawlStarsTag): List<PlayerBrawler> {

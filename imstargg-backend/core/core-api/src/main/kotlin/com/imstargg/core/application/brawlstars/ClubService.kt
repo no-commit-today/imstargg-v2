@@ -22,8 +22,7 @@ class ClubService(
         offsetLimit: OffsetLimit,
     ): Slice<Club> =
         if (BrawlStarsTag.isValid(search.query)) {
-            val club = clubRepository.searchByTag(BrawlStarsTag(search.query))
-            Slice(content = listOfNotNull(club), hasNext = false)
+            clubRepository.searchByTag(BrawlStarsTag(search.query), offsetLimit)
         } else {
             clubRepository.searchByName(search.query, offsetLimit)
         }

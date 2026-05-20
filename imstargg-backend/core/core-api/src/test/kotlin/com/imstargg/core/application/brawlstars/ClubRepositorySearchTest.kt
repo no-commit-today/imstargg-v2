@@ -27,26 +27,100 @@ class ClubRepositorySearchTest(
     @Nested
     inner class SearchByTag {
         @Test
-        fun `태그 정확 일치 - 단건 반환`() {
+        fun `tag prefix 매칭 - 트로피 desc 정렬`() {
             // given
-            clubJpaRepository.save(aClubEntity().withBrawlStarsTag("#ABC").withName("스타포스").build())
-            clubJpaRepository.save(aClubEntity().withBrawlStarsTag("#XYZ").withName("문라이트").build())
+            clubJpaRepository.save(
+                aClubEntity()
+                    .withBrawlStarsTag("#ABC")
+                    .withName("스타포스")
+                    .withTrophies(100)
+                    .build(),
+            )
+            clubJpaRepository.save(
+                aClubEntity()
+                    .withBrawlStarsTag("#ABD")
+                    .withName("스타라이트")
+                    .withTrophies(500)
+                    .build(),
+            )
+            clubJpaRepository.save(
+                aClubEntity()
+                    .withBrawlStarsTag("#XYZ")
+                    .withName("문라이트")
+                    .withTrophies(300)
+                    .build(),
+            )
 
             // when
-            val result = sut.searchByTag(BrawlStarsTag("#ABC"))
+            val result = sut.searchByTag(BrawlStarsTag("#AB"), OffsetLimit(offset = 0, limit = 10))
 
             // then
-            assertThat(result).isNotNull
-            assertThat(result!!.tag.value).isEqualTo("#ABC")
+            assertThat(result.content).hasSize(2)
+            assertThat(result.content[0].tag.value).isEqualTo("#ABD")
+            assertThat(result.content[1].tag.value).isEqualTo("#ABC")
+            assertThat(result.hasNext).isFalse
         }
 
         @Test
-        fun `존재하지 않는 태그 - null 반환`() {
+        fun `매칭되는 tag 없음 - 빈 Slice`() {
+            // given
+            clubJpaRepository.save(aClubEntity().withBrawlStarsTag("#XYZ").withName("문라이트").build())
+
             // when
-            val result = sut.searchByTag(BrawlStarsTag("#NONE"))
+            val result = sut.searchByTag(BrawlStarsTag("#NONE"), OffsetLimit(offset = 0, limit = 10))
 
             // then
-            assertThat(result).isNull()
+            assertThat(result.content).isEmpty()
+            assertThat(result.hasNext).isFalse
+        }
+
+        @Test
+        fun `검색 결과 클럽들의 멤버가 각 클럽에 정확히 매핑됨`() {
+            // given
+            val clubA =
+                clubJpaRepository.save(
+                    aClubEntity()
+                        .withBrawlStarsTag("#AA")
+                        .withName("스타A")
+                        .withTrophies(300)
+                        .build(),
+                )
+            val clubB =
+                clubJpaRepository.save(
+                    aClubEntity()
+                        .withBrawlStarsTag("#AB")
+                        .withName("스타B")
+                        .withTrophies(200)
+                        .build(),
+                )
+            clubMemberJpaRepository.save(
+                aClubMemberEntity()
+                    .withClub(clubA)
+                    .withBrawlStarsTag("#A1")
+                    .withName("A멤버1")
+                    .build(),
+            )
+            clubMemberJpaRepository.save(
+                aClubMemberEntity()
+                    .withClub(clubB)
+                    .withBrawlStarsTag("#B1")
+                    .withName("B멤버1")
+                    .build(),
+            )
+
+            // when
+            val result = sut.searchByTag(BrawlStarsTag("#A"), OffsetLimit(offset = 0, limit = 10))
+
+            // then
+            assertThat(result.content).hasSize(2)
+            val clubAResult = result.content.single { it.tag.value == "#AA" }
+            val clubBResult = result.content.single { it.tag.value == "#AB" }
+            assertThat(clubAResult.members)
+                .extracting<String> { it.name }
+                .containsExactly("A멤버1")
+            assertThat(clubBResult.members)
+                .extracting<String> { it.name }
+                .containsExactly("B멤버1")
         }
     }
 

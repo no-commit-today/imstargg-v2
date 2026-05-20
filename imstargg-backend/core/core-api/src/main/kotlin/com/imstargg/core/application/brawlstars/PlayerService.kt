@@ -25,8 +25,7 @@ class PlayerService(
         offsetLimit: OffsetLimit,
     ): Slice<Player> =
         if (BrawlStarsTag.isValid(search.query)) {
-            val player = playerRepository.searchByTag(BrawlStarsTag(search.query))
-            Slice(content = listOfNotNull(player), hasNext = false)
+            playerRepository.searchByTag(BrawlStarsTag(search.query), offsetLimit)
         } else {
             playerRepository.searchByName(search.query, offsetLimit)
         }
