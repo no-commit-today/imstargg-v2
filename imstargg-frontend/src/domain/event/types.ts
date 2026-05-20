@@ -1,10 +1,10 @@
-import type { BattleEventResultType } from "@/api/types";
+import type { BattleEventModeResultType } from "@/api/types";
 
 export interface BattleEventMode {
   id: number;
   name: string;
   iconImageUrl: string | null;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
 }
 
 export interface BattleEvent {

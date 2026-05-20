@@ -75,16 +75,16 @@ export interface BattleEvent {
   mapNames: Record<Language, string>;
 }
 
-export type BattleEventResultType = "RESULT" | "RANK";
+export type BattleEventModeResultType = "RESULT" | "RANK";
 
-export const BATTLE_EVENT_RESULT_TYPES: BattleEventResultType[] = ["RESULT", "RANK"];
+export const BATTLE_EVENT_MODE_RESULT_TYPES: BattleEventModeResultType[] = ["RESULT", "RANK"];
 
 export interface BattleEventMode {
   brawlStarsId: number;
   brawlStarsName: string;
   names: Record<Language, string>;
   iconImageUrl: string | null;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
 }
 
 export interface Maintenance {

@@ -6,7 +6,7 @@ import type {
   Gear,
   BattleEvent,
   BattleEventMode,
-  BattleEventResultType,
+  BattleEventModeResultType,
   Maintenance,
 } from "./types";
 
@@ -199,7 +199,7 @@ export const getEventModes = () => request<BattleEventMode[]>("/event-modes");
 export const createEventMode = (data: {
   brawlStarsId: number;
   brawlStarsName: string;
-  resultType?: BattleEventResultType;
+  resultType?: BattleEventModeResultType;
 }) => request<void>("/event-modes", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventModeMessages = (brawlStarsId: number, messages: Record<string, string>) =>
@@ -216,7 +216,7 @@ export const uploadEventModeImage = (brawlStarsId: number, file: File) => {
 
 export const updateEventModeResultType = (
   brawlStarsId: number,
-  resultType: BattleEventResultType,
+  resultType: BattleEventModeResultType,
 ) =>
   request<void>(`/event-modes/${brawlStarsId}/result-type`, {
     method: "PUT",

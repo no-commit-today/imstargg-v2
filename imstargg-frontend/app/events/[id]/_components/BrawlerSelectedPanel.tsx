@@ -14,7 +14,7 @@ import {
   sortResultStats,
 } from "@/domain/statistics/sort";
 import type { StatsTierRange, StatsDateRange } from "@/domain/statistics/enums";
-import type { BattleEventResultType } from "@/api/types";
+import type { BattleEventModeResultType } from "@/api/types";
 import { PairStatsTable } from "@app/brawlers/[id]/_components/PairStatsTable";
 import { EnemyStatsTable } from "@app/brawlers/[id]/_components/EnemyStatsTable";
 import { PairRankTable } from "./PairRankTable";
@@ -22,7 +22,7 @@ import { PairRankTable } from "./PairRankTable";
 type Props = {
   eventId: number;
   brawlerId: number;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
   tier: StatsTierRange;
   date: StatsDateRange;
   searchParams: Record<string, string | string[] | undefined>;

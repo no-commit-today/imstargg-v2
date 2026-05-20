@@ -1,6 +1,6 @@
 package com.imstargg.core.enums
 
-enum class BattleEventResultType {
+enum class BattleEventModeResultType {
     RESULT,
     RANK,
 }

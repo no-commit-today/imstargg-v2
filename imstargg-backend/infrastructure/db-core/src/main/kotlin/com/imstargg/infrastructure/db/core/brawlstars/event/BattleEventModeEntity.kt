@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.event
 
-import com.imstargg.core.enums.BattleEventResultType
+import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -26,7 +26,7 @@ class BattleEventModeEntity(
     val brawlStarsId: Long,
     @Column(name = "brawlstars_name", updatable = false, nullable = false)
     val brawlStarsName: String,
-    resultType: BattleEventResultType = BattleEventResultType.RESULT,
+    resultType: BattleEventModeResultType = BattleEventModeResultType.RESULT,
     playerCounts: List<Int> = DEFAULT_PLAYER_COUNTS,
 ) : BaseTimeEntity() {
     @Id
@@ -36,7 +36,7 @@ class BattleEventModeEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "result_type", nullable = false)
-    var resultType: BattleEventResultType = resultType
+    var resultType: BattleEventModeResultType = resultType
         protected set
 
     /**
@@ -48,7 +48,7 @@ class BattleEventModeEntity(
      *  - Duels (1v1): [1, 1]
      *  - 비대칭(가상): [1, 5]
      *
-     * Rank 모드(`BattleEventResultType.RANK`)에서도 의미는 동일하지만,
+     * Rank 모드(`BattleEventModeResultType.RANK`)에서도 의미는 동일하지만,
      * Rank 통계 엔티티(`BrawlerBattleRankStatsEntity`)는 본인 팀 슬롯만 집계하므로
      * 이 값으로 게임 수를 환산할 수 없다.
      */
@@ -61,7 +61,7 @@ class BattleEventModeEntity(
         validatePlayerCounts(playerCounts)
     }
 
-    fun changeResultType(newType: BattleEventResultType) {
+    fun changeResultType(newType: BattleEventModeResultType) {
         this.resultType = newType
     }
 

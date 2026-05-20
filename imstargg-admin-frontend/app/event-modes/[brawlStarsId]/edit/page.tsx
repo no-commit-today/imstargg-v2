@@ -20,8 +20,8 @@ import {
   uploadEventModeImage,
   updateEventModeResultType,
 } from "@/lib/api";
-import type { BattleEventMode, BattleEventResultType } from "@/lib/types";
-import { BATTLE_EVENT_RESULT_TYPES } from "@/lib/types";
+import type { BattleEventMode, BattleEventModeResultType } from "@/lib/types";
+import { BATTLE_EVENT_MODE_RESULT_TYPES } from "@/lib/types";
 import { toast } from "sonner";
 import { ImageUploadField } from "@/components/image-upload-field";
 
@@ -31,7 +31,7 @@ export default function EventModeEditPage() {
   const [eventMode, setEventMode] = useState<BattleEventMode | null>(null);
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
-  const [resultType, setResultType] = useState<BattleEventResultType>("RESULT");
+  const [resultType, setResultType] = useState<BattleEventModeResultType>("RESULT");
 
   const loadEventMode = useCallback(() => {
     getEventModes().then((modes) => {
@@ -106,11 +106,11 @@ export default function EventModeEditPage() {
               <Label>Result Type</Label>
               <Select
                 value={resultType}
-                onValueChange={(v) => setResultType((v ?? "RESULT") as BattleEventResultType)}
+                onValueChange={(v) => setResultType((v ?? "RESULT") as BattleEventModeResultType)}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BATTLE_EVENT_RESULT_TYPES.map((r) => (
+                  {BATTLE_EVENT_MODE_RESULT_TYPES.map((r) => (
                     <SelectItem key={r} value={r}>{r}</SelectItem>
                   ))}
                 </SelectContent>

@@ -160,13 +160,13 @@ export interface ClubResponse {
 }
 
 // === BattleEvent ===
-export type BattleEventResultType = "RESULT" | "RANK";
+export type BattleEventModeResultType = "RESULT" | "RANK";
 
 export interface BattleEventModeResponse {
   id: number;
   name: MessagesResponse;
   iconImageUrl: string | null;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
 }
 
 export interface BattleEventResponse {

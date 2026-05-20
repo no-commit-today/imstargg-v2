@@ -5,7 +5,7 @@ import com.imstargg.core.admin.request.BattleEventCreateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
-import com.imstargg.core.enums.BattleEventResultType
+import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -87,7 +87,7 @@ class BattleEventService(
     @Transactional
     fun updateModeResultType(
         brawlStarsId: Long,
-        resultType: BattleEventResultType,
+        resultType: BattleEventModeResultType,
     ) {
         val entity =
             battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)

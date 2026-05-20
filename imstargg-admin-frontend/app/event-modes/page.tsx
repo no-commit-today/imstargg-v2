@@ -29,8 +29,8 @@ import {
 } from "@/components/ui/table";
 import { getEventModes, createEventMode } from "@/lib/api";
 import { ImageThumbnail } from "@/components/image-thumbnail";
-import type { BattleEventMode, BattleEventResultType } from "@/lib/types";
-import { BATTLE_EVENT_RESULT_TYPES } from "@/lib/types";
+import type { BattleEventMode, BattleEventModeResultType } from "@/lib/types";
+import { BATTLE_EVENT_MODE_RESULT_TYPES } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -40,7 +40,7 @@ export default function EventModeListPage() {
   const [form, setForm] = useState<{
     brawlStarsId: string;
     brawlStarsName: string;
-    resultType: BattleEventResultType;
+    resultType: BattleEventModeResultType;
   }>({ brawlStarsId: "", brawlStarsName: "", resultType: "RESULT" });
 
   const loadEventModes = () => getEventModes().then(setEventModes);
@@ -101,12 +101,12 @@ export default function EventModeListPage() {
                 <Select
                   value={form.resultType}
                   onValueChange={(v) =>
-                    setForm({ ...form, resultType: (v ?? "RESULT") as BattleEventResultType })
+                    setForm({ ...form, resultType: (v ?? "RESULT") as BattleEventModeResultType })
                   }
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {BATTLE_EVENT_RESULT_TYPES.map((r) => (
+                    {BATTLE_EVENT_MODE_RESULT_TYPES.map((r) => (
                       <SelectItem key={r} value={r}>{r}</SelectItem>
                     ))}
                   </SelectContent>
