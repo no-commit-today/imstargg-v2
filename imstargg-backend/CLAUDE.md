@@ -93,9 +93,9 @@ imstargg-backend/
 ### Cache Key Conventions
 
 - **Redis 키 컨벤션 준수**: 로컬 캐시(Caffeine)에서도 향후 Redis 전환을 고려하여 Redis 키 컨벤션(`:` 구분자) 사용
-- **로컬 캐시는 버전 관리 불필요**: 현재 캐시 백엔드는 Caffeine(로컬). 프로세스 재시작 시 캐시가 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
-- **Redis 전환 시점에 버전 도입**: Redis 등 영속 캐시로 전환할 때 `v{N}:` prefix 를 도입한다. 그 시점에 캐싱 객체 형태 변경 시 버전을 올려 역직렬화 오류를 방지.
-- **키 형식**: `cacheName::keyPrefix:param1:param2:...` (예: `statistics::battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+- **로컬 캐시는 버전 관리 불필요**: Caffeine 로컬 캐시(`brawler`, `battleEvent` 등) 는 프로세스 재시작 시 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
+- **Redis 캐시는 메서드별 버전 prefix**: Redis 영속 캐시(`statistics` 등) 는 캐싱 객체 형태 변경 시 역직렬화 오류 방지를 위해 키에 `v{N}:` prefix 를 둔다. `RedisCacheConfiguration.computePrefixWith` 같은 전역 버전이 아니라 **각 `@Cacheable(key=...)` 의 키 prefix 에 메서드 단위로** 둔다. 한 메서드의 반환 객체 구조만 바뀌어도 같은 cacheName 의 다른 메서드 캐시까지 함께 무효화되는 부담을 피하기 위함.
+- **키 형식**: `cacheName::v{N}:methodKey:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
 
 ### DB & Entity Conventions
 

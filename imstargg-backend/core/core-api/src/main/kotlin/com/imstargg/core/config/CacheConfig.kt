@@ -60,7 +60,7 @@ class CacheConfig : CachingConfigurer {
             RedisCacheConfiguration
                 .defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
-                .computePrefixWith { cacheName -> "v1:$cacheName::" }
+                .computePrefixWith { cacheName -> "$cacheName::" }
                 .serializeValuesWith(
                     RedisSerializationContext.SerializationPair.fromSerializer(serializer),
                 ).disableCachingNullValues()
@@ -68,6 +68,7 @@ class CacheConfig : CachingConfigurer {
             .builder(connectionFactory)
             .cacheDefaults(statisticsConfig)
             .initialCacheNames(setOf(CacheNames.STATISTICS))
+            .disableCreateOnMissingCache()
             .build()
     }
 

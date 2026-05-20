@@ -17,7 +17,7 @@ class BattleResultStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerEventResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:brawlerEventResult:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findBrawlerEventResultCounts(
@@ -36,7 +36,7 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'enemyResultRaw:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
+            "'v1:enemyResultRaw:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
                 " + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
@@ -69,7 +69,7 @@ class BattleResultStatisticsRepositoryWithCache(
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'pairResultRaw:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
+            "'v1:pairResultRaw:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
                 " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
@@ -104,7 +104,7 @@ class BattleResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'eventSlotSums:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:eventSlotSums:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findEventTotalSlotSums(
@@ -122,7 +122,8 @@ class BattleResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'brawlerDailyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:brawlerDailyResult:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
     )
     fun findBrawlerDailyResultCounts(
         brawlerId: BrawlStarsId,

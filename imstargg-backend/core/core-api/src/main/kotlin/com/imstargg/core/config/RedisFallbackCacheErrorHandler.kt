@@ -4,6 +4,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.cache.Cache
 import org.springframework.cache.interceptor.CacheErrorHandler
 
+/**
+ * Redis 등 캐시 백엔드에서 예외가 발생해도 요청 흐름은 정상 동작하도록 폴백 처리.
+ * 예외를 다시 던지지 않으므로 `@Cacheable` 메서드는 캐시 미스로 간주되어 실제 로직(DB 조회) 이 실행된다.
+ */
 class RedisFallbackCacheErrorHandler : CacheErrorHandler {
     private val log = LoggerFactory.getLogger(javaClass)
 
