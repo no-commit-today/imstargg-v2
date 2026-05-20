@@ -7,6 +7,8 @@ import com.imstargg.core.api.controller.v1.response.PlayerBrawlerResponse
 import com.imstargg.core.api.controller.v1.response.PlayerResponse
 import com.imstargg.core.application.brawlstars.PlayerService
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
+import com.imstargg.core.domain.brawlstars.player.PlayerSearch
+import jakarta.validation.constraints.NotBlank
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -38,10 +40,10 @@ class PlayerController(
 
     @GetMapping("/v1/player/search")
     fun searchPlayers(
-        @RequestParam q: String,
+        @RequestParam @NotBlank q: String,
         @ModelAttribute offsetLimit: OffsetLimitRequest,
     ): ResponseEntity<SliceResponse<PlayerResponse>> {
-        val slice = playerService.search(q, offsetLimit.toOffsetLimit())
+        val slice = playerService.search(PlayerSearch.of(q), offsetLimit.toOffsetLimit())
         return ResponseEntity.ok(SliceResponse.from(slice.map { PlayerResponse.of(it) }))
     }
 }

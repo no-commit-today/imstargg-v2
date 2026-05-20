@@ -5,6 +5,8 @@ import com.imstargg.core.api.controller.SliceResponse
 import com.imstargg.core.api.controller.v1.response.ClubResponse
 import com.imstargg.core.application.brawlstars.ClubService
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
+import com.imstargg.core.domain.brawlstars.player.ClubSearch
+import jakarta.validation.constraints.NotBlank
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -26,10 +28,10 @@ class ClubController(
 
     @GetMapping("/v1/club/search")
     fun searchClubs(
-        @RequestParam q: String,
+        @RequestParam @NotBlank q: String,
         @ModelAttribute offsetLimit: OffsetLimitRequest,
     ): ResponseEntity<SliceResponse<ClubResponse>> {
-        val slice = clubService.search(q, offsetLimit.toOffsetLimit())
+        val slice = clubService.search(ClubSearch.of(q), offsetLimit.toOffsetLimit())
         return ResponseEntity.ok(SliceResponse.from(slice.map { ClubResponse.of(it) }))
     }
 }

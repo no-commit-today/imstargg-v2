@@ -1,67 +1,47 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.CoreApiContextTest
 import com.imstargg.core.domain.OffsetLimit
-import com.imstargg.core.domain.Slice
-import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.brawlstars.BrawlStarsTag
-import com.imstargg.core.domain.brawlstars.player.Club
-import com.imstargg.core.enums.ClubType
-import com.imstargg.core.error.CoreException
-import com.imstargg.core.error.ErrorType
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import com.imstargg.core.domain.brawlstars.player.ClubSearch
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
+import com.imstargg.infrastructure.db.core.test.CleanUp
+import com.imstargg.infrastructure.db.core.test.fixture.ClubEntityFixture.Companion.aClubEntity
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.catchThrowableOfType
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class ClubServiceTest {
-    private val clubRepository = mockk<ClubRepository>()
-
-    private val sut = ClubService(clubRepository = clubRepository)
+class ClubServiceTest(
+    private val sut: ClubService,
+    private val cleanUp: CleanUp,
+    private val clubJpaRepository: ClubJpaRepository,
+) : CoreApiContextTest() {
+    @BeforeEach
+    fun setUp() {
+        cleanUp.all()
+    }
 
     @Nested
     inner class Search {
         @Test
-        fun `공백 query 는 INVALID_REQUEST 예외가 발생한다`() {
+        fun `# 으로 시작하는 정상 태그 query 는 해당 클럽 단건 Slice 를 반환한다`() {
             // given
-            val query = "   "
+            clubJpaRepository.save(aClubEntity().withBrawlStarsTag("#ABC").withName("스타포스").build())
+            clubJpaRepository.save(aClubEntity().withBrawlStarsTag("#XYZ").withName("문라이트").build())
 
             // when
-            val ex =
-                catchThrowableOfType(CoreException::class.java) {
-                    sut.search(query, OffsetLimit(offset = 0, limit = 20))
-                }
+            val result = sut.search(ClubSearch.of("#ABC"), OffsetLimit(offset = 0, limit = 20))
 
             // then
-            assertThat(ex.errorType).isEqualTo(ErrorType.INVALID_REQUEST)
-        }
-
-        @Test
-        fun `# 으로 시작하는 query 는 searchByTag 로 위임되고 단건 Slice 로 감싸진다`() {
-            // given
-            val tag = BrawlStarsTag("#ABC")
-            val club = aClub(tag = tag)
-            every { clubRepository.searchByTag(tag) } returns club
-
-            // when
-            val result = sut.search("#ABC", OffsetLimit(offset = 0, limit = 20))
-
-            // then
-            assertThat(result.content).containsExactly(club)
+            assertThat(result.content).hasSize(1)
+            assertThat(result.content[0].tag.value).isEqualTo("#ABC")
             assertThat(result.hasNext).isFalse()
-            verify { clubRepository.searchByTag(tag) }
         }
 
         @Test
-        fun `# 으로 시작하는 query 가 미존재 태그면 빈 Slice 가 반환된다`() {
-            // given
-            val tag = BrawlStarsTag("#NONE")
-            every { clubRepository.searchByTag(tag) } returns null
-
+        fun `# 으로 시작하는 미존재 태그 query 는 빈 Slice 가 반환된다`() {
             // when
-            val result = sut.search("#NONE", OffsetLimit(offset = 0, limit = 20))
+            val result = sut.search(ClubSearch.of("#NONE"), OffsetLimit(offset = 0, limit = 20))
 
             // then
             assertThat(result.content).isEmpty()
@@ -69,30 +49,38 @@ class ClubServiceTest {
         }
 
         @Test
-        fun `이름 query 는 searchByName 으로 위임되고 결과가 그대로 반환된다`() {
+        fun `이름 query 는 trim 된 prefix 로 검색되어 매칭되는 클럽들이 반환된다`() {
             // given
-            val offsetLimit = OffsetLimit(offset = 0, limit = 20)
-            val expected = Slice(content = listOf(aClub(tag = BrawlStarsTag("#A"))), hasNext = true)
-            every { clubRepository.searchByName("뉴비클럽", offsetLimit) } returns expected
+            clubJpaRepository.save(
+                aClubEntity()
+                    .withBrawlStarsTag("#A")
+                    .withName("뉴비클럽")
+                    .withTrophies(100)
+                    .build(),
+            )
+            clubJpaRepository.save(
+                aClubEntity()
+                    .withBrawlStarsTag("#B")
+                    .withName("뉴비룸")
+                    .withTrophies(200)
+                    .build(),
+            )
+            clubJpaRepository.save(
+                aClubEntity()
+                    .withBrawlStarsTag("#C")
+                    .withName("고수클럽")
+                    .withTrophies(300)
+                    .build(),
+            )
 
             // when
-            val result = sut.search("  뉴비클럽  ", offsetLimit)
+            val result = sut.search(ClubSearch.of("  뉴비  "), OffsetLimit(offset = 0, limit = 20))
 
             // then
-            assertThat(result).isEqualTo(expected)
-            verify { clubRepository.searchByName("뉴비클럽", offsetLimit) }
+            assertThat(result.content)
+                .extracting<String> { it.tag.value }
+                .containsExactlyInAnyOrder("#A", "#B")
+            assertThat(result.hasNext).isFalse()
         }
     }
-
-    private fun aClub(tag: BrawlStarsTag): Club =
-        Club(
-            tag = tag,
-            name = "name",
-            description = "",
-            type = ClubType.UNKNOWN,
-            badgeId = BrawlStarsId(0),
-            requiredTrophies = 0,
-            trophies = 0,
-            members = emptyList(),
-        )
 }
