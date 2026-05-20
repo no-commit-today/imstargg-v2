@@ -30,6 +30,7 @@ storage:
       data-source-properties:
         reWriteBatchedInserts: true
         socketTimeout: 3
+        ApplicationName: ${spring.application.name:imstargg}
 
 ---
 spring:

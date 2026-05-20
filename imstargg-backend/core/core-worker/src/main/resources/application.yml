@@ -1,7 +1,7 @@
 spring:
 
   application:
-    name: core-worker
+    name: imstargg-core-worker
 
   profiles:
     active: local

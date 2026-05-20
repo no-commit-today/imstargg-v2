@@ -1,14 +1,17 @@
 spring:
+
   application:
-    name: core-admin
-  mvc:
-    problemdetails:
-      enabled: true
+    name: imstargg-core-admin
+
   profiles:
     active: local
     include:
       - db
       - aws-s3
+
+  mvc:
+    problemdetails:
+      enabled: true
 
 app:
   cors:

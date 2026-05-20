@@ -1,5 +1,8 @@
 spring:
 
+  application:
+    name: imstargg-core-api
+
   profiles:
     active: local
     group:
