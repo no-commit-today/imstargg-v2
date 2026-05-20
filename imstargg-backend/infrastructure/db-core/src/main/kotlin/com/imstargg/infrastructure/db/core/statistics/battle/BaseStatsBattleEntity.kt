@@ -30,7 +30,7 @@ abstract class BaseStatsBattleEntity(
     @Column(name = "player_brawlstars_tag", length = 45, updatable = false, nullable = false)
     val playerBrawlStarsTag: String,
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "teams", columnDefinition = "jsonb", updatable = false, nullable = false)
+    @Column(name = "teams", updatable = false, nullable = false)
     val teams: List<List<StatsBattleEntityTeamPlayer>>,
 ) : BaseTimeEntity() {
     @Column(name = "battle_date", updatable = false, nullable = false)

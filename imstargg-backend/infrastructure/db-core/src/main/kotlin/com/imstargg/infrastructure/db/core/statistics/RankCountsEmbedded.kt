@@ -9,7 +9,7 @@ import org.hibernate.type.SqlTypes
 @ConsistentCopyVisibility
 data class RankCountsEmbedded internal constructor(
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "rank_counts", columnDefinition = "jsonb", nullable = false)
+    @Column(name = "rank_counts", nullable = false)
     val counts: List<Long>,
     @Column(name = "total_count", nullable = false)
     val totalCount: Long,

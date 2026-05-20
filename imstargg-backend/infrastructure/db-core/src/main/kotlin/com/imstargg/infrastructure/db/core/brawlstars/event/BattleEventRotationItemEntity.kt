@@ -29,7 +29,7 @@ class BattleEventRotationItemEntity(
     @Column(name = "event_map_name", updatable = false)
     val eventMapName: String? = null,
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "modifiers", columnDefinition = "jsonb", updatable = false, nullable = false)
+    @Column(name = "modifiers", updatable = false, nullable = false)
     val modifiers: List<String>,
     @Column(name = "slot_id", updatable = false, nullable = false)
     val slotId: Int,

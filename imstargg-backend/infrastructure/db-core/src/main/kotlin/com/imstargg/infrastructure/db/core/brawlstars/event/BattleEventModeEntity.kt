@@ -53,7 +53,7 @@ class BattleEventModeEntity(
      * 이 값으로 게임 수를 환산할 수 없다.
      */
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "player_counts", columnDefinition = "jsonb", nullable = false)
+    @Column(name = "player_counts", nullable = false)
     var playerCounts: List<Int> = playerCounts
         protected set
 
