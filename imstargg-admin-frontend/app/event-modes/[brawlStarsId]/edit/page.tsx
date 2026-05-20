@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/select";
 import {
   getEventModes,
+  updateEventMode,
   updateEventModeMessages,
   uploadEventModeImage,
-  updateEventModeResultType,
 } from "@/lib/api";
 import type { BattleEventMode, BattleEventModeResultType } from "@/lib/types";
 import { BATTLE_EVENT_MODE_RESULT_TYPES } from "@/lib/types";
@@ -32,6 +32,7 @@ export default function EventModeEditPage() {
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
   const [resultType, setResultType] = useState<BattleEventModeResultType>("RESULT");
+  const [playerCounts, setPlayerCounts] = useState<string>("");
 
   const loadEventMode = useCallback(() => {
     getEventModes().then((modes) => {
@@ -41,6 +42,7 @@ export default function EventModeEditPage() {
         setKo(found.names.KOREAN || "");
         setEn(found.names.ENGLISH || "");
         setResultType(found.resultType);
+        setPlayerCounts(found.playerCounts.join(","));
       }
     });
   }, [brawlStarsId]);
@@ -59,10 +61,38 @@ export default function EventModeEditPage() {
     }
   };
 
+  const parsePlayerCounts = (): number[] | null => {
+    const parsed = playerCounts
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+      .map((s) => Number(s));
+    if (parsed.length === 0 || parsed.some((n) => !Number.isInteger(n) || n < 1)) {
+      return null;
+    }
+    return parsed;
+  };
+
   const handleSaveResultType = async () => {
+    if (!eventMode) return;
     try {
-      await updateEventModeResultType(brawlStarsId, resultType);
+      await updateEventMode(brawlStarsId, { resultType, playerCounts: eventMode.playerCounts });
       toast.success("결과 타입이 저장되었습니다.");
+      loadEventMode();
+    } catch {
+      toast.error("저장에 실패했습니다.");
+    }
+  };
+
+  const handleSavePlayerCounts = async () => {
+    const parsed = parsePlayerCounts();
+    if (parsed === null) {
+      toast.error("팀 인원수는 1 이상의 정수 리스트여야 합니다.");
+      return;
+    }
+    try {
+      await updateEventMode(brawlStarsId, { resultType, playerCounts: parsed });
+      toast.success("플레이어 인원수가 저장되었습니다.");
       loadEventMode();
     } catch {
       toast.error("저장에 실패했습니다.");
@@ -117,6 +147,24 @@ export default function EventModeEditPage() {
               </Select>
             </div>
             <Button onClick={handleSaveResultType}>결과 타입 저장</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>플레이어 인원수</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Player Counts</Label>
+              <Input
+                value={playerCounts}
+                onChange={(e) => setPlayerCounts(e.target.value)}
+                placeholder="3,3"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                각 팀의 인원 수를 쉼표로 구분. 예: 3v3 → 3,3 / Solo Showdown → 1,1,1,1,1,1,1,1,1,1
+              </p>
+            </div>
+            <Button onClick={handleSavePlayerCounts}>플레이어 인원수 저장</Button>
           </CardContent>
         </Card>
 

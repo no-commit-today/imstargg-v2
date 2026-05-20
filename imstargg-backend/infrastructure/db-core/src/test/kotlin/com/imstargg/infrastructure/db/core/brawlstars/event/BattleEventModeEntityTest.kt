@@ -32,14 +32,14 @@ class BattleEventModeEntityTest : DbCoreContextTest() {
     }
 
     @Test
-    fun `changePlayerCounts 빈 리스트는 거부`() {
+    fun `updatePlayerCounts 빈 리스트는 거부`() {
         // given
         val sut = aBattleEventModeEntity().withPlayerCounts(listOf(3, 3)).build()
 
         // when
         val ex =
             catchThrowableOfType(IllegalArgumentException::class.java) {
-                sut.changePlayerCounts(emptyList())
+                sut.updatePlayerCounts(emptyList())
             }
 
         // then
@@ -47,14 +47,14 @@ class BattleEventModeEntityTest : DbCoreContextTest() {
     }
 
     @Test
-    fun `changePlayerCounts 0 이하 인원은 거부`() {
+    fun `updatePlayerCounts 0 이하 인원은 거부`() {
         // given
         val sut = aBattleEventModeEntity().withPlayerCounts(listOf(3, 3)).build()
 
         // when
         val ex =
             catchThrowableOfType(IllegalArgumentException::class.java) {
-                sut.changePlayerCounts(listOf(3, 0))
+                sut.updatePlayerCounts(listOf(3, 0))
             }
 
         // then

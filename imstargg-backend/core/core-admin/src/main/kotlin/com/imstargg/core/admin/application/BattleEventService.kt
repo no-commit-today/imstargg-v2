@@ -3,9 +3,9 @@ package com.imstargg.core.admin.application
 import com.imstargg.core.admin.config.CloudFrontProperties
 import com.imstargg.core.admin.request.BattleEventCreateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
+import com.imstargg.core.admin.request.BattleEventModeUpdateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
-import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
@@ -85,25 +85,15 @@ class BattleEventService(
     }
 
     @Transactional
-    fun updateModeResultType(
+    fun updateMode(
         brawlStarsId: Long,
-        resultType: BattleEventModeResultType,
+        request: BattleEventModeUpdateRequest,
     ) {
         val entity =
             battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
                 ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
-        entity.changeResultType(resultType)
-    }
-
-    @Transactional
-    fun updateModePlayerCounts(
-        brawlStarsId: Long,
-        playerCounts: List<Int>,
-    ) {
-        val entity =
-            battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
-                ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
-        entity.changePlayerCounts(playerCounts)
+        entity.updateResultType(request.resultType)
+        entity.updatePlayerCounts(request.playerCounts)
     }
 
     @Transactional

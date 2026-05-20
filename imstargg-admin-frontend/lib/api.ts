@@ -214,13 +214,13 @@ export const uploadEventModeImage = (brawlStarsId: number, file: File) => {
   return request<void>(`/event-modes/${brawlStarsId}/image`, { method: "PUT", body: formData });
 };
 
-export const updateEventModeResultType = (
+export const updateEventMode = (
   brawlStarsId: number,
-  resultType: BattleEventModeResultType,
+  data: { resultType: BattleEventModeResultType; playerCounts: number[] },
 ) =>
-  request<void>(`/event-modes/${brawlStarsId}/result-type`, {
-    method: "PUT",
-    body: JSON.stringify({ resultType }),
+  request<void>(`/event-modes/${brawlStarsId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
   });
 
 // Maintenance

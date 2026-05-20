@@ -61,11 +61,11 @@ class BattleEventModeEntity(
         validatePlayerCounts(playerCounts)
     }
 
-    fun changeResultType(newType: BattleEventModeResultType) {
+    fun updateResultType(newType: BattleEventModeResultType) {
         this.resultType = newType
     }
 
-    fun changePlayerCounts(newCounts: List<Int>) {
+    fun updatePlayerCounts(newCounts: List<Int>) {
         validatePlayerCounts(newCounts)
         this.playerCounts = newCounts
     }

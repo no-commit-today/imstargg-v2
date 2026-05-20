@@ -85,6 +85,7 @@ export interface BattleEventMode {
   names: Record<Language, string>;
   iconImageUrl: string | null;
   resultType: BattleEventModeResultType;
+  playerCounts: number[];
 }
 
 export interface Maintenance {
