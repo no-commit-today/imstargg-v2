@@ -168,6 +168,12 @@ assertThat(result).isEqualTo(expected)
 - Service/Component: `CoreApiContextTest` 등 (`@SpringBootTest`)
 - 통합 테스트 정리: `CleanUp.all()` 호출로 전체 테이블 TRUNCATE (데이터 삽입은 `JpaRepository.save()` 사용)
 
+### Service/Component 테스트 의존성 처리
+의존성 종류별로 처리 방식을 가른다 — stub-and-verify(`every`/`verify`)는 호출 결합도만 검증해 행위 검증이 약하고 프로덕션 동작과 어긋날 위험이 있다.
+- **내부 데이터 계층** (application 패키지의 Repository, JPA wrapper): 실 DB (`CoreApiContextTest` + `CleanUp.all()` + `JpaRepository.save()` 로 데이터 주입)
+- **외부 시스템** (HTTP client, 외부 API, queue producer 등 side-effect): MockK
+- **시간**: `Clock.fixed(...)` 주입
+
 ### 예외 검증
 - `catchThrowableOfType(Class, ThrowingCallable)` 사용 (Class가 첫 번째 파라미터)
 - ❌ `catchThrowableOfType(ThrowingCallable, Class)` - deprecated, 사용 금지
