@@ -89,15 +89,16 @@ class BattleResultStatisticsService(
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-    ): List<BrawlerResultDailyStatistics> {
+    ): BrawlerResultDailyStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        return resultRepository
-            .findBrawlerDailyResultCounts(
+        val dailyCounts =
+            resultRepository.findBrawlerDailyResultCounts(
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-            ).map { BrawlerResultDailyStatistics.create(it) }
+            )
+        return BrawlerResultDailyStatistics.create(brawlerId = brawlerId, dailyCounts = dailyCounts)
     }
 
     /**
