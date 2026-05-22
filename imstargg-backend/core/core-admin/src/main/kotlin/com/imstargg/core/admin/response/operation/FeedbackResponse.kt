@@ -1,26 +1,24 @@
 package com.imstargg.core.admin.response.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
 import java.time.Instant
 
 data class FeedbackResponse(
     val id: Long,
-    val category: FeedbackCategory,
+    val rating: FeedbackRating,
     val content: String,
-    val email: String?,
     val checked: Boolean,
-    val createdAt: Instant,
+    val submittedAt: Instant,
 ) {
     companion object {
         fun of(entity: FeedbackEntity): FeedbackResponse =
             FeedbackResponse(
                 id = requireNotNull(entity.id),
-                category = entity.category,
+                rating = entity.rating,
                 content = entity.content,
-                email = entity.email,
                 checked = entity.checked,
-                createdAt = requireNotNull(entity.createdAt),
+                submittedAt = entity.submittedAt,
             )
     }
 }
