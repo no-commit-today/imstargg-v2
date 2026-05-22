@@ -38,10 +38,11 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     private fun save3v3Event(eventId: Long): BrawlStarsId {
+        // mode 의 brawlStarsId 는 event 와 별개 테이블 PK 라 충돌 위험 없음 — 단순 distinct 값.
         val mode =
             battleEventModeJpaRepository.save(
                 BattleEventModeEntity(
-                    brawlStarsId = eventId + 30_000_000L,
+                    brawlStarsId = 48000000L + eventId,
                     brawlStarsName = "gemGrab",
                     playerCounts = listOf(3, 3),
                 ),
@@ -151,7 +152,7 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
-    fun `findBrawlerDailyResultStatistics - 같은 날짜의 entity 들을 합산해서 일별 row 반환`() {
+    fun `findBrawlerDailyResultStatistics - 날짜별 row 반환`() {
         val event = save3v3Event(eventId = 103L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
