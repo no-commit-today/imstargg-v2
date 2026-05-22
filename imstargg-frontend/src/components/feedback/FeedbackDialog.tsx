@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -16,7 +17,10 @@ export function FeedbackDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>의견 보내기</DialogTitle>
+          <DialogTitle>ImStarGG에 피드백을 전달해주세요.</DialogTitle>
+          <DialogDescription>
+            주신 의견은 빠짐없이 확인하고 감사히 받아들이겠습니다.
+          </DialogDescription>
         </DialogHeader>
         <FeedbackForm
           onSuccess={() => setOpen(false)}
