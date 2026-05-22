@@ -1,22 +1,18 @@
 package com.imstargg.infrastructure.db.core.operation
 
-import com.imstargg.core.enums.operation.FeedbackRating
+import com.imstargg.core.enums.operation.FeedbackCategory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class FeedbackEntityTest {
-    private val fixedSubmittedAt = OffsetDateTime.of(2026, 5, 22, 10, 0, 0, 0, ZoneOffset.UTC)
-
     @Test
     fun `check()를 호출하면 checked가 true가 된다`() {
         // given
         val sut =
             FeedbackEntity(
-                rating = FeedbackRating.VERY_SATISFIED,
-                content = "만족합니다",
-                submittedAt = fixedSubmittedAt,
+                category = FeedbackCategory.BUG,
+                content = "버그 발생",
+                email = null,
             )
 
         // when
@@ -31,9 +27,9 @@ class FeedbackEntityTest {
         // given
         val sut =
             FeedbackEntity(
-                rating = FeedbackRating.VERY_SATISFIED,
-                content = "만족합니다",
-                submittedAt = fixedSubmittedAt,
+                category = FeedbackCategory.BUG,
+                content = "버그 발생",
+                email = null,
             )
         sut.check()
 
@@ -42,19 +38,5 @@ class FeedbackEntityTest {
 
         // then
         assertThat(sut.checked).isFalse()
-    }
-
-    @Test
-    fun `submittedAt은 생성자 인자 그대로 보관된다`() {
-        // given & when
-        val sut =
-            FeedbackEntity(
-                rating = FeedbackRating.NEUTRAL,
-                content = "보통",
-                submittedAt = fixedSubmittedAt,
-            )
-
-        // then
-        assertThat(sut.submittedAt).isEqualTo(fixedSubmittedAt)
     }
 }
