@@ -95,15 +95,19 @@ export interface Maintenance {
   createdAt: string | null;
 }
 
-export type FeedbackCategory = "BUG" | "FEATURE_REQUEST" | "ETC";
+export type FeedbackRating =
+  | "VERY_SATISFIED"
+  | "SATISFIED"
+  | "NEUTRAL"
+  | "DISSATISFIED"
+  | "VERY_DISSATISFIED";
 
 export interface FeedbackItem {
   id: number;
-  category: FeedbackCategory;
+  rating: FeedbackRating;
   content: string;
-  email: string | null;
   checked: boolean;
-  createdAt: string;
+  submittedAt: string;
 }
 
 export interface FeedbackListResponse {
@@ -115,7 +119,7 @@ export interface FeedbackListResponse {
 }
 
 export interface FeedbackSearchParams {
-  category?: FeedbackCategory;
+  rating?: FeedbackRating;
   checked?: boolean;
   page?: number;
   size?: number;
