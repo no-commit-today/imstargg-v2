@@ -1,11 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerBattleResultStatsAggregator
-import com.imstargg.core.batch.job.statistics.task.DailyBattleStatsAggregationTask
 import com.imstargg.core.batch.support.parameter.DateJobParameter
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsEntity.Companion.brawlerBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
-import jakarta.persistence.EntityManager
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -22,8 +17,7 @@ import org.springframework.transaction.PlatformTransactionManager
 class BrawlerBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
-    private val em: EntityManager,
-    private val aggregationTask: DailyBattleStatsAggregationTask,
+    private val task: BrawlerBattleResultStatsTask,
 ) {
     companion object {
         const val JOB_NAME = "brawlerBattleResultStatsJob"
@@ -51,30 +45,7 @@ class BrawlerBattleResultStatsJobConfig(
     fun brawlerBattleResultStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
-                aggregationTask.aggregate(
-                    em = em,
-                    jobName = JOB_NAME,
-                    date = dateJobParameter().date!!,
-                    readPage = { queryFactory, date, lastId ->
-                        queryFactory
-                            .selectFrom(statsResultBattleEntity)
-                            .where(
-                                statsResultBattleEntity.battleDate.eq(date),
-                                statsResultBattleEntity.id.gt(lastId),
-                            ).orderBy(statsResultBattleEntity.id.asc())
-                            .limit(BattleStatsConstants.READ_PAGE_SIZE)
-                            .fetch()
-                            .toList()
-                    },
-                    getId = { it.id!! },
-                    aggregator = BrawlerBattleResultStatsAggregator(),
-                    deleteExisting = { queryFactory, date ->
-                        queryFactory
-                            .delete(brawlerBattleResultStatsEntity)
-                            .where(brawlerBattleResultStatsEntity.battleDate.eq(date))
-                            .execute()
-                    },
-                )
+                task.aggregate(dateJobParameter().date!!)
                 RepeatStatus.FINISHED
             }, txManager)
             .build()
