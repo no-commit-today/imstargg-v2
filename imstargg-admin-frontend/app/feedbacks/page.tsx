@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FeedbackFilters } from "./_components/FeedbackFilters";
 import { FeedbackTable } from "./_components/FeedbackTable";
 import { getFeedbacks } from "@/lib/api/operation/feedback";
-import type { FeedbackCategory, FeedbackListResponse } from "@/lib/types";
+import type { FeedbackRating, FeedbackListResponse } from "@/lib/types";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
@@ -18,8 +18,8 @@ export default function FeedbackListPage() {
   const [data, setData] = useState<FeedbackListResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const category =
-    (params?.get("category") as FeedbackCategory | null) ?? undefined;
+  const rating =
+    (params?.get("rating") as FeedbackRating | null) ?? undefined;
   const checkedParam = params?.get("checked") ?? null;
   const checked =
     checkedParam === "true"
@@ -33,7 +33,7 @@ export default function FeedbackListPage() {
     setLoading(true);
     try {
       const res = await getFeedbacks({
-        category,
+        rating,
         checked,
         page,
         size: PAGE_SIZE,
@@ -44,7 +44,7 @@ export default function FeedbackListPage() {
     } finally {
       setLoading(false);
     }
-  }, [category, checked, page]);
+  }, [rating, checked, page]);
 
   useEffect(() => {
     load();
