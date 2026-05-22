@@ -786,13 +786,13 @@ create unique index if not exists uk_player_brawler_stats_item
 -- feedback table
 create table if not exists feedback
 (
-    id         bigserial    primary key,
-    category   varchar(32)  not null,
-    content    text         not null,
-    email      varchar(254),
-    checked    boolean      not null default false,
-    created_at timestamptz  not null default now(),
-    updated_at timestamptz  not null default now()
+    id           bigserial   primary key,
+    rating       varchar(32) not null,
+    content      text        not null,
+    checked      boolean     not null default false,
+    submitted_at timestamptz not null,
+    created_at   timestamptz not null default now(),
+    updated_at   timestamptz not null default now()
 );
-create index if not exists ix_feedback__createdat on feedback (created_at desc);
-create index if not exists ix_feedback__checked    on feedback (checked);
+create index if not exists ix_feedback__checked__submittedat
+    on feedback (checked, submitted_at desc);
