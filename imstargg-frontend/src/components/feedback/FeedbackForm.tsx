@@ -5,26 +5,26 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { createFeedback, type FeedbackCategory } from "@/api/operation/feedback";
+import { createFeedback, type FeedbackRating } from "@/api/operation/feedback";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  FEEDBACK_CATEGORIES,
-  FEEDBACK_CATEGORY_LABELS,
-} from "@/components/feedback/feedback-category";
+  FEEDBACK_RATINGS,
+  FEEDBACK_RATING_LABELS,
+  FEEDBACK_RATING_EMOJIS,
+} from "@/components/feedback/feedback-rating";
 
 const schema = z.object({
-  category: z.enum(["BUG", "FEATURE_REQUEST", "ETC"]),
+  rating: z.enum(
+    ["VERY_SATISFIED", "SATISFIED", "NEUTRAL", "DISSATISFIED", "VERY_DISSATISFIED"],
+    { required_error: "만족도를 선택해주세요" },
+  ),
   content: z
     .string()
     .trim()
-    .min(1, "내용을 입력해주세요")
+    .min(1, "의견을 입력해주세요")
     .max(2000, "최대 2000자까지 입력 가능합니다"),
-  email: z
-    .union([z.literal(""), z.string().email("이메일 형식이 아닙니다").max(254)])
-    .optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -42,7 +42,7 @@ export function FeedbackForm({ onSuccess, onCancel }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { category: "BUG", content: "", email: "" },
+    defaultValues: { content: "" },
   });
 
   const content = watch("content") ?? "";
@@ -50,9 +50,8 @@ export function FeedbackForm({ onSuccess, onCancel }: Props) {
   const onSubmit = async (values: FormValues) => {
     try {
       await createFeedback({
-        category: values.category as FeedbackCategory,
+        rating: values.rating as FeedbackRating,
         content: values.content,
-        email: values.email && values.email !== "" ? values.email : undefined,
       });
       toast.success("의견이 접수되었습니다. 감사합니다!");
       onSuccess();
@@ -64,20 +63,38 @@ export function FeedbackForm({ onSuccess, onCancel }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <Label className="mb-2 block">유형</Label>
-        <div className="flex flex-col gap-1">
-          {FEEDBACK_CATEGORIES.map((cat) => (
-            <label key={cat} className="flex items-center gap-2 text-sm">
-              <input type="radio" value={cat} {...register("category")} />
-              {FEEDBACK_CATEGORY_LABELS[cat]}
+        <Label className="mb-2 block">
+          만족도 <span className="text-red-500">*</span>
+        </Label>
+        <div role="radiogroup" className="grid grid-cols-5 gap-2">
+          {FEEDBACK_RATINGS.map((r) => (
+            <label
+              key={r}
+              className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-neutral-200 bg-white p-2 text-center transition has-[:checked]:border-yellow-400 has-[:checked]:shadow-[0_3px_0_0_rgba(0,0,0,0.35)] has-[:checked]:ring-4 has-[:checked]:ring-yellow-200/50 hover:border-neutral-300"
+            >
+              <input
+                type="radio"
+                value={r}
+                {...register("rating")}
+                className="sr-only"
+              />
+              <span className="text-xl" aria-hidden>
+                {FEEDBACK_RATING_EMOJIS[r]}
+              </span>
+              <span className="text-[12px] font-bold leading-none">
+                {FEEDBACK_RATING_LABELS[r]}
+              </span>
             </label>
           ))}
         </div>
+        {errors.rating && (
+          <p className="mt-1 text-xs text-red-500">{errors.rating.message}</p>
+        )}
       </div>
 
       <div>
         <Label htmlFor="feedback-content">
-          내용 <span className="text-red-500">*</span>
+          의견 <span className="text-red-500">*</span>
         </Label>
         <Textarea
           id="feedback-content"
@@ -90,20 +107,6 @@ export function FeedbackForm({ onSuccess, onCancel }: Props) {
           <span>{errors.content?.message}</span>
           <span>{content.length} / 2000</span>
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="feedback-email">이메일 (선택)</Label>
-        <Input
-          id="feedback-email"
-          type="email"
-          placeholder="답변이 필요한 경우 입력"
-          aria-invalid={Boolean(errors.email)}
-          {...register("email")}
-        />
-        {errors.email && (
-          <p className="text-xs text-red-500">{errors.email.message}</p>
-        )}
       </div>
 
       <div className="flex justify-end gap-2">
