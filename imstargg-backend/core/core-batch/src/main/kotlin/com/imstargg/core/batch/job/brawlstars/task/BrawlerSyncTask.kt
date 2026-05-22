@@ -84,64 +84,81 @@ class BrawlerSyncTask(
 
         for (brawler in existingBrawlers) {
             changes +=
-                changeDetector.detectItemChanges(
-                    brawlerId = brawler.id,
-                    brawlerName = brawler.name,
+                detectFor(
+                    brawler = brawler,
+                    jsonMapper = jsonMapper,
                     itemType = BrawlerChangeItemType.STAR_POWER,
-                    apiItemIds = brawler.starPowers.map { it.id }.toSet(),
+                    apiItems = brawler.starPowers,
+                    apiItemId = { it.id },
                     dbItemIds =
                         starPowerJpaRepository
                             .findAllByBrawlerBrawlStarsId(brawler.id)
                             .map { it.brawlStarsId }
                             .toSet(),
-                    toJson = { id -> jsonMapper.writeValueAsString(brawler.starPowers.first { it.id == id }) },
                 )
 
             changes +=
-                changeDetector.detectItemChanges(
-                    brawlerId = brawler.id,
-                    brawlerName = brawler.name,
+                detectFor(
+                    brawler = brawler,
+                    jsonMapper = jsonMapper,
                     itemType = BrawlerChangeItemType.GADGET,
-                    apiItemIds = brawler.gadgets.map { it.id }.toSet(),
+                    apiItems = brawler.gadgets,
+                    apiItemId = { it.id },
                     dbItemIds =
                         gadgetJpaRepository
                             .findAllByBrawlerBrawlStarsId(brawler.id)
                             .map { it.brawlStarsId }
                             .toSet(),
-                    toJson = { id -> jsonMapper.writeValueAsString(brawler.gadgets.first { it.id == id }) },
                 )
 
             changes +=
-                changeDetector.detectItemChanges(
-                    brawlerId = brawler.id,
-                    brawlerName = brawler.name,
+                detectFor(
+                    brawler = brawler,
+                    jsonMapper = jsonMapper,
                     itemType = BrawlerChangeItemType.HYPER_CHARGE,
-                    apiItemIds = brawler.hyperCharges.map { it.id }.toSet(),
+                    apiItems = brawler.hyperCharges,
+                    apiItemId = { it.id },
                     dbItemIds =
                         hyperChargeJpaRepository
                             .findAllByBrawlerBrawlStarsId(brawler.id)
                             .map { it.brawlStarsId }
                             .toSet(),
-                    toJson = { id -> jsonMapper.writeValueAsString(brawler.hyperCharges.first { it.id == id }) },
                 )
 
             changes +=
-                changeDetector.detectItemChanges(
-                    brawlerId = brawler.id,
-                    brawlerName = brawler.name,
+                detectFor(
+                    brawler = brawler,
+                    jsonMapper = jsonMapper,
                     itemType = BrawlerChangeItemType.GEAR,
-                    apiItemIds = brawler.gears.map { it.id }.toSet(),
+                    apiItems = brawler.gears,
+                    apiItemId = { it.id },
                     dbItemIds =
                         brawlerGearJpaRepository
                             .findAllByBrawlerBrawlStarsId(brawler.id)
                             .map { it.gearBrawlStarsId }
                             .toSet(),
-                    toJson = { id -> jsonMapper.writeValueAsString(brawler.gears.first { it.id == id }) },
                 )
         }
 
         return changes
     }
+
+    private fun <T> detectFor(
+        brawler: BrawlerResponse,
+        jsonMapper: JsonMapper,
+        itemType: BrawlerChangeItemType,
+        apiItems: List<T>,
+        apiItemId: (T) -> Long,
+        dbItemIds: Set<Long>,
+    ): List<BrawlerChange> =
+        changeDetector.detectItemChanges(
+            brawlerId = brawler.id,
+            brawlerName = brawler.name,
+            itemType = itemType,
+            apiItemIds = apiItems.map(apiItemId).toSet(),
+            dbItemIds = dbItemIds,
+            toJson = { id -> jsonMapper.writeValueAsString(apiItems.first { apiItemId(it) == id }) },
+        )
 
     private fun alertBrawlerChanges(changes: List<BrawlerChange>) {
         if (changes.isEmpty()) return
