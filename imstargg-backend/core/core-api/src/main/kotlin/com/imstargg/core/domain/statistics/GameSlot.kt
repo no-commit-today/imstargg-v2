@@ -12,7 +12,9 @@ import com.imstargg.core.domain.brawlstars.event.BattleEventMode
  *
  * 환산: `gameCount = totalSlotSum / GameSlot.<x>SlotsPerGame`
  */
-data class GameSlot(val playerCounts: List<Int>) {
+data class GameSlot(
+    val playerCounts: List<Int>,
+) {
     val resultSlotsPerGame: Int
         get() = playerCounts.sum()
     val pairSlotsPerGame: Int
