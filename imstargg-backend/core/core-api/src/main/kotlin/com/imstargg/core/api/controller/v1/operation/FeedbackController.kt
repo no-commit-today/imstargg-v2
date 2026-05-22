@@ -19,9 +19,8 @@ class FeedbackController(
     ): ResponseEntity<FeedbackCreateResponse> {
         val feedback =
             feedbackService.submit(
-                category = request.category,
+                rating = requireNotNull(request.rating),
                 content = request.content,
-                email = request.email,
             )
         return ResponseEntity.status(HttpStatus.CREATED).body(FeedbackCreateResponse.of(feedback))
     }
