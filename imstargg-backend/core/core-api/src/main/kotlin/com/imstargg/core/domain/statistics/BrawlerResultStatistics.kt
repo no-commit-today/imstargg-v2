@@ -25,7 +25,7 @@ data class BrawlerResultStatistics(
     companion object {
         fun create(
             rows: List<BrawlerEventResultCount>,
-            slotsPerGameByEvent: Map<BrawlStarsId, Int>,
+            gameSlots: GameSlots,
         ): BrawlerResultStatistics {
             if (rows.isEmpty()) {
                 return BrawlerResultStatistics(totalBattleCount = 0L, items = emptyList())
@@ -36,10 +36,7 @@ data class BrawlerResultStatistics(
                     .groupBy { it.eventId }
                     .map { (eventId, eventRows) ->
                         val eventSlotSum = eventRows.sumOf { it.resultCount.totalCount }
-                        val slotsPerGame =
-                            slotsPerGameByEvent[eventId]
-                                ?: error("playerCounts missing for event=$eventId")
-                        eventSlotSum / slotsPerGame
+                        eventSlotSum / gameSlots[eventId].resultSlotsPerGame
                     }.sum()
 
             val brawlerAggregates =

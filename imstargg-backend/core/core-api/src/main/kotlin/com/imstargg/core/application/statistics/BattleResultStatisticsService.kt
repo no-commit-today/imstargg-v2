@@ -7,7 +7,8 @@ import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerPairResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
-import com.imstargg.core.domain.statistics.SlotsPerGame
+import com.imstargg.core.domain.statistics.GameSlot
+import com.imstargg.core.domain.statistics.GameSlots
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
@@ -33,8 +34,8 @@ class BattleResultStatisticsService(
                 startDate = startDate,
                 endDate = endDate,
             )
-        val slotsPerGameByEvent = slotsPerGameByEvent(rows.map { it.eventId })
-        return BrawlerResultStatistics.create(rows = rows, slotsPerGameByEvent = slotsPerGameByEvent)
+        val gameSlots = gameSlotsByEvent(rows.map { it.eventId })
+        return BrawlerResultStatistics.create(rows = rows, gameSlots = gameSlots)
     }
 
     fun getBrawlerPairResultStatistics(
@@ -122,25 +123,27 @@ class BattleResultStatisticsService(
                 startDate = startDate,
                 endDate = endDate,
             )
-        val slotsPerGameByEvent = slotsPerGameByEvent(eventSlotSums.map { it.eventId })
+        val gameSlots = gameSlotsByEvent(eventSlotSums.map { it.eventId })
         return eventSlotSums.sumOf { sum ->
-            sum.totalSlotCount / slotsPerGameByEvent.getValue(sum.eventId)
+            sum.totalSlotCount / gameSlots[sum.eventId].resultSlotsPerGame
         }
     }
 
     /**
-     * 이벤트별 `slotsPerGame` (= playerCounts 합) 맵을 만든다.
+     * 이벤트별 [GameSlot] 묶음을 만든다.
      *
-     * mode 정보가 누락된 이벤트는 [BattleEventMode.DEFAULT_PLAYER_COUNTS] 로 폴백하여
+     * mode 정보가 누락된 이벤트는 [GameSlot.default] 로 폴백하여
      * 호출자가 항상 모든 이벤트 ID 에 대해 값을 얻을 수 있도록 보장한다.
      */
-    private fun slotsPerGameByEvent(eventIds: List<BrawlStarsId>): Map<BrawlStarsId, Int> =
-        eventIds
-            .distinct()
-            .associateWith { id ->
-                val playerCounts =
-                    battleEventRepositoryWithCache.find(id)?.mode?.playerCounts
-                        ?: BattleEventMode.DEFAULT_PLAYER_COUNTS
-                SlotsPerGame.forResult(playerCounts)
-            }
+    private fun gameSlotsByEvent(eventIds: List<BrawlStarsId>): GameSlots =
+        GameSlots(
+            eventIds
+                .distinct()
+                .associateWith { id ->
+                    val playerCounts =
+                        battleEventRepositoryWithCache.find(id)?.mode?.playerCounts
+                            ?: BattleEventMode.DEFAULT_PLAYER_COUNTS
+                    GameSlot(playerCounts)
+                },
+        )
 }

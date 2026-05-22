@@ -2,7 +2,6 @@ package com.imstargg.core.domain.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
@@ -21,14 +20,13 @@ class BrawlerResultStatisticsTest {
                     BrawlerEventResultCount(eventId, brawlerB, ResultCount(150, 150, 0), 30),
                     BrawlerEventResultCount(eventId, BrawlStarsId(12L), ResultCount(150, 150, 0), 60),
                 )
-            val slotsPerGameByEvent = mapOf(eventId to 6)
+            val gameSlots = GameSlots(mapOf(eventId to GameSlot(listOf(3, 3))))
 
             // when
-            val sut = BrawlerResultStatistics.create(rows, slotsPerGameByEvent)
+            val sut = BrawlerResultStatistics.create(rows, gameSlots)
 
             // then: totalBattleCount = 900/6 = 150
             assertThat(sut.totalBattleCount).isEqualTo(150)
-            // pickRate(A) = 300 / 150 = 2.0
             val itemA = sut.items.first { it.brawlerId == brawlerA }
             assertThat(itemA.pickRate).isEqualTo(2.0)
             assertThat(itemA.totalBattleCount).isEqualTo(150)
@@ -47,42 +45,44 @@ class BrawlerResultStatisticsTest {
                     BrawlerEventResultCount(eventSolo, brawler, ResultCount(50, 0, 0), 0),
                     BrawlerEventResultCount(eventSolo, BrawlStarsId(99L), ResultCount(225, 225, 0), 0),
                 )
-            val slotsPerGameByEvent = mapOf(event3v3 to 6, eventSolo to 10)
+            val gameSlots =
+                GameSlots(
+                    mapOf(
+                        event3v3 to GameSlot(listOf(3, 3)),
+                        eventSolo to GameSlot(List(10) { 1 }),
+                    ),
+                )
 
             // when
-            val sut = BrawlerResultStatistics.create(rows, slotsPerGameByEvent)
+            val sut = BrawlerResultStatistics.create(rows, gameSlots)
 
             // then: totalBattleCount = 360/6 + 500/10 = 60 + 50 = 110
             assertThat(sut.totalBattleCount).isEqualTo(110)
-            // brawler 슬롯 합 = 60 + 50 = 110, pickRate = 110/110 = 1.0
             val item = sut.items.first { it.brawlerId == brawler }
             assertThat(item.pickRate).isEqualTo(1.0)
         }
 
         @Test
-        fun `slotsPerGameByEvent에 누락된 이벤트가 있으면 예외`() {
-            // given
+        fun `GameSlots 에 누락된 이벤트는 default 로 폴백`() {
+            // given: 3v3 default(=BattleEventMode.DEFAULT_PLAYER_COUNTS = listOf(3,3)) → slots=6
             val eventId = BrawlStarsId(1L)
             val rows =
                 listOf(
-                    BrawlerEventResultCount(eventId, BrawlStarsId(10L), ResultCount(1, 0, 0), 0),
+                    BrawlerEventResultCount(eventId, BrawlStarsId(10L), ResultCount(6, 0, 0), 0),
                 )
-            val slotsPerGameByEvent = emptyMap<BrawlStarsId, Int>()
+            val gameSlots = GameSlots(emptyMap())
 
             // when
-            val ex =
-                catchThrowableOfType(IllegalStateException::class.java) {
-                    BrawlerResultStatistics.create(rows, slotsPerGameByEvent)
-                }
+            val sut = BrawlerResultStatistics.create(rows, gameSlots)
 
-            // then
-            assertThat(ex).hasMessageContaining("playerCounts")
+            // then: totalBattleCount = 6 / 6 = 1
+            assertThat(sut.totalBattleCount).isEqualTo(1)
         }
 
         @Test
         fun `빈 입력은 totalBattleCount 0`() {
             // given / when
-            val sut = BrawlerResultStatistics.create(emptyList(), emptyMap())
+            val sut = BrawlerResultStatistics.create(emptyList(), GameSlots(emptyMap()))
 
             // then
             assertThat(sut.totalBattleCount).isEqualTo(0)
