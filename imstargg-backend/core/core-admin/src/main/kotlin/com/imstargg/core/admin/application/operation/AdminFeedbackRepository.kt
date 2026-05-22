@@ -1,6 +1,6 @@
 package com.imstargg.core.admin.application.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
 import com.imstargg.infrastructure.db.core.operation.FeedbackJpaRepository
 import com.imstargg.infrastructure.db.core.operation.QFeedbackEntity.Companion.feedbackEntity
@@ -21,13 +21,13 @@ class AdminFeedbackRepository(
     private val queryFactory = JPAQueryFactory(entityManager)
 
     fun search(
-        category: FeedbackCategory?,
+        rating: FeedbackRating?,
         checked: Boolean?,
         pageable: Pageable,
     ): Page<FeedbackEntity> {
         val predicates =
             listOfNotNull(
-                category?.let { feedbackEntity.category.eq(it) },
+                rating?.let { feedbackEntity.rating.eq(it) },
                 checked?.let { feedbackEntity.checked.eq(it) },
             ).toTypedArray()
 
@@ -35,7 +35,7 @@ class AdminFeedbackRepository(
             queryFactory
                 .selectFrom(feedbackEntity)
                 .where(*predicates)
-                .orderBy(feedbackEntity.createdAt.desc())
+                .orderBy(feedbackEntity.submittedAt.desc())
                 .offset(pageable.offset)
                 .limit(pageable.pageSize.toLong())
                 .fetch()

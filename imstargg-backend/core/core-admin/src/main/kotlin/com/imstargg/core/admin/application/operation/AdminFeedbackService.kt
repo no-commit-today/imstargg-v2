@@ -1,6 +1,6 @@
 package com.imstargg.core.admin.application.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -15,11 +15,11 @@ class AdminFeedbackService(
 ) {
     @Transactional(readOnly = true)
     fun search(
-        category: FeedbackCategory?,
+        rating: FeedbackRating?,
         checked: Boolean?,
         page: Int,
         size: Int,
-    ): Page<FeedbackEntity> = repository.search(category, checked, PageRequest.of(page, size))
+    ): Page<FeedbackEntity> = repository.search(rating, checked, PageRequest.of(page, size))
 
     @Transactional
     fun updateCheck(

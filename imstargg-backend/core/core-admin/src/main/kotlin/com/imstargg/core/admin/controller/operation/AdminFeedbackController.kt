@@ -22,7 +22,7 @@ class AdminFeedbackController(
     ): ResponseEntity<FeedbackListResponse> {
         val page =
             service.search(
-                category = request.category,
+                rating = request.rating,
                 checked = request.checked,
                 page = request.normalizedPage(),
                 size = request.normalizedSize(),
