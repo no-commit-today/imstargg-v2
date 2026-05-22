@@ -3,7 +3,7 @@ import type { FeedbackListResponse, FeedbackSearchParams } from "@/lib/types";
 
 export async function getFeedbacks(params: FeedbackSearchParams): Promise<FeedbackListResponse> {
   const search = new URLSearchParams();
-  if (params.category) search.set("category", params.category);
+  if (params.rating) search.set("rating", params.rating);
   if (params.checked !== undefined) search.set("checked", String(params.checked));
   if (params.page !== undefined) search.set("page", String(params.page));
   if (params.size !== undefined) search.set("size", String(params.size));
