@@ -1,24 +1,28 @@
 package com.imstargg.core.batch.job.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 
 object FeedbackDigestMessage {
-    fun build(
-        countByCategory: Map<FeedbackCategory, Long>,
-        emailCount: Long,
-    ): FeedbackDigest? {
-        val total = countByCategory.values.sum()
+    private val RATING_LABELS: Map<FeedbackRating, String> =
+        mapOf(
+            FeedbackRating.VERY_SATISFIED to "매우 만족",
+            FeedbackRating.SATISFIED to "만족",
+            FeedbackRating.NEUTRAL to "보통",
+            FeedbackRating.DISSATISFIED to "불만족",
+            FeedbackRating.VERY_DISSATISFIED to "매우 불만족",
+        )
+
+    fun build(countByRating: Map<FeedbackRating, Long>): FeedbackDigest? {
+        val total = countByRating.values.sum()
         if (total == 0L) return null
 
         val lines = mutableListOf<String>()
-        FeedbackCategory.entries.forEach { category ->
-            val count = countByCategory[category] ?: 0L
+        FeedbackRating.entries.forEach { rating ->
+            val count = countByRating[rating] ?: 0L
             if (count > 0L) {
-                lines += "• ${category.name} ${count}건"
+                val label = RATING_LABELS[rating] ?: rating.name
+                lines += "• $label ${count}건"
             }
-        }
-        if (emailCount > 0L) {
-            lines += "✉️ 이메일 응답 요청 ${emailCount}건"
         }
 
         return FeedbackDigest(
