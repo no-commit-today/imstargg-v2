@@ -1,0 +1,178 @@
+package com.imstargg.core.application.statistics
+
+import com.imstargg.CoreApiContextTest
+import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.test.CleanUp
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+
+class BattleResultStatisticsRepositoryTest(
+    private val sut: BattleResultStatisticsRepository,
+    private val battleEventJpaRepository: BattleEventJpaRepository,
+    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
+    private val resultStatsJpaRepository: BrawlerBattleResultStatsJpaRepository,
+    private val pairStatsJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
+    private val enemyStatsJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
+    private val cleanUp: CleanUp,
+) : CoreApiContextTest() {
+    private val tierRange = StatsTierRange.TROPHY_1000_PLUS
+    private val date = LocalDate.of(2026, 5, 1)
+
+    @AfterEach
+    fun tearDown() {
+        cleanUp.all()
+    }
+
+    private fun save3v3Event(eventId: Long): BrawlStarsId {
+        val mode =
+            battleEventModeJpaRepository.save(
+                BattleEventModeEntity(
+                    brawlStarsId = eventId + 30_000_000L,
+                    brawlStarsName = "gemGrab",
+                    playerCounts = listOf(3, 3),
+                ),
+            )
+        battleEventJpaRepository.save(BattleEventEntity(brawlStarsId = eventId, mode = mode, mapName = "X"))
+        return BrawlStarsId(eventId)
+    }
+
+    @Test
+    fun `findBrawlerResultStatistics - 3v3 이벤트의 게임 수 분모로 픽률 계산`() {
+        val event = save3v3Event(eventId = 100L)
+        resultStatsJpaRepository.save(
+            BrawlerBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                battleDate = date,
+                brawlerBrawlStarsId = 10L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
+                starPlayerCount = 1,
+            ),
+        )
+
+        val result = sut.findBrawlerResultStatistics(event, tierRange, date, date)
+
+        assertThat(result.totalBattleCount).isEqualTo(1)
+        assertThat(result.items).hasSize(1)
+        assertThat(result.items.first().brawlerId).isEqualTo(BrawlStarsId(10L))
+    }
+
+    @Test
+    fun `findBrawlerPairResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
+        val event = save3v3Event(eventId = 101L)
+        resultStatsJpaRepository.save(
+            BrawlerBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                battleDate = date,
+                brawlerBrawlStarsId = 10L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
+                starPlayerCount = 0,
+            ),
+        )
+        pairStatsJpaRepository.save(
+            BrawlerPairBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                startBattleDate = date,
+                endBattleDate = date,
+                brawlerBrawlStarsId = 10L,
+                pairBrawlerBrawlStarsId = 20L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
+            ),
+        )
+
+        val result =
+            sut.findBrawlerPairResultStatistics(
+                eventId = event,
+                brawlerId = BrawlStarsId(10L),
+                pairBrawlerId = null,
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        assertThat(result.totalBattleCount).isEqualTo(1)
+        assertThat(result.items).hasSize(1)
+        assertThat(result.items.first().pairBrawlerId).isEqualTo(BrawlStarsId(20L))
+    }
+
+    @Test
+    fun `findBrawlerEnemyResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
+        val event = save3v3Event(eventId = 102L)
+        resultStatsJpaRepository.save(
+            BrawlerBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                battleDate = date,
+                brawlerBrawlStarsId = 10L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
+                starPlayerCount = 0,
+            ),
+        )
+        enemyStatsJpaRepository.save(
+            BrawlerEnemyBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                startBattleDate = date,
+                endBattleDate = date,
+                brawlerBrawlStarsId = 10L,
+                enemyBrawlerBrawlStarsId = 30L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
+            ),
+        )
+
+        val result =
+            sut.findBrawlerEnemyResultStatistics(
+                eventId = event,
+                brawlerId = BrawlStarsId(10L),
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        assertThat(result.totalBattleCount).isEqualTo(1)
+        assertThat(result.items).hasSize(1)
+        assertThat(result.items.first().enemyBrawlerId).isEqualTo(BrawlStarsId(30L))
+    }
+
+    @Test
+    fun `findBrawlerDailyResultStatistics - 같은 날짜의 entity 들을 합산해서 일별 row 반환`() {
+        val event = save3v3Event(eventId = 103L)
+        resultStatsJpaRepository.save(
+            BrawlerBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                battleDate = date,
+                brawlerBrawlStarsId = 10L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 2, defeatCount = 1, drawCount = 0),
+                starPlayerCount = 1,
+            ),
+        )
+
+        val result =
+            sut.findBrawlerDailyResultStatistics(
+                brawlerId = BrawlStarsId(10L),
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        assertThat(result.items).hasSize(1)
+        assertThat(result.items.first().date).isEqualTo(date)
+    }
+}
