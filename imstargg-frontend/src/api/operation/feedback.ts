@@ -1,11 +1,15 @@
 import { apiFetch } from "@/api/client";
 
-export type FeedbackCategory = "BUG" | "FEATURE_REQUEST" | "ETC";
+export type FeedbackRating =
+  | "VERY_SATISFIED"
+  | "SATISFIED"
+  | "NEUTRAL"
+  | "DISSATISFIED"
+  | "VERY_DISSATISFIED";
 
 export interface FeedbackCreateRequest {
-  category: FeedbackCategory;
+  rating: FeedbackRating;
   content: string;
-  email?: string;
 }
 
 export interface FeedbackCreateResponse {
