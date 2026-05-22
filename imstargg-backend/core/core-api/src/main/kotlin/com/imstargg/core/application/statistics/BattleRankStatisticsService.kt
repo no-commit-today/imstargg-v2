@@ -19,7 +19,12 @@ class BattleRankStatisticsService(
         dateRange: StatsDateRange,
     ): BrawlerRankStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        return rankRepository.findBrawlerRankStatistics(eventId, tierRange, startDate, endDate)
+        return rankRepository.findBrawlerRankStatistics(
+            eventId = eventId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
     }
 
     fun getBrawlerPairRankStatistics(
@@ -31,12 +36,12 @@ class BattleRankStatisticsService(
     ): BrawlerPairRankStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return rankRepository.findBrawlerPairRankStatistics(
-            eventId,
-            brawlerId,
-            pairBrawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            eventId = eventId,
+            brawlerId = brawlerId,
+            pairBrawlerId = pairBrawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
     }
 }

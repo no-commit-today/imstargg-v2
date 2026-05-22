@@ -113,6 +113,50 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
+    fun `findBrawlerPairResultStatistics - 다중 날짜에 걸친 분모는 일별 Result 슬롯합 환산의 합`() {
+        val event = save3v3Event(eventId = 104L)
+        val day1 = date
+        val day2 = date.plusDays(1)
+        // Result 슬롯: day1 6 슬롯(=1 게임) + day2 6 슬롯(=1 게임) → 분모 = 2
+        listOf(day1, day2).forEach { d ->
+            resultStatsJpaRepository.save(
+                BrawlerBattleResultStatsEntity(
+                    eventBrawlStarsId = event.value,
+                    tierRange = tierRange,
+                    battleDate = d,
+                    brawlerBrawlStarsId = 10L,
+                    resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
+                    starPlayerCount = 0,
+                ),
+            )
+        }
+        pairStatsJpaRepository.save(
+            BrawlerPairBattleResultStatsEntity(
+                eventBrawlStarsId = event.value,
+                tierRange = tierRange,
+                startBattleDate = day1,
+                endBattleDate = day2,
+                brawlerBrawlStarsId = 10L,
+                pairBrawlerBrawlStarsId = 20L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 1, drawCount = 0),
+            ),
+        )
+
+        val result =
+            sut.findBrawlerPairResultStatistics(
+                eventId = event,
+                brawlerId = BrawlStarsId(10L),
+                pairBrawlerId = null,
+                tierRange = tierRange,
+                startDate = day1,
+                endDate = day2,
+            )
+
+        assertThat(result.totalBattleCount).isEqualTo(2)
+        assertThat(result.items).hasSize(1)
+    }
+
+    @Test
     fun `findBrawlerEnemyResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
         val event = save3v3Event(eventId = 102L)
         resultStatsJpaRepository.save(

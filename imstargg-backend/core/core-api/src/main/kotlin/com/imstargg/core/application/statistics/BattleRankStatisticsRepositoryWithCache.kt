@@ -23,7 +23,13 @@ class BattleRankStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): BrawlerRankStatistics = battleRankStatisticsRepository.findBrawlerRankStatistics(eventId, tierRange, startDate, endDate)
+    ): BrawlerRankStatistics =
+        battleRankStatisticsRepository.findBrawlerRankStatistics(
+            eventId = eventId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
@@ -41,11 +47,11 @@ class BattleRankStatisticsRepositoryWithCache(
         endDate: LocalDate,
     ): BrawlerPairRankStatistics =
         battleRankStatisticsRepository.findBrawlerPairRankStatistics(
-            eventId,
-            brawlerId,
-            pairBrawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            eventId = eventId,
+            brawlerId = brawlerId,
+            pairBrawlerId = pairBrawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
 }

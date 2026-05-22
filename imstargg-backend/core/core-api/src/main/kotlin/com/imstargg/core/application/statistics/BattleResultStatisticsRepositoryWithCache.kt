@@ -25,7 +25,13 @@ class BattleResultStatisticsRepositoryWithCache(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): BrawlerResultStatistics = battleResultStatisticsRepository.findBrawlerResultStatistics(eventId, tierRange, startDate, endDate)
+    ): BrawlerResultStatistics =
+        battleResultStatisticsRepository.findBrawlerResultStatistics(
+            eventId = eventId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
@@ -43,12 +49,12 @@ class BattleResultStatisticsRepositoryWithCache(
         endDate: LocalDate,
     ): BrawlerPairResultStatistics =
         battleResultStatisticsRepository.findBrawlerPairResultStatistics(
-            eventId,
-            brawlerId,
-            pairBrawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            eventId = eventId,
+            brawlerId = brawlerId,
+            pairBrawlerId = pairBrawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
 
     @Cacheable(
@@ -66,11 +72,11 @@ class BattleResultStatisticsRepositoryWithCache(
         endDate: LocalDate,
     ): BrawlerEnemyResultStatistics =
         battleResultStatisticsRepository.findBrawlerEnemyResultStatistics(
-            eventId,
-            brawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            eventId = eventId,
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
 
     @Cacheable(
@@ -85,9 +91,9 @@ class BattleResultStatisticsRepositoryWithCache(
         endDate: LocalDate,
     ): BrawlerResultDailyStatistics =
         battleResultStatisticsRepository.findBrawlerDailyResultStatistics(
-            brawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
 }

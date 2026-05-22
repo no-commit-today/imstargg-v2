@@ -21,7 +21,12 @@ class BattleResultStatisticsService(
         dateRange: StatsDateRange,
     ): BrawlerResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        return resultRepository.findBrawlerResultStatistics(eventId, tierRange, startDate, endDate)
+        return resultRepository.findBrawlerResultStatistics(
+            eventId = eventId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
     }
 
     fun getBrawlerPairResultStatistics(
@@ -33,12 +38,12 @@ class BattleResultStatisticsService(
     ): BrawlerPairResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerPairResultStatistics(
-            eventId,
-            brawlerId,
-            pairBrawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            eventId = eventId,
+            brawlerId = brawlerId,
+            pairBrawlerId = pairBrawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
     }
 
@@ -50,11 +55,11 @@ class BattleResultStatisticsService(
     ): BrawlerEnemyResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerEnemyResultStatistics(
-            eventId,
-            brawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            eventId = eventId,
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
     }
 
@@ -65,10 +70,10 @@ class BattleResultStatisticsService(
     ): BrawlerResultDailyStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerDailyResultStatistics(
-            brawlerId,
-            tierRange,
-            startDate,
-            endDate,
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
     }
 }
