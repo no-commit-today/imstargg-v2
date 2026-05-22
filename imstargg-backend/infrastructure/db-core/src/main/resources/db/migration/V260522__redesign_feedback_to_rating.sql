@@ -2,7 +2,7 @@
 -- 피드백 도메인 재설계: 카테고리/이메일 제거, 5단계 rating + submittedAt 도입
 drop table if exists feedback;
 
-create table feedback (
+create table if not exists feedback (
     id           bigserial   primary key,
     rating       varchar(32) not null,
     content      text        not null,
@@ -12,5 +12,5 @@ create table feedback (
     updated_at   timestamptz not null default now()
 );
 
-create index ix_feedback__checked__submittedat
+create index if not exists ix_feedback__checked__submittedat
     on feedback (checked, submitted_at desc);

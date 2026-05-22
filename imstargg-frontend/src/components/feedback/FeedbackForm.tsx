@@ -18,7 +18,10 @@ import {
 const schema = z.object({
   rating: z.enum(
     ["VERY_SATISFIED", "SATISFIED", "NEUTRAL", "DISSATISFIED", "VERY_DISSATISFIED"],
-    { required_error: "만족도를 선택해주세요" },
+    {
+      required_error: "만족도를 선택해주세요",
+      invalid_type_error: "만족도를 선택해주세요",
+    },
   ),
   content: z
     .string()
@@ -70,7 +73,7 @@ export function FeedbackForm({ onSuccess, onCancel }: Props) {
           {FEEDBACK_RATINGS.map((r) => (
             <label
               key={r}
-              className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-neutral-200 bg-white p-2 text-center transition has-[:checked]:border-yellow-400 has-[:checked]:shadow-[0_3px_0_0_rgba(0,0,0,0.35)] has-[:checked]:ring-4 has-[:checked]:ring-yellow-200/50 hover:border-neutral-300"
+              className="flex cursor-pointer flex-col items-center gap-1 rounded-md border border-neutral-200 bg-white p-2 text-center transition hover:border-[#B4B9C7] hover:shadow-[0_3px_0_0_rgba(0,0,0,0.35)] has-[:checked]:border-yellow-400 has-[:checked]:shadow-[0_3px_0_0_rgba(0,0,0,0.35),0_0_0_4px_rgba(255,198,10,0.35)]"
             >
               <input
                 type="radio"
