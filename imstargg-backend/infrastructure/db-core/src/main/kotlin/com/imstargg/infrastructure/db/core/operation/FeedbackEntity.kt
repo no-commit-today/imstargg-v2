@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -10,17 +10,18 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import java.time.Instant
 
 @Entity
 @Table(name = "feedback")
 class FeedbackEntity(
     @Enumerated(EnumType.STRING)
-    @Column(name = "category", updatable = false, nullable = false, length = 32)
-    val category: FeedbackCategory,
+    @Column(name = "rating", updatable = false, nullable = false, length = 32)
+    val rating: FeedbackRating,
     @Column(name = "content", updatable = false, nullable = false, columnDefinition = "text")
     val content: String,
-    @Column(name = "email", updatable = false, length = 254)
-    val email: String?,
+    @Column(name = "submitted_at", updatable = false, nullable = false)
+    val submittedAt: Instant,
     checked: Boolean = false,
 ) : BaseTimeEntity() {
     @Id

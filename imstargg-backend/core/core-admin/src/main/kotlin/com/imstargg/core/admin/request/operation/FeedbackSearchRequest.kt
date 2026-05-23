@@ -1,9 +1,9 @@
 package com.imstargg.core.admin.request.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 
 data class FeedbackSearchRequest(
-    val category: FeedbackCategory? = null,
+    val rating: FeedbackRating? = null,
     val checked: Boolean? = null,
     val page: Int = 0,
     val size: Int = 20,

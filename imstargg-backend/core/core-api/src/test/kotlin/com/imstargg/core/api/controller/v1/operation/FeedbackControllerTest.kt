@@ -1,7 +1,7 @@
 package com.imstargg.core.api.controller.v1.operation
 
 import com.imstargg.CoreApiContextTest
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.operation.FeedbackJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
@@ -29,7 +29,7 @@ class FeedbackControllerTest
         @Test
         fun `정상 제출시 201과 id를 반환한다`() {
             // given
-            val body = """{"category":"BUG","content":"버그가 발생했어요","email":"user@example.com"}"""
+            val body = """{"rating":"VERY_SATISFIED","content":"만족합니다"}"""
 
             // when & then
             mockMvc
@@ -43,30 +43,14 @@ class FeedbackControllerTest
 
             val saved = feedbackJpaRepository.findAll()
             assertThat(saved).hasSize(1)
-            assertThat(saved[0].category).isEqualTo(FeedbackCategory.BUG)
-            assertThat(saved[0].content).isEqualTo("버그가 발생했어요")
-            assertThat(saved[0].email).isEqualTo("user@example.com")
+            assertThat(saved[0].rating).isEqualTo(FeedbackRating.VERY_SATISFIED)
+            assertThat(saved[0].content).isEqualTo("만족합니다")
         }
 
         @Test
         fun `content가 빈문자열이면 400을 반환한다`() {
             // given
-            val body = """{"category":"BUG","content":"   "}"""
-
-            // when & then
-            mockMvc
-                .post("/v1/feedback") {
-                    contentType = MediaType.APPLICATION_JSON
-                    content = body
-                }.andExpect {
-                    status { isBadRequest() }
-                }
-        }
-
-        @Test
-        fun `잘못된 이메일 형식이면 400을 반환한다`() {
-            // given
-            val body = """{"category":"BUG","content":"내용","email":"not-an-email"}"""
+            val body = """{"rating":"VERY_SATISFIED","content":"   "}"""
 
             // when & then
             mockMvc
@@ -82,7 +66,7 @@ class FeedbackControllerTest
         fun `content가 2000자를 초과하면 400을 반환한다`() {
             // given
             val longContent = "a".repeat(2001)
-            val body = """{"category":"BUG","content":"$longContent"}"""
+            val body = """{"rating":"VERY_SATISFIED","content":"$longContent"}"""
 
             // when & then
             mockMvc
@@ -95,9 +79,24 @@ class FeedbackControllerTest
         }
 
         @Test
-        fun `category가 없으면 400을 반환한다`() {
+        fun `rating이 없으면 400을 반환한다`() {
             // given
             val body = """{"content":"내용"}"""
+
+            // when & then
+            mockMvc
+                .post("/v1/feedback") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = body
+                }.andExpect {
+                    status { isBadRequest() }
+                }
+        }
+
+        @Test
+        fun `rating이 enum에 없는 값이면 400을 반환한다`() {
+            // given
+            val body = """{"rating":"BUG","content":"내용"}"""
 
             // when & then
             mockMvc

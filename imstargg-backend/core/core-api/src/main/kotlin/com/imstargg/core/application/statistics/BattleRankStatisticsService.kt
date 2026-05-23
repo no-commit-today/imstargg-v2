@@ -17,11 +17,13 @@ class BattleRankStatisticsService(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
-    ): List<BrawlerRankStatistics> {
+    ): BrawlerRankStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
-        return rankRepository
-            .findBrawlerRankCounts(eventId, tierRange, startDate, endDate)
-            .map { it.toStatistics() }
+        val items =
+            rankRepository
+                .findBrawlerRankCounts(eventId, tierRange, startDate, endDate)
+                .map { it.toStatisticsItem() }
+        return BrawlerRankStatistics(items = items)
     }
 
     fun getBrawlerPairRankStatistics(

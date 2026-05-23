@@ -17,8 +17,8 @@ class JpaBatchTransactionRunner(
             propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
         }
 
-    fun <T : Any> run(action: (EntityManager, JPAQueryFactory) -> T): T =
+    fun <T> run(action: (EntityManager, JPAQueryFactory) -> T): T =
         transactionTemplate.execute {
             action(entityManager, JPAQueryFactory(entityManager))
-        } ?: error("JpaBatchTransactionRunner action returned null")
+        }
 }

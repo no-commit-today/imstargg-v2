@@ -1,7 +1,7 @@
 package com.imstargg.core.admin.controller.operation
 
 import com.imstargg.CoreAdminContextTest
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
 import com.imstargg.infrastructure.db.core.operation.FeedbackJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
@@ -14,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.put
+import java.time.Instant
 
 @AutoConfigureMockMvc
 class AdminFeedbackControllerTest
@@ -23,37 +24,70 @@ class AdminFeedbackControllerTest
         private val feedbackJpaRepository: FeedbackJpaRepository,
         private val cleanUp: CleanUp,
     ) : CoreAdminContextTest() {
+        private val baseSubmittedAt: Instant = Instant.parse("2026-05-22T10:00:00Z")
+
         @AfterEach
         fun tearDown() {
             cleanUp.all()
         }
 
         @Test
-        fun `목록을 카테고리로 필터링할 수 있다`() {
+        fun `목록을 rating으로 필터링할 수 있다`() {
             // given
             feedbackJpaRepository.save(
                 FeedbackEntity(
-                    category = FeedbackCategory.BUG,
-                    content = "버그 리포트",
-                    email = null,
+                    rating = FeedbackRating.VERY_SATISFIED,
+                    content = "매우 만족",
+                    submittedAt = baseSubmittedAt,
                 ),
             )
             feedbackJpaRepository.save(
                 FeedbackEntity(
-                    category = FeedbackCategory.FEATURE_REQUEST,
-                    content = "기능 요청",
-                    email = null,
+                    rating = FeedbackRating.DISSATISFIED,
+                    content = "불만족",
+                    submittedAt = baseSubmittedAt,
                 ),
             )
 
             // when & then
             mockMvc
                 .get("/feedbacks") {
-                    param("category", "BUG")
+                    param("rating", "VERY_SATISFIED")
                 }.andExpect {
                     status { isOk() }
                     jsonPath("$.content.length()") { value(1) }
-                    jsonPath("$.content[0].category") { value("BUG") }
+                    jsonPath("$.content[0].rating") { value("VERY_SATISFIED") }
+                    jsonPath("$.content[0].submittedAt") { exists() }
+                }
+        }
+
+        @Test
+        fun `목록은 submittedAt 내림차순으로 정렬된다`() {
+            // given
+            val older =
+                feedbackJpaRepository.save(
+                    FeedbackEntity(
+                        rating = FeedbackRating.NEUTRAL,
+                        content = "오래된 의견",
+                        submittedAt = baseSubmittedAt.minusSeconds(3600),
+                    ),
+                )
+            val newer =
+                feedbackJpaRepository.save(
+                    FeedbackEntity(
+                        rating = FeedbackRating.NEUTRAL,
+                        content = "최근 의견",
+                        submittedAt = baseSubmittedAt,
+                    ),
+                )
+
+            // when & then
+            mockMvc
+                .get("/feedbacks")
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.content[0].id") { value(newer.id!!.toInt()) }
+                    jsonPath("$.content[1].id") { value(older.id!!.toInt()) }
                 }
         }
 
@@ -63,9 +97,9 @@ class AdminFeedbackControllerTest
             val saved =
                 feedbackJpaRepository.save(
                     FeedbackEntity(
-                        category = FeedbackCategory.BUG,
+                        rating = FeedbackRating.SATISFIED,
                         content = "체크 테스트",
-                        email = null,
+                        submittedAt = baseSubmittedAt,
                         checked = false,
                     ),
                 )

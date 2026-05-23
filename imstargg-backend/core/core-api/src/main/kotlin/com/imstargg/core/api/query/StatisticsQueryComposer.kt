@@ -98,9 +98,9 @@ class StatisticsQueryComposer(
         dateRange: StatsDateRange,
     ): List<BrawlerResultDailyStatisticsResponse> {
         val brawlers = brawlers()
-        return battleResultStatisticsService
-            .getDailyResultStatistics(brawlerId, tierRange, dateRange)
-            .map { BrawlerResultDailyStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
+        val statistics = battleResultStatisticsService.getDailyResultStatistics(brawlerId, tierRange, dateRange)
+        val brawlerResponse = brawlers.toBrawlerResponse(statistics.brawlerId)
+        return statistics.items.map { BrawlerResultDailyStatisticsResponse.of(it, brawlerResponse) }
     }
 
     fun getBrawlerRankStatistics(
@@ -111,6 +111,7 @@ class StatisticsQueryComposer(
         val brawlers = brawlers()
         return battleRankStatisticsService
             .getBrawlerRankStatistics(eventId, tierRange, dateRange)
+            .items
             .map { BrawlerRankStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
     }
 

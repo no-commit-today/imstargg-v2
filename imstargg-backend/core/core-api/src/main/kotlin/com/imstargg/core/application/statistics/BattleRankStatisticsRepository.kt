@@ -4,6 +4,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerPairRankStatisticsItem
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.core.infrastructure.jpa.toRankCount
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleRankStatsJpaRepository
 import org.springframework.stereotype.Repository

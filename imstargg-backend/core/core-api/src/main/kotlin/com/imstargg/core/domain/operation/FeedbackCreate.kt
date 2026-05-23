@@ -1,9 +1,10 @@
 package com.imstargg.core.domain.operation
 
-import com.imstargg.core.enums.operation.FeedbackCategory
+import com.imstargg.core.enums.operation.FeedbackRating
+import java.time.Instant
 
 data class FeedbackCreate(
-    val category: FeedbackCategory,
+    val rating: FeedbackRating,
     val content: String,
-    val email: String?,
+    val submittedAt: Instant,
 )

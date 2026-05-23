@@ -16,9 +16,9 @@ class FeedbackRepository(
     fun save(command: FeedbackCreate): Feedback {
         val entity =
             FeedbackEntity(
-                category = command.category,
+                rating = command.rating,
                 content = command.content,
-                email = command.email,
+                submittedAt = command.submittedAt,
             )
         val saved = jpaRepository.save(entity)
         return saved.toDomain()
@@ -27,9 +27,9 @@ class FeedbackRepository(
     private fun FeedbackEntity.toDomain(): Feedback =
         Feedback(
             id = requireNotNull(id) { "Feedback id must not be null after save" },
-            category = category,
+            rating = rating,
             content = content,
-            email = email,
+            submittedAt = submittedAt,
             checked = checked,
         )
 }
