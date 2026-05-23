@@ -28,7 +28,7 @@ import java.time.LocalDate
  * `BattleEventMode.playerCounts` 가 알려진다면 게임 수를 정확히 도출할 수 있다:
  *
  *     eventSlotSum = Σ totalCount over brawlers within event
- *     gameCount    = eventSlotSum / SlotsPerGame.forResult(playerCounts)
+ *     gameCount    = eventSlotSum / GameSlot(playerCounts).resultSlotsPerGame
  *
  * 픽률 (= 브롤러 슬롯 수 / 게임 수) 계산이 이 관계에 의존한다.
  * `BrawlerBattleRankStatsEntity` 와의 결정적 차이는 이 엔티티가 양 팀을 모두 집계한다는 점이다.

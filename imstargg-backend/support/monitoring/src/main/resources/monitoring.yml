@@ -8,6 +8,9 @@ management:
           - prometheus
           - info
           - health
+  metrics:
+    tags:
+      application: ${spring.application.name}
   info:
     build:
       enabled: true

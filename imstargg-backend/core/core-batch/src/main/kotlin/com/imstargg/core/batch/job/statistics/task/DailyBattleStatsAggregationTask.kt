@@ -28,7 +28,7 @@ class DailyBattleStatsAggregationTask(
         var totalRead = 0L
 
         val readEm = entityManagerFactory.createEntityManager()
-        try {
+        readEm.use { readEm ->
             val readQueryFactory = JPAQueryFactory(readEm)
             while (true) {
                 val battles = readPage(readQueryFactory, date, lastId)
@@ -39,8 +39,6 @@ class DailyBattleStatsAggregationTask(
                 readEm.clear()
                 log.debug("[{}] 읽기 진행 - date: {}, 누적: {}건", jobName, date, totalRead)
             }
-        } finally {
-            readEm.close()
         }
 
         var totalEntities = 0L
