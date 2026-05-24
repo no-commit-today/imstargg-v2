@@ -1,11 +1,7 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerPairBattleResultStatsAggregator
-import com.imstargg.core.batch.job.statistics.task.WeeklyEventBattleStatsAggregationTask
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.enums.StatsWeekRange
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerPairBattleResultStatsEntity.Companion.brawlerPairBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity.Companion.statsResultBattleEntity
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -20,7 +16,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class BrawlerPairBattleResultStatsJobConfig(
     private val jobRepository: JobRepository,
-    private val aggregationTask: WeeklyEventBattleStatsAggregationTask,
+    private val task: BrawlerPairBattleResultStatsTask,
 ) {
     companion object {
         const val JOB_NAME = "brawlerPairBattleResultStatsJob"
@@ -48,47 +44,7 @@ class BrawlerPairBattleResultStatsJobConfig(
     fun brawlerPairBattleResultStatsStep(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
-                aggregationTask.aggregate(
-                    jobName = JOB_NAME,
-                    weekRanges = StatsWeekRange.currentAndPrevious(dateJobParameter().date!!),
-                    readDistinctEventIds = { queryFactory, weekRange ->
-                        queryFactory
-                            .select(statsResultBattleEntity.eventBrawlStarsId)
-                            .distinct()
-                            .from(statsResultBattleEntity)
-                            .where(statsResultBattleEntity.battleDate.between(weekRange.start, weekRange.end))
-                            .fetch()
-                            .toList()
-                    },
-                    readPage = { queryFactory, weekRange, lastId, eventBrawlStarsId ->
-                        queryFactory
-                            .selectFrom(statsResultBattleEntity)
-                            .where(
-                                statsResultBattleEntity.battleDate.between(weekRange.start, weekRange.end),
-                                statsResultBattleEntity.eventBrawlStarsId.eq(eventBrawlStarsId),
-                                statsResultBattleEntity.id.gt(lastId),
-                            ).orderBy(statsResultBattleEntity.id.asc())
-                            .limit(BattleStatsConstants.READ_PAGE_SIZE)
-                            .fetch()
-                            .toList()
-                    },
-                    getId = { it.id!! },
-                    aggregatorFactory = { weekRange ->
-                        BrawlerPairBattleResultStatsAggregator(
-                            startBattleDate = weekRange.start,
-                            endBattleDate = weekRange.end,
-                        )
-                    },
-                    deleteExisting = { queryFactory, weekRange, eventBrawlStarsId ->
-                        queryFactory
-                            .delete(brawlerPairBattleResultStatsEntity)
-                            .where(
-                                brawlerPairBattleResultStatsEntity.startBattleDate.eq(weekRange.start),
-                                brawlerPairBattleResultStatsEntity.endBattleDate.eq(weekRange.end),
-                                brawlerPairBattleResultStatsEntity.eventBrawlStarsId.eq(eventBrawlStarsId),
-                            ).execute()
-                    },
-                )
+                task.aggregate(StatsWeekRange.currentAndPrevious(dateJobParameter().date!!))
                 RepeatStatus.FINISHED
             })
             .build()
