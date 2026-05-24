@@ -458,7 +458,12 @@ img { display: block; max-width: 100%; }
   font-weight: 700;
   letter-spacing: 0.06em;
 }
-.data-table-head [data-sortable]:hover {
+.data-table-head [data-sortable] {
+  color: inherit;
+  cursor: pointer;
+}
+.data-table-head [data-sortable]:hover,
+.data-table-head [data-sortable][data-active="true"] {
   color: var(--color-brand-yellow);
 }
 .data-row {
@@ -487,6 +492,13 @@ img { display: block; max-width: 100%; }
 .data-row[data-rail="gold"]    { --row-rail: var(--tier-gold); }
 .data-row[data-rail="silver"]  { --row-rail: var(--tier-silver); }
 .data-row[data-rail="bronze"]  { --row-rail: var(--tier-bronze); }
+.data-row[data-selected="true"] {
+  --row-rail: var(--color-brand-yellow);
+  background: rgba(255, 224, 130, 0.4);
+}
+.data-row[data-selected="true"]:hover {
+  background: rgba(255, 224, 130, 0.55);
+}
 
 /* ===== Win gauge ===== */
 .win-gauge {

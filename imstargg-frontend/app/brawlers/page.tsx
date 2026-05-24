@@ -9,7 +9,6 @@ import {
   parseTierRange,
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
-import { parseSortOrder } from "@/domain/statistics/sort";
 import { sortByName } from "@/domain/brawler/filters";
 import { buildMetadata } from "@/lib/seo";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
@@ -30,8 +29,6 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const sp = await searchParams;
   const tierRange = parseTierRange(sp.tier);
   const dateRange = parseDateRange(sp.date);
-  const sort = typeof sp.sort === "string" ? sp.sort : "tier";
-  const order = parseSortOrder(sp.order);
 
   const [brawlersList, statsDto] = await Promise.all([
     brawlerApi.list({ next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } }),
@@ -57,12 +54,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
         </div>
         <StatRangeSelector tier={tierRange} date={dateRange} />
       </header>
-      <BrawlerStatTable
-        rows={rows}
-        sort={sort}
-        order={order}
-        totalBattleCount={stats.totalBattleCount}
-      />
+      <BrawlerStatTable rows={rows} totalBattleCount={stats.totalBattleCount} />
     </main>
   );
 }

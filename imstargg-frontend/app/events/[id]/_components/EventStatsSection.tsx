@@ -10,7 +10,6 @@ import {
   parseTierRange,
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
-import { parseSortOrder } from "@/domain/statistics/sort";
 import type { BattleEvent } from "@/domain/event/types";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
 import { EventResultStatsTable } from "./EventResultStatsTable";
@@ -32,14 +31,10 @@ export async function EventStatsSection({ event, searchParams }: Props) {
   const resultType = event.mode?.resultType ?? "RESULT";
 
   if (resultType === "RANK") {
-    const rankSort =
-      typeof searchParams.sort === "string" ? searchParams.sort : "averageRank";
-    const rankOrder = parseSortOrder(searchParams.order ?? "ASC");
     const main = await statisticsApi.brawlerRank(
       { eventId: event.id, tierRange: tier, dateRange: date },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     );
-    const items = sortRankItems(main.content.map(toBrawlerRankStat), rankSort, rankOrder);
     return (
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -50,9 +45,7 @@ export async function EventStatsSection({ event, searchParams }: Props) {
           <StatRangeSelector tier={tier} date={date} />
         </div>
         <EventRankStatsTable
-          items={items}
-          sort={rankSort}
-          order={rankOrder}
+          items={main.content.map(toBrawlerRankStat)}
           selectedBrawlerId={selectedBrawlerId}
         />
         {selectedBrawlerId && (
@@ -71,8 +64,6 @@ export async function EventStatsSection({ event, searchParams }: Props) {
     );
   }
 
-  const sort = typeof searchParams.sort === "string" ? searchParams.sort : "tier";
-  const order = parseSortOrder(searchParams.order);
   const main = await statisticsApi.brawlerResult(
     { eventId: event.id, tierRange: tier, dateRange: date },
     { next: { revalidate: CACHE_SECONDS.SHORT } },
@@ -88,9 +79,7 @@ export async function EventStatsSection({ event, searchParams }: Props) {
         <StatRangeSelector tier={tier} date={date} />
       </div>
       <EventResultStatsTable
-        items={sortResultItems(stats.items, sort, order)}
-        sort={sort}
-        order={order}
+        items={stats.items}
         selectedBrawlerId={selectedBrawlerId}
       />
       {selectedBrawlerId && (
@@ -107,39 +96,6 @@ export async function EventStatsSection({ event, searchParams }: Props) {
       )}
     </section>
   );
-}
-
-function sortRankItems<
-  T extends { averageRank: number; totalBattleCount: number },
->(items: T[], sort: string, order: import("@/domain/statistics/sort").SortOrder): T[] {
-  const sign = order === "DESC" ? -1 : 1;
-  const cmp = (a: T, b: T) => {
-    switch (sort) {
-      case "totalBattleCount":
-        return (a.totalBattleCount - b.totalBattleCount) * sign;
-      case "averageRank":
-      default:
-        return (a.averageRank - b.averageRank) * sign;
-    }
-  };
-  return [...items].sort(cmp);
-}
-
-function sortResultItems<
-  T extends { tierScore: number; winRate: number; pickRate: number; starPlayerRate: number; totalBattleCount: number },
->(items: T[], sort: string, order: import("@/domain/statistics/sort").SortOrder): T[] {
-  const sign = order === "DESC" ? -1 : 1;
-  const cmp = (a: T, b: T) => {
-    switch (sort) {
-      case "winRate": return (a.winRate - b.winRate) * sign;
-      case "pickRate": return (a.pickRate - b.pickRate) * sign;
-      case "starPlayerRate": return (a.starPlayerRate - b.starPlayerRate) * sign;
-      case "totalBattleCount": return (a.totalBattleCount - b.totalBattleCount) * sign;
-      case "tier":
-      default: return (a.tierScore - b.tierScore) * sign;
-    }
-  };
-  return [...items].sort(cmp);
 }
 
 function PanelFallback() {

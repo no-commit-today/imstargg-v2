@@ -6,11 +6,6 @@ import {
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
 import {
-  parseResultSortBy,
-  parseSortOrder,
-  sortResultStats,
-} from "@/domain/statistics/sort";
-import {
   toDailyResultStat,
   toEnemyResultStat,
   toPairResultStat,
@@ -29,10 +24,6 @@ type Props = {
 export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
   const tier = parseTierRange(searchParams.tier);
   const date = parseDateRange(searchParams.date);
-  const pairSort = parseResultSortBy(searchParams.pairSort);
-  const pairOrder = parseSortOrder(searchParams.pairOrder);
-  const enemySort = parseResultSortBy(searchParams.enemySort);
-  const enemyOrder = parseSortOrder(searchParams.enemyOrder);
 
   const [daily, pair, enemy] = await Promise.all([
     statisticsApi.daily(
@@ -40,33 +31,14 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.pairResult(
-      {
-        brawlerId: brawler.id,
-        tierRange: tier,
-        dateRange: date,
-      },
+      { brawlerId: brawler.id, tierRange: tier, dateRange: date },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.enemyResult(
-      {
-        brawlerId: brawler.id,
-        tierRange: tier,
-        dateRange: date,
-      },
+      { brawlerId: brawler.id, tierRange: tier, dateRange: date },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
-
-  const pairItems = sortResultStats(
-    pair.content.map(toPairResultStat),
-    pairSort,
-    pairOrder,
-  );
-  const enemyItems = sortResultStats(
-    enemy.content.map(toEnemyResultStat),
-    enemySort,
-    enemyOrder,
-  );
 
   return (
     <section className="space-y-4">
@@ -81,8 +53,8 @@ export async function BrawlerStatsSection({ brawler, searchParams }: Props) {
       </div>
       <DailyTrendChart items={daily.content.map(toDailyResultStat)} />
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <PairStatsTable items={pairItems} sort={pairSort} order={pairOrder} />
-        <EnemyStatsTable items={enemyItems} sort={enemySort} order={enemyOrder} />
+        <PairStatsTable items={pair.content.map(toPairResultStat)} />
+        <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} />
       </div>
     </section>
   );

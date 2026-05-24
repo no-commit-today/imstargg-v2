@@ -1,7 +1,15 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Swords } from "lucide-react";
 import type { EnemyResultStat } from "@/domain/statistics/types";
-import type { SortOrder, ResultStatsSortBy } from "@/domain/statistics/sort";
+import {
+  type ResultStatsSortBy,
+  type SortOrder,
+  sortResultStats,
+  toggleSortOrder,
+} from "@/domain/statistics/sort";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import { SortableHeader } from "@app/_components/statistics/SortableHeader";
 import {
@@ -11,8 +19,8 @@ import {
 
 type Props = {
   items: EnemyResultStat[];
-  sort: ResultStatsSortBy;
-  order: SortOrder;
+  initialSort?: ResultStatsSortBy;
+  initialOrder?: SortOrder;
 };
 
 /**
@@ -27,11 +35,28 @@ function enemyRail(enemyWinRate: number): "win" | "neutral" | "loss" {
   return "neutral";
 }
 
-function enemyTone(enemyWinRate: number): "win" | "neutral" | "loss" {
-  return enemyRail(enemyWinRate);
-}
+export function EnemyStatsTable({
+  items,
+  initialSort = "WIN_RATE",
+  initialOrder = "DESC",
+}: Props) {
+  const [sort, setSort] = useState<ResultStatsSortBy>(initialSort);
+  const [order, setOrder] = useState<SortOrder>(initialOrder);
 
-export function EnemyStatsTable({ items, sort, order }: Props) {
+  function onSort(column: ResultStatsSortBy) {
+    if (column === sort) {
+      setOrder(toggleSortOrder(order));
+    } else {
+      setSort(column);
+      setOrder("DESC");
+    }
+  }
+
+  const sorted = useMemo(
+    () => sortResultStats(items, sort, order),
+    [items, sort, order],
+  );
+
   return (
     <div className="data-table">
       <div className="data-table-toolbar">
@@ -44,14 +69,14 @@ export function EnemyStatsTable({ items, sort, order }: Props) {
       <div className="data-table-head grid grid-cols-[28px_minmax(0,1fr)_44px_56px_56px] items-center gap-1 sm:grid-cols-[48px_minmax(0,1fr)_72px_88px_96px] sm:gap-2">
         <span>순위</span>
         <span>카운터 브롤러</span>
-        <SortableHeader column="PICK_RATE" label="픽률" currentSort={sort} currentOrder={order} paramPrefix="enemy" />
-        <SortableHeader column="WIN_RATE" label="승률" currentSort={sort} currentOrder={order} paramPrefix="enemy" />
+        <SortableHeader column="PICK_RATE" label="픽률" currentSort={sort} currentOrder={order} onSort={onSort} />
+        <SortableHeader column="WIN_RATE" label="승률" currentSort={sort} currentOrder={order} onSort={onSort} />
         <span>전투수</span>
       </div>
-      {items.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className="px-4 py-8 text-center text-sm text-[#5C6271]">데이터가 부족합니다.</div>
       ) : (
-        items.map((it, i) =>
+        sorted.map((it, i) =>
           it.enemyBrawler ? (
             <Link
               key={`${it.enemyBrawler.id}-${i}`}
@@ -71,7 +96,7 @@ export function EnemyStatsTable({ items, sort, order }: Props) {
                 <span className="truncate font-bold">{it.enemyBrawler.name}</span>
               </div>
               <PercentCell value={it.pickRate} />
-              <PercentCell value={it.winRate} gauge gaugeTone={enemyTone(it.winRate)} />
+              <PercentCell value={it.winRate} />
               <CountCell value={it.totalBattleCount} />
             </Link>
           ) : null,
