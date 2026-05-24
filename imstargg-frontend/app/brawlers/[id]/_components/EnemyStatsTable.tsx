@@ -1,6 +1,15 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Swords } from "lucide-react";
 import type { EnemyResultStat } from "@/domain/statistics/types";
-import type { SortOrder, ResultStatsSortBy } from "@/domain/statistics/sort";
+import {
+  type ResultStatsSortBy,
+  type SortOrder,
+  sortResultStats,
+  toggleSortOrder,
+} from "@/domain/statistics/sort";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import { SortableHeader } from "@app/_components/statistics/SortableHeader";
 import {
@@ -10,32 +19,70 @@ import {
 
 type Props = {
   items: EnemyResultStat[];
-  sort: ResultStatsSortBy;
-  order: SortOrder;
+  initialSort?: ResultStatsSortBy;
+  initialOrder?: SortOrder;
 };
 
-export function EnemyStatsTable({ items, sort, order }: Props) {
+/**
+ * 카운터 표는 행의 의미가 반전된다.
+ * - 적의 승률 ≥55%: 나에게 "위협(loss)" — 빨간 rail
+ * - 적의 승률 ≤45%: 나에게 "좋음(win)"  — 초록 rail
+ * - 그 외: neutral
+ */
+function enemyRail(enemyWinRate: number): "win" | "neutral" | "loss" {
+  if (enemyWinRate >= 0.55) return "loss";
+  if (enemyWinRate <= 0.45) return "win";
+  return "neutral";
+}
+
+export function EnemyStatsTable({
+  items,
+  initialSort = "WIN_RATE",
+  initialOrder = "DESC",
+}: Props) {
+  const [sort, setSort] = useState<ResultStatsSortBy>(initialSort);
+  const [order, setOrder] = useState<SortOrder>(initialOrder);
+
+  function onSort(column: ResultStatsSortBy) {
+    if (column === sort) {
+      setOrder(toggleSortOrder(order));
+    } else {
+      setSort(column);
+      setOrder("DESC");
+    }
+  }
+
+  const sorted = useMemo(
+    () => sortResultStats(items, sort, order),
+    [items, sort, order],
+  );
+
   return (
-    <div className="rounded-lg border border-[#D8DCE5] bg-white">
-      <div className="border-b border-[#D8DCE5] bg-[#F6F7FA] px-3 py-2">
-        <h3 className="text-sm font-bold">카운터</h3>
+    <div className="data-table">
+      <div className="data-table-toolbar">
+        <h3 className="text-sm font-bold flex items-center gap-2">
+          <Swords size={16} aria-hidden className="text-[#FF3A3A]" />
+          카운터
+        </h3>
+        <span className="text-[11px] text-[#5C6271]">적 픽일 때의 적 승률</span>
       </div>
-      <div className="grid grid-cols-[28px_minmax(0,1fr)_44px_44px_56px] items-center gap-1 border-b border-[#D8DCE5] px-2 py-2 text-[10px] font-bold tracking-wider text-[#5C6271] sm:grid-cols-[48px_minmax(0,1fr)_72px_72px_96px] sm:gap-2 sm:px-3 sm:text-[11px]">
+      <div className="data-table-head grid grid-cols-[28px_minmax(0,1fr)_44px_56px_56px] items-center gap-1 sm:grid-cols-[48px_minmax(0,1fr)_72px_88px_96px] sm:gap-2">
         <span>순위</span>
         <span>카운터 브롤러</span>
-        <SortableHeader column="PICK_RATE" label="픽률" currentSort={sort} currentOrder={order} paramPrefix="enemy" />
-        <SortableHeader column="WIN_RATE" label="승률" currentSort={sort} currentOrder={order} paramPrefix="enemy" />
+        <SortableHeader column="PICK_RATE" label="픽률" currentSort={sort} currentOrder={order} onSort={onSort} />
+        <SortableHeader column="WIN_RATE" label="승률" currentSort={sort} currentOrder={order} onSort={onSort} />
         <span>전투수</span>
       </div>
-      {items.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className="px-4 py-8 text-center text-sm text-[#5C6271]">데이터가 부족합니다.</div>
       ) : (
-        items.map((it, i) =>
+        sorted.map((it, i) =>
           it.enemyBrawler ? (
             <Link
               key={`${it.enemyBrawler.id}-${i}`}
               href={`/brawlers/${it.enemyBrawler.id}`}
-              className="grid grid-cols-[28px_minmax(0,1fr)_44px_44px_56px] items-center gap-1 border-b border-[#ECEEF3] px-2 py-2 text-[11px] hover:bg-[#F6F7FA] sm:grid-cols-[48px_minmax(0,1fr)_72px_72px_96px] sm:gap-2 sm:px-3 sm:text-sm"
+              data-rail={enemyRail(it.winRate)}
+              className="data-row grid grid-cols-[28px_minmax(0,1fr)_44px_56px_56px] items-center gap-1 text-[13px] sm:grid-cols-[48px_minmax(0,1fr)_72px_88px_96px] sm:gap-2 sm:text-sm"
             >
               <span className="font-bold text-[#5C6271] tabular-nums">{i + 1}</span>
               <div className="flex min-w-0 items-center gap-1 overflow-hidden sm:gap-2">
@@ -43,7 +90,7 @@ export function EnemyStatsTable({ items, sort, order }: Props) {
                   name={it.enemyBrawler.name}
                   imageUrl={it.enemyBrawler.portraitImageUrl}
                   rarity={it.enemyBrawler.rarity}
-                  size={28}
+                  size={32}
                   className="shrink-0"
                 />
                 <span className="truncate font-bold">{it.enemyBrawler.name}</span>

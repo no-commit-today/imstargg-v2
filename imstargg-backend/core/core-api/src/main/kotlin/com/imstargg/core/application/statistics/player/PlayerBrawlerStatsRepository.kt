@@ -1,11 +1,11 @@
 package com.imstargg.core.application.statistics.player
 
-import com.imstargg.core.application.statistics.toResultCount
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.statistics.player.PlayerBrawlerStats
 import com.imstargg.core.domain.statistics.player.PlayerBrawlerStatsItem
 import com.imstargg.core.enums.BattleType
+import com.imstargg.core.infrastructure.jpa.toResultCount
 import com.imstargg.infrastructure.db.core.statistics.player.PlayerBrawlerStatsItemJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.player.PlayerBrawlerStatsJpaRepository
 import org.springframework.stereotype.Repository

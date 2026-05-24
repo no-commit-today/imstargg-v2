@@ -5,11 +5,12 @@ export type SearchEntryKind = "player" | "club";
 export interface SearchEntry {
   kind: SearchEntryKind;
   tag: string;
-  label?: string;
+  name: string;
+  trophies: number;
   addedAt: number;
 }
 
-const RECENTS_KEY = "imstargg.search.recents";
+const RECENTS_KEY = "imstargg.search.recents.v2";
 export const RECENTS_LIMIT = 10;
 
 function isBrowser(): boolean {
@@ -22,9 +23,19 @@ function readArray(key: string): SearchEntry[] {
   if (raw == null) return [];
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as SearchEntry[];
-    window.localStorage.removeItem(key);
-    return [];
+    if (!Array.isArray(parsed)) {
+      window.localStorage.removeItem(key);
+      return [];
+    }
+    return parsed.filter(
+      (e): e is SearchEntry =>
+        e != null &&
+        (e.kind === "player" || e.kind === "club") &&
+        typeof e.tag === "string" &&
+        typeof e.name === "string" &&
+        typeof e.trophies === "number" &&
+        typeof e.addedAt === "number",
+    );
   } catch {
     window.localStorage.removeItem(key);
     return [];

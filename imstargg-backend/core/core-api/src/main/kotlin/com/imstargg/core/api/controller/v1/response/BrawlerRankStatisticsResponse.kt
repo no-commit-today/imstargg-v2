@@ -1,6 +1,6 @@
 package com.imstargg.core.api.controller.v1.response
 
-import com.imstargg.core.domain.statistics.BrawlerRankStatistics
+import com.imstargg.core.domain.statistics.BrawlerRankStatisticsItem
 
 data class BrawlerRankStatisticsResponse(
     val brawler: BrawlerResponse?,
@@ -9,12 +9,12 @@ data class BrawlerRankStatisticsResponse(
 ) {
     companion object {
         fun of(
-            statistics: BrawlerRankStatistics,
+            item: BrawlerRankStatisticsItem,
             brawler: BrawlerResponse?,
         ) = BrawlerRankStatisticsResponse(
             brawler = brawler,
-            totalBattleCount = statistics.totalBattleCount,
-            averageRank = statistics.averageRank,
+            totalBattleCount = item.totalBattleCount,
+            averageRank = item.averageRank,
         )
     }
 }

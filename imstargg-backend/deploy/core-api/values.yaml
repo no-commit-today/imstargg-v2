@@ -18,6 +18,10 @@ deployment:
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: prod
+    - name: REDIS_HOST
+      value: valkey-imstargg-primary.valkey
+    - name: REDIS_PORT
+      value: "6379"
   envFrom:
     - secretRef:
         name: core-api-secret

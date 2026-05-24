@@ -14,6 +14,25 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.LocalDate
 
+/**
+ * 결과형(승/패/무) 배틀 통계의 브롤러 단위 집계.
+ *
+ * ## 집계 단위
+ * 브롤러 × 이벤트 × 티어 구간 × 날짜.
+ *
+ * ## 집계 범위
+ * 한 배틀의 **양 팀 모든 슬롯**이 카운트된다 — 자기 팀은 본래 결과로, 적군 팀은 반대 결과로.
+ * 3v3 의 경우 한 게임당 6 슬롯이 다수 row 에 분산 기록된다.
+ *
+ * ## 게임 수 도출
+ * `BattleEventMode.playerCounts` 가 알려진다면 게임 수를 정확히 도출할 수 있다:
+ *
+ *     eventSlotSum = Σ totalCount over brawlers within event
+ *     gameCount    = eventSlotSum / GameSlot(playerCounts).resultSlotsPerGame
+ *
+ * 픽률 (= 브롤러 슬롯 수 / 게임 수) 계산이 이 관계에 의존한다.
+ * `BrawlerBattleRankStatsEntity` 와의 결정적 차이는 이 엔티티가 양 팀을 모두 집계한다는 점이다.
+ */
 @Entity
 @Table(
     name = "brawler_battle_result_stats",

@@ -16,8 +16,12 @@ out/
 ### Git ###
 .worktree
 .worktrees/
-.superpowers/
 
 ### Python ###
 __pycache__/
 *.py[cod]
+
+### Claude Code ###
+.claude/worktrees
+.superpowers/
+.playwright-mcp

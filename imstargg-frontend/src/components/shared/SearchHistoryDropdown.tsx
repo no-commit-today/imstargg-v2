@@ -9,9 +9,10 @@ interface Props {
   favorites: SearchEntry[];
   activeIndex: number; // -1 = nothing active. 0..favorites.length-1 = fav, beyond = recents
   onSelect?: () => void;
-  onToggleFavorite: (entry: Pick<SearchEntry, "kind" | "tag">) => void;
+  onToggleFavorite: (entry: Omit<SearchEntry, "addedAt">) => void;
   onClearRecents: () => void;
   isFavorite: (kind: SearchEntryKind, tag: string) => boolean;
+  variant?: "default" | "topnav";
 }
 
 function entryHref(e: SearchEntry): string {
@@ -20,27 +21,43 @@ function entryHref(e: SearchEntry): string {
 
 export function SearchHistoryDropdown({
   recents, favorites, activeIndex, onSelect, onToggleFavorite, onClearRecents, isFavorite,
+  variant = "default",
 }: Props) {
   if (recents.length === 0 && favorites.length === 0) return null;
 
   const recentsActiveIndex = activeIndex >= favorites.length ? activeIndex - favorites.length : -1;
   const favoritesActiveIndex = activeIndex < favorites.length ? activeIndex : -1;
 
+  const positionStyle: React.CSSProperties =
+    variant === "topnav"
+      ? {
+          position: "absolute",
+          top: "100%",
+          right: 0,
+          marginTop: 6,
+          width: 320,
+          maxWidth: "calc(100vw - 24px)",
+          zIndex: 100,
+        }
+      : {
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          marginTop: 4,
+          zIndex: 50,
+        };
+
   return (
     <div
       role="menu"
       style={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        right: 0,
-        marginTop: 4,
+        ...positionStyle,
         background: "#fff",
         border: "1px solid #D8DCE5",
         borderRadius: 12,
         boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
         padding: 8,
-        zIndex: 50,
         maxHeight: 360,
         overflowY: "auto",
       }}
@@ -91,7 +108,7 @@ function Section({
   entries: SearchEntry[];
   activeIndex: number;
   onSelect?: () => void;
-  onToggleFavorite: (entry: Pick<SearchEntry, "kind" | "tag">) => void;
+  onToggleFavorite: (entry: Omit<SearchEntry, "addedAt">) => void;
   isFavorite: (kind: SearchEntryKind, tag: string) => boolean;
   rightAction?: React.ReactNode;
 }) {
@@ -127,21 +144,43 @@ function Section({
                   role="menuitem"
                   onClick={onSelect}
                   style={{
-                    flex: 1, display: "flex", alignItems: "center", gap: 8,
-                    padding: "6px 8px", borderRadius: 6, color: "#14161B",
-                    textDecoration: "none", fontSize: 13,
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 8px",
+                    borderRadius: 6,
+                    color: "#14161B",
+                    textDecoration: "none",
+                    fontSize: 13,
                   }}
                 >
                   <span
                     style={{
-                      fontSize: 10, fontWeight: 700, color: "#5C6271",
-                      textTransform: "uppercase", minWidth: 36,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: "#5C6271",
+                      textTransform: "uppercase",
+                      minWidth: 36,
                     }}
                   >
                     {e.kind === "player" ? "PLAYER" : "CLUB"}
                   </span>
-                  <span style={{ fontFamily: "var(--font-mono)" }}>{e.tag}</span>
-                  {e.label && <span style={{ color: "#5C6271" }}>· {e.label}</span>}
+                  <span style={{ fontWeight: 700 }}>{e.name}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", color: "#5C6271" }}>
+                    {e.tag}
+                  </span>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontFamily: "var(--font-num)",
+                      fontWeight: 700,
+                      color: "#14161B",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {e.trophies.toLocaleString()} 🏆
+                  </span>
                 </Link>
                 <button
                   type="button"
@@ -150,7 +189,7 @@ function Section({
                   onClick={(ev) => {
                     ev.preventDefault();
                     ev.stopPropagation();
-                    onToggleFavorite({ kind: e.kind, tag: e.tag });
+                    onToggleFavorite({ kind: e.kind, tag: e.tag, name: e.name, trophies: e.trophies });
                   }}
                   style={{
                     background: "none", border: "none",

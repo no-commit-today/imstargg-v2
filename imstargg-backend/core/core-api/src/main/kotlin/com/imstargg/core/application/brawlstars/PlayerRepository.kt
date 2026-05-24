@@ -1,5 +1,7 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.brawler.Brawler
@@ -43,6 +45,30 @@ class PlayerRepository(
     fun find(tag: BrawlStarsTag): Player? {
         val entity = playerJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
         return toPlayer(entity)
+    }
+
+    fun searchByTag(
+        tagPrefix: BrawlStarsTag,
+        offsetLimit: OffsetLimit,
+    ): Slice<Player> {
+        val slice =
+            playerJpaRepository.findAllByBrawlStarsTagStartingWithOrderByTrophiesDescBrawlStarsTagAsc(
+                brawlStarsTag = tagPrefix.value,
+                pageable = offsetLimit.toPageable(),
+            )
+        return Slice.from(slice.map { toPlayer(it) })
+    }
+
+    fun searchByName(
+        namePrefix: String,
+        offsetLimit: OffsetLimit,
+    ): Slice<Player> {
+        val slice =
+            playerJpaRepository.findAllByNameStartingWithOrderByTrophiesDescBrawlStarsTagAsc(
+                name = namePrefix,
+                pageable = offsetLimit.toPageable(),
+            )
+        return Slice.from(slice.map { toPlayer(it) })
     }
 
     fun findAllPlayerBrawler(tag: BrawlStarsTag): List<PlayerBrawler> {

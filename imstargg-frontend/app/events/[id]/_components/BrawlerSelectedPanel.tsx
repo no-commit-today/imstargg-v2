@@ -6,9 +6,8 @@ import {
   toPairRankStat,
   toPairResultStat,
 } from "@/domain/statistics/mappers";
-import { parseResultSortBy, parseRankSortBy, parseSortOrder } from "@/domain/statistics/sort";
 import type { StatsTierRange, StatsDateRange } from "@/domain/statistics/enums";
-import type { BattleEventResultType } from "@/api/types";
+import type { BattleEventModeResultType } from "@/api/types";
 import { PairStatsTable } from "@app/brawlers/[id]/_components/PairStatsTable";
 import { EnemyStatsTable } from "@app/brawlers/[id]/_components/EnemyStatsTable";
 import { PairRankTable } from "./PairRankTable";
@@ -16,7 +15,7 @@ import { PairRankTable } from "./PairRankTable";
 type Props = {
   eventId: number;
   brawlerId: number;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
   tier: StatsTierRange;
   date: StatsDateRange;
   searchParams: Record<string, string | string[] | undefined>;
@@ -30,9 +29,6 @@ export async function BrawlerSelectedPanel({
   date,
   searchParams,
 }: Props) {
-  const pairOrder = parseSortOrder(searchParams.pairOrder);
-  const enemyOrder = parseSortOrder(searchParams.enemyOrder);
-
   const closeHref = (() => {
     const sp = new URLSearchParams();
     for (const [k, v] of Object.entries(searchParams)) {
@@ -44,9 +40,8 @@ export async function BrawlerSelectedPanel({
   })();
 
   if (resultType === "RANK") {
-    const pairSort = parseRankSortBy(searchParams.pairSort);
     const pair = await statisticsApi.pairRank(
-      { eventId, brawlerId, tierRange: tier, dateRange: date, sortBy: pairSort, sortOrder: pairOrder },
+      { eventId, brawlerId, tierRange: tier, dateRange: date },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     );
     return (
@@ -58,7 +53,7 @@ export async function BrawlerSelectedPanel({
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <PairRankTable items={pair.content.map(toPairRankStat)} sort={pairSort} order={pairOrder} />
+          <PairRankTable items={pair.content.map(toPairRankStat)} />
           <div className="rounded-lg border border-[#D8DCE5] bg-white px-4 py-8 text-center text-sm text-[#5C6271]">
             카운터는 결과형 모드 전용입니다.
           </div>
@@ -67,15 +62,13 @@ export async function BrawlerSelectedPanel({
     );
   }
 
-  const pairSort = parseResultSortBy(searchParams.pairSort);
-  const enemySort = parseResultSortBy(searchParams.enemySort);
   const [pair, enemy] = await Promise.all([
     statisticsApi.pairResult(
-      { eventId, brawlerId, tierRange: tier, dateRange: date, sortBy: pairSort, sortOrder: pairOrder },
+      { eventId, brawlerId, tierRange: tier, dateRange: date },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
     statisticsApi.enemyResult(
-      { eventId, brawlerId, tierRange: tier, dateRange: date, sortBy: enemySort, sortOrder: enemyOrder },
+      { eventId, brawlerId, tierRange: tier, dateRange: date },
       { next: { revalidate: CACHE_SECONDS.SHORT } },
     ),
   ]);
@@ -89,8 +82,8 @@ export async function BrawlerSelectedPanel({
         </Link>
       </div>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <PairStatsTable items={pair.content.map(toPairResultStat)} sort={pairSort} order={pairOrder} />
-        <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} sort={enemySort} order={enemyOrder} />
+        <PairStatsTable items={pair.content.map(toPairResultStat)} />
+        <EnemyStatsTable items={enemy.content.map(toEnemyResultStat)} />
       </div>
     </section>
   );

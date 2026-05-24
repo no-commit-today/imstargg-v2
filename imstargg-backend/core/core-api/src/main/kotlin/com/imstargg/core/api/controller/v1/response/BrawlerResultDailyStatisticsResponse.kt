@@ -1,6 +1,6 @@
 package com.imstargg.core.api.controller.v1.response
 
-import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
+import com.imstargg.core.domain.statistics.BrawlerResultDailyStatisticsItem
 import java.time.LocalDate
 
 data class BrawlerResultDailyStatisticsResponse(
@@ -12,14 +12,14 @@ data class BrawlerResultDailyStatisticsResponse(
 ) {
     companion object {
         fun of(
-            statistics: BrawlerResultDailyStatistics,
+            item: BrawlerResultDailyStatisticsItem,
             brawler: BrawlerResponse?,
         ) = BrawlerResultDailyStatisticsResponse(
-            date = statistics.date,
+            date = item.date,
             brawler = brawler,
-            totalBattleCount = statistics.totalBattleCount,
-            winRate = statistics.winRate,
-            starPlayerRate = statistics.starPlayerRate,
+            totalBattleCount = item.totalBattleCount,
+            winRate = item.winRate,
+            starPlayerRate = item.starPlayerRate,
         )
     }
 }

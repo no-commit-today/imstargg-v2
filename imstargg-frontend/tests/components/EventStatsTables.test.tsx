@@ -38,8 +38,6 @@ describe("EventStatsTables", () => {
             tier: "S",
           },
         ]}
-        sort="tier"
-        order="DESC"
         selectedBrawlerId={null}
       />,
     );
@@ -65,8 +63,6 @@ describe("EventStatsTables", () => {
             tier: "S",
           },
         ]}
-        sort="tier"
-        order="DESC"
         selectedBrawlerId={16000104}
       />,
     );
@@ -86,8 +82,6 @@ describe("EventStatsTables", () => {
             averageRank: 2.14,
           },
         ]}
-        sort="averageRank"
-        order="ASC"
         selectedBrawlerId={16000104}
       />,
     );

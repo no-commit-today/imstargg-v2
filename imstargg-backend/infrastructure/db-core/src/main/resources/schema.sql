@@ -24,6 +24,8 @@ create table if not exists player
     updated_at                            timestamptz  not null default now()
 );
 create unique index if not exists uk_player__brawlstarstag on player (brawlstars_tag);
+create index if not exists ix_player__name on player (name varchar_pattern_ops);
+create index if not exists ix_player__brawlstars_tag on player (brawlstars_tag varchar_pattern_ops);
 
 -- player brawler table
 create table if not exists player_brawler
@@ -112,6 +114,8 @@ create table if not exists club
     updated_at           timestamptz  not null default now()
 );
 create unique index if not exists uk_club__brawlstarstag on club (brawlstars_tag);
+create index if not exists ix_club__name on club (name varchar_pattern_ops);
+create index if not exists ix_club__brawlstars_tag on club (brawlstars_tag varchar_pattern_ops);
 
 -- club member table
 create table if not exists club_member
@@ -341,6 +345,7 @@ create table if not exists battle_event_mode
     brawlstars_id        bigint       not null,
     brawlstars_name      varchar(255) not null,
     result_type          varchar(20)  not null default 'RESULT',
+    player_counts        jsonb        not null default '[3, 3]'::jsonb,
     created_at           timestamptz  not null default now(),
     updated_at           timestamptz  not null default now()
 );
@@ -777,3 +782,17 @@ create table if not exists player_brawler_stats_item
 );
 create unique index if not exists uk_player_brawler_stats_item
     on player_brawler_stats_item (player_brawler_stats_id, brawler_brawlstars_id);
+
+-- feedback table
+create table if not exists feedback
+(
+    id           bigserial   primary key,
+    rating       varchar(32) not null,
+    content      text        not null,
+    checked      boolean     not null default false,
+    submitted_at timestamptz not null,
+    created_at   timestamptz not null default now(),
+    updated_at   timestamptz not null default now()
+);
+create index if not exists ix_feedback__checked__submittedat
+    on feedback (checked, submitted_at desc);

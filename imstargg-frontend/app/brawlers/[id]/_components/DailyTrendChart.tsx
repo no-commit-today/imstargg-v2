@@ -1,7 +1,12 @@
 "use client";
 
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import type { DailyResultStat } from "@/domain/statistics/types";
 import StarIcon from "@/components/primitives/StarIcon";
 
@@ -35,8 +40,9 @@ export function DailyTrendChart({ items }: Props) {
           <XAxis dataKey="date" stroke="#5C6271" fontSize={11} />
           <YAxis stroke="#5C6271" fontSize={11} unit="%" domain={[0, 100]} />
           <Tooltip
-            formatter={(v, name) => [`${v}%`, name === "winRate" ? "승률" : <StarIcon size={12} />]}
+            formatter={(v, name) => [`${v}%`, name === "winRate" ? "승률" : "스타"]}
           />
+          <ChartLegend content={<ChartLegendContent />} verticalAlign="top" />
           <Line type="monotone" dataKey="winRate" stroke="var(--color-winRate)" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="starPlayerRate" stroke="var(--color-starPlayerRate)" strokeWidth={2} strokeDasharray="4 4" dot={false} />
         </LineChart>

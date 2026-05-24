@@ -75,16 +75,17 @@ export interface BattleEvent {
   mapNames: Record<Language, string>;
 }
 
-export type BattleEventResultType = "RESULT" | "RANK";
+export type BattleEventModeResultType = "RESULT" | "RANK";
 
-export const BATTLE_EVENT_RESULT_TYPES: BattleEventResultType[] = ["RESULT", "RANK"];
+export const BATTLE_EVENT_MODE_RESULT_TYPES: BattleEventModeResultType[] = ["RESULT", "RANK"];
 
 export interface BattleEventMode {
   brawlStarsId: number;
   brawlStarsName: string;
   names: Record<Language, string>;
   iconImageUrl: string | null;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
+  playerCounts: number[];
 }
 
 export interface Maintenance {
@@ -92,4 +93,34 @@ export interface Maintenance {
   startTime: string;
   endTime: string;
   createdAt: string | null;
+}
+
+export type FeedbackRating =
+  | "VERY_SATISFIED"
+  | "SATISFIED"
+  | "NEUTRAL"
+  | "DISSATISFIED"
+  | "VERY_DISSATISFIED";
+
+export interface FeedbackItem {
+  id: number;
+  rating: FeedbackRating;
+  content: string;
+  checked: boolean;
+  submittedAt: string;
+}
+
+export interface FeedbackListResponse {
+  content: FeedbackItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface FeedbackSearchParams {
+  rating?: FeedbackRating;
+  checked?: boolean;
+  page?: number;
+  size?: number;
 }

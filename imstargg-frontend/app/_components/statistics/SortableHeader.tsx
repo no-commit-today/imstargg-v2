@@ -1,57 +1,35 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type SortOrder, toggleSortOrder } from "@/domain/statistics/sort";
+import type { SortOrder } from "@/domain/statistics/sort";
 
-type Props = {
-  column: string;
+type Props<C extends string> = {
+  column: C;
   label: ReactNode;
   title?: string;
-  currentSort: string;
+  currentSort: C;
   currentOrder: SortOrder;
-  /** "" | "pair" | "enemy" — sort/order 파라미터 prefix. 비어 있으면 sort/order 직접 사용. */
-  paramPrefix?: string;
+  onSort: (column: C) => void;
 };
 
-function paramName(prefix: string | undefined, base: "sort" | "order"): string {
-  if (!prefix) return base;
-  return `${prefix}${base.charAt(0).toUpperCase()}${base.slice(1)}`;
-}
-
-export function SortableHeader({
+export function SortableHeader<C extends string>({
   column,
   label,
   title,
   currentSort,
   currentOrder,
-  paramPrefix,
-}: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
+  onSort,
+}: Props<C>) {
   const isActive = currentSort === column;
-
-  function onClick() {
-    const sp = new URLSearchParams(params);
-    const sortKey = paramName(paramPrefix, "sort");
-    const orderKey = paramName(paramPrefix, "order");
-    const nextOrder: SortOrder = isActive ? toggleSortOrder(currentOrder) : "DESC";
-    sp.set(sortKey, column);
-    sp.set(orderKey, nextOrder);
-    router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
-  }
-
   const arrow = !isActive ? "" : currentOrder === "DESC" ? "▼" : "▲";
-
   return (
     <button
       type="button"
-      onClick={onClick}
+      data-sortable=""
+      data-active={isActive ? "true" : undefined}
+      onClick={() => onSort(column)}
       title={title}
-      className={`inline-flex items-center gap-0.5 font-bold tracking-wider ${
-        isActive ? "text-[#14161B]" : "text-[#5C6271] hover:text-[#14161B]"
-      }`}
+      className="inline-flex items-center gap-0.5 font-bold tracking-wider"
     >
       {label}
       {arrow && <span aria-hidden>{arrow}</span>}

@@ -85,19 +85,6 @@ export default function HomeScreen() {
           게임 내 프로필에서 태그를 확인할 수 있어요
         </p>
       </div>
-
-      <div
-        style={{
-          marginTop: "auto",
-          padding: "40px 0 20px",
-          color: "var(--color-neutral-400)",
-          fontSize: 11,
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        ImStarGG는 Supercell과 무관한 비공식 팬 사이트입니다.
-      </div>
     </div>
   );
 }

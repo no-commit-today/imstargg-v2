@@ -2,7 +2,7 @@ import { toUrlPath } from "@/lib/tag";
 
 export const routes = {
   home: () => "/",
-  ranking: () => "/ranking",
+  players: () => "/players",
   brawlers: () => "/brawlers",
   brawler: (id: string | number) => `/brawlers/${id}`,
   events: () => "/events",

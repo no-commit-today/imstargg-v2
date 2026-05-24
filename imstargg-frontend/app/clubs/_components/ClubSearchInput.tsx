@@ -1,43 +1,45 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
-import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
-import { isValidTag } from "@/lib/tag";
-import { routes } from "@/config/routes";
-import { toast } from "sonner";
+import Trophy from "@/components/primitives/Trophy";
+import { SearchableInput } from "@/components/shared/SearchableInput";
+import type { SearchableInputResult } from "@/components/shared/SearchableInput";
+import { clubApi } from "@/api/endpoints/club";
+
+const LIVE_LIMIT = 5;
+
+async function fetchClubs(q: string): Promise<SearchableInputResult[]> {
+  const res = await clubApi.search(q, 0, LIVE_LIMIT);
+  return res.content.map((c) => ({
+    kind: "club",
+    tag: c.tag,
+    name: c.name,
+    trophies: c.trophies,
+  }));
+}
+
+function renderClubResult(item: SearchableInputResult) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+      <span style={{ fontWeight: 700, color: "#14161B" }}>{item.name}</span>
+      <span style={{ fontFamily: "var(--font-mono)", color: "#5C6271" }}>{item.tag}</span>
+      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <Trophy value={item.trophies} />
+      </span>
+    </div>
+  );
+}
 
 export function ClubSearchInput({ defaultValue = "" }: { defaultValue?: string }) {
-  const router = useRouter();
-  const [value, setValue] = useState(defaultValue);
-
-  function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const trimmed = value.trim();
-    if (!isValidTag(trimmed)) {
-      toast.error("올바른 클럽 태그를 입력해 주세요. 예: #2U8CVLQQ9");
-      return;
-    }
-    router.push(routes.club(trimmed));
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-md items-center gap-2">
-      <Input
-        type="text"
-        inputMode="text"
-        autoCapitalize="characters"
-        spellCheck={false}
-        placeholder="#CLUB_TAG"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        aria-label="클럽 태그 입력"
-      />
-      <Button type="submit" size="default" aria-label="클럽 검색">
-        <Search className="size-4" />
-      </Button>
-    </form>
+    <SearchableInput
+      placeholder="클럽 이름 또는 #태그"
+      inputAriaLabel="클럽 이름 또는 태그 입력"
+      buttonAriaLabel="클럽 검색"
+      defaultValue={defaultValue}
+      fetchLiveResults={fetchClubs}
+      renderResult={renderClubResult}
+      toDetailHref={(item) => `/clubs/${item.tag.replace(/^#/, "")}`}
+      toSearchHref={(q) => `/clubs/search?q=${encodeURIComponent(q)}`}
+    />
   );
 }

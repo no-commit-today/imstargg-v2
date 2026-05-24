@@ -1,13 +1,19 @@
 package com.imstargg.core.api.controller.v1
 
 import com.imstargg.core.api.controller.ListResponse
+import com.imstargg.core.api.controller.OffsetLimitRequest
+import com.imstargg.core.api.controller.SliceResponse
 import com.imstargg.core.api.controller.v1.response.PlayerBrawlerResponse
 import com.imstargg.core.api.controller.v1.response.PlayerResponse
 import com.imstargg.core.application.brawlstars.PlayerService
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
+import com.imstargg.core.domain.brawlstars.player.PlayerSearch
+import jakarta.validation.constraints.NotBlank
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -30,5 +36,14 @@ class PlayerController(
         return ResponseEntity.ok(
             ListResponse(playerBrawlers.map { PlayerBrawlerResponse.of(it) }),
         )
+    }
+
+    @GetMapping("/v1/player/search")
+    fun searchPlayers(
+        @RequestParam @NotBlank q: String,
+        @ModelAttribute offsetLimit: OffsetLimitRequest,
+    ): ResponseEntity<SliceResponse<PlayerResponse>> {
+        val slice = playerService.search(PlayerSearch.of(q), offsetLimit.toOffsetLimit())
+        return ResponseEntity.ok(SliceResponse.from(slice.map { PlayerResponse.of(it) }))
     }
 }

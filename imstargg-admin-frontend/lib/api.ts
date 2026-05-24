@@ -6,13 +6,13 @@ import type {
   Gear,
   BattleEvent,
   BattleEventMode,
-  BattleEventResultType,
+  BattleEventModeResultType,
   Maintenance,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+export async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -199,7 +199,7 @@ export const getEventModes = () => request<BattleEventMode[]>("/event-modes");
 export const createEventMode = (data: {
   brawlStarsId: number;
   brawlStarsName: string;
-  resultType?: BattleEventResultType;
+  resultType?: BattleEventModeResultType;
 }) => request<void>("/event-modes", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventModeMessages = (brawlStarsId: number, messages: Record<string, string>) =>
@@ -214,13 +214,13 @@ export const uploadEventModeImage = (brawlStarsId: number, file: File) => {
   return request<void>(`/event-modes/${brawlStarsId}/image`, { method: "PUT", body: formData });
 };
 
-export const updateEventModeResultType = (
+export const updateEventMode = (
   brawlStarsId: number,
-  resultType: BattleEventResultType,
+  data: { resultType: BattleEventModeResultType; playerCounts: number[] },
 ) =>
-  request<void>(`/event-modes/${brawlStarsId}/result-type`, {
-    method: "PUT",
-    body: JSON.stringify({ resultType }),
+  request<void>(`/event-modes/${brawlStarsId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
   });
 
 // Maintenance

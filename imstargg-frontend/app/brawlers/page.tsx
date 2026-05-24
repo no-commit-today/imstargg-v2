@@ -9,7 +9,6 @@ import {
   parseTierRange,
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
-import { parseSortOrder } from "@/domain/statistics/sort";
 import { sortByName } from "@/domain/brawler/filters";
 import { buildMetadata } from "@/lib/seo";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
@@ -30,8 +29,6 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const sp = await searchParams;
   const tierRange = parseTierRange(sp.tier);
   const dateRange = parseDateRange(sp.date);
-  const sort = typeof sp.sort === "string" ? sp.sort : "tier";
-  const order = parseSortOrder(sp.order);
 
   const [brawlersList, statsDto] = await Promise.all([
     brawlerApi.list({ next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } }),
@@ -48,18 +45,16 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="text-sm text-[#5C6271]">
-          <span className="font-bold text-[#14161B]">{TIER_RANGE_LABELS[tierRange]}</span> 메타
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl tracking-[0.02em]">브롤러 메타</h1>
+          <p className="mt-1 text-sm text-[#5C6271]">
+            <span className="font-bold text-[#14161B]">{TIER_RANGE_LABELS[tierRange]}</span> 메타
+          </p>
         </div>
         <StatRangeSelector tier={tierRange} date={dateRange} />
-      </div>
-      <BrawlerStatTable
-        rows={rows}
-        sort={sort}
-        order={order}
-        totalBattleCount={stats.totalBattleCount}
-      />
+      </header>
+      <BrawlerStatTable rows={rows} totalBattleCount={stats.totalBattleCount} />
     </main>
   );
 }

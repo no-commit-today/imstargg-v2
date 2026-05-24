@@ -13,6 +13,6 @@ import org.springframework.test.context.TestConstructor
 @Import(TestJpaConfig::class)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 abstract class CoreApiContextTest {
-    @MockkBean
+    @MockkBean(relaxed = true)
     private lateinit var renewalProducer: RenewalMessageProducer
 }

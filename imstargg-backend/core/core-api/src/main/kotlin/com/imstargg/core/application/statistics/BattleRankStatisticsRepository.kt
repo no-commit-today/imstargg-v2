@@ -1,12 +1,12 @@
 package com.imstargg.core.application.statistics
 
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.BrawlerPairRankStatistics
 import com.imstargg.core.domain.statistics.BrawlerPairRankStatisticsItem
 import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.enums.RankStatsSortBy
-import com.imstargg.core.enums.SortOrder
+import com.imstargg.core.domain.statistics.BrawlerRankStatistics
 import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.core.infrastructure.jpa.toRankCount
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleRankStatsJpaRepository
 import org.springframework.stereotype.Repository
@@ -19,92 +19,80 @@ class BattleRankStatisticsRepository(
     private val soloBattleRankJpaRepository: BrawlerBattleRankStatsJpaRepository,
     private val pairBattleRankJpaRepository: BrawlerPairBattleRankStatsJpaRepository,
 ) {
-    fun findBrawlerRankCounts(
+    fun findBrawlerRankStatistics(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerRankCount> {
-        val entities =
+    ): BrawlerRankStatistics {
+        val items =
             soloBattleRankJpaRepository
-                .findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(eventId.value, tierRange, startDate, endDate)
-
-        return entities
-            .groupBy { it.brawlerBrawlStarsId }
-            .map { (brawlerBrawlStarsId, grouped) ->
-                BrawlerRankCount(
-                    brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                    rankCount = grouped.map { it.rankCounts }.reduce { acc, r -> acc + r }.toRankCount(),
-                )
-            }
+                .findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
+                    eventId.value,
+                    tierRange,
+                    startDate,
+                    endDate,
+                ).groupBy { it.brawlerBrawlStarsId }
+                .map { (brawlerBrawlStarsId, grouped) ->
+                    BrawlerRankCount(
+                        brawlerId = BrawlStarsId(brawlerBrawlStarsId),
+                        rankCount = grouped.map { it.rankCounts }.reduce { acc, r -> acc + r }.toRankCount(),
+                    )
+                }.map { it.toStatisticsItem() }
+        return BrawlerRankStatistics(items = items)
     }
 
-    fun findBrawlerPairRankCounts(
+    fun findBrawlerPairRankStatistics(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: RankStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
-    ): List<BrawlerPairRankStatisticsItem> =
-        pairBattleRankJpaRepository
-            .findPagedByConditions(
+    ): BrawlerPairRankStatistics {
+        val items: List<BrawlerPairRankStatisticsItem> =
+            pairBattleRankJpaRepository
+                .findAllByConditions(
+                    eventBrawlStarsId = eventId.value,
+                    brawlerBrawlStarsId = brawlerId.value,
+                    pairBrawlerBrawlStarsId = pairBrawlerId?.value,
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                ).map { projection ->
+                    BrawlerPairRankStatisticsItem(
+                        brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
+                        pairBrawlerId = BrawlStarsId(projection.pairBrawlerBrawlStarsId),
+                        totalBattleCount = projection.totalCount,
+                        averageRank =
+                            if (projection.totalCount > 0) {
+                                projection.weightedRankSum.toDouble() / projection.totalCount
+                            } else {
+                                0.0
+                            },
+                    )
+                }
+        val totalBattleCount =
+            pairBattleRankJpaRepository.countTotalBattleCount(
+                eventBrawlStarsId = eventId.value,
+                brawlerBrawlStarsId = brawlerId.value,
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        val totalElementCount =
+            pairBattleRankJpaRepository.countDistinctPairBrawlers(
                 eventBrawlStarsId = eventId.value,
                 brawlerBrawlStarsId = brawlerId.value,
                 pairBrawlerBrawlStarsId = pairBrawlerId?.value,
                 tierRange = tierRange,
                 startDate = startDate,
                 endDate = endDate,
-                sortBy = sortField,
-                sortOrder = sortOrder,
-                offset = offsetLimit.offset.toLong(),
-                limit = offsetLimit.limit.toLong(),
-            ).map { projection ->
-                BrawlerPairRankStatisticsItem(
-                    brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
-                    pairBrawlerId = BrawlStarsId(projection.pairBrawlerBrawlStarsId),
-                    totalBattleCount = projection.totalCount,
-                    averageRank =
-                        if (projection.totalCount > 0) {
-                            projection.weightedRankSum.toDouble() / projection.totalCount
-                        } else {
-                            0.0
-                        },
-                )
-            }
-
-    fun countPairRankTotalBattleCount(
-        eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        pairBattleRankJpaRepository.countTotalBattleCount(
-            eventBrawlStarsId = eventId.value,
-            brawlerBrawlStarsId = brawlerId.value,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
+            )
+        return BrawlerPairRankStatistics(
+            totalBattleCount = totalBattleCount,
+            totalElementCount = totalElementCount,
+            items = items,
         )
-
-    fun countPairRankBy(
-        eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        pairBattleRankJpaRepository.countDistinctPairBrawlers(
-            eventBrawlStarsId = eventId.value,
-            brawlerBrawlStarsId = brawlerId.value,
-            pairBrawlerBrawlStarsId = pairBrawlerId?.value,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
+    }
 }

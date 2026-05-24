@@ -11,6 +11,7 @@ tasks.getByName("bootJar") {
 dependencies {
     implementation(project(":core:core-enum"))
     implementation(project(":infrastructure:db-core"))
+    implementation(project(":infrastructure:redis-core"))
     implementation(project(":infrastructure:aws-sqs"))
     implementation(project(":support:monitoring"))
     implementation(project(":support:logging"))

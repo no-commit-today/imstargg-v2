@@ -1,4 +1,7 @@
-type RateProps = { value: number; fractionDigits?: number };
+type RateProps = {
+  value: number;
+  fractionDigits?: number;
+};
 
 export function PercentCell({ value, fractionDigits = 1 }: RateProps) {
   return (

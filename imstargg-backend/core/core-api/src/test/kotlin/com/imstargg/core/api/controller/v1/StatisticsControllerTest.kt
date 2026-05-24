@@ -44,6 +44,49 @@ class StatisticsControllerTest(
     }
 
     @Test
+    fun `pair result 의 legacy sort 파라미터는 무시한다`() {
+        mockMvc
+            .get("/v1/statistics/brawler/pair/result") {
+                param("brawlerId", "16000000")
+                param("tierRange", "TROPHY_1000_PLUS")
+                param("dateRange", "THIS_WEEK")
+                param("sortBy", "IGNORED")
+                param("sortOrder", "SIDEWAYS")
+            }.andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `enemy result 의 legacy sort 파라미터는 무시한다`() {
+        mockMvc
+            .get("/v1/statistics/brawler/enemy/result") {
+                param("brawlerId", "16000000")
+                param("tierRange", "TROPHY_1000_PLUS")
+                param("dateRange", "THIS_WEEK")
+                param("sortBy", "IGNORED")
+                param("sortOrder", "SIDEWAYS")
+            }.andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `pair rank 의 legacy sort 파라미터는 무시한다`() {
+        mockMvc
+            .get("/v1/statistics/brawler/pair/rank") {
+                param("eventId", "60000001")
+                param("brawlerId", "16000000")
+                param("tierRange", "TROPHY_1000_PLUS")
+                param("dateRange", "THIS_WEEK")
+                param("sortBy", "IGNORED")
+                param("sortOrder", "SIDEWAYS")
+            }.andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
     fun `team result endpoint 는 등록되어 있지 않다`() {
         mockMvc
             .get("/v1/statistics/brawler/team/result") {

@@ -13,9 +13,7 @@ import org.springframework.stereotype.Component
 class StringToCountryConverter : Converter<String, Country> {
     override fun convert(source: String): Country {
         val trimmed = source.trim()
-        if (trimmed.isEmpty()) {
-            throw IllegalArgumentException("Country code must not be blank")
-        }
+        require(trimmed.isNotEmpty()) { "Country code must not be blank" }
         EnumCodeType.findByCode<Country>(trimmed.lowercase())?.let { return it }
         return runCatching { Country.valueOf(trimmed.uppercase()) }
             .getOrElse { throw IllegalArgumentException("Unknown Country: '$source'") }

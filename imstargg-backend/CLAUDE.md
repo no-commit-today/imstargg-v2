@@ -71,6 +71,7 @@ imstargg-backend/
 ### Code Organization
 
 - **파일당 1개 클래스 원칙**: 한 파일에 하나의 클래스(또는 data class)만 선언. 사용자가 명시적으로 지시하거나, 제안 후 승인된 경우에만 예외 허용.
+- **도메인 히스토리는 KDoc 으로 보존**: 엔티티/도메인 클래스가 갖는 비자명한 집계 규칙·정합성 제약·"왜 이렇게 안 했는지" 같은 결정은 클래스/메서드 KDoc 으로 남긴다. 향후 유사 변경을 시도하는 사람이 코드만 읽고도 의도를 알 수 있어야 한다. (예: `BrawlerBattleRankStatsEntity` 가 자기 팀만 집계하는 이유)
 
 ### API 경로 컨벤션
 
@@ -85,6 +86,7 @@ imstargg-backend/
 - **엔티티 연관관계**: `@OneToMany` 사용 금지. 자식 엔티티는 부모의 ID 컬럼(Long 등)으로 참조하고, 필요한 경우 Repository 쿼리로 조회. (Domain ID Reference 원칙과 일치)
 - **QueryDSL**: KSP 코드 생성 (`infrastructure/db-core`). Q-Class는 로컬 변수에 할당하지 않고 static import된 인스턴스를 직접 사용 (예: `statsResultBattleEntity.battleDate`)
 - **Application Layer Repository**: `core-api`의 Service는 JPA Repository를 직접 참조하지 않고, `application` 패키지의 Repository 클래스를 통해 접근. 캐시가 필요한 경우 `*WithCache` 래퍼 사용 (예: `EventRepository` → `EventRepositoryWithCache`)
+- **Service ↛ Service 의존 금지**: 같은 application 계층의 Service 끼리 직접 참조하지 않는다. 다른 도메인의 데이터가 필요하면 해당 Repository (`*WithCache` 포함) 를 직접 주입해 사용 — Service 가 다른 Service 의 얇은 위임 메서드를 호출하기 위해 늘어나는 것을 막고, 데이터 접근 책임을 Repository 계층에 일관되게 둔다.
 - **Domain ID Reference**: 도메인 클래스에서 다른 도메인의 객체는 직접 참조하지 않고 ID로 참조
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출. Repository(`application` 패키지) 를 직접 참조하지 않고 Service 만 의존 — 데이터 접근은 Service 가 책임 (Application Layer Repository 패턴과 일관)
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
@@ -92,9 +94,9 @@ imstargg-backend/
 ### Cache Key Conventions
 
 - **Redis 키 컨벤션 준수**: 로컬 캐시(Caffeine)에서도 향후 Redis 전환을 고려하여 Redis 키 컨벤션(`:` 구분자) 사용
-- **로컬 캐시는 버전 관리 불필요**: 현재 캐시 백엔드는 Caffeine(로컬). 프로세스 재시작 시 캐시가 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
-- **Redis 전환 시점에 버전 도입**: Redis 등 영속 캐시로 전환할 때 `v{N}:` prefix 를 도입한다. 그 시점에 캐싱 객체 형태 변경 시 버전을 올려 역직렬화 오류를 방지.
-- **키 형식**: `cacheName::keyPrefix:param1:param2:...` (예: `statistics::battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+- **로컬 캐시는 버전 관리 불필요**: Caffeine 로컬 캐시(`brawler`, `battleEvent` 등) 는 프로세스 재시작 시 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
+- **Redis 캐시는 메서드별 버전 prefix**: Redis 영속 캐시(`statistics` 등) 는 캐싱 객체 형태 변경 시 역직렬화 오류 방지를 위해 키에 `v{N}:` prefix 를 둔다. `RedisCacheConfiguration.computePrefixWith` 같은 전역 버전이 아니라 **각 `@Cacheable(key=...)` 의 키 prefix 에 메서드 단위로** 둔다. 한 메서드의 반환 객체 구조만 바뀌어도 같은 cacheName 의 다른 메서드 캐시까지 함께 무효화되는 부담을 피하기 위함.
+- **키 형식**: `cacheName::v{N}:methodKey:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
 
 ### DB & Entity Conventions
 
@@ -166,6 +168,12 @@ assertThat(result).isEqualTo(expected)
 - Repository: `DbCoreContextTest` (`@DataJpaTest`)
 - Service/Component: `CoreApiContextTest` 등 (`@SpringBootTest`)
 - 통합 테스트 정리: `CleanUp.all()` 호출로 전체 테이블 TRUNCATE (데이터 삽입은 `JpaRepository.save()` 사용)
+
+### Service/Component 테스트 의존성 처리
+의존성 종류별로 처리 방식을 가른다 — stub-and-verify(`every`/`verify`)는 호출 결합도만 검증해 행위 검증이 약하고 프로덕션 동작과 어긋날 위험이 있다.
+- **내부 데이터 계층** (application 패키지의 Repository, JPA wrapper): 실 DB (`CoreApiContextTest` + `CleanUp.all()` + `JpaRepository.save()` 로 데이터 주입)
+- **외부 시스템** (HTTP client, 외부 API, queue producer 등 side-effect): MockK
+- **시간**: `Clock.fixed(...)` 주입
 
 ### 예외 검증
 - `catchThrowableOfType(Class, ThrowingCallable)` 사용 (Class가 첫 번째 파라미터)

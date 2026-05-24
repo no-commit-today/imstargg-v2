@@ -5,6 +5,11 @@ export interface ListResponse<T> {
   content: T[];
 }
 
+export interface SliceResponse<T> {
+  content: T[];
+  hasNext: boolean;
+}
+
 // === Player ===
 export interface PlayerResponse {
   tag: string;
@@ -155,13 +160,13 @@ export interface ClubResponse {
 }
 
 // === BattleEvent ===
-export type BattleEventResultType = "RESULT" | "RANK";
+export type BattleEventModeResultType = "RESULT" | "RANK";
 
 export interface BattleEventModeResponse {
   id: number;
   name: MessagesResponse;
   iconImageUrl: string | null;
-  resultType: BattleEventResultType;
+  resultType: BattleEventModeResultType;
 }
 
 export interface BattleEventResponse {
@@ -225,10 +230,6 @@ export type StatsDateRangeDto =
 
 export type BrawlerTrophyRangeDto =
   | "TROPHY_500_PLUS" | "TROPHY_1000_PLUS" | "TROPHY_2000_PLUS" | "TROPHY_3000_PLUS";
-
-export type ResultStatsSortByDto = "PICK_RATE" | "WIN_RATE";
-export type RankStatsSortByDto = "PICK_RATE" | "AVERAGE_RANK";
-export type SortOrderDto = "ASC" | "DESC";
 
 export interface BrawlerResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
@@ -350,12 +351,6 @@ export interface SoloRankSeasonResponse {
   month: number;
   startAt: string;
   endAt: string;
-}
-
-// === Slice (offset/limit pagination) ===
-export interface SliceResponse<T> {
-  content: T[];
-  hasNext: boolean;
 }
 
 // === Battle ===

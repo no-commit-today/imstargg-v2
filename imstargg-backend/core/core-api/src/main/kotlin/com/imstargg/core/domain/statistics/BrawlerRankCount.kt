@@ -6,8 +6,8 @@ data class BrawlerRankCount(
     val brawlerId: BrawlStarsId,
     val rankCount: RankCount,
 ) {
-    fun toStatistics() =
-        BrawlerRankStatistics(
+    fun toStatisticsItem() =
+        BrawlerRankStatisticsItem(
             brawlerId = brawlerId,
             totalBattleCount = rankCount.totalCount,
             averageRank = rankCount.averageRank,

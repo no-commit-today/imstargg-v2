@@ -1,5 +1,7 @@
 package com.imstargg.core.application.brawlstars
 
+import com.imstargg.core.domain.OffsetLimit
+import com.imstargg.core.domain.Slice
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.brawlstars.player.Club
@@ -14,6 +16,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaR
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubMemberJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.data.domain.Slice as SpringDataSlice
 
 @Repository
 @Transactional(readOnly = true)
@@ -30,6 +33,41 @@ class ClubRepository(
         val clubEntity = clubJpaRepository.findByBrawlStarsTag(tag.value) ?: return null
         val memberEntities = clubMemberJpaRepository.findAllByClub(clubEntity)
         return toClub(clubEntity, memberEntities)
+    }
+
+    fun searchByTag(
+        tagPrefix: BrawlStarsTag,
+        offsetLimit: OffsetLimit,
+    ): Slice<Club> {
+        val slice =
+            clubJpaRepository.findAllByBrawlStarsTagStartingWithOrderByTrophiesDescBrawlStarsTagAsc(
+                brawlStarsTag = tagPrefix.value,
+                pageable = offsetLimit.toPageable(),
+            )
+        return toClubSlice(slice)
+    }
+
+    fun searchByName(
+        namePrefix: String,
+        offsetLimit: OffsetLimit,
+    ): Slice<Club> {
+        val slice =
+            clubJpaRepository.findAllByNameStartingWithOrderByTrophiesDescBrawlStarsTagAsc(
+                name = namePrefix,
+                pageable = offsetLimit.toPageable(),
+            )
+        return toClubSlice(slice)
+    }
+
+    private fun toClubSlice(slice: SpringDataSlice<ClubEntity>): Slice<Club> {
+        val entities = slice.content
+        val membersByClubId =
+            if (entities.isEmpty()) {
+                emptyMap()
+            } else {
+                clubMemberJpaRepository.findAllByClubIn(entities).groupBy { it.club.id }
+            }
+        return Slice.from(slice.map { toClub(it, membersByClubId[it.id] ?: emptyList()) })
     }
 
     private fun toClub(

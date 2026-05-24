@@ -1,11 +1,9 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.config.CacheNames
-import com.imstargg.core.domain.OffsetLimit
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.statistics.BrawlerRankCount
-import com.imstargg.core.enums.RankStatsSortBy
-import com.imstargg.core.enums.SortOrder
+import com.imstargg.core.domain.statistics.BrawlerPairRankStatistics
+import com.imstargg.core.domain.statistics.BrawlerRankStatistics
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -17,68 +15,43 @@ class BattleRankStatisticsRepositoryWithCache(
 ) {
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key = "'battleEventBrawlerRank:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v1:brawlerRankStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
     )
-    fun findBrawlerRankCounts(
+    fun findBrawlerRankStatistics(
         eventId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerRankCount> = battleRankStatisticsRepository.findBrawlerRankCounts(eventId, tierRange, startDate, endDate)
+    ): BrawlerRankStatistics =
+        battleRankStatisticsRepository.findBrawlerRankStatistics(
+            eventId = eventId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
         key =
-            "'pairRank:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate" +
-                " + ':' + #sortField + ':' + #sortOrder" +
-                " + ':' + #offsetLimit.offset + ':' + #offsetLimit.limit",
+            "'v1:brawlerPairRankStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
+                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
-    fun findBrawlerPairRank(
+    fun findBrawlerPairRankStatistics(
         eventId: BrawlStarsId,
         brawlerId: BrawlStarsId,
         pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-        sortField: RankStatsSortBy,
-        sortOrder: SortOrder,
-        offsetLimit: OffsetLimit,
-    ): BrawlerPairRankCounts {
-        val items =
-            battleRankStatisticsRepository.findBrawlerPairRankCounts(
-                eventId = eventId,
-                brawlerId = brawlerId,
-                pairBrawlerId = pairBrawlerId,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-                sortField = sortField,
-                sortOrder = sortOrder,
-                offsetLimit = offsetLimit,
-            )
-        val totalBattleCount =
-            battleRankStatisticsRepository.countPairRankTotalBattleCount(
-                eventId = eventId,
-                brawlerId = brawlerId,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            )
-        val totalElementCount =
-            battleRankStatisticsRepository.countPairRankBy(
-                eventId = eventId,
-                brawlerId = brawlerId,
-                pairBrawlerId = pairBrawlerId,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            )
-        return BrawlerPairRankCounts(
-            items = items,
-            totalBattleCount = totalBattleCount,
-            totalElementCount = totalElementCount,
+    ): BrawlerPairRankStatistics =
+        battleRankStatisticsRepository.findBrawlerPairRankStatistics(
+            eventId = eventId,
+            brawlerId = brawlerId,
+            pairBrawlerId = pairBrawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
         )
-    }
 }

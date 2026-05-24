@@ -1,17 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import ItemSlot from "@/components/primitives/ItemSlot";
 import type { BrawlerDisplayItem } from "@/domain/brawler/itemOwnership";
 import type { ItemKind } from "@/lib/itemPlaceholder";
-
-const KIND_LABELS: Record<BrawlerDisplayItem["kind"], string> = {
-  gadget: "가젯",
-  starPower: "스타파워",
-  gear: "기어",
-  hyperCharge: "하이퍼차지",
-  buffy: "버피",
-};
 
 function toOwnershipPercent(rate: number) {
   if (!Number.isFinite(rate)) return 0;
@@ -48,12 +39,7 @@ export function BrawlerItemCard({ item }: { item: BrawlerDisplayItem }) {
         />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <div className="min-w-0 truncate text-sm font-bold">{item.name}</div>
-          <Badge variant="secondary" className="shrink-0">
-            {KIND_LABELS[item.kind]}
-          </Badge>
-        </div>
+        <div className="min-w-0 truncate text-sm font-bold">{item.name}</div>
         {item.ownership ? (
           <div className="flex flex-col gap-1">
             <OwnershipBar rate={item.ownership.rate} />

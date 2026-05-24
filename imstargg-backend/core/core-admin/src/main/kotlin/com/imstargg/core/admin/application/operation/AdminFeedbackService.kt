@@ -1,0 +1,34 @@
+package com.imstargg.core.admin.application.operation
+
+import com.imstargg.core.enums.operation.FeedbackRating
+import com.imstargg.infrastructure.db.core.operation.FeedbackEntity
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
+
+@Service
+class AdminFeedbackService(
+    private val repository: AdminFeedbackRepository,
+) {
+    @Transactional(readOnly = true)
+    fun search(
+        rating: FeedbackRating?,
+        checked: Boolean?,
+        page: Int,
+        size: Int,
+    ): Page<FeedbackEntity> = repository.search(rating, checked, PageRequest.of(page, size))
+
+    @Transactional
+    fun updateCheck(
+        id: Long,
+        checked: Boolean,
+    ) {
+        val entity =
+            repository.findById(id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found: id=$id")
+        if (checked) entity.check() else entity.uncheck()
+    }
+}

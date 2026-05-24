@@ -1,5 +1,5 @@
 spring:
-  application.name: core-batch
+  application.name: imstargg-core-batch
 
   profiles:
     active: local

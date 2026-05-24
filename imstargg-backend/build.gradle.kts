@@ -92,6 +92,8 @@ subprojects {
     tasks.register<Test>("unitTest") {
         description = "Runs the unit tests."
         group = "verification"
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
         useJUnitPlatform {
             excludeTags("develop", "context")
         }
@@ -100,6 +102,8 @@ subprojects {
     tasks.register<Test>("contextTest") {
         description = "Runs the context tests."
         group = "verification"
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
         useJUnitPlatform {
             includeTags("context")
         }
@@ -108,6 +112,8 @@ subprojects {
     tasks.register<Test>("developTest") {
         description = "Runs the development tests."
         group = "verification"
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
         useJUnitPlatform {
             includeTags("develop")
         }
