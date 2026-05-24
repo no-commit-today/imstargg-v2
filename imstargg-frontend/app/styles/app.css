@@ -500,27 +500,6 @@ img { display: block; max-width: 100%; }
   background: rgba(255, 224, 130, 0.55);
 }
 
-/* ===== Win gauge ===== */
-.win-gauge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.win-gauge-track {
-  width: 28px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--color-neutral-100);
-  overflow: hidden;
-}
-.win-gauge-fill {
-  height: 100%;
-  background: var(--color-accent-green);
-  transition: width var(--dur-slow) var(--ease-out);
-}
-.win-gauge-fill[data-tone="loss"]    { background: var(--color-accent-red); }
-.win-gauge-fill[data-tone="neutral"] { background: var(--color-neutral-400); }
-
 /* ===== Section title ===== */
 .section-title {
   display: flex;
@@ -565,7 +544,6 @@ img { display: block; max-width: 100%; }
     transition: none !important;
   }
   .data-row:hover { transform: none; }
-  .win-gauge-fill { transition: none; }
 }
 
 /* ===== Tier badge hover ===== */
