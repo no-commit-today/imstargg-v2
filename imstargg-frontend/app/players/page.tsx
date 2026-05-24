@@ -4,7 +4,7 @@ import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toPlayerRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
-import { CountrySelector } from "@/components/ranking/CountrySelector";
+import { CountryFlagPills } from "@/components/ranking/CountryFlagPills";
 import { PlayerRankingList } from "@/components/ranking/PlayerRankingList";
 
 type SearchParams = Promise<{ country?: string }>;
@@ -33,20 +33,23 @@ export default async function Page({
   const rankings = dto.content.map(toPlayerRanking);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="m-0 font-display text-3xl tracking-[0.02em]">플레이어</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          이름 또는 #태그로 검색하세요.
-        </p>
-      </div>
+    <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-5">
+      <header className="space-y-1">
+        <h1 className="font-display text-3xl tracking-[0.02em]">플레이어</h1>
+        <p className="text-sm text-[#5C6271]">이름 또는 #태그로 검색하세요.</p>
+      </header>
       <PlayerSearchInput />
-      <section className="mt-10 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">
-            {COUNTRY_LABELS[country]} 플레이어 랭킹
-          </h2>
-          <CountrySelector current={country} />
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="section-title">
+              {COUNTRY_LABELS[country]} 랭킹
+            </h2>
+            <p className="ml-[14px] text-xs text-[#5C6271]">
+              트로피 기준 상위 플레이어
+            </p>
+          </div>
+          <CountryFlagPills current={country} />
         </div>
         <PlayerRankingList rankings={rankings} />
       </section>

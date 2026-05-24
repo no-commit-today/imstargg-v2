@@ -22,10 +22,23 @@ export function BrawlerContent({ initialDetail, ownership, trophy }: Props) {
   return (
     <section className="py-6 space-y-5">
       <BrawlerHero brawler={detail.brawler} />
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">상세</TabsTrigger>
-          <TabsTrigger value="ranking">랭킹</TabsTrigger>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList
+          variant="line"
+          className="h-11 w-full justify-start gap-4 border-b border-[#D8DCE5] px-0"
+        >
+          <TabsTrigger
+            value="overview"
+            className="px-2 text-base font-semibold data-[state=active]:text-[#14161B]"
+          >
+            상세
+          </TabsTrigger>
+          <TabsTrigger
+            value="ranking"
+            className="px-2 text-base font-semibold data-[state=active]:text-[#14161B]"
+          >
+            랭킹
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <BrawlerItems items={detail.items} ownership={ownership} trophy={trophy} />

@@ -1,47 +1,75 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import { toUrlPath } from "@/lib/tag";
 import type { ClubRanking } from "@/domain/ranking/types";
 import Trophy from "@/components/primitives/Trophy";
-import { RankBadge } from "@/components/ranking/RankBadge";
+import { RankNumber } from "@/components/ranking/RankNumber";
+import { RankChange } from "@/components/ranking/RankChange";
 
 type Props = {
   rankings: ClubRanking[];
 };
 
+function railFor(rank: number): string {
+  if (rank === 1) return "gold";
+  if (rank === 2) return "silver";
+  if (rank === 3) return "bronze";
+  return "neutral";
+}
+
+const GRID =
+  "grid grid-cols-[44px_minmax(0,1fr)_56px_88px] items-center gap-2 sm:grid-cols-[64px_minmax(0,1fr)_80px_120px] sm:gap-3";
+
 export function ClubRankingList({ rankings }: Props) {
   if (rankings.length === 0) {
     return (
-      <Card className="p-8 text-center text-muted-foreground">
-        랭킹 데이터가 없습니다
-      </Card>
+      <div className="data-table">
+        <div className="px-4 py-12 text-center text-sm text-[#5C6271]">
+          랭킹 데이터가 없습니다
+        </div>
+      </div>
     );
   }
   return (
-    <ul className="space-y-2">
+    <div className="data-table">
+      <div className={`data-table-head ${GRID}`}>
+        <span>순위</span>
+        <span>클럽</span>
+        <span className="text-right">변동</span>
+        <span className="text-right">트로피</span>
+      </div>
       {rankings.map((r) => (
-        <li key={r.tag}>
-          <Link href={`/clubs/${toUrlPath(r.tag)}`} className="block">
-            <Card className="flex flex-row items-center gap-3 p-3 transition hover:border-foreground">
-              <div className="w-20 shrink-0">
-                <RankBadge rank={r.rank} rankChange={r.rankChange} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 truncate font-bold">
-                  <img src="/assets/icon_club_league_masters.png" alt="" width={16} height={16} />
-                  {r.name}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  멤버 {r.memberCount}명
-                </div>
-              </div>
-              <div className="shrink-0">
-                <Trophy value={r.trophies} size={16} />
-              </div>
-            </Card>
-          </Link>
-        </li>
+        <Link
+          key={r.tag}
+          href={`/clubs/${toUrlPath(r.tag)}`}
+          data-rail={railFor(r.rank)}
+          className={`data-row text-[13px] sm:text-sm ${GRID}`}
+        >
+          <span className="flex justify-center">
+            <RankNumber rank={r.rank} />
+          </span>
+          <span className="flex min-w-0 items-center gap-2">
+            <img
+              src="/assets/icon_club_league_masters.png"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0"
+            />
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate font-bold">{r.name}</span>
+              <span className="truncate text-[11px] text-[#5C6271]">
+                멤버 {r.memberCount}명
+              </span>
+            </span>
+          </span>
+          <span className="flex justify-end">
+            <RankChange change={r.rankChange} />
+          </span>
+          <span className="flex justify-end">
+            <Trophy value={r.trophies} size={14} />
+          </span>
+        </Link>
       ))}
-    </ul>
+    </div>
   );
 }
