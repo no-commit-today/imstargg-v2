@@ -40,7 +40,7 @@ export function DailyTrendChart({ items }: Props) {
           <XAxis dataKey="date" stroke="#5C6271" fontSize={11} />
           <YAxis stroke="#5C6271" fontSize={11} unit="%" domain={[0, 100]} />
           <Tooltip
-            formatter={(v, name) => [`${v}%`, name === "winRate" ? "승률" : <StarIcon size={12} />]}
+            formatter={(v, name) => [`${v}%`, name === "winRate" ? "승률" : "스타"]}
           />
           <ChartLegend content={<ChartLegendContent />} verticalAlign="top" />
           <Line type="monotone" dataKey="winRate" stroke="var(--color-winRate)" strokeWidth={2} dot={false} />
