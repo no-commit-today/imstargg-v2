@@ -92,14 +92,16 @@ jobs:
             const artifacts = await github.rest.actions.listArtifactsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: '${{ inputs.app }}-jar'
+              per_page: 100
             });
             for (const artifact of artifacts.data.artifacts) {
-              await github.rest.actions.deleteArtifact({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                artifact_id: artifact.id
-              });
+              if (artifact.name === '${{ inputs.app }}-jar' || artifact.name.endsWith('.dockerbuild')) {
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id
+                });
+              }
             }
 
   update-image-tags:
