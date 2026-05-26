@@ -35,17 +35,6 @@ imstargg-v2/
 - `core-api` 변경 → `imstargg-frontend`
 - `core-admin` 변경 → `imstargg-admin-frontend`
 
-## 버전 관리 / 릴리즈
-
-각 앱(core-api / core-batch / core-worker / frontend) 의 코드를 수정한 뒤 사용자가 작업 마무리·PR 준비·배포 신호를 보내면 (예: "PR 만들자", "커밋해줘", "main 으로 올리자", "release"), `release-management` 스킬을 자동으로 호출해 변경된 앱의 버전을 SNAPSHOT 규칙대로 bump 한다. 사용자 명시 호출 없이도 트리거.
-
-- dev/feature 작업 후: `bump` 모드 — 변경된 앱만 SNAPSHOT 으로 bump (또는 격상)
-- main PR 준비: `prepare` 모드 — SNAPSHOT 제거 + `docs/release/<YYYY.MM.N>.md` 생성
-- main 직접 hotfix: `hotfix` 모드 — patch finalized + 노트
-- 조회만: `status` 모드
-
-스킬은 변경 없는 앱은 조용히 무시 (idempotent — 반복 호출 안전). 모드/규칙 상세는 [.claude/skills/release-management/SKILL.md](.claude/skills/release-management/SKILL.md). core-admin / imstargg-admin-frontend 는 관리 대상 외.
-
 각 프로젝트의 상세 가이드는 하위 CLAUDE.md 참조:
 
 - `imstargg-backend/CLAUDE.md` - 백엔드 빌드, 테스트, 아키텍처
