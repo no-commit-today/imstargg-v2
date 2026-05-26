@@ -20,7 +20,13 @@ spring:
         queue-capacity: 10000
       shutdown:
         await-termination: true
-        await-termination-period: 10000
+        await-termination-period: 30s
+
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  shutdown: graceful
 
 app:
   alert:

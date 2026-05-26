@@ -10,6 +10,12 @@ spring:
         access-key: test
         secret-key: test
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  shutdown: graceful
+
 app:
   cors:
     allowed-origins:

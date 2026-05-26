@@ -15,7 +15,11 @@ spring:
     - logging.yml
     - monitoring.yml
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
 server:
+  shutdown: graceful
   tomcat:
     max-connections: 20000
     threads:

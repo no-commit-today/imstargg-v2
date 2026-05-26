@@ -19,7 +19,7 @@ class AsyncConfig : AsyncConfigurer {
         executor.queueCapacity = 10000
         executor.setThreadNamePrefix("worker-task-")
         executor.setWaitForTasksToCompleteOnShutdown(true)
-        executor.setAwaitTerminationSeconds(10)
+        executor.setAwaitTerminationSeconds(30)
         executor.initialize()
         return executor
     }
