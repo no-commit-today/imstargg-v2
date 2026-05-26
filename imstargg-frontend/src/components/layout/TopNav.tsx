@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { Menu, MessageSquare, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -48,7 +49,13 @@ export default function TopNav() {
           onClick={() => router.push("/")}
           title="ImStarGG"
         >
-          <img src="/assets/logo.webp" alt="ImStarGG" />
+          <Image
+            src="/assets/logo.webp"
+            alt="ImStarGG"
+            width={119}
+            height={28}
+            unoptimized
+          />
         </button>
         <div className="topnav-links">
           {NAV_ITEMS.map((item) => (

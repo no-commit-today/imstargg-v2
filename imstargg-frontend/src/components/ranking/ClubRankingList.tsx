@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { toUrlPath } from "@/lib/tag";
 import type { ClubRanking } from "@/domain/ranking/types";
@@ -48,11 +49,12 @@ export function ClubRankingList({ rankings }: Props) {
             <RankNumber rank={r.rank} />
           </span>
           <span className="flex min-w-0 items-center gap-2">
-            <img
+            <Image
               src="/assets/icon_club_league_masters.png"
               alt=""
               width={28}
               height={28}
+              unoptimized
               className="h-7 w-7 shrink-0"
             />
             <span className="flex min-w-0 flex-col">

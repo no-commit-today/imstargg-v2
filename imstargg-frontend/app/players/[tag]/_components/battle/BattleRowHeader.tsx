@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import PowerLevel from "@/components/primitives/PowerLevel";
 import { BattleResultBadge } from "./BattleResultBadge";
@@ -83,11 +84,12 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
               }}
             >
               {battle.type === "SOLO_RANKED" && (
-                <img
+                <Image
                   src="/assets/icon_ranked_front.png"
                   alt=""
                   width={12}
                   height={12}
+                  unoptimized
                   style={{ width: 12, height: 12, objectFit: "contain" }}
                 />
               )}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Zap } from "lucide-react";
 import type { GearRarity } from "@/api/types";
 import { basePlaceholder, type ItemKind } from "@/lib/itemPlaceholder";
@@ -46,12 +47,13 @@ export default function ItemSlot({
   if (!src) return null;
 
   return (
-    <img
+    <Image
       src={src}
       alt=""
       role="img"
       width={size}
       height={size}
+      unoptimized
       title={title}
       aria-label={ariaLabel}
       style={owned ? undefined : { opacity: 0.3, filter: "grayscale(1)" }}

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BRAWLER_TROPHY_RANGES,
@@ -39,11 +40,12 @@ export function TrophyRangeSelector({ trophy, paramName = "trophy" }: Props) {
       <SelectTrigger className="w-28 text-sm">
         <SelectValue>
           <span className="inline-flex items-center gap-1.5">
-            <img
+            <Image
               src={TROPHY_RANGE_ICON}
               alt=""
               width={16}
               height={16}
+              unoptimized
               className="h-4 w-4 shrink-0 object-contain"
             />
             {TROPHY_RANGE_LABELS[trophy]}
@@ -54,11 +56,12 @@ export function TrophyRangeSelector({ trophy, paramName = "trophy" }: Props) {
         {BRAWLER_TROPHY_RANGES.map((t) => (
           <SelectItem key={t} value={t}>
             <span className="inline-flex items-center gap-1.5">
-              <img
+              <Image
                 src={TROPHY_RANGE_ICON}
                 alt=""
                 width={16}
                 height={16}
+                unoptimized
                 className="h-4 w-4 shrink-0 object-contain"
               />
               {TROPHY_RANGE_LABELS[t]}

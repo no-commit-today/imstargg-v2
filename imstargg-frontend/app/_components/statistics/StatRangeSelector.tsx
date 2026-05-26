@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   STATS_TIER_RANGES,
@@ -27,11 +28,12 @@ type Props = {
 
 function TierIcon({ tier }: { tier: StatsTierRange }) {
   return (
-    <img
+    <Image
       src={TIER_RANGE_ICONS[tier]}
       alt=""
       width={16}
       height={16}
+      unoptimized
       className="h-4 w-4 shrink-0 object-contain"
     />
   );

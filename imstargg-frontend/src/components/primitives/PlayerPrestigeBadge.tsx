@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface Props {
   level: number;
   size?: number;
@@ -7,7 +9,14 @@ export default function PlayerPrestigeBadge({ level, size = 22 }: Props) {
   if (level < 1) return null;
   return (
     <span style={{ position: "relative", display: "inline-block", width: size, height: size }}>
-      <img src="/assets/icon_total_prestige.webp" alt="" role="img" width={size} height={size} />
+      <Image
+        src="/assets/icon_total_prestige.webp"
+        alt=""
+        role="img"
+        width={size}
+        height={size}
+        unoptimized
+      />
       <span
         aria-label={`프레스티지 ${level}`}
         style={{

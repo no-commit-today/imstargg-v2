@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { Player } from "@/domain/player/types";
 import { formatNumber } from "@/lib/format";
@@ -33,7 +34,13 @@ export function PlayerHero({ player }: { player: Player }) {
           <p className="mt-1 flex items-center gap-1.5 text-sm">
             {player.club ? (
               <>
-                <img src="/assets/icon_club_league_masters.png" alt="" width={16} height={16} />
+                <Image
+                  src="/assets/icon_club_league_masters.png"
+                  alt=""
+                  width={16}
+                  height={16}
+                  unoptimized
+                />
                 <span className="text-[#5C6271]">클럽:</span>
                 <Link
                   className="font-medium hover:underline"
