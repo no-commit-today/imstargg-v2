@@ -9,7 +9,6 @@ on:
         type: choice
         options:
           - core-api
-          - core-admin
           - core-batch
           - core-worker
 
@@ -67,7 +66,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set image tag
-        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        run: |
+          VERSION=$(./imstargg-deploy/scripts/get-app-version.sh "${{ inputs.app }}")
+          echo "IMAGE_TAG=${VERSION}-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       - uses: docker/build-push-action@v6
         with:
@@ -125,8 +126,10 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          cd imstargg-backend/deploy
+          VERSION=$(./imstargg-deploy/scripts/get-app-version.sh "${{ inputs.app }}")
+          IMAGE_TAG="${VERSION}-${GITHUB_SHA::7}"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_ENV"
+          cd imstargg-deploy/apps/prod
 
           if [ "${{ inputs.app }}" == "core-batch" ]; then
             yq e ".cronjob.image.repository = \"${ECR_REGISTRY}/imstargg/core-batch\"" -i core-batch/values.yaml
@@ -140,9 +143,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add imstargg-backend/deploy/
+          git add imstargg-deploy/
           git diff --staged --quiet && exit 0
-          git commit -m "chore: update ${{ inputs.app }} image tag to ${GITHUB_SHA::7}"
+          git commit -m "chore: update ${{ inputs.app }} image tag to ${IMAGE_TAG}"
 
           for i in 1 2 3 4 5; do
             git push && exit 0
