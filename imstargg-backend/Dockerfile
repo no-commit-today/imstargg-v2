@@ -32,7 +32,9 @@ RUN ./gradlew ${GRADLE_MODULE}:bootJar -x test --no-daemon --build-cache --paral
  && cp "$(find ${MODULE_PATH}/build/libs -name '*.jar' -not -name '*-plain.jar' | head -n1)" application.jar \
  && java -Djarmode=tools -jar application.jar extract --layers --destination extracted
 
-# ── Runtime: 타깃 플랫폼(arm64). COPY 만 → QEMU 불필요 ──
+# ── Runtime: 타깃 플랫폼(arm64). COPY 만(RUN 없음) → 외래 아치도 QEMU 불필요 ──
+# ⚠️ 이 스테이지에 RUN 을 추가하면 크로스/멀티 아치 빌드 시 QEMU 가 필요해짐
+#    → 그때는 워크플로에 docker/setup-qemu-action 단계를 추가할 것
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=builder --chown=1000:1000 /workspace/extracted/dependencies/ ./
