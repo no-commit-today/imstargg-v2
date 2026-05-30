@@ -6,7 +6,7 @@ deployment:
   replicaCount: 1
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-worker
-    tag: "c0cb6b1"
+    tag: "0.1.2-1052481"
     pullPolicy: Always
   env:
     - name: SPRING_PROFILES_ACTIVE
@@ -32,6 +32,5 @@ service:
       port: 9292
       targetPort: metrics
       protocol: TCP
-
 ingress:
   enabled: false
