@@ -164,6 +164,7 @@ group by tp.brawler.brawlStarsId, b.result</code></pre>
 <ul>
   <li><strong>집계 정합성(시즌 경계):</strong> accumulator 는 배틀마다 <code>BrawlPassSeason.of(battleAt)</code> 로 시즌을 판정한다. 따라서 계산 쿼리도 <code>LocalDate</code> 자정이 아니라 <strong>시즌 정시 경계</strong>(<code>startAt ≤ battleAt &lt; endAt</code>, <code>OffsetDateTime</code>)로 필터해야 결과가 정확히 일치한다. → Service 시그니처를 OffsetDateTime 으로 바꾸는 핵심 이유.</li>
   <li><strong>SOLO_RANKED 첫 시즌 이전:</strong> 호출부가 특정 <code>SoloRankSeason</code> 범위를 넘기므로 accumulator 의 "첫 시즌 이전 배틀 제외"가 범위 필터로 자연 처리된다.</li>
+  <li><strong>SOLO_RANKED 시즌 경계 (의도된 차이, #38):</strong> 경계를 <strong>반열림 <code>[startAt, endAt)</code></strong> 로 통일한다. RANKED(연속 시즌)는 구 accumulator 와 완전 일치. 그러나 <code>SoloRankSeason</code> 은 <code>endAt</code> 포함 + 시즌 사이 ~24h 공백이 있어, 구 <code>SoloRankSeason.of()</code> 는 그 공백 구간·정확히 <code>endAt</code> 순간의 배틀도 해당 시즌에 귀속시켰다. 반열림 필터는 이 경계 배틀을 제외 → 솔로랭크는 공백 구간 플레이가 없어 실질 결과 차이는 없다(극소수 경계만). 정확 parity 대신 균일·명확한 의미를 택함.</li>
   <li><strong>result 매핑:</strong> 쿼리는 raw <code>result</code> 문자열로 그룹핑, 앱에서 <code>BattleResult.findByCode</code> 로 매핑하고 미지정은 무시 → accumulator 의 <code>?: return</code> 과 동일.</li>
   <li><strong>cache-aside 잔여 레이스:</strong> "읽기 재계산 ↔ 쓰기 커밋/무효화"가 겹치는 극히 드문 창에서 일시적 stale 가능. <strong>afterCommit 무효화 + TTL 백스톱</strong>으로 완화하며 다음 갱신/TTL 에 자가치유. 지연 이중삭제·버전키 등 과설계는 <strong>YAGNI 로 보류</strong>하고 한계로 문서화.</li>
   <li><strong>빈 결과 캐싱:</strong> 배틀 없는 시즌은 빈 items 로 캐싱(재계산 회피). 갱신 시 evict 로 정리.</li>
