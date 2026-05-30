@@ -7,7 +7,7 @@
 각 앱은 SemVer 2.0 의 `MAJOR.MINOR.PATCH` 또는 SNAPSHOT 형태:
 
 - `0.1.0` — finalized (운영 배포 가능 상태)
-- `0.1.0-SNAPSHOT` — dev 단계 (다음 main PR 에서 finalize 될 후보)
+- `0.1.0-SNAPSHOT` — develop 단계 (다음 main PR 에서 finalize 될 후보)
 
 ## SNAPSHOT bump 매트릭스
 

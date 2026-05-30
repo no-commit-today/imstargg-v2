@@ -35,7 +35,24 @@ imstargg-v2/
 - `core-api` 변경 → `imstargg-frontend`
 - `core-admin` 변경 → `imstargg-admin-frontend`
 
-각 프로젝트의 상세 가이드는 하위 CLAUDE.md 참조:
+## Git 전략
+
+`release` 브랜치 없는 Git Flow. `main`(운영) · `develop`(통합 개발) 2개 상시 브랜치.
+
+| 브랜치 | 역할 | 갱신 방식 |
+|---|---|---|
+| `main` | 운영 배포 대상. finalized 버전(SemVer) | `develop` → `main` PR 병합 + 배포 봇 이미지 태그 커밋 |
+| `develop` | 통합 개발 브랜치. SNAPSHOT 버전 | 기능 브랜치 PR 병합 (+ 필요 시 `main` backmerge) |
+| `feature/<설명>` | 기능 개발 | `develop`에서 분기 → `develop`로 PR |
+| `hotfix/<설명>` | 운영 긴급 수정 | `main`에서 분기 → `main` 반영 후 `develop` backmerge |
+
+- **명명**: 접두사 풀워드(`feature/` `fix/` `refactor/` `docs/` `chore/` `hotfix/`) + kebab-case 설명. 브랜치 접두사 `feature/` 와 Conventional Commits 타입 `feat:` 혼동 금지.
+
+**흐름**: `develop`에서 기능 브랜치 분기 → 작업 → `develop`로 PR(`pr-test.yml` 이 변경 영역 backend/frontend 테스트) → 배포 준비되면 `develop` → `main` PR → 병합 후 `Deploy` 워크플로로 앱별 수동 배포.
+
+**커밋·버전**: 커밋은 Conventional Commits(`feat:` `fix:` `refactor:` `docs:` `chore:` `ci:`, scope 예 `ci(deploy):`). 버전은 앱별 독립 SemVer(`develop`=SNAPSHOT, `main`=finalized) — bump·main PR 준비·hotfix·릴리즈 노트는 `/release` 스킬로 자동화(`.claude/skills/release-management/`).
+
+## 하위 CLAUDE.md 참조
 
 - `imstargg-backend/CLAUDE.md` - 백엔드 빌드, 테스트, 아키텍처
 - `imstargg-frontend/CLAUDE.md` - 사용자 프론트엔드 개발 가이드

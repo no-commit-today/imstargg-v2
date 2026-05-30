@@ -8,7 +8,7 @@
 
 ### 트리거 컨텍스트
 
-- 현재 브랜치가 feature/* 또는 dev
+- 현재 브랜치가 feature/* 또는 develop
 - 사용자가 작업 마무리 신호 ("PR 만들자", "커밋해줘", "버전 올려줘", "작업 끝났어") 를 보냈거나
 - 명시 호출 (`/release bump`)
 
@@ -60,7 +60,7 @@
 
 ### 트리거 컨텍스트
 
-- 현재 브랜치가 dev (또는 main 으로 PR 준비 중)
+- 현재 브랜치가 develop (또는 main 으로 PR 준비 중)
 - 사용자가 "main 으로 올리자", "릴리즈 준비", "main PR 만들자" 같은 신호
 - 명시 호출 (`/release prepare`)
 
@@ -74,7 +74,7 @@
 
 2. **모두 finalized 면 종료** — 새로 준비할 게 없음. (혹은 사용자에게 "이미 finalize 된 상태입니다" 안내)
 
-3. **dev → main 의 변경 history 수집**
+3. **develop → main 의 변경 history 수집**
    ```bash
    git log main..HEAD --pretty=format:"%h %s"
    ```
@@ -124,7 +124,7 @@
 
 ### 단계
 
-1. **사용자 확인**: 정말 hotfix 인지 (main 직접 패치 의도). dev 작업이라면 bump 모드로 가야 함.
+1. **사용자 확인**: 정말 hotfix 인지 (main 직접 패치 의도). develop 작업이라면 bump 모드로 가야 함.
 
 2. **변경된 앱 식별**
    ```bash
@@ -153,9 +153,9 @@
    ```
    생성된 노트의 변경 사항 본문에 "hotfix: ..." 명시.
 
-6. **dev 로 backmerge 안내**
-   - dev 의 SNAPSHOT 과 main 의 finalized 가 충돌 가능
-   - 사용자에게 "dev 에서 `git merge main` 후 충돌 해결 (대부분 SNAPSHOT 우선 유지)" 안내
+6. **develop 로 backmerge 안내**
+   - develop 의 SNAPSHOT 과 main 의 finalized 가 충돌 가능
+   - 사용자에게 "develop 에서 `git merge main` 후 충돌 해결 (대부분 SNAPSHOT 우선 유지)" 안내
 
 ---
 
@@ -167,7 +167,7 @@
 
 1. `python3 scripts/current_versions.py` — 각 앱 현재 버전
 2. `ls -t docs/release/*.md | head -1` — 마지막 릴리즈
-3. `git log main..HEAD --merges --oneline` — dev 누적 머지 (또는 PR)
+3. `git log main..HEAD --merges --oneline` — develop 누적 머지 (또는 PR)
 4. **다음 prepare 시 예상 결과 미리보기**:
    - SNAPSHOT 앱들의 finalized 후보 (X.Y.Z-SNAPSHOT → X.Y.Z)
    - 다음 CalVer 후보 (`YYYY.MM.<N+1>`)
@@ -181,7 +181,7 @@
      frontend    0.2.0-SNAPSHOT
 
    마지막 릴리즈: 2026.05.0 (2026-05-02)
-   dev 누적: 3 PRs
+   develop 누적: 3 PRs
 
    다음 prepare 시 예상:
      core-api  → 0.1.1

@@ -11,8 +11,8 @@ description: 이 모노레포(imstargg-v2)의 SemVer + SNAPSHOT 버전 관리와
 
 | 컨텍스트 | 모드 |
 |---|---|
-| feature/* 또는 dev 브랜치 + 코드 수정 후 마무리 신호 | **bump** |
-| dev → main PR 준비 (배포 전) | **prepare** |
+| feature/* 또는 develop 브랜치 + 코드 수정 후 마무리 신호 | **bump** |
+| develop → main PR 준비 (배포 전) | **prepare** |
 | main 브랜치에서 직접 hotfix | **hotfix** |
 | 조회만 ("지금 버전 뭐야?", "다음 릴리즈 미리보기") | **status** |
 
@@ -58,7 +58,7 @@ core-admin / imstargg-admin-frontend 는 관리 대상 외.
 
 1. **현재 버전 조회** — SNAPSHOT 인 앱들이 finalize 대상
 2. **모두 finalized 면 종료** ("이미 finalize 된 상태입니다")
-3. **dev → main 변경 history** — `git log main..HEAD --pretty=format:"%h %s"` (또는 `--merges` 로 PR 만)
+3. **develop → main 변경 history** — `git log main..HEAD --pretty=format:"%h %s"` (또는 `--merges` 로 PR 만)
 4. **변경 사항 자연어 정리** — 앱별 그룹화, 사용자 친화 문구
 5. **CalVer 결정** — `ls docs/release/<YYYY>.<MM>.*.md` 의 최대 N + 1
 6. **검수 모드**: 결정된 CalVer + finalize 표 + 노트 초안 (Breaking/마이그레이션/롤백 섹션 포함) → 사용자 검수
@@ -79,14 +79,14 @@ core-admin / imstargg-admin-frontend 는 관리 대상 외.
    python3 .claude/skills/release-management/scripts/finalize_version.py <app>
    ```
 4. **노트 생성** — hotfix 표시
-5. **dev 로 backmerge 안내** — dev 의 SNAPSHOT 과 충돌 가능성
+5. **develop 로 backmerge 안내** — develop 의 SNAPSHOT 과 충돌 가능성
 
 ## status 모드 워크플로
 
 읽기 전용. 다음을 텍스트로 요약:
 - 각 앱 현재 버전 (current_versions.py)
 - 마지막 릴리즈 (`ls -t docs/release/*.md | head -1`)
-- dev 누적 PR 수 (`git log main..HEAD --merges --oneline | wc -l`)
+- develop 누적 PR 수 (`git log main..HEAD --merges --oneline | wc -l`)
 - 다음 prepare 시 예상 (SNAPSHOT 앱들의 finalized 후보 + 다음 CalVer)
 
 ## 안전 원칙
