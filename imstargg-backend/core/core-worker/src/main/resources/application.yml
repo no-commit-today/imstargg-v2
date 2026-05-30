@@ -17,6 +17,9 @@ spring:
       - logging.yml
       - monitoring.yml
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
   jpa:
     properties:
       hibernate:
@@ -25,6 +28,9 @@ spring:
           batch_versioned_data: false
         order_inserts: true
         order_updates: true
+
+server:
+  shutdown: graceful
 
 storage:
   datasource:

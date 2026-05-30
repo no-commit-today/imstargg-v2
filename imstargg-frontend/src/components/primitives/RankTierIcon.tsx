@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { SoloRankTier } from "@/api/types";
 import { tierColor, tierStickerImage, tierSegmentNumber } from "@/domain/battle/tierLabels";
 
@@ -10,7 +11,14 @@ export default function RankTierIcon({ tier, size = 18 }: Props) {
   const segment = tierSegmentNumber(tier);
   return (
     <span style={{ position: "relative", display: "inline-block", width: size, height: size }}>
-      <img src={tierStickerImage(tier)} alt="" role="img" width={size} height={size} />
+      <Image
+        src={tierStickerImage(tier)}
+        alt=""
+        role="img"
+        width={size}
+        height={size}
+        unoptimized
+      />
       {segment && (
         <span
           style={{

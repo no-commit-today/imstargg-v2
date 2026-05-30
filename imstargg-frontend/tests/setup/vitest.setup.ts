@@ -10,7 +10,8 @@ function installFetchSignalShim() {
   const originalFetch = globalThis.fetch.bind(globalThis);
   const wrapped: typeof fetch = (input, init) => {
     if (init?.signal) {
-      const { signal: _drop, ...rest } = init;
+      const { signal, ...rest } = init;
+      void signal;
       return originalFetch(input, rest);
     }
     return originalFetch(input, init);

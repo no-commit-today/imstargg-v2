@@ -14,7 +14,7 @@ export function GoogleAdsenseScript() {
     <Script
       id="google-adsense"
       async
-      strategy="beforeInteractive"
+      strategy="afterInteractive"
       src={GOOGLE_ADSENSE_SCRIPT_SRC}
       crossOrigin="anonymous"
     />

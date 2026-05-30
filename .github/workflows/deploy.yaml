@@ -9,7 +9,6 @@ on:
         type: choice
         options:
           - core-api
-          - core-admin
           - core-batch
           - core-worker
 
@@ -17,44 +16,16 @@ env:
   AWS_REGION: ap-northeast-2
 
 jobs:
-  build-jar:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: temurin
-          cache: gradle
-
-      - name: Build JAR
-        working-directory: imstargg-backend
-        run: |
-          ./gradlew :core:${{ inputs.app }}:bootJar -x test --no-daemon
-          find core/${{ inputs.app }}/build/libs -name "*.jar" -not -name "*plain*" \
-            -exec cp {} ${{ github.workspace }}/app.jar \;
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.app }}-jar
-          path: app.jar
-
   build-and-push:
-    needs: build-jar
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      registry: ${{ steps.login-ecr.outputs.registry }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.app }}-jar
-          path: jar
 
       - uses: docker/setup-buildx-action@v3
 
@@ -67,82 +38,51 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set image tag
-        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        id: meta
+        run: |
+          VERSION=$(./imstargg-deploy/scripts/get-app-version.sh "${{ inputs.app }}")
+          echo "image_tag=${VERSION}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
         with:
-          context: jar
-          file: imstargg-backend/core/${{ inputs.app }}/Dockerfile
+          context: imstargg-backend
+          file: imstargg-backend/Dockerfile
+          build-args: |
+            GRADLE_MODULE=:core:${{ inputs.app }}
           push: true
           platforms: linux/arm64
-          tags: ${{ steps.login-ecr.outputs.registry }}/imstargg/${{ inputs.app }}:${{ env.IMAGE_TAG }}
+          provenance: false
+          tags: ${{ steps.login-ecr.outputs.registry }}/imstargg/${{ inputs.app }}:${{ steps.meta.outputs.image_tag }}
           cache-from: type=gha,scope=${{ inputs.app }}
           cache-to: type=gha,mode=max,scope=${{ inputs.app }}
-
-  cleanup:
-    needs: build-and-push
-    if: always()
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listArtifactsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            });
-            for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name === '${{ inputs.app }}-jar' || artifact.name.endsWith('.dockerbuild')) {
-                await github.rest.actions.deleteArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: artifact.id
-                });
-              }
-            }
 
   update-image-tags:
     needs: build-and-push
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
       - name: Update image tag
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          cd imstargg-backend/deploy
-
-          if [ "${{ inputs.app }}" == "core-batch" ]; then
-            yq e ".cronjob.image.repository = \"${ECR_REGISTRY}/imstargg/core-batch\"" -i core-batch/values.yaml
-            yq e ".cronjob.image.tag = \"${IMAGE_TAG}\"" -i core-batch/values.yaml
-          else
-            yq e ".deployment.image.repository = \"${ECR_REGISTRY}/imstargg/${{ inputs.app }}\"" -i ${{ inputs.app }}/values.yaml
-            yq e ".deployment.image.tag = \"${IMAGE_TAG}\"" -i ${{ inputs.app }}/values.yaml
-          fi
+          ./imstargg-deploy/scripts/update-image-tag.sh \
+            "${{ inputs.app }}" \
+            "${{ needs.build-and-push.outputs.registry }}/imstargg/${{ inputs.app }}" \
+            "${{ needs.build-and-push.outputs.image_tag }}"
 
       - name: Commit and push
+        env:
+          APP: ${{ inputs.app }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add imstargg-backend/deploy/
+          git add imstargg-deploy/
           git diff --staged --quiet && exit 0
-          git commit -m "chore: update ${{ inputs.app }} image tag to ${GITHUB_SHA::7}"
+          git commit -m "chore: update ${APP} image tag to ${IMAGE_TAG}"
 
           for i in 1 2 3 4 5; do
             git push && exit 0

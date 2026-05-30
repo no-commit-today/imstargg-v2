@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface Props {
   trophies: number;
   size?: number;
@@ -17,7 +19,14 @@ export default function PrestigeBadge({ trophies, size = 18 }: Props) {
   const step = STEPS.find((s) => trophies >= s.min)!;
   return (
     <span style={{ position: "relative", display: "inline-block", width: size, height: size }}>
-      <img src={step.src} alt="" role="img" width={size} height={size} />
+      <Image
+        src={step.src}
+        alt=""
+        role="img"
+        width={size}
+        height={size}
+        unoptimized
+      />
       {step.overlay && (
         <span
           style={{

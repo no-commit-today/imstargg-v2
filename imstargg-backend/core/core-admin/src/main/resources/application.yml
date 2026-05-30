@@ -13,6 +13,12 @@ spring:
     problemdetails:
       enabled: true
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  shutdown: graceful
+
 app:
   cors:
     allowed-origins:

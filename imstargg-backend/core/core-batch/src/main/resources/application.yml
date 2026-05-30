@@ -1,6 +1,9 @@
 spring:
   application.name: imstargg-core-batch
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
   profiles:
     active: local
     group:
@@ -33,7 +36,7 @@ spring:
         queue-capacity: 10000
       shutdown:
         await-termination: true
-        await-termination-period: 10000
+        await-termination-period: 30s
 
   jpa:
     properties:
@@ -47,6 +50,9 @@ spring:
 app:
   alert:
     type: NO_OPS
+
+server:
+  shutdown: graceful
 
 ---
 spring:

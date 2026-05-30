@@ -54,7 +54,6 @@ export function PlayerStatisticsControls({
               type="button"
               role="tab"
               aria-selected={active}
-              aria-pressed={active}
               onClick={() => onBattleTypeChange(opt.value)}
               className={
                 active

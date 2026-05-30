@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { formatNumber } from "@/lib/format";
 
 interface Props {
@@ -14,7 +15,14 @@ function trophyIcon(value: number): string {
 export default function BrawlerTrophy({ value, size = 14 }: Props) {
   return (
     <span className="trophy" style={{ fontSize: size }}>
-      <img src={trophyIcon(value)} alt="" role="img" width={size} height={size} />
+      <Image
+        src={trophyIcon(value)}
+        alt=""
+        role="img"
+        width={size}
+        height={size}
+        unoptimized
+      />
       <span>{formatNumber(value)}</span>
     </span>
   );

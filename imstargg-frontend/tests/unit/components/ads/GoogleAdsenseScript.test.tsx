@@ -28,7 +28,7 @@ describe("GoogleAdsenseScript", () => {
     );
   });
 
-  it("loads before hydration in production", () => {
+  it("loads after hydration in production", () => {
     vi.stubEnv("NODE_ENV", "production");
 
     try {
@@ -38,7 +38,7 @@ describe("GoogleAdsenseScript", () => {
       expect(script?.props).toMatchObject({
         id: "google-adsense",
         async: true,
-        strategy: "beforeInteractive",
+        strategy: "afterInteractive",
         src: GOOGLE_ADSENSE_SCRIPT_SRC,
         crossOrigin: "anonymous",
       });

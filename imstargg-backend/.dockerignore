@@ -1,5 +1,11 @@
 .git
-.gradle
-**/.gradle
-**/build
+**/build/
+**/bin/
+**/.gradle/
+.gradle/
+.idea/
+*.iml
+**/.apt_generated/
+**/.kotlin/
+.prompt/
 docker-compose.yml

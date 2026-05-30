@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 
 export default function HomeScreen() {
@@ -51,8 +52,14 @@ export default function HomeScreen() {
             marginBottom: 18,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/BS_KO_KR.webp" alt="브롤스타즈" style={{ height: 96 }} />
+          <Image
+            src="/assets/BS_KO_KR.webp"
+            alt="브롤스타즈"
+            width={169}
+            height={96}
+            unoptimized
+            style={{ height: 96, width: "auto" }}
+          />
         </div>
         <h1
           style={{

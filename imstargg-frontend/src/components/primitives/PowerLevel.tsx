@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface Props {
   level: number;
   size?: number;
@@ -6,12 +8,13 @@ interface Props {
 export default function PowerLevel({ level, size = 22 }: Props) {
   return (
     <span style={{ position: "relative", display: "inline-block", width: size, height: size }}>
-      <img
+      <Image
         src="/assets/power_level_base_empty.svg"
         alt=""
         role="img"
         width={size}
         height={size}
+        unoptimized
       />
       <span
         aria-label={`파워 레벨 ${level}`}
