@@ -16,44 +16,13 @@ env:
   AWS_REGION: ap-northeast-2
 
 jobs:
-  build-jar:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: temurin
-          cache: gradle
-
-      - name: Build JAR
-        working-directory: imstargg-backend
-        run: |
-          ./gradlew :core:${{ inputs.app }}:bootJar -x test --no-daemon
-          find core/${{ inputs.app }}/build/libs -name "*.jar" -not -name "*plain*" \
-            -exec cp {} ${{ github.workspace }}/app.jar \;
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.app }}-jar
-          path: app.jar
-
   build-and-push:
-    needs: build-jar
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.app }}-jar
-          path: jar
 
       - uses: docker/setup-buildx-action@v3
 
@@ -72,10 +41,13 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: jar
-          file: imstargg-backend/core/${{ inputs.app }}/Dockerfile
+          context: imstargg-backend
+          file: imstargg-backend/Dockerfile
+          build-args: |
+            GRADLE_MODULE=:core:${{ inputs.app }}
           push: true
           platforms: linux/arm64
+          provenance: false
           tags: ${{ steps.login-ecr.outputs.registry }}/imstargg/${{ inputs.app }}:${{ env.IMAGE_TAG }}
           cache-from: type=gha,scope=${{ inputs.app }}
           cache-to: type=gha,mode=max,scope=${{ inputs.app }}
@@ -96,7 +68,7 @@ jobs:
               per_page: 100
             });
             for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name === '${{ inputs.app }}-jar' || artifact.name.endsWith('.dockerbuild')) {
+              if (artifact.name.endsWith('.dockerbuild')) {
                 await github.rest.actions.deleteArtifact({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
