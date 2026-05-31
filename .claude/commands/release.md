@@ -1,5 +1,5 @@
 ---
-description: Release management — bump (dev/feature), prepare (main PR), hotfix (main 직접), status (조회)
+description: Release management — bump (develop/feature), prepare (main PR), hotfix (main 직접), status (조회)
 argument-hint: '[bump|prepare|hotfix|status] [--auto]'
 ---
 

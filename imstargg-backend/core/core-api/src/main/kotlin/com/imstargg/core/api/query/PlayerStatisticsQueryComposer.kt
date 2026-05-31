@@ -16,7 +16,7 @@ import com.imstargg.core.enums.BrawlPassSeason
 import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.core.enums.SoloRankSeason
 import org.springframework.stereotype.Component
-import java.time.LocalDate
+import java.time.OffsetDateTime
 
 @Component
 class PlayerStatisticsQueryComposer(
@@ -30,8 +30,8 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerStatistics(
             playerTag = playerTag,
             battleType = BattleType.RANKED,
-            startBattleDate = season.startAt.toLocalDate(),
-            endBattleDate = season.endAt.toLocalDate(),
+            startAt = season.startAt,
+            endAt = season.endAt,
         )
 
     fun getSoloRankedBrawlerStatistics(
@@ -41,8 +41,8 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerStatistics(
             playerTag = playerTag,
             battleType = BattleType.SOLO_RANKED,
-            startBattleDate = season.startAt.toLocalDate(),
-            endBattleDate = season.endAt.toLocalDate(),
+            startAt = season.startAt,
+            endAt = season.endAt,
         )
 
     fun getRankedBrawlerRoleStatistics(
@@ -52,8 +52,8 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerRoleStatistics(
             playerTag = playerTag,
             battleType = BattleType.RANKED,
-            startBattleDate = season.startAt.toLocalDate(),
-            endBattleDate = season.endAt.toLocalDate(),
+            startAt = season.startAt,
+            endAt = season.endAt,
         )
 
     fun getSoloRankedBrawlerRoleStatistics(
@@ -63,22 +63,22 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerRoleStatistics(
             playerTag = playerTag,
             battleType = BattleType.SOLO_RANKED,
-            startBattleDate = season.startAt.toLocalDate(),
-            endBattleDate = season.endAt.toLocalDate(),
+            startAt = season.startAt,
+            endAt = season.endAt,
         )
 
     private fun buildBrawlerStatistics(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startBattleDate: LocalDate,
-        endBattleDate: LocalDate,
+        startAt: OffsetDateTime,
+        endAt: OffsetDateTime,
     ): PlayerBrawlerStatisticsResponse {
         val stats =
             playerBrawlerStatsService.get(
                 playerTag = playerTag,
                 battleType = battleType,
-                startBattleDate = startBattleDate,
-                endBattleDate = endBattleDate,
+                startAt = startAt,
+                endAt = endAt,
             )
         val items = stats.items
         val brawlers = Brawlers(brawlerService.getAll())
@@ -94,8 +94,8 @@ class PlayerStatisticsQueryComposer(
                 )
             }
         return PlayerBrawlerStatisticsResponse(
-            startBattleDate = startBattleDate,
-            endBattleDate = endBattleDate,
+            startBattleDate = stats.startBattleDate,
+            endBattleDate = stats.endBattleDate,
             totalBattleCount = items.sumOf { it.resultCount.totalCount },
             items = responseItems,
         )
@@ -104,15 +104,15 @@ class PlayerStatisticsQueryComposer(
     private fun buildBrawlerRoleStatistics(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startBattleDate: LocalDate,
-        endBattleDate: LocalDate,
+        startAt: OffsetDateTime,
+        endAt: OffsetDateTime,
     ): PlayerBrawlerRoleStatisticsResponse {
         val stats =
             playerBrawlerStatsService.get(
                 playerTag = playerTag,
                 battleType = battleType,
-                startBattleDate = startBattleDate,
-                endBattleDate = endBattleDate,
+                startAt = startAt,
+                endAt = endAt,
             )
         val items = stats.items
         val roleByBrawlerId = brawlerService.getAll().associate { it.id to it.role }
@@ -134,8 +134,8 @@ class PlayerStatisticsQueryComposer(
                 )
             }
         return PlayerBrawlerRoleStatisticsResponse(
-            startBattleDate = startBattleDate,
-            endBattleDate = endBattleDate,
+            startBattleDate = stats.startBattleDate,
+            endBattleDate = stats.endBattleDate,
             totalBattleCount = items.sumOf { it.resultCount.totalCount },
             items = responseItems,
         )

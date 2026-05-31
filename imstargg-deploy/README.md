@@ -47,6 +47,41 @@ Use the helper script to read the current version:
 ./imstargg-deploy/scripts/get-app-version.sh core-api
 ```
 
+## ECR Lifecycle Policy
+
+ECR repositories (`imstargg/core-api`, `imstargg/core-batch`, `imstargg/core-worker`)
+share a single lifecycle policy defined in `ecr/lifecycle-policy.json`:
+
+| Rule | Selection | Action |
+|---|---|---|
+| 1 | untagged images older than 1 day | expire |
+| 2 | tagged images beyond the most recent 10 | expire |
+
+Rule 2 is **count-based, not age-based**: the currently deployed tag is not always
+the newest image (e.g. core-batch runs as a low-frequency CronJob), so an age rule
+could delete an in-use image. Keeping the last 10 tagged images protects the
+deployed revision.
+
+Apply the policy (default profile `nocommittoday`, region `ap-northeast-2`):
+
+```bash
+# Dry run — show which images would be expired, without applying
+./imstargg-deploy/scripts/apply-ecr-lifecycle-policy.sh --preview
+
+# Apply to all three repositories
+./imstargg-deploy/scripts/apply-ecr-lifecycle-policy.sh
+
+# Override the AWS CLI profile
+./imstargg-deploy/scripts/apply-ecr-lifecycle-policy.sh my-profile
+```
+
+Edit `ecr/lifecycle-policy.json` and re-run the script to change the policy.
+
+> **Multi-arch caveat:** images are currently built for `linux/arm64` only. If
+> multi-platform builds are added later, the platform-specific images under a
+> manifest list appear as *untagged* — the "expire untagged after 1 day" rule
+> would then break manifest lists. Revisit the untagged rule before that switch.
+
 ## Secrets
 
 Do not commit secrets to this directory. Values files may reference existing

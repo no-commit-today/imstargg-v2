@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>플레이어 브롤러 통계 — 사전집계 테이블 제거 → 온더플라이 계산 + Redis 캐시 설계</title>
+<style>
+  body { font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; line-height: 1.7; max-width: 960px; margin: 2rem auto; padding: 0 1.2rem; color: #1a1a1a; }
+  h1 { border-bottom: 3px solid #2563eb; padding-bottom: .4rem; }
+  h2 { margin-top: 2.2rem; border-bottom: 1px solid #ddd; padding-bottom: .3rem; color: #1e3a8a; }
+  h3 { margin-top: 1.4rem; color: #1f2937; }
+  code { background: #f3f4f6; padding: .1rem .35rem; border-radius: 4px; font-size: .9em; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #d1d5db; padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; }
+  .ok { color: #15803d; font-weight: 600; }
+  .no { color: #b91c1c; font-weight: 600; }
+  .meta { color: #6b7280; font-size: .9rem; }
+  blockquote { border-left: 4px solid #2563eb; margin: 1rem 0; padding: .3rem 1rem; background: #eff6ff; }
+  .tag { display: inline-block; background: #2563eb; color: #fff; border-radius: 4px; padding: .05rem .5rem; font-size: .75rem; }
+  .warn { border-left: 4px solid #d97706; background: #fffbeb; }
+</style>
+</head>
+<body>
+
+<h1>플레이어 브롤러 통계 — 온더플라이 계산 + Redis 캐시 설계</h1>
+<p class="meta">작성일: 2026-05-30 · 이슈: #38 (플레이어 브롤러 통계 테이블 제거) · 대상: <code>imstargg-backend</code> (core-api · core-worker · redis-core · db-core)</p>
+
+<h2>1. 배경 &amp; 목표</h2>
+<p>현재 플레이어 브롤러 통계는 <strong>쓰기 시점 사전집계</strong> 방식이다. 플레이어 갱신 시 <code>core-worker</code> 의 <code>PlayerBrawlerStatsAccumulator</code> 가 신규 배틀을 시즌별로 증분 집계하여 <code>player_brawler_stats</code> / <code>player_brawler_stats_item</code> 테이블에 적재하고, <code>core-api</code> 는 이 테이블을 읽기만 한다.</p>
+<p>이 사전집계 테이블은 <strong>battle 데이터의 파생물</strong>일 뿐이다. battle 은 영구 보존(삭제 로직 부재)되므로 통계는 언제든 battle 에서 재계산할 수 있고, 별도 테이블·증분 적재 경로는 중복이다.</p>
+
+<h3>목표</h3>
+<ul>
+  <li><strong>읽기 시점 계산</strong>: API 호출 시 해당 기간의 battle 을 SQL 집계해 결과 생성.</li>
+  <li><strong>결과 캐싱</strong>: <code>redis-core</code> 에 플레이어별 Redis Hash 로 캐싱.</li>
+  <li><strong>쓰기 경로 무효화</strong>: 플레이어 갱신 시 워커가 해당 플레이어 캐시를 무효화(증분 적재 대신).</li>
+  <li><strong>테이블·코드 제거</strong>: <code>player_brawler_stats(_item)</code> 테이블, <code>PlayerBrawlerStatsAccumulator</code>, 관련 엔티티·JPA 리포지토리 일괄 제거.</li>
+</ul>
+
+<h3>비목표 (Out of Scope)</h3>
+<ul>
+  <li>다른 통계(브롤러 전역 통계, <code>stats_*</code> 등) 계산/저장 방식 변경 — 본 작업 무관.</li>
+  <li>배틀 보존/아카이빙 정책 변경.</li>
+  <li>프론트엔드 변경 — API 요청/응답 스펙은 동일 유지(내부 구현만 교체)이므로 동기화 불필요.</li>
+</ul>
+
+<h2>2. 현재 구조 (코드 확인 결과)</h2>
+<table>
+  <tr><th>항목</th><th>확인 내용</th></tr>
+  <tr><td>읽기 경로</td><td><code>PlayerStatisticsQueryComposer</code> → <code>PlayerBrawlerStatsService.get(tag, type, startBattleDate, endBattleDate)</code> → <code>PlayerBrawlerStatsRepository.find()</code> (두 테이블 조회). 시즌 start/end 는 호출부가 <code>BrawlPassSeason</code>/<code>SoloRankSeason</code> 에서 이미 보유</td></tr>
+  <tr><td>쓰기 경로</td><td><code>PlayerRenewalService</code>/<code>PlayerRefreshService</code> → <code>PlayerUpdater.update()</code> → 배틀 저장 + <code>accumulator.accumulate()</code>. RANKED/SOLO_RANKED 만, 시즌별 증분</td></tr>
+  <tr><td>데이터 모델</td><td>헤더 <code>(playerTag, battleType, startBattleDate)</code> + items <code>(brawlerId → ResultCount{victory,defeat,draw})</code></td></tr>
+  <tr><td>battle 보존</td><td><span class="ok">삭제 로직 전무</span>. <code>PlayerDeactivator</code> 도 플레이어 soft-delete + <code>stats_player</code> 정리만, battle 미삭제 → 영구 보존</td></tr>
+  <tr><td>parity 보장</td><td><code>update()</code> 는 <code>updateBattles()</code>(배틀 저장) 직후 <code>accumulate()</code> 호출 → 집계된 모든 배틀은 battle 테이블에 존재 → <strong>온더플라이 재계산 ≡ accumulator 재생</strong></td></tr>
+  <tr><td>redis-core</td><td>코드 없는 빈 인프라 모듈(<code>build.gradle.kts</code> + <code>application-redis.yml</code> 뿐). <code>spring-boot-starter-data-redis</code> 의존만 선언</td></tr>
+  <tr><td>모듈 의존</td><td><code>core-api</code> → redis-core <span class="ok">의존</span> / <code>core-worker</code> → redis-core <span class="no">미의존</span> (무효화 위해 추가 필요)</td></tr>
+  <tr><td>기존 캐시</td><td>Spring Cache 추상화(<code>CompositeCacheManager(caffeine, redis)</code>). Redis 는 <code>statistics</code> cacheName, 30분 TTL, <code>RedisFallbackCacheErrorHandler</code> 로 장애 시 graceful degradation</td></tr>
+  <tr><td>인덱스</td><td><code>ix_battle__playerid_battleat (player_id, battle_at desc)</code>, <code>ix_battleteamplayer__battleid (battle_id)</code> — 집계 쿼리에 적합</td></tr>
+  <tr><td>enum 코드</td><td><code>BattleType.RANKED="ranked"</code>, <code>SOLO_RANKED="soloRanked"</code> (1:1). <code>BattleResult</code> victory/defeat/draw (1:1)</td></tr>
+</table>
+
+<h2>3. 설계 결정 &amp; 근거</h2>
+
+<h3>3.1 제거 범위 → <span class="tag">한 PR 일괄 제거</span></h3>
+<p>battle 영구 보존으로 통계는 항상 재계산 가능 → 테이블 DROP 에 데이터 손실 위험 없음. 계산+캐시 도입 · accumulator/엔티티/리포지토리 제거 · 테이블 DROP 마이그레이션을 <strong>한 PR</strong>로 진행. (단계적 제거/드롭 보류 대비 코드가 가장 깔끔)</p>
+<blockquote>전제: battle 테이블엔 없는데 <code>player_brawler_stats</code> 에만 존재하는 과거 백필 데이터가 없어야 한다. 현재 코드상 모든 통계는 배틀 적재 경로에서만 생성됨 → 위험 없음으로 간주.</blockquote>
+
+<h3>3.2 계산 방식 → <span class="tag">SQL 집계 (GROUP BY)</span></h3>
+<table>
+  <tr><th>항목</th><th>SQL GROUP BY <span class="ok">(채택)</span></th><th>앱 측 1000개 배치 집계 (이슈 원안)</th></tr>
+  <tr><td>반환 데이터</td><td class="ok">브롤러×결과 카운트만 — 최대 (브롤러수×3) 수십 행</td><td class="no">raw battle 수천 행을 앱으로 적재</td></tr>
+  <tr><td>I/O · 메모리</td><td class="ok">한 번의 쿼리, 페이지네이션 불필요</td><td class="no">keyset 반복 조회 + 앱 집계</td></tr>
+  <tr><td>코드량</td><td class="ok">QueryDSL 쿼리 + 매핑</td><td class="no">배치 루프 + 집계 로직</td></tr>
+  <tr><td>적합 조건</td><td>시즌이 호출부에서 고정 → SQL 로 충분</td><td>집계 로직이 SQL 로 표현 불가할 때만 이점</td></tr>
+</table>
+<p><strong>결론:</strong> 읽기 시점에 시즌 범위가 이미 고정이라 배틀별 시즌 판정이 불필요 → 단일 GROUP BY 로 충분하고 압도적으로 효율적.</p>
+
+<h3>3.3 캐시 계층 → <span class="tag">redis-core 전용 스토어 + 플레이어별 Hash</span></h3>
+<table>
+  <tr><th>항목</th><th>redis-core 전용 스토어 + Hash <span class="ok">(채택)</span></th><th>Spring @Cacheable 확장</th></tr>
+  <tr><td>모듈 간 키 공유</td><td class="ok">키·직렬화 단일 정의, core-api/worker 공통 의존</td><td class="no">Spring Cache 내부 키 포맷에 worker 수동 삭제가 결합 — 취약</td></tr>
+  <tr><td>플레이어 단위 무효화</td><td class="ok"><code>DEL</code> 한 번에 전 시즌·타입 제거 (Hash)</td><td class="no">flat key — 모든 (타입,시즌) 키 열거 또는 SCAN 필요</td></tr>
+  <tr><td>부분 갱신 동시성</td><td class="ok">시즌별 <code>HSET</code> 은 서로 다른 field → 충돌 없음</td><td>—</td></tr>
+</table>
+<blockquote>구현 선택: 이 패턴(부분 put + 플레이어 단위 일괄 evict)은 <code>@RedisHash</code> 엔티티보다 <code>StringRedisTemplate</code> 해시 연산(HGET/HSET/EXPIRE/DEL)이 더 적합하다. <code>@RedisHash</code> 는 엔트리마다 독립 키일 때 유리하고, 한 플레이어 해시의 시즌 field 를 부분 갱신하는 모델과 어긋난다.</blockquote>
+
+<h2>4. 아키텍처 / 데이터 흐름</h2>
+<pre><code>[읽기] core-api
+  QueryComposer → PlayerBrawlerStatsService.get(tag, type, startAt, endAt)
+     → PlayerBrawlerStatsRepositoryWithCache.find()
+          1) redis-core 스토어 HGET            (hit → 반환)
+          2) miss → PlayerBrawlerStatsRepository.compute()
+                      └ SQL GROUP BY (battle ⨝ battle_team_player) → DB
+          3) 스토어 HSET + EXPIRE → 반환
+
+[쓰기] core-worker
+  PlayerUpdater.update(): 배틀 저장   (accumulator 호출 제거)
+     → 트랜잭션 커밋 후(afterCommit), newBattles 비어있지 않으면
+          → redis-core 스토어.evict(tag) = DEL playerBrawlerStats:v1:{tag}
+
+[공유] redis-core : PlayerBrawlerStatsCacheStore
+   ├─ core-api   : find / put / evict
+   └─ core-worker: evict 만   (build.gradle 에 redis-core 의존 추가)</code></pre>
+
+<h2>5. 컴포넌트 상세</h2>
+
+<h3>5.A db-core — 집계 쿼리 (QueryDSL)</h3>
+<p>입력 <code>(playerId, battleTypeCode, startAt, endAt: OffsetDateTime)</code>, 출력 <code>(brawlerBrawlStarsId, resultCode, count)</code> 행.</p>
+<pre><code>select tp.brawler.brawlStarsId, b.result, count(b)
+from   BattleEntity b
+join   BattleTeamPlayerEntity tp on tp.battle = b and tp.brawlStarsTag = :playerTag
+where  b.player.id = :playerId
+  and  b.type      = :battleTypeCode            // "ranked" | "soloRanked"
+  and  b.battleAt &gt;= :startAt and b.battleAt &lt; :endAt   // 시즌 정시 경계
+  and  b.result is not null
+group by tp.brawler.brawlStarsId, b.result</code></pre>
+<ul>
+  <li>본인 브롤러는 <code>tp.brawlStarsTag = :playerTag</code> 조인으로 자연 격리 → 본인 미참여 배틀 자동 제외, 배틀당 1행이라 중복 카운트 없음.</li>
+  <li>인덱스 <code>ix_battle__playerid_battleat</code> 로 player+기간 필터, <code>ix_battleteamplayer__battleid</code> 로 조인.</li>
+</ul>
+
+<h3>5.B redis-core — <code>PlayerBrawlerStatsCacheStore</code> (신규)</h3>
+<p>이 모듈의 첫 Kotlin 코드. <code>StringRedisTemplate</code> + Jackson <code>ObjectMapper</code>(Kotlin module) 기반. 값은 primitive DTO 를 JSON 문자열로 직렬화해 hash field 값으로 저장(다형성 타이핑 회피 → 역직렬화 견고).</p>
+<table>
+  <tr><th>요소</th><th>정의</th></tr>
+  <tr><td>Hash 키</td><td><code>playerBrawlerStats:v1:{playerTag}</code> — CLAUDE.md 의 Redis 메서드별 <code>v{N}:</code> 버전 prefix 규약 준수</td></tr>
+  <tr><td>Field</td><td><code>{battleType.name}:{startBattleDate}</code> (예: <code>RANKED:2026-05-01</code>)</td></tr>
+  <tr><td>값 DTO</td><td><code>{ endBattleDate: LocalDate, items: [{ brawlerId: Long, victoryCount, defeatCount, drawCount: Int }] }</code></td></tr>
+  <tr><td>find</td><td><code>HGET</code> → 역직렬화 (miss/오류 → null)</td></tr>
+  <tr><td>put</td><td><code>HSET</code> + <code>EXPIRE</code>(키 단위 TTL 1h, 튜닝 가능)</td></tr>
+  <tr><td>evict</td><td><code>DEL</code> — 해당 플레이어 전 시즌·타입 일괄 제거</td></tr>
+</table>
+<p><strong>복원력:</strong> Redis 장애 시 <code>find</code>→null(=재계산), <code>put</code>/<code>evict</code>→로그 후 무시. 기존 <code>RedisFallbackCacheErrorHandler</code> 철학과 일치. (단, evict 실패 시 다음 TTL 만료까지 stale 가능 — §6 참조)</p>
+<p><strong>설정:</strong> redis-core 에 전용 <code>RedisTemplate</code>/<code>ObjectMapper</code> 빈 + 캐시 스토어 컴포넌트 제공. core-api/core-worker 가 컴포넌트 스캔으로 주입받도록 구성.</p>
+
+<h3>5.C core-api 배선</h3>
+<ul>
+  <li><code>PlayerBrawlerStatsRepository.compute(tag, type, startAt, endAt)</code>: 5.A 호출 → <code>resultCode → BattleResult</code> 매핑(미지정/null 무시) → 브롤러별 <code>ResultCount</code> 집계 → 도메인 <code>PlayerBrawlerStats</code>. 플레이어 미존재/배틀 없음 → 빈 items(<strong>기존 동작 유지</strong>).</li>
+  <li><code>PlayerBrawlerStatsRepositoryWithCache.find(...)</code>: redis-core 스토어로 cache-aside. 기존 <code>*WithCache</code> 패턴의 변형 — 모듈 간 공유 때문에 <code>@Cacheable</code> 대신 명시적 스토어 사용. 그 이유를 KDoc 으로 명시.</li>
+  <li><code>PlayerBrawlerStatsService.get(...)</code>: WithCache 위임. <strong>시그니처 변경</strong> — <code>startBattleDate/endBattleDate: LocalDate</code> → <code>startAt/endAt: OffsetDateTime</code>(시즌 정시 경계). 응답·캐시키용 <code>LocalDate</code> 는 내부에서 <code>.toLocalDate()</code> 유도.</li>
+  <li><code>PlayerStatisticsQueryComposer</code>: <code>season.startAt.toLocalDate()</code> 전달 → <code>season.startAt</code>(OffsetDateTime) 전달로 변경.</li>
+</ul>
+
+<h3>5.D core-worker 무효화</h3>
+<ul>
+  <li><code>core-worker/build.gradle.kts</code> 에 <code>implementation(project(":infrastructure:redis-core"))</code> 추가.</li>
+  <li><code>PlayerUpdater.update()</code>: <code>playerBrawlerStatsAccumulator.accumulate(...)</code> 제거. <code>newBattles</code> 비어있지 않으면 <strong>커밋 후</strong>(<code>TransactionSynchronization.afterCommit</code>) <code>cacheStore.evict(playerTag)</code>.</li>
+  <li>커밋 전 DEL 은 동시 읽기가 신규 배틀 미반영 상태로 재적재할 수 있어 afterCommit 으로 순서 보장.</li>
+  <li><code>updatePlayer()</code>(PlayerRefreshService, 배틀 없음)는 무효화 불필요.</li>
+</ul>
+
+<h3>5.E 제거 대상</h3>
+<ul>
+  <li>삭제: <code>PlayerBrawlerStatsAccumulator</code>(+<code>PlayerBrawlerStatsAccumulatorTest</code>), <code>PlayerBrawlerStatsEntity</code>, <code>PlayerBrawlerStatsItemEntity</code>, <code>PlayerBrawlerStatsJpaRepository</code>, <code>PlayerBrawlerStatsItemJpaRepository</code>.</li>
+  <li><code>PlayerUpdater</code> 생성자에서 accumulator 의존 제거 + 관련 테스트 기대 수정.</li>
+  <li>마이그레이션 <code>V260530__drop_player_brawler_stats_tables.sql</code>: <code>drop table if exists player_brawler_stats_item;</code> → <code>drop table if exists player_brawler_stats;</code> (멱등, 자식 먼저).</li>
+  <li><code>infrastructure/db-core/.../schema.sql</code> 에서 두 테이블·인덱스 정의 제거.</li>
+</ul>
+
+<h2>6. 정합성 &amp; 동시성</h2>
+<ul>
+  <li><strong>집계 정합성(시즌 경계):</strong> accumulator 는 배틀마다 <code>BrawlPassSeason.of(battleAt)</code> 로 시즌을 판정한다. 따라서 계산 쿼리도 <code>LocalDate</code> 자정이 아니라 <strong>시즌 정시 경계</strong>(<code>startAt ≤ battleAt &lt; endAt</code>, <code>OffsetDateTime</code>)로 필터해야 결과가 정확히 일치한다. → Service 시그니처를 OffsetDateTime 으로 바꾸는 핵심 이유.</li>
+  <li><strong>SOLO_RANKED 첫 시즌 이전:</strong> 호출부가 특정 <code>SoloRankSeason</code> 범위를 넘기므로 accumulator 의 "첫 시즌 이전 배틀 제외"가 범위 필터로 자연 처리된다.</li>
+  <li><strong>SOLO_RANKED 시즌 경계 (의도된 차이, #38):</strong> 경계를 <strong>반열림 <code>[startAt, endAt)</code></strong> 로 통일한다. RANKED(연속 시즌)는 구 accumulator 와 완전 일치. 그러나 <code>SoloRankSeason</code> 은 <code>endAt</code> 포함 + 시즌 사이 ~24h 공백이 있어, 구 <code>SoloRankSeason.of()</code> 는 그 공백 구간·정확히 <code>endAt</code> 순간의 배틀도 해당 시즌에 귀속시켰다. 반열림 필터는 이 경계 배틀을 제외 → 솔로랭크는 공백 구간 플레이가 없어 실질 결과 차이는 없다(극소수 경계만). 정확 parity 대신 균일·명확한 의미를 택함.</li>
+  <li><strong>result 매핑:</strong> 쿼리는 raw <code>result</code> 문자열로 그룹핑, 앱에서 <code>BattleResult.findByCode</code> 로 매핑하고 미지정은 무시 → accumulator 의 <code>?: return</code> 과 동일.</li>
+  <li><strong>cache-aside 잔여 레이스:</strong> "읽기 재계산 ↔ 쓰기 커밋/무효화"가 겹치는 극히 드문 창에서 일시적 stale 가능. <strong>afterCommit 무효화 + TTL 백스톱</strong>으로 완화하며 다음 갱신/TTL 에 자가치유. 지연 이중삭제·버전키 등 과설계는 <strong>YAGNI 로 보류</strong>하고 한계로 문서화.</li>
+  <li><strong>빈 결과 캐싱:</strong> 배틀 없는 시즌은 빈 items 로 캐싱(재계산 회피). 갱신 시 evict 로 정리.</li>
+</ul>
+
+<h2>7. 테스트 전략</h2>
+<table>
+  <tr><th>대상</th><th>베이스</th><th>검증</th></tr>
+  <tr><td>집계 쿼리</td><td><code>DbCoreContextTest</code></td><td>시즌 경계 정밀(직전 제외/직후 포함), 다중 브롤러, 승/무/패, null result 무시, 본인 미참여 배틀 제외</td></tr>
+  <tr><td>캐시 스토어</td><td>redis-core (<code>data-redis-test</code>)</td><td>put/find/evict, Hash field 의미, TTL 설정, evict 가 전 field 제거</td></tr>
+  <tr><td>Service cache-aside</td><td><code>CoreApiContextTest</code></td><td>miss→compute→put, hit→재계산 없음, 배틀 없음→빈 결과</td></tr>
+  <tr><td>무효화 배선</td><td>core-worker</td><td>신규 배틀→afterCommit evict / <code>updatePlayer</code>→evict 없음 / 배틀 없음→evict 없음</td></tr>
+  <tr><td>동등성(일회성)</td><td>개발용</td><td>기존 <code>PlayerBrawlerStatsAccumulatorTest</code> 픽스처를 신규 compute 로 포팅해 결과 동등성 확인</td></tr>
+</table>
+
+<h2>8. 미해결 · 주의</h2>
+<ul>
+  <li>TTL 기본값 1h 제안(eviction 이 실질 신선도 보장, TTL 은 백스톱). 운영 부하 보며 조정.</li>
+  <li>매우 활동적인 플레이어의 시즌 배틀량이 예상보다 크면 집계 쿼리 비용 모니터링(인덱스로 충분하다 판단하나 실측 권장).</li>
+  <li>현 브랜치 <code>claude/mystifying-edison-089dc0</code> — 작업 브랜치 명명(<code>feature/...</code>)·PR 흐름은 <code>/release</code> 흐름에 따름.</li>
+</ul>
+
+</body>
+</html>

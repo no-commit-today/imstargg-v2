@@ -10,16 +10,19 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEnt
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
+import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheStore
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 
 @Component
 class PlayerUpdater(
     private val playerRepository: PlayerRepository,
     private val battleJpaRepository: BattleJpaRepository,
     private val battleTeamPlayerJpaRepository: BattleTeamPlayerJpaRepository,
-    private val playerBrawlerStatsAccumulator: PlayerBrawlerStatsAccumulator,
+    private val playerBrawlerStatsCacheStore: PlayerBrawlerStatsCacheStore,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(PlayerUpdater::class.java)
@@ -36,7 +39,9 @@ class PlayerUpdater(
         val newBattles = filterNewBattles(player.entity, battles)
         log.debug("[플레이어 갱신] 신규 배틀 {}건 tag={}", newBattles.size, playerResponse.tag)
         updateBattles(player.entity, newBattles)
-        playerBrawlerStatsAccumulator.accumulate(player.entity, newBattles)
+        if (newBattles.isNotEmpty()) {
+            evictBrawlerStatsCacheAfterCommit(player.entity.brawlStarsTag)
+        }
         return newBattles
     }
 
@@ -45,6 +50,24 @@ class PlayerUpdater(
         val player = findOrCreate(response)
         player.update(response)
         playerRepository.save(player)
+    }
+
+    /**
+     * 신규 배틀 반영 후 그 플레이어의 브롤러 통계 캐시를 무효화한다.
+     * 커밋 전에 DEL 하면 동시 읽기가 신규 배틀 미반영 상태로 재적재할 수 있어 afterCommit 으로 순서를 보장한다.
+     */
+    private fun evictBrawlerStatsCacheAfterCommit(playerTag: String) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                object : TransactionSynchronization {
+                    override fun afterCommit() {
+                        playerBrawlerStatsCacheStore.evict(playerTag)
+                    }
+                },
+            )
+        } else {
+            playerBrawlerStatsCacheStore.evict(playerTag)
+        }
     }
 
     private fun filterNewBattles(
