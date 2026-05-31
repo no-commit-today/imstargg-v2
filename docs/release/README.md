@@ -20,6 +20,7 @@
 
 ## 인덱스
 
+- [2026.05.3](2026.05.3.md) — 2026-05-31. 플레이어 브롤러 통계 on-the-fly 전환 (사전집계 테이블 제거 + Redis 캐시), core-worker 캐시 eviction, GA4 연동, graceful shutdown, 도커 멀티플랫폼 in-image 빌드 CI.
 - [2026.05.2](2026.05.2.md) — 2026-05-24. Feedback 도메인 rating 재설계 (API/DB/UI), 통계 Repository → Statistics 객체화, 통계 잡 평탄화, 데이터 테이블 + 게임 액센트 디자인 시스템.
 - [2026.05.1](2026.05.1.md) — 2026-05-05. 시즌 목록 API, Brawler 카탈로그 분리, 플레이어/클럽/이벤트 UI 다수 개선, `stats_rank_battle` 컬럼 정리.
 - [2026.05.0](2026.05.0.md) — 2026-05-02. 애플리케이션별 버전 관리 도입.
