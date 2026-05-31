@@ -11,7 +11,6 @@ class PlayerBrawlerStatsCacheCodecTest {
         // given
         val value =
             PlayerBrawlerStatsCacheValue(
-                endBattleDate = "2026-05-01",
                 items =
                     listOf(
                         PlayerBrawlerStatsCacheValue.Item(16000000L, 5L, 1L, 0L),
@@ -29,7 +28,7 @@ class PlayerBrawlerStatsCacheCodecTest {
     @Test
     fun `빈 items 도 라운드트립된다`() {
         // given
-        val value = PlayerBrawlerStatsCacheValue(endBattleDate = "2026-05-01", items = emptyList())
+        val value = PlayerBrawlerStatsCacheValue(items = emptyList())
 
         // when
         val decoded = sut.decode(sut.encode(value))

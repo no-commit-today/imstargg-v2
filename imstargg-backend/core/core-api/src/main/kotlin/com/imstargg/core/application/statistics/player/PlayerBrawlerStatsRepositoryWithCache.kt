@@ -28,11 +28,35 @@ class PlayerBrawlerStatsRepositoryWithCache(
         endAt: OffsetDateTime,
     ): PlayerBrawlerStats {
         val startBattleDate = startAt.toLocalDate()
-        cacheStore.find(playerTag.value, battleType, startBattleDate)?.let { cached ->
-            return cached.toDomain(playerTag, battleType, startBattleDate)
-        }
-        val computed = playerBrawlerStatsRepository.compute(playerTag, battleType, startAt, endAt)
-        cacheStore.put(playerTag.value, battleType, startBattleDate, computed.toCacheValue())
+        val endBattleDate = endAt.toLocalDate()
+        cacheStore
+            .find(
+                playerTag = playerTag.value,
+                battleType = battleType,
+                startBattleDate = startBattleDate,
+                endBattleDate = endBattleDate,
+            )?.let { cached ->
+                return cached.toDomain(
+                    playerTag = playerTag,
+                    battleType = battleType,
+                    startBattleDate = startBattleDate,
+                    endBattleDate = endBattleDate,
+                )
+            }
+        val computed =
+            playerBrawlerStatsRepository.compute(
+                playerTag = playerTag,
+                battleType = battleType,
+                startAt = startAt,
+                endAt = endAt,
+            )
+        cacheStore.put(
+            playerTag = playerTag.value,
+            battleType = battleType,
+            startBattleDate = startBattleDate,
+            endBattleDate = endBattleDate,
+            value = computed.toCacheValue(),
+        )
         return computed
     }
 }
@@ -41,12 +65,13 @@ private fun PlayerBrawlerStatsCacheValue.toDomain(
     playerTag: BrawlStarsTag,
     battleType: BattleType,
     startBattleDate: LocalDate,
+    endBattleDate: LocalDate,
 ): PlayerBrawlerStats =
     PlayerBrawlerStats(
         playerTag = playerTag,
         battleType = battleType,
         startBattleDate = startBattleDate,
-        endBattleDate = LocalDate.parse(endBattleDate),
+        endBattleDate = endBattleDate,
         items =
             items.map { item ->
                 PlayerBrawlerStatsItem(
@@ -58,7 +83,6 @@ private fun PlayerBrawlerStatsCacheValue.toDomain(
 
 private fun PlayerBrawlerStats.toCacheValue(): PlayerBrawlerStatsCacheValue =
     PlayerBrawlerStatsCacheValue(
-        endBattleDate = endBattleDate.toString(),
         items =
             items.map { item ->
                 PlayerBrawlerStatsCacheValue.Item(

@@ -39,7 +39,7 @@ class PlayerBrawlerStatsServiceTest(
     fun setUp() {
         cleanUp.all()
         // 기본은 캐시 미스. (relaxed 모킹의 nullable 반환이 환경에 따라 null 이 아닐 수 있어 명시 stub)
-        every { cacheStore.find(any(), any(), any()) } returns null
+        every { cacheStore.find(any(), any(), any(), any()) } returns null
     }
 
     @Test
@@ -75,17 +75,16 @@ class PlayerBrawlerStatsServiceTest(
                 .first()
                 .resultCount.victoryCount,
         ).isEqualTo(1L)
-        verify { cacheStore.put("#ME", BattleType.RANKED, startAt.toLocalDate(), any()) }
+        verify { cacheStore.put("#ME", BattleType.RANKED, startAt.toLocalDate(), endAt.toLocalDate(), any()) }
     }
 
     @Test
     fun `캐시 히트면 계산하지 않고 캐시 값을 반환한다`() {
         // given (DB 에는 배틀이 없지만 캐시가 값을 돌려줌 = 계산을 거치지 않음)
         every {
-            cacheStore.find("#ME", BattleType.RANKED, startAt.toLocalDate())
+            cacheStore.find("#ME", BattleType.RANKED, startAt.toLocalDate(), endAt.toLocalDate())
         } returns
             PlayerBrawlerStatsCacheValue(
-                endBattleDate = "2026-05-01",
                 items = listOf(PlayerBrawlerStatsCacheValue.Item(16000000L, 5L, 1L, 0L)),
             )
 
@@ -105,7 +104,7 @@ class PlayerBrawlerStatsServiceTest(
                 .first()
                 .resultCount.defeatCount,
         ).isEqualTo(1L)
-        verify(exactly = 0) { cacheStore.put(any(), any(), any(), any()) }
+        verify(exactly = 0) { cacheStore.put(any(), any(), any(), any(), any()) }
     }
 
     @Test

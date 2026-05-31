@@ -18,9 +18,9 @@ class PlayerBrawlerStatsCacheStoreTest {
     private val sut = PlayerBrawlerStatsCacheStore(redisTemplate, codec)
 
     private val date = LocalDate.of(2026, 5, 1)
+    private val endDate = LocalDate.of(2026, 5, 31)
     private val value =
         PlayerBrawlerStatsCacheValue(
-            endBattleDate = "2026-05-31",
             items = listOf(PlayerBrawlerStatsCacheValue.Item(16000000L, 5L, 1L, 0L)),
         )
 
@@ -29,11 +29,11 @@ class PlayerBrawlerStatsCacheStoreTest {
         // given
         every { redisTemplate.opsForHash<String, String>() } returns hashOps
         every {
-            hashOps.get("playerBrawlerStats:v1:#TAG", "RANKED:2026-05-01")
+            hashOps.get("playerBrawlerStats:v1:#TAG", "RANKED:2026-05-01:2026-05-31")
         } returns codec.encode(value)
 
         // when
-        val result = sut.find("#TAG", BattleType.RANKED, date)
+        val result = sut.find("#TAG", BattleType.RANKED, date, endDate)
 
         // then
         assertThat(result).isEqualTo(value)
@@ -46,7 +46,7 @@ class PlayerBrawlerStatsCacheStoreTest {
         every { hashOps.get(any(), any()) } returns null
 
         // when & then
-        assertThat(sut.find("#TAG", BattleType.RANKED, date)).isNull()
+        assertThat(sut.find("#TAG", BattleType.RANKED, date, endDate)).isNull()
     }
 
     @Test
@@ -55,7 +55,7 @@ class PlayerBrawlerStatsCacheStoreTest {
         every { redisTemplate.opsForHash<String, String>() } throws RuntimeException("redis down")
 
         // when & then
-        assertThat(sut.find("#TAG", BattleType.RANKED, date)).isNull()
+        assertThat(sut.find("#TAG", BattleType.RANKED, date, endDate)).isNull()
     }
 
     @Test
@@ -66,10 +66,10 @@ class PlayerBrawlerStatsCacheStoreTest {
         every { redisTemplate.expire(any<String>(), any<Duration>()) } returns true
 
         // when
-        sut.put("#TAG", BattleType.RANKED, date, value)
+        sut.put("#TAG", BattleType.RANKED, date, endDate, value)
 
         // then
-        verify { hashOps.put("playerBrawlerStats:v1:#TAG", "RANKED:2026-05-01", codec.encode(value)) }
+        verify { hashOps.put("playerBrawlerStats:v1:#TAG", "RANKED:2026-05-01:2026-05-31", codec.encode(value)) }
         verify { redisTemplate.expire("playerBrawlerStats:v1:#TAG", Duration.ofHours(1)) }
     }
 
