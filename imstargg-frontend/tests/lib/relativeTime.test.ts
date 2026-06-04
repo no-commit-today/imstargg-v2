@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatRelativeTime } from "@/lib/relativeTime";
+import { formatAbsoluteTime, formatRelativeTime } from "@/lib/relativeTime";
 
 const NOW = new Date("2026-04-29T12:00:00Z").getTime();
 
@@ -22,5 +22,15 @@ describe("formatRelativeTime", () => {
     const d = new Date(iso);
     const expected = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
     expect(formatRelativeTime(iso, NOW)).toBe(expected);
+  });
+});
+
+describe("formatAbsoluteTime", () => {
+  it("ISO 문자열을 YYYY.MM.DD HH:mm 으로 포맷한다", () => {
+    expect(formatAbsoluteTime("2026-06-03T14:09:00")).toBe("2026.06.03 14:09");
+  });
+
+  it("한 자리 월/일/시/분을 0으로 패딩한다", () => {
+    expect(formatAbsoluteTime("2026-01-05T03:07:00")).toBe("2026.01.05 03:07");
   });
 });
