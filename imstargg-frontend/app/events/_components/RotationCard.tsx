@@ -16,7 +16,7 @@ export function RotationCard({ rotation }: { rotation: RotationEvent }) {
     <Link href={`/events/${event.id}`} className="event-card group">
       <div
         className="event-card-head"
-        style={{ background: modeStyle.gradient }}
+        style={{ background: modeStyle.bg, color: modeStyle.fg }}
       >
         <div className="event-card-mode">
           {event.mode?.iconImageUrl ? (

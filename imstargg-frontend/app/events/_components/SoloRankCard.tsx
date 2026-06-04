@@ -14,7 +14,7 @@ export function SoloRankCard({ event }: { event: BattleEvent }) {
     <Link href={`/events/${event.id}`} className="solorank-card group">
       <div
         className="solorank-card-icon-wrap"
-        style={{ background: modeStyle.gradient }}
+        style={{ background: modeStyle.bg, color: modeStyle.fg }}
       >
         {event.mode?.iconImageUrl ? (
           <Image
