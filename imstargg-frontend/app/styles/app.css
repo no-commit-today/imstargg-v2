@@ -613,8 +613,8 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  min-height: 80px;
+  padding: 10px 14px;
+  min-height: 60px;
 }
 .event-card-head::after {
   content: "";
@@ -634,8 +634,8 @@ img { display: block; max-width: 100%; }
   min-width: 0;
 }
 .event-card-mode-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
@@ -657,35 +657,12 @@ img { display: block; max-width: 100%; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.event-card-live {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 8px;
-  background: var(--color-accent-red);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border-radius: var(--radius-pill);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
-}
-.event-card-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  animation: live-pulse 1.4s ease-in-out infinite;
-}
 .event-card-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 14px 16px 12px;
-  min-height: 76px;
+  padding: 12px 14px 10px;
+  min-height: 56px;
 }
 .event-card-overline {
   font-size: 10px;
@@ -696,7 +673,7 @@ img { display: block; max-width: 100%; }
 .event-card-mapname {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 17px;
   line-height: 1.2;
   color: var(--color-neutral-900);
   letter-spacing: 0.01em;
@@ -706,7 +683,7 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-top: 1px solid var(--color-neutral-100);
   background: var(--color-neutral-50);
 }
@@ -716,10 +693,6 @@ img { display: block; max-width: 100%; }
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-neutral-500);
-}
-@keyframes live-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.6; }
 }
 @keyframes countdown-pulse {
   0%, 100% { opacity: 1; }
@@ -794,6 +767,5 @@ img { display: block; max-width: 100%; }
   .solorank-card { transition: none; }
   .event-card:hover,
   .solorank-card:hover { transform: none; }
-  .event-card-live-dot,
   .event-countdown-urgent { animation: none !important; }
 }
