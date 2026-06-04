@@ -4,7 +4,7 @@ import { ClubSearchInput } from "@app/clubs/_components/ClubSearchInput";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toClubRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
-import { CountryFlagPills } from "@/components/ranking/CountryFlagPills";
+import { CountrySelect } from "@/components/ranking/CountrySelect";
 import { ClubRankingList } from "@/components/ranking/ClubRankingList";
 
 type SearchParams = Promise<{ country?: string }>;
@@ -49,7 +49,7 @@ export default async function Page({
               트로피 기준 상위 클럽
             </p>
           </div>
-          <CountryFlagPills current={country} />
+          <CountrySelect current={country} />
         </div>
         <ClubRankingList rankings={rankings} />
       </section>
