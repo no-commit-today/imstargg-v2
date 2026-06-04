@@ -1,13 +1,13 @@
 /* === Battle row mobile === */
 @media (max-width: 640px) {
   .battle-row-header {
-    grid-template-columns: 4px 24px 1fr auto 20px !important;
-    gap: 8px !important;
+    grid-template-columns: 3px 22px minmax(0, 1fr) auto auto !important;
+    gap: 6px !important;
     padding: 8px !important;
   }
   .battle-row-header .battle-row-owner-brawler,
-  .battle-row-header .battle-row-relative-time {
-    display: none;
+  .battle-row-header .battle-row-arrow {
+    display: none !important;
   }
   .battle-expanded-teams[data-result-type="RANK"][data-team-count="5"] {
     grid-template-columns: repeat(2, 1fr) !important;
