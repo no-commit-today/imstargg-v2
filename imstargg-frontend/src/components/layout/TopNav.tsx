@@ -74,7 +74,7 @@ export default function TopNav() {
         <button
           type="button"
           onClick={() => setFeedbackOpen(true)}
-          className="topnav-link"
+          className="topnav-link topnav-feedback"
           aria-label="의견 보내기"
         >
           <MessageSquare className="h-4 w-4" aria-hidden="true" />
@@ -115,9 +115,6 @@ export default function TopNav() {
                 <X aria-hidden="true" />
               </button>
             </SheetHeader>
-            <div className="topnav-search-drawer">
-              <PlayerSearchInput />
-            </div>
             <div className="topnav-drawer-links">
               {NAV_ITEMS.map((item) => (
                 <button
@@ -130,16 +127,6 @@ export default function TopNav() {
                   {item.label}
                 </button>
               ))}
-              <button
-                type="button"
-                aria-label="의견 보내기"
-                onClick={() => {
-                  setDrawerOpen(false);
-                  setFeedbackOpen(true);
-                }}
-              >
-                피드백
-              </button>
             </div>
           </SheetContent>
         </Sheet>

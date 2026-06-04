@@ -64,6 +64,7 @@ img { display: block; max-width: 100%; }
 }
 .topnav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
 .topnav-link.active { color: var(--color-brand-yellow); }
+.topnav-feedback { display: inline-flex; align-items: center; gap: 6px; }
 .topnav-spacer { flex: 1; }
 .topnav-search-wrap { position: relative; }
 .topnav-search {
