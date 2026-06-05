@@ -20,7 +20,7 @@ export function EventCountdown({ endTime, large = false }: Props) {
   }, []);
 
   const sizeClass = large
-    ? "text-[22px] font-extrabold leading-none"
+    ? "text-[15px] font-extrabold leading-none sm:text-[22px]"
     : "text-base font-bold";
 
   if (now === null) {
