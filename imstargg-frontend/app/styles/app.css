@@ -694,6 +694,17 @@ img { display: block; max-width: 100%; }
   text-transform: uppercase;
   color: var(--color-neutral-500);
 }
+@media (max-width: 640px) {
+  .event-card-head { min-height: 38px; padding: 6px 10px; }
+  .event-card-mode { gap: 7px; }
+  .event-card-mode-icon { width: 26px; height: 26px; }
+  .event-card-mode-label { font-size: 14px; }
+  .event-card-body { min-height: 0; padding: 6px 10px 5px; gap: 1px; }
+  .event-card-overline { font-size: 8px; }
+  .event-card-mapname { font-size: 13px; }
+  .event-card-footer { padding: 4px 10px; }
+  .event-card-footer-label { font-size: 8px; }
+}
 @keyframes countdown-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.65; }
