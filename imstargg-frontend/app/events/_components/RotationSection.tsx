@@ -22,7 +22,7 @@ export function RotationSection({ rotation }: { rotation: RotationEvent[] }) {
           {rotation.length}개 진행 중
         </span>
       </header>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
         {rotation.map((r) => (
           <RotationCard key={r.event.id} rotation={r} />
         ))}

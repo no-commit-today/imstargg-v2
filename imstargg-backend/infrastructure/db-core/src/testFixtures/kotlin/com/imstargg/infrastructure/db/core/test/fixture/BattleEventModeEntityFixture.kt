@@ -8,6 +8,7 @@ class BattleEventModeEntityFixture {
     private var brawlStarsName: String = "gemGrab"
     private var resultType: BattleEventModeResultType = BattleEventModeResultType.RESULT
     private var playerCounts: List<Int> = listOf(3, 3)
+    private var color: String = "#2A2E38"
 
     companion object {
         fun aBattleEventModeEntity() = BattleEventModeEntityFixture()
@@ -21,11 +22,14 @@ class BattleEventModeEntityFixture {
 
     fun withPlayerCounts(value: List<Int>) = apply { playerCounts = value }
 
+    fun withColor(value: String) = apply { color = value }
+
     fun build() =
         BattleEventModeEntity(
             brawlStarsId = brawlStarsId,
             brawlStarsName = brawlStarsName,
             resultType = resultType,
             playerCounts = playerCounts,
+            color = color,
         )
 }

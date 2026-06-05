@@ -25,7 +25,7 @@ export function EventSearch({ children }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
+      <div className="relative w-full sm:max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={text}

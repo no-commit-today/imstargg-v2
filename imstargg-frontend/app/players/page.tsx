@@ -4,7 +4,7 @@ import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toPlayerRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
-import { CountryFlagPills } from "@/components/ranking/CountryFlagPills";
+import { CountrySelect } from "@/components/ranking/CountrySelect";
 import { PlayerRankingList } from "@/components/ranking/PlayerRankingList";
 
 type SearchParams = Promise<{ country?: string }>;
@@ -49,7 +49,7 @@ export default async function Page({
               트로피 기준 상위 플레이어
             </p>
           </div>
-          <CountryFlagPills current={country} />
+          <CountrySelect current={country} />
         </div>
         <PlayerRankingList rankings={rankings} />
       </section>

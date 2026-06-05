@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TopNav from "@/components/layout/TopNav";
@@ -34,16 +34,17 @@ describe("TopNav", () => {
     expect(screen.getByText("클럽")).toBeInTheDocument();
   });
 
-  it("opens mobile menu drawer with search and primary links", async () => {
+  it("opens mobile menu drawer with primary links only (no search)", async () => {
     const user = userEvent.setup();
     render(<TopNav />);
 
     await user.click(screen.getByRole("button", { name: "모바일 메뉴 열기" }));
 
     expect(screen.getByRole("dialog", { name: "메뉴" })).toBeInTheDocument();
+    // 드로어에는 검색이 없으므로 검색 입력은 데스크탑 1개만 존재
     expect(
       screen.getAllByLabelText("플레이어 이름 또는 태그 입력").length,
-    ).toBeGreaterThan(1);
+    ).toBe(1);
     expect(
       screen.getByRole("button", { name: "브롤러 페이지로 이동" }),
     ).toBeInTheDocument();
@@ -56,25 +57,5 @@ describe("TopNav", () => {
     expect(
       screen.getByRole("button", { name: "클럽 페이지로 이동" }),
     ).toBeInTheDocument();
-  });
-
-  it("drawer search submission navigates to /players/search", async () => {
-    const user = userEvent.setup();
-    render(<TopNav />);
-
-    await user.click(screen.getByRole("button", { name: "모바일 메뉴 열기" }));
-    expect(screen.getByRole("dialog", { name: "메뉴" })).toBeInTheDocument();
-
-    const inputs = screen.getAllByLabelText("플레이어 이름 또는 태그 입력");
-    await user.type(inputs[inputs.length - 1], "야옹이");
-    await user.click(
-      screen.getAllByRole("button", { name: "플레이어 검색" }).at(-1)!,
-    );
-
-    await waitFor(() => {
-      expect(push).toHaveBeenCalledWith(
-        `/players/search?q=${encodeURIComponent("야옹이")}`,
-      );
-    });
   });
 });

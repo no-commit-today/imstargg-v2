@@ -21,7 +21,8 @@ export function PlayerHero({ player }: { player: Player }) {
   return (
     <Card className="flex flex-col gap-5 p-6 sm:p-7">
       <header className="flex items-center gap-4 sm:gap-6">
-        <PlayerAvatar name={player.name} size={80} />
+        <PlayerAvatar name={player.name} size={64} className="sm:hidden" />
+        <PlayerAvatar name={player.name} size={80} className="hidden sm:flex" />
         <div className="min-w-0 flex-1">
           <h1
             className="flex items-center gap-2 text-2xl font-bold sm:text-3xl"
@@ -31,7 +32,7 @@ export function PlayerHero({ player }: { player: Player }) {
             <PlayerPrestigeBadge level={player.totalPrestigeLevel} size={24} />
           </h1>
           <p className="font-mono text-sm text-[#5C6271]">{player.tag}</p>
-          <p className="mt-1 flex items-center gap-1.5 text-sm">
+          <p className="mt-1 flex min-w-0 flex-nowrap items-center gap-1.5 text-sm">
             {player.club ? (
               <>
                 <Image
@@ -43,7 +44,7 @@ export function PlayerHero({ player }: { player: Player }) {
                 />
                 <span className="text-[#5C6271]">클럽:</span>
                 <Link
-                  className="font-medium hover:underline"
+                  className="min-w-0 truncate font-medium hover:underline"
                   href={routes.club(player.club.tag)}
                 >
                   {player.club.name}

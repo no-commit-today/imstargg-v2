@@ -86,6 +86,7 @@ export interface BattleEventMode {
   iconImageUrl: string | null;
   resultType: BattleEventModeResultType;
   playerCounts: number[];
+  color: string;
 }
 
 export interface Maintenance {

@@ -346,6 +346,7 @@ create table if not exists battle_event_mode
     brawlstars_name      varchar(255) not null,
     result_type          varchar(20)  not null default 'RESULT',
     player_counts        jsonb        not null default '[3, 3]'::jsonb,
+    color                varchar(7)   not null default '#2A2E38',
     created_at           timestamptz  not null default now(),
     updated_at           timestamptz  not null default now()
 );
