@@ -5,7 +5,7 @@ imagePullSecrets:
 cronjob:
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-    tag: "0.2.1-9cb42e8"
+    tag: "0.2.2-aba62ac"
     pullPolicy: Always
   command:
     - /bin/sh
