@@ -1,38 +1,29 @@
 export interface ModeStyle {
-  key: string;
-  gradient: string;
+  /** 단색 배경 (hex) */
+  bg: string;
+  /** 배경 대비 텍스트/아이콘 색 */
+  fg: string;
 }
 
-const DEFAULT_STYLE: ModeStyle = {
-  key: "default",
-  gradient: "linear-gradient(135deg, #2A2E38 0%, #14161B 100%)",
-};
-
-const MAP: Record<string, ModeStyle> = {
-  젬그랩: { key: "gemGrab", gradient: "linear-gradient(135deg, #9146FF 0%, #6A28D9 100%)" },
-  브롤볼: { key: "brawlBall", gradient: "linear-gradient(135deg, #3DE0FF 0%, #2E7CF6 100%)" },
-  하이스트: { key: "heist", gradient: "linear-gradient(135deg, #FFC60A 0%, #FF8A1F 100%)" },
-  핫존: { key: "hotZone", gradient: "linear-gradient(135deg, #FF8A1F 0%, #FF3A3A 100%)" },
-  녹아웃: { key: "knockout", gradient: "linear-gradient(135deg, #FF3A3A 0%, #C9141A 100%)" },
-  현상금사냥: { key: "bounty", gradient: "linear-gradient(135deg, #FFD447 0%, #E8A900 100%)" },
-  솔로쇼다운: { key: "soloShowdown", gradient: "linear-gradient(135deg, #2BD576 0%, #0E6E3C 100%)" },
-  듀오쇼다운: { key: "duoShowdown", gradient: "linear-gradient(135deg, #2BD576 0%, #1D4FB3 100%)" },
-  듀얼: { key: "duels", gradient: "linear-gradient(135deg, #FF5DAA 0%, #9146FF 100%)" },
-  전멸전: { key: "wipeout", gradient: "linear-gradient(135deg, #FF3A3A 0%, #1E2128 100%)" },
-  발리브롤: { key: "volleyBrawl", gradient: "linear-gradient(135deg, #3DE0FF 0%, #2BD576 100%)" },
-  공성전: { key: "siege", gradient: "linear-gradient(135deg, #8A90A0 0%, #2A2E38 100%)" },
-  바스켓브롤: { key: "basketBrawl", gradient: "linear-gradient(135deg, #FF8A1F 0%, #C9141A 100%)" },
-  트로피쟁탈전: { key: "trophyThieves", gradient: "linear-gradient(135deg, #FFC60A 0%, #FF5DAA 100%)" },
-  보스전: { key: "bossFight", gradient: "linear-gradient(135deg, #C9141A 0%, #0B0C10 100%)" },
-  빅게임: { key: "bigGame", gradient: "linear-gradient(135deg, #B83BFF 0%, #9146FF 100%)" },
-  로보럼블: { key: "roboRumble", gradient: "linear-gradient(135deg, #58D7E8 0%, #2A2E38 100%)" },
-};
-
-function normalize(name: string): string {
-  return name.replace(/\s+/g, "").trim();
+/** hex 배경의 상대 명도로 흰색/짙은색 텍스트를 고른다. */
+function pickFg(hex: string): string {
+  const m = hex.replace("#", "");
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  // 상대 휘도 (sRGB 근사)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#14161B" : "#FFFFFF";
 }
 
-export function getModeStyle(name: string | null | undefined): ModeStyle {
-  if (!name) return DEFAULT_STYLE;
-  return MAP[normalize(name)] ?? DEFAULT_STYLE;
+/** 색이 없는 이벤트(mode=null 등)의 폴백 회색. 백엔드 DEFAULT_COLOR(#2A2E38)와 일치. */
+const DEFAULT_STYLE: ModeStyle = { bg: "#2A2E38", fg: "#FFFFFF" };
+
+/**
+ * 백엔드가 제공하는 모드 색(`mode.color`)으로 카드 배경/텍스트 스타일을 만든다.
+ * 색 데이터의 단일 출처는 백엔드(`battle_event_mode.color`)이며, 여기서는 명도로 텍스트색만 보강한다.
+ */
+export function getModeStyle(color: string | null | undefined): ModeStyle {
+  if (!color) return DEFAULT_STYLE;
+  return { bg: color, fg: pickFg(color) };
 }

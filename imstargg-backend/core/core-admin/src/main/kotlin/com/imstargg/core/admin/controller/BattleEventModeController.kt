@@ -2,6 +2,7 @@ package com.imstargg.core.admin.controller
 
 import com.imstargg.core.admin.application.BattleEventService
 import com.imstargg.core.admin.controller.support.toImageUpdate
+import com.imstargg.core.admin.request.BattleEventModeColorUpdateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.request.BattleEventModeUpdateRequest
 import com.imstargg.core.admin.request.MessagesUpdateRequest
@@ -56,6 +57,15 @@ class BattleEventModeController(
         @RequestBody request: BattleEventModeUpdateRequest,
     ): ResponseEntity<Unit> {
         battleEventService.updateMode(brawlStarsId, request)
+        return ResponseEntity.ok().build()
+    }
+
+    @PutMapping("/event-modes/{brawlStarsId}/color")
+    fun updateColor(
+        @PathVariable brawlStarsId: Long,
+        @RequestBody request: BattleEventModeColorUpdateRequest,
+    ): ResponseEntity<Unit> {
+        battleEventService.updateModeColor(brawlStarsId, request.color)
         return ResponseEntity.ok().build()
     }
 }

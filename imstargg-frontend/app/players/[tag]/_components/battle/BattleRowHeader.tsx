@@ -4,7 +4,7 @@ import PowerLevel from "@/components/primitives/PowerLevel";
 import { BattleResultBadge } from "./BattleResultBadge";
 import { BattleModeIcon } from "./BattleModeIcon";
 import { modeLabel } from "@/domain/battle/modeLabels";
-import { formatRelativeTime } from "@/lib/relativeTime";
+import { BattleTime } from "./BattleTime";
 import { isSameTag } from "@/lib/tag";
 import type { Battle, BattlePlayer, BattleType } from "@/domain/battle/types";
 
@@ -125,11 +125,12 @@ export function BattleRowHeader({ battle, ownerTag, expanded }: Props) {
           </span>
         )}
       </div>
-      <div className="battle-row-relative-time" style={{ fontSize: 12, color: "#5C6271", whiteSpace: "nowrap" }}>
-        {formatRelativeTime(battle.battleTime)}
+      <div className="battle-row-time-cell">
+        <BattleTime iso={battle.battleTime} />
       </div>
       <div
         aria-hidden
+        className="battle-row-arrow"
         style={{
           transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
           transition: "transform 150ms cubic-bezier(0.34,1.56,0.64,1)",

@@ -60,4 +60,46 @@ class BattleEventModeEntityTest : DbCoreContextTest() {
         // then
         assertThat(ex).hasMessageContaining("playerCounts")
     }
+
+    @Test
+    fun `color round-trip 보존`() {
+        // given
+        val sut = aBattleEventModeEntity().withColor("#8F43EA").build()
+
+        // when
+        val saved = repository.save(sut)
+        repository.flush()
+        entityManager.clear()
+        val reloaded = repository.findById(saved.id!!).orElseThrow()
+
+        // then
+        assertThat(reloaded.color).isEqualTo("#8F43EA")
+    }
+
+    @Test
+    fun `updateColor 로 색상 변경`() {
+        // given
+        val sut = aBattleEventModeEntity().withColor("#2A2E38").build()
+
+        // when
+        sut.updateColor("#FFC60A")
+
+        // then
+        assertThat(sut.color).isEqualTo("#FFC60A")
+    }
+
+    @Test
+    fun `updateColor 는 잘못된 형식을 거부`() {
+        // given
+        val sut = aBattleEventModeEntity().build()
+
+        // when
+        val ex =
+            catchThrowableOfType(IllegalArgumentException::class.java) {
+                sut.updateColor("red")
+            }
+
+        // then
+        assertThat(ex).hasMessageContaining("color")
+    }
 }

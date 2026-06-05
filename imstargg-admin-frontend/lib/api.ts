@@ -223,6 +223,12 @@ export const updateEventMode = (
     body: JSON.stringify(data),
   });
 
+export const updateEventModeColor = (brawlStarsId: number, color: string) =>
+  request<void>(`/event-modes/${brawlStarsId}/color`, {
+    method: "PUT",
+    body: JSON.stringify({ color }),
+  });
+
 // Maintenance
 export const getMaintenances = () => request<Maintenance[]>("/maintenances");
 

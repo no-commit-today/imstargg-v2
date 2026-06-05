@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { SearchEntry, SearchEntryKind } from "@/lib/searchHistory";
 import { routes } from "@/config/routes";
@@ -173,13 +174,23 @@ function Section({
                   <span
                     style={{
                       marginLeft: "auto",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
                       fontFamily: "var(--font-num)",
                       fontWeight: 700,
                       color: "#14161B",
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {e.trophies.toLocaleString()} 🏆
+                    {e.trophies.toLocaleString()}
+                    <Image
+                      src="/assets/icon_trophy.png"
+                      alt=""
+                      width={14}
+                      height={14}
+                      unoptimized
+                    />
                   </span>
                 </Link>
                 <button

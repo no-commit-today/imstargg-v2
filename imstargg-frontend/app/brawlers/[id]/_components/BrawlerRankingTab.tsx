@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { rankingApi } from "@/api/endpoints/ranking";
-import { CountryFlagPills } from "@/components/ranking/CountryFlagPills";
+import { CountrySelect } from "@/components/ranking/CountrySelect";
 import { BrawlerRankingList } from "@/components/ranking/BrawlerRankingList";
 import { parseCountry } from "@/domain/ranking/country";
 import { toBrawlerRanking } from "@/domain/ranking/mappers";
@@ -27,7 +27,7 @@ export function BrawlerRankingTab({ brawlerId }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <CountryFlagPills current={country} />
+        <CountrySelect current={country} />
       </div>
       {isLoading ? (
         <div className="data-table">

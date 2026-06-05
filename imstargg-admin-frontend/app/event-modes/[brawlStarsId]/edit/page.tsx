@@ -17,6 +17,7 @@ import {
 import {
   getEventModes,
   updateEventMode,
+  updateEventModeColor,
   updateEventModeMessages,
   uploadEventModeImage,
 } from "@/lib/api";
@@ -33,6 +34,7 @@ export default function EventModeEditPage() {
   const [en, setEn] = useState("");
   const [resultType, setResultType] = useState<BattleEventModeResultType>("RESULT");
   const [playerCounts, setPlayerCounts] = useState<string>("");
+  const [color, setColor] = useState("#2A2E38");
 
   const loadEventMode = useCallback(() => {
     getEventModes().then((modes) => {
@@ -43,6 +45,7 @@ export default function EventModeEditPage() {
         setEn(found.names.ENGLISH || "");
         setResultType(found.resultType);
         setPlayerCounts(found.playerCounts.join(","));
+        setColor(found.color);
       }
     });
   }, [brawlStarsId]);
@@ -93,6 +96,16 @@ export default function EventModeEditPage() {
     try {
       await updateEventMode(brawlStarsId, { resultType, playerCounts: parsed });
       toast.success("플레이어 인원수가 저장되었습니다.");
+      loadEventMode();
+    } catch {
+      toast.error("저장에 실패했습니다.");
+    }
+  };
+
+  const handleSaveColor = async () => {
+    try {
+      await updateEventModeColor(brawlStarsId, color);
+      toast.success("색상이 저장되었습니다.");
       loadEventMode();
     } catch {
       toast.error("저장에 실패했습니다.");
@@ -165,6 +178,31 @@ export default function EventModeEditPage() {
               </p>
             </div>
             <Button onClick={handleSavePlayerCounts}>플레이어 인원수 저장</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>색상</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={/^#[0-9a-fA-F]{6}$/.test(color) ? color : "#2A2E38"}
+                onChange={(e) => setColor(e.target.value)}
+                aria-label="색상 선택"
+                className="h-9 w-12 cursor-pointer rounded border"
+              />
+              <Input
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="#RRGGBB"
+                maxLength={7}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              이벤트 카드 배경색. 비우면 기본 회색(#2A2E38)으로 저장됩니다.
+            </p>
+            <Button onClick={handleSaveColor}>색상 저장</Button>
           </CardContent>
         </Card>
 

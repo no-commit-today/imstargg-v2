@@ -6,7 +6,7 @@ const baseDto: BattleResponse = {
   battleTime: "2026-04-29T11:00:00Z",
   event: {
     id: 1,
-    mode: { id: 10, name: { ko: "젬 그랩", en: "Gem Grab" }, iconImageUrl: "x.png", resultType: "RESULT" },
+    mode: { id: 10, name: { ko: "젬 그랩", en: "Gem Grab" }, iconImageUrl: "x.png", resultType: "RESULT", color: "#8F43EA" },
     mapName: { ko: "다이아몬드 광산", en: "Diamond Mine" },
   },
   mode: "GEM_GRAB",

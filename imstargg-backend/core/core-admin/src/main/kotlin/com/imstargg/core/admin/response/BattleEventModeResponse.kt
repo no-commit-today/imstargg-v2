@@ -10,4 +10,5 @@ data class BattleEventModeResponse(
     val iconImageUrl: String?,
     val resultType: BattleEventModeResultType,
     val playerCounts: List<Int>,
+    val color: String,
 )

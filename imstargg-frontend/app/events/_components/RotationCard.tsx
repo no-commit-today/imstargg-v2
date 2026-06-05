@@ -10,21 +10,21 @@ export function RotationCard({ rotation }: { rotation: RotationEvent }) {
   const { event, endTime } = rotation;
   const modeName = event.mode?.name ?? "이벤트";
   const initial = modeName.slice(0, 1);
-  const modeStyle = getModeStyle(modeName);
+  const modeStyle = getModeStyle(event.mode?.color);
 
   return (
     <Link href={`/events/${event.id}`} className="event-card group">
       <div
         className="event-card-head"
-        style={{ background: modeStyle.gradient }}
+        style={{ background: modeStyle.bg, color: modeStyle.fg }}
       >
         <div className="event-card-mode">
           {event.mode?.iconImageUrl ? (
             <Image
               src={event.mode.iconImageUrl}
               alt={modeName}
-              width={56}
-              height={56}
+              width={40}
+              height={40}
               className="event-card-mode-icon"
               unoptimized
             />
@@ -35,10 +35,6 @@ export function RotationCard({ rotation }: { rotation: RotationEvent }) {
           )}
           <span className="event-card-mode-label">{modeName}</span>
         </div>
-        <span className="event-card-live">
-          <span className="event-card-live-dot" aria-hidden="true" />
-          LIVE
-        </span>
       </div>
       <div className="event-card-body">
         <span className="event-card-overline">MAP</span>
