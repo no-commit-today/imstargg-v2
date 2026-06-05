@@ -9,11 +9,17 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.Instant
 
 @Entity
-@Table(name = "feedback")
+@Table(
+    name = "feedback",
+    indexes = [
+        Index(name = "ix_feedback__checked__submittedat", columnList = "checked, submitted_at desc"),
+    ],
+)
 class FeedbackEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "rating", updatable = false, nullable = false, length = 32)
