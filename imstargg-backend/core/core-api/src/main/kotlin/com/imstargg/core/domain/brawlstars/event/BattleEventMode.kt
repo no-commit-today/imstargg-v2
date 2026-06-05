@@ -11,6 +11,8 @@ data class BattleEventMode(
     val resultType: BattleEventModeResultType,
     /** 각 팀의 인원 수. 결과형 통계 픽률 계산의 분모(게임 수) 환산에 사용. */
     val playerCounts: List<Int>,
+    /** 이벤트 카드 배경에 쓰이는 모드 대표색 (`#RRGGBB`). */
+    val color: String,
 ) {
     companion object {
         /** 절대다수의 모드가 3v3 이므로 mode 정보가 누락된 이벤트의 폴백 값. */

@@ -1,5 +1,4 @@
 export interface ModeStyle {
-  key: string;
   /** 단색 배경 (hex) */
   bg: string;
   /** 배경 대비 텍스트/아이콘 색 */
@@ -17,40 +16,14 @@ function pickFg(hex: string): string {
   return luminance > 0.6 ? "#14161B" : "#FFFFFF";
 }
 
-function style(key: string, bg: string): ModeStyle {
-  return { key, bg, fg: pickFg(bg) };
-}
+/** 색이 없는 이벤트(mode=null 등)의 폴백 회색. 백엔드 DEFAULT_COLOR(#2A2E38)와 일치. */
+const DEFAULT_STYLE: ModeStyle = { bg: "#2A2E38", fg: "#FFFFFF" };
 
-const DEFAULT_STYLE: ModeStyle = style("default", "#2A2E38");
-
-// 이슈 #49 지정 색상(단색). 미지정 모드는 기존 톤의 대표색을 단색화.
-const MAP: Record<string, ModeStyle> = {
-  젬그랩: style("gemGrab", "#8F43EA"), // 143,67,234
-  브롤볼: style("brawlBall", "#909FDB"), // 144,159,219
-  하이스트: style("heist", "#C763CD"), // 199,99,205
-  녹아웃: style("knockout", "#E8893A"), // 232,137,58
-  솔로쇼다운: style("soloShowdown", "#95D449"), // 149,212,73
-  듀오쇼다운: style("duoShowdown", "#95D449"), // 149,212,73
-  바스켓브롤: style("basketBrawl", "#62C1F4"), // 98,193,244
-  브롤하키: style("brawlHockey", "#D2D2FB"), // 210,210,251
-  // --- 이슈 미지정: 기존 대표색 단색화 ---
-  핫존: style("hotZone", "#FF8A1F"),
-  바운티: style("bounty", "#FFC60A"),
-  듀얼: style("duels", "#FF5DAA"),
-  전멸전: style("wipeout", "#FF3A3A"),
-  발리브롤: style("volleyBrawl", "#3DE0FF"),
-  공성전: style("siege", "#5C6271"),
-  트로피쟁탈전: style("trophyThieves", "#FFC60A"),
-  보스전: style("bossFight", "#C9141A"),
-  빅게임: style("bigGame", "#B83BFF"),
-  로보럼블: style("roboRumble", "#58D7E8"),
-};
-
-function normalize(name: string): string {
-  return name.replace(/\s+/g, "").trim();
-}
-
-export function getModeStyle(name: string | null | undefined): ModeStyle {
-  if (!name) return DEFAULT_STYLE;
-  return MAP[normalize(name)] ?? DEFAULT_STYLE;
+/**
+ * 백엔드가 제공하는 모드 색(`mode.color`)으로 카드 배경/텍스트 스타일을 만든다.
+ * 색 데이터의 단일 출처는 백엔드(`battle_event_mode.color`)이며, 여기서는 명도로 텍스트색만 보강한다.
+ */
+export function getModeStyle(color: string | null | undefined): ModeStyle {
+  if (!color) return DEFAULT_STYLE;
+  return { bg: color, fg: pickFg(color) };
 }

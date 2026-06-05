@@ -10,7 +10,7 @@ export function RotationCard({ rotation }: { rotation: RotationEvent }) {
   const { event, endTime } = rotation;
   const modeName = event.mode?.name ?? "이벤트";
   const initial = modeName.slice(0, 1);
-  const modeStyle = getModeStyle(modeName);
+  const modeStyle = getModeStyle(event.mode?.color);
 
   return (
     <Link href={`/events/${event.id}`} className="event-card group">

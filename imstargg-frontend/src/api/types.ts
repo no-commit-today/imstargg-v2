@@ -167,6 +167,7 @@ export interface BattleEventModeResponse {
   name: MessagesResponse;
   iconImageUrl: string | null;
   resultType: BattleEventModeResultType;
+  color: string;
 }
 
 export interface BattleEventResponse {

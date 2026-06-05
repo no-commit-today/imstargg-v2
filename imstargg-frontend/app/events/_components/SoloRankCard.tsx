@@ -8,7 +8,7 @@ import { getModeStyle } from "./modeStyles";
 export function SoloRankCard({ event }: { event: BattleEvent }) {
   const modeName = event.mode?.name ?? "이벤트";
   const initial = modeName.slice(0, 1);
-  const modeStyle = getModeStyle(modeName);
+  const modeStyle = getModeStyle(event.mode?.color);
 
   return (
     <Link href={`/events/${event.id}`} className="solorank-card group">

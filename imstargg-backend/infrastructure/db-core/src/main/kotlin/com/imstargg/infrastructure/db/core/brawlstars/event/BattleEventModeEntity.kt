@@ -28,6 +28,7 @@ class BattleEventModeEntity(
     val brawlStarsName: String,
     resultType: BattleEventModeResultType = BattleEventModeResultType.RESULT,
     playerCounts: List<Int> = DEFAULT_PLAYER_COUNTS,
+    color: String = DEFAULT_COLOR,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,8 +58,18 @@ class BattleEventModeEntity(
     var playerCounts: List<Int> = playerCounts
         protected set
 
+    /**
+     * 이벤트 카드 배경에 쓰이는 모드 대표색 (`#RRGGBB`).
+     * 표시 메타데이터(이름·아이콘)와 함께 DB 가 단일 출처이며, 관리자 화면에서 편집한다.
+     * 색상이 지정되지 않은 모드는 [DEFAULT_COLOR] 회색으로 표시된다.
+     */
+    @Column(name = "color", nullable = false)
+    var color: String = color
+        protected set
+
     init {
         validatePlayerCounts(playerCounts)
+        validateColor(color)
     }
 
     fun updateResultType(newType: BattleEventModeResultType) {
@@ -70,9 +81,18 @@ class BattleEventModeEntity(
         this.playerCounts = newCounts
     }
 
+    fun updateColor(newColor: String) {
+        validateColor(newColor)
+        this.color = newColor
+    }
+
     private fun validatePlayerCounts(counts: List<Int>) {
         require(counts.isNotEmpty()) { "playerCounts must not be empty" }
         require(counts.all { it >= 1 }) { "playerCounts: every team size must be >= 1, but got $counts" }
+    }
+
+    private fun validateColor(value: String) {
+        require(COLOR_REGEX.matches(value)) { "color must be #RRGGBB hex, but got $value" }
     }
 
     companion object {
@@ -81,5 +101,10 @@ class BattleEventModeEntity(
 
         /** 절대다수의 모드가 3v3 이므로 기본값. 마이그레이션과 일치. */
         val DEFAULT_PLAYER_COUNTS: List<Int> = listOf(3, 3)
+
+        /** 색상 미지정 모드의 기본 회색. 마이그레이션 default 와 일치. */
+        const val DEFAULT_COLOR = "#2A2E38"
+
+        private val COLOR_REGEX = Regex("^#[0-9A-Fa-f]{6}$")
     }
 }

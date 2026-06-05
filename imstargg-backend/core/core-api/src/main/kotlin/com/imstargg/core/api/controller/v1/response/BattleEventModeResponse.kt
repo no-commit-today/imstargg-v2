@@ -8,6 +8,7 @@ data class BattleEventModeResponse(
     val name: MessagesResponse,
     val iconImageUrl: String?,
     val resultType: BattleEventModeResultType,
+    val color: String,
 ) {
     companion object {
         fun of(mode: BattleEventMode) =
@@ -16,6 +17,7 @@ data class BattleEventModeResponse(
                 name = MessagesResponse.of(mode.name),
                 iconImageUrl = mode.iconImageUrl,
                 resultType = mode.resultType,
+                color = mode.color,
             )
     }
 }
