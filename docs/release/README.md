@@ -20,6 +20,7 @@
 
 ## 인덱스
 
+- [2026.06.1](2026.06.1.md) — 2026-06-06. 결과형 통계 item 전투수 버그 수정(`battleCount` rename + 캐시 v2), core-batch 잡 재설계(brawler sync 통합·rankingCollectJob 통합·API 스펙 추적 추가), OffsetDateTime→Instant 전환.
 - [2026.06.0](2026.06.0.md) — 2026-06-05. 게임 모드 색상 백엔드 DB 관리(`battle_event_mode.color` 추가 + API 응답 + 프론트 연동), 이벤트 카드 모바일 최적화·배틀 실제시간 툴팁 등 프론트 개선.
 - [2026.05.3](2026.05.3.md) — 2026-05-31. 플레이어 브롤러 통계 on-the-fly 전환 (사전집계 테이블 제거 + Redis 캐시), core-worker 캐시 eviction, GA4 연동, graceful shutdown, 도커 멀티플랫폼 in-image 빌드 CI.
 - [2026.05.2](2026.05.2.md) — 2026-05-24. Feedback 도메인 rating 재설계 (API/DB/UI), 통계 Repository → Statistics 객체화, 통계 잡 평탄화, 데이터 테이블 + 게임 액센트 디자인 시스템.
