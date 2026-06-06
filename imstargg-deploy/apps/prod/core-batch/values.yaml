@@ -5,7 +5,7 @@ imagePullSecrets:
 cronjob:
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-batch
-    tag: "0.2.2-aba62ac"
+    tag: "0.3.0-9f16c9d"
     pullPolicy: Always
   command:
     - /bin/sh
@@ -30,27 +30,27 @@ cronjob:
 # 우측 주석은 대응 KST(UTC+9). date 보정: KST 오늘=$(date -u -d '9 hours' ...), KST 전일=$(date -u -d '15 hours ago' ...).
 jobs:
   - name: partition-manage
-    schedule: "0 17 * * *"   # 02:00 KST
+    schedule: "0 17 * * *" # 02:00 KST
     args:
       - "java -jar /app/application.jar --job.name=partitionManageJob date=$(date -u -d '9 hours' +%Y-%m-%d)"
   - name: battle-event-mode-sync
-    schedule: "0 23 * * *"   # 08:00 KST
+    schedule: "0 23 * * *" # 08:00 KST
     args:
       - "java -jar /app/application.jar --job.name=battleEventModeSyncJob"
   - name: battle-event-rotation-sync
-    schedule: "0 * * * *"    # 매시 정각
+    schedule: "0 * * * *" # 매시 정각
     args:
       - "java -jar /app/application.jar --job.name=battleEventRotationSyncJob"
   - name: battle-event-sync
-    schedule: "0 23 * * *"   # 08:00 KST
+    schedule: "0 23 * * *" # 08:00 KST
     args:
       - "java -jar /app/application.jar --job.name=battleEventSyncJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: brawlstars-api-spec-track
-    schedule: "0 22 * * *"   # 07:00 KST
+    schedule: "0 22 * * *" # 07:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlStarsApiSpecTrackJob"
   - name: brawler-sync
-    schedule: "30 0 * * *"   # 09:30 KST
+    schedule: "30 0 * * *" # 09:30 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerSyncJob"
   - name: ranking-collect
@@ -58,38 +58,38 @@ jobs:
     args:
       - "java -jar /app/application.jar --job.name=rankingCollectJob window=$(($(date +%s)/1800))"
   - name: battle-rank-stats
-    schedule: "0 17 * * *"   # 02:00 KST
+    schedule: "0 17 * * *" # 02:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerBattleRankStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: battle-result-stats
-    schedule: "0 18 * * *"   # 03:00 KST
+    schedule: "0 18 * * *" # 03:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: enemy-battle-result-stats
-    schedule: "0 19 * * *"   # 04:00 KST
+    schedule: "0 19 * * *" # 04:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerEnemyBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: pair-battle-rank-stats
-    schedule: "0 21 * * *"   # 06:00 KST
+    schedule: "0 21 * * *" # 06:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerPairBattleRankStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: pair-battle-result-stats
-    schedule: "0 22 * * *"   # 07:00 KST
+    schedule: "0 22 * * *" # 07:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerPairBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: brawler-item-ownership-stats
-    schedule: "0 23 * * *"   # 08:00 KST
+    schedule: "0 23 * * *" # 08:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerItemOwnershipStatsJob"
   - name: stats-player-sync
-    schedule: "0 0 * * *"    # 09:00 KST
+    schedule: "0 0 * * *" # 09:00 KST
     args:
       - "java -jar /app/application.jar --job.name=statsPlayerSyncJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: stats-player-sync-from-ranking
-    schedule: "0 0 * * *"    # 09:00 KST
+    schedule: "0 0 * * *" # 09:00 KST
     args:
       - "java -jar /app/application.jar --job.name=statsPlayerSyncFromRankingJob"
   - name: feedback-daily-digest
-    schedule: "0 0 * * *"    # 09:00 KST
+    schedule: "0 0 * * *" # 09:00 KST
     args:
       - "java -jar /app/application.jar --job.name=feedbackDailyDigestJob"
