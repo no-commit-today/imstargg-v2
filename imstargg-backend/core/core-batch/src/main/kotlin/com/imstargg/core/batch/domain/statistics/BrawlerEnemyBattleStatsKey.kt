@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.domain
+package com.imstargg.core.batch.domain.statistics
 
 import com.imstargg.core.enums.StatsTierRange
 

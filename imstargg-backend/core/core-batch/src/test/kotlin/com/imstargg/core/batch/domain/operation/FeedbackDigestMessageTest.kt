@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job.operation
+package com.imstargg.core.batch.domain.operation
 
 import com.imstargg.core.enums.operation.FeedbackRating
 import org.assertj.core.api.Assertions.assertThat

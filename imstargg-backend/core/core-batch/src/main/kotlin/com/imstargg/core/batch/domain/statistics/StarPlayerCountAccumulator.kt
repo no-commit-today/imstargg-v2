@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.domain
+package com.imstargg.core.batch.domain.statistics
 
 class StarPlayerCountAccumulator<K> {
     private val counts = mutableMapOf<K, Long>()

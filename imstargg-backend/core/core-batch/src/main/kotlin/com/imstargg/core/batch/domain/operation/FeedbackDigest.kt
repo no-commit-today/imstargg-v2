@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job.operation
+package com.imstargg.core.batch.domain.operation
 
 data class FeedbackDigest(
     val title: String,

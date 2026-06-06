@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerBattleRankStatsAggregator
+import com.imstargg.core.batch.domain.statistics.BrawlerBattleRankStatsAggregator
 import com.imstargg.core.enums.BattleType
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler

@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.domain
+package com.imstargg.core.batch.domain.statistics
 
 /**
  * 배틀 데이터를 통계 엔티티로 집계하는 인터페이스.

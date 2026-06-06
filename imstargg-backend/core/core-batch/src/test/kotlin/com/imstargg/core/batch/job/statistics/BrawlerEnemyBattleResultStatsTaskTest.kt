@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerEnemyBattleResultStatsAggregator
+import com.imstargg.core.batch.domain.statistics.BrawlerEnemyBattleResultStatsAggregator
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.WeekRange

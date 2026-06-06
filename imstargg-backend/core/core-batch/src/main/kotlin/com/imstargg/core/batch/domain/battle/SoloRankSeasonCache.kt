@@ -1,4 +1,4 @@
-package com.imstargg.core.batch.job.brawlstars
+package com.imstargg.core.batch.domain.battle
 
 import com.imstargg.core.enums.SoloRankSeason
 import com.imstargg.infrastructure.db.core.KOREA_ZONE

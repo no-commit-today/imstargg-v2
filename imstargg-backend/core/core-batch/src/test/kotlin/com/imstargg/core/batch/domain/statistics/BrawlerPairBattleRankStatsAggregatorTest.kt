@@ -1,32 +1,22 @@
-package com.imstargg.core.batch.domain
+package com.imstargg.core.batch.domain.statistics
 
-import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleRankStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
-import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-class BrawlerPairBattleResultStatsAggregatorTest {
+class BrawlerPairBattleRankStatsAggregatorTest {
     @Nested
     inner class Aggregate {
         @Test
-        fun `2명 팀에서 ordered pair 2개를 생성한다`() {
-            val entities = aggregate(listOf(players(1), players(2)))
-
-            assertThat(entities).hasSize(2)
-            assertThat(entities.map { it.brawlerBrawlStarsId to it.pairBrawlerBrawlStarsId })
-                .containsExactlyInAnyOrder(1L to 2L, 2L to 1L)
-        }
-
-        @Test
-        fun `3명 팀에서 ordered pair 6개를 생성한다`() {
+        fun `3명 팀에서 player team 기준 ordered pair 6개를 생성한다`() {
             val entities = aggregate(listOf(players(1), players(2), players(3)))
 
             assertThat(entities).hasSize(6)
@@ -70,49 +60,42 @@ class BrawlerPairBattleResultStatsAggregatorTest {
         }
 
         @Test
-        fun `적군 팀은 반대 결과로 집계한다`() {
-            val playerTeam = listOf(players(1))
-            val enemyTeam = listOf(players(11), players(12))
-            val entities = aggregate(teams = listOf(playerTeam, enemyTeam), result = BattleResult.VICTORY)
+        fun `weighted rank sum 과 total count 를 계산한다`() {
+            val entities = aggregate(listOf(players(1), players(2)), battleRank = 3)
 
             assertThat(entities).hasSize(2)
             assertThat(entities).allSatisfy { entity ->
-                assertThat(entity.brawlerBrawlStarsId).isIn(11L, 12L)
-                assertThat(entity.resultCount.victoryCount).isZero()
-                assertThat(entity.resultCount.defeatCount).isEqualTo(1)
-                assertThat(entity.resultCount.drawCount).isZero()
+                assertThat(entity.rankCounts.totalCount).isEqualTo(1)
+                assertThat(entity.rankCounts.countOf(3)).isEqualTo(1)
+                assertThat(entity.weightedRankSum).isEqualTo(3)
             }
         }
     }
 
-    private fun aggregate(players: List<StatsBattleEntityTeamPlayer>): List<BrawlerPairBattleResultStatsEntity> =
-        aggregate(teams = listOf(players), result = BattleResult.VICTORY)
-
     private fun aggregate(
-        teams: List<List<StatsBattleEntityTeamPlayer>>,
-        result: BattleResult,
-    ): List<BrawlerPairBattleResultStatsEntity> {
-        val aggregator = BrawlerPairBattleResultStatsAggregator(START_DATE, END_DATE)
-        aggregator.aggregate(resultBattle(teams = teams, result = result))
+        players: List<StatsBattleEntityTeamPlayer>,
+        battleRank: Int = 1,
+    ): List<BrawlerPairBattleRankStatsEntity> {
+        val aggregator = BrawlerPairBattleRankStatsAggregator(START_DATE, END_DATE)
+        aggregator.aggregate(rankBattle(players = players, battleRank = battleRank))
         return aggregator.toEntities()
     }
 
-    private fun resultBattle(
-        teams: List<List<StatsBattleEntityTeamPlayer>>,
-        result: BattleResult,
-    ): StatsResultBattleEntity =
-        StatsResultBattleEntity(
-            battleKey = "battle-${teams.flatten().joinToString("-") { it.brawlStarsTag }}",
+    private fun rankBattle(
+        players: List<StatsBattleEntityTeamPlayer>,
+        battleRank: Int,
+    ): StatsRankBattleEntity =
+        StatsRankBattleEntity(
+            battleKey = "rank-battle-${players.joinToString("-") { it.brawlStarsTag }}",
             battleAt = OffsetDateTime.parse("2026-04-26T00:00:00+09:00").toInstant(),
             eventBrawlStarsId = 1,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",
-            mode = "gemGrab",
+            mode = "soloShowdown",
             type = BattleType.RANKED.code,
-            starPlayerBrawlStarsTag = null,
-            playerBrawlStarsTag = teams.first().first().brawlStarsTag,
-            teams = teams,
-            result = result.code,
+            playerBrawlStarsTag = players.first().brawlStarsTag,
+            teams = listOf(players),
+            battleRank = battleRank,
         )
 
     private fun players(
@@ -131,7 +114,7 @@ class BrawlerPairBattleResultStatsAggregatorTest {
                 ),
         )
 
-    private fun List<BrawlerPairBattleResultStatsEntity>.tierRangesOf(
+    private fun List<BrawlerPairBattleRankStatsEntity>.tierRangesOf(
         brawlerBrawlStarsId: Long,
         pairBrawlerBrawlStarsId: Long,
     ): List<StatsTierRange> =
