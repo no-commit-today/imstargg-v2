@@ -19,10 +19,10 @@ class BrawlerRankingCollectTask(
     private val brawlerRankingItemJpaRepository: BrawlerRankingItemJpaRepository,
 ) {
     fun collect() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info("[{}] 시작", STEP_NAME)
         val brawlers = brawlStarsClient.getBrawlers().items
         Country.entries.forEach { country ->
-            log.info("[{}] 국가 {} 진행 - 브롤러 {}개", JOB_NAME, country, brawlers.size)
+            log.info("[{}] 국가 {} 진행 - 브롤러 {}개", STEP_NAME, country, brawlers.size)
             brawlers.forEach { brawler ->
                 val collectedAt = clock.instant()
                 val response = brawlStarsClient.getBrawlerRanking(country.code, brawler.id)
@@ -55,7 +55,7 @@ class BrawlerRankingCollectTask(
                 deleteOutdated(country, brawler.id)
             }
         }
-        log.info("[{}] 완료", JOB_NAME)
+        log.info("[{}] 완료", STEP_NAME)
     }
 
     private fun deleteOutdated(
@@ -75,7 +75,7 @@ class BrawlerRankingCollectTask(
     }
 
     companion object {
-        private const val JOB_NAME = "brawlerRankingCollectJob"
+        private const val STEP_NAME = "brawlerRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
         private val log = LoggerFactory.getLogger(BrawlerRankingCollectTask::class.java)
     }
