@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
-import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 
 class RenewalEntityTest {
     private val fixedClock = Clock.fixed(Instant.parse("2025-01-17T10:00:00Z"), ZoneId.of("UTC"))
@@ -24,7 +22,7 @@ class RenewalEntityTest {
             sut.toPending()
             sut.toExecuting(fixedClock)
             sut.toCompleted(fixedClock)
-            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
+            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
             sut.reRequest(newRequestedAt)
@@ -43,7 +41,7 @@ class RenewalEntityTest {
             sut.toPending()
             sut.toExecuting(fixedClock)
             sut.toNotFound(fixedClock)
-            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
+            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
             sut.reRequest(newRequestedAt)
@@ -59,7 +57,7 @@ class RenewalEntityTest {
             sut.toPending()
             sut.toExecuting(fixedClock)
             sut.toFailed(fixedClock)
-            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
+            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
             sut.reRequest(newRequestedAt)
@@ -72,7 +70,7 @@ class RenewalEntityTest {
         fun `REQUESTED 상태에서 호출하면 requestedAt이 갱신된다`() {
             // given
             val sut = aRenewalEntity().build()
-            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
+            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
             sut.reRequest(newRequestedAt)
@@ -87,7 +85,7 @@ class RenewalEntityTest {
             // given
             val sut = aRenewalEntity().build()
             sut.toPending()
-            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
+            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
             sut.reRequest(newRequestedAt)
@@ -103,7 +101,7 @@ class RenewalEntityTest {
             val sut = aRenewalEntity().build()
             sut.toPending()
             sut.toExecuting(fixedClock)
-            val newRequestedAt = OffsetDateTime.of(2025, 1, 18, 10, 0, 0, 0, ZoneOffset.UTC)
+            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
             sut.reRequest(newRequestedAt)

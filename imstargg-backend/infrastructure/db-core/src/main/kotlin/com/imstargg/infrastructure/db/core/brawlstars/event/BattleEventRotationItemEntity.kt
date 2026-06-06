@@ -10,7 +10,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -34,9 +34,9 @@ class BattleEventRotationItemEntity(
     @Column(name = "slot_id", updatable = false, nullable = false)
     val slotId: Int,
     @Column(name = "start_time", updatable = false, nullable = false)
-    val startTime: OffsetDateTime,
+    val startTime: Instant,
     @Column(name = "end_time", updatable = false, nullable = false)
-    val endTime: OffsetDateTime,
+    val endTime: Instant,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

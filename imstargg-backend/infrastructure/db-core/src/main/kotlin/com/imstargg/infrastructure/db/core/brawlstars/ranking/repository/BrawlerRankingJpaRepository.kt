@@ -4,7 +4,7 @@ import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import java.time.OffsetDateTime
+import java.time.Instant
 
 interface BrawlerRankingJpaRepository : JpaRepository<BrawlerRankingEntity, Long> {
     fun findTopByCountryAndBrawlerBrawlStarsIdOrderByCollectedAtDesc(
@@ -15,7 +15,7 @@ interface BrawlerRankingJpaRepository : JpaRepository<BrawlerRankingEntity, Long
     fun findTopByCountryAndBrawlerBrawlStarsIdAndCollectedAtLessThanOrderByCollectedAtDesc(
         country: Country,
         brawlerBrawlStarsId: Long,
-        collectedAt: OffsetDateTime,
+        collectedAt: Instant,
     ): BrawlerRankingEntity?
 
     fun findAllByCountryAndBrawlerBrawlStarsIdOrderByCollectedAtDesc(

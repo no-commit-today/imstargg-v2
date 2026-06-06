@@ -21,7 +21,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
+import java.time.Duration
+import java.time.Instant
 
 class RankingRepositoryTest(
     private val sut: RankingRepository,
@@ -58,7 +59,7 @@ class RankingRepositoryTest(
             val ranking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(OffsetDateTime.now())
+                    .withCollectedAt(Instant.now())
                     .build()
             playerRankingRepository.save(ranking)
 
@@ -81,11 +82,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹에 없던 플레이어의 rankChange는 null이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             playerRankingRepository.save(previousRanking)
 
@@ -123,11 +124,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹과 순위가 같으면 rankChange는 0이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             playerRankingRepository.save(previousRanking)
 
@@ -165,11 +166,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹보다 순위가 올랐으면 rankChange는 양수이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             playerRankingRepository.save(previousRanking)
 
@@ -207,11 +208,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹보다 순위가 내렸으면 rankChange는 음수이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aPlayerRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             playerRankingRepository.save(previousRanking)
 
@@ -270,7 +271,7 @@ class RankingRepositoryTest(
                 aBrawlerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withBrawlerBrawlStarsId(brawlerId.value)
-                    .withCollectedAt(OffsetDateTime.now())
+                    .withCollectedAt(Instant.now())
                     .build()
             brawlerRankingRepository.save(ranking)
 
@@ -293,12 +294,12 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹에 없던 플레이어의 rankChange는 null이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aBrawlerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withBrawlerBrawlStarsId(brawlerId.value)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             brawlerRankingRepository.save(previousRanking)
 
@@ -337,12 +338,12 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹과 순위가 같으면 rankChange는 0이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aBrawlerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withBrawlerBrawlStarsId(brawlerId.value)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             brawlerRankingRepository.save(previousRanking)
 
@@ -381,12 +382,12 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹보다 순위가 올랐으면 rankChange는 양수이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aBrawlerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withBrawlerBrawlStarsId(brawlerId.value)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             brawlerRankingRepository.save(previousRanking)
 
@@ -425,12 +426,12 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹보다 순위가 내렸으면 rankChange는 음수이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aBrawlerRankingEntity()
                     .withCountry(Country.GLOBAL)
                     .withBrawlerBrawlStarsId(brawlerId.value)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             brawlerRankingRepository.save(previousRanking)
 
@@ -487,7 +488,7 @@ class RankingRepositoryTest(
             val ranking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(OffsetDateTime.now())
+                    .withCollectedAt(Instant.now())
                     .build()
             clubRankingRepository.save(ranking)
 
@@ -510,11 +511,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹에 없던 클럽의 rankChange는 null이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             clubRankingRepository.save(previousRanking)
 
@@ -552,11 +553,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹과 순위가 같으면 rankChange는 0이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             clubRankingRepository.save(previousRanking)
 
@@ -594,11 +595,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹보다 순위가 올랐으면 rankChange는 양수이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             clubRankingRepository.save(previousRanking)
 
@@ -636,11 +637,11 @@ class RankingRepositoryTest(
         @Test
         fun `이전 랭킹보다 순위가 내렸으면 rankChange는 음수이다`() {
             // given
-            val now = OffsetDateTime.now()
+            val now = Instant.now()
             val previousRanking =
                 aClubRankingEntity()
                     .withCountry(Country.GLOBAL)
-                    .withCollectedAt(now.minusHours(1))
+                    .withCollectedAt(now.minus(Duration.ofHours(1)))
                     .build()
             clubRankingRepository.save(previousRanking)
 

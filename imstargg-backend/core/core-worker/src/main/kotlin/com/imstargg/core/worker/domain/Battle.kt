@@ -1,10 +1,10 @@
 package com.imstargg.core.worker.domain
 
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class Battle(
     val battleKey: String,
-    val battleAt: OffsetDateTime,
+    val battleAt: Instant,
     val event: BattleEvent?,
     val mode: String?,
     val type: String?,

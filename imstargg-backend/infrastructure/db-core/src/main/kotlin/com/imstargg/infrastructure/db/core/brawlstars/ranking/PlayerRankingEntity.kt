@@ -11,7 +11,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -25,7 +25,7 @@ class PlayerRankingEntity(
     @Column(name = "country", columnDefinition = "varchar(25)", nullable = false, updatable = false)
     val country: Country,
     @Column(name = "collected_at", nullable = false, updatable = false)
-    val collectedAt: OffsetDateTime,
+    val collectedAt: Instant,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

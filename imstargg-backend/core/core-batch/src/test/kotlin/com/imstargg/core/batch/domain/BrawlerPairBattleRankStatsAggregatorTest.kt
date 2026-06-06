@@ -87,7 +87,7 @@ class BrawlerPairBattleRankStatsAggregatorTest {
     ): StatsRankBattleEntity =
         StatsRankBattleEntity(
             battleKey = "rank-battle-${players.joinToString("-") { it.brawlStarsTag }}",
-            battleAt = OffsetDateTime.parse("2026-04-26T00:00:00+09:00"),
+            battleAt = OffsetDateTime.parse("2026-04-26T00:00:00+09:00").toInstant(),
             eventBrawlStarsId = 1,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",

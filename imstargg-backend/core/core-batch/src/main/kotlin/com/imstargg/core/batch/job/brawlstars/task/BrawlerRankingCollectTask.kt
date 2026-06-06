@@ -10,7 +10,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.Brawler
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Component
 class BrawlerRankingCollectTask(
@@ -25,7 +24,7 @@ class BrawlerRankingCollectTask(
         Country.entries.forEach { country ->
             log.info("[{}] 국가 {} 진행 - 브롤러 {}개", JOB_NAME, country, brawlers.size)
             brawlers.forEach { brawler ->
-                val collectedAt = OffsetDateTime.now(clock)
+                val collectedAt = clock.instant()
                 val response = brawlStarsClient.getBrawlerRanking(country.code, brawler.id)
                 val ranking =
                     brawlerRankingJpaRepository.save(

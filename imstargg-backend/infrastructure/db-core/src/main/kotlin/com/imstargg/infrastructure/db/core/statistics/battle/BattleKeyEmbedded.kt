@@ -2,7 +2,7 @@ package com.imstargg.infrastructure.db.core.statistics.battle
 
 import java.nio.ByteBuffer
 import java.security.MessageDigest
-import java.time.OffsetDateTime
+import java.time.Instant
 
 /**
  * 배틀 식별자 값 객체. SHA-256(epochSeconds + sorted tags).
@@ -17,7 +17,7 @@ value class BattleKeyEmbedded(
 ) {
     companion object {
         fun create(
-            battleTime: OffsetDateTime,
+            battleTime: Instant,
             playerTags: Collection<String>,
         ): BattleKeyEmbedded {
             val joined =
@@ -26,7 +26,7 @@ value class BattleKeyEmbedded(
                     .joinToString("")
                     .toByteArray(Charsets.UTF_8)
             val buffer = ByteBuffer.allocate(Long.SIZE_BYTES + joined.size)
-            buffer.putLong(battleTime.toEpochSecond())
+            buffer.putLong(battleTime.epochSecond)
             buffer.put(joined)
             val digest = MessageDigest.getInstance("SHA-256").digest(buffer.array())
             return BattleKeyEmbedded(digest.toHex())

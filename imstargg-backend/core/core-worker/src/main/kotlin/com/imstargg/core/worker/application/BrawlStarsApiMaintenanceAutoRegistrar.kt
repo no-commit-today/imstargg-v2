@@ -5,7 +5,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMa
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
+import java.time.Duration
 
 @Component
 class BrawlStarsApiMaintenanceAutoRegistrar(
@@ -18,11 +18,11 @@ class BrawlStarsApiMaintenanceAutoRegistrar(
     }
 
     fun register() {
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         if (brawlStarsApiMaintenanceJpaRepository.existsByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(now, now)) {
             return
         }
-        val endTime = now.plusHours(DEFAULT_DURATION_HOURS)
+        val endTime = now.plus(Duration.ofHours(DEFAULT_DURATION_HOURS))
         brawlStarsApiMaintenanceJpaRepository.save(
             BrawlStarsApiMaintenanceEntity(
                 startTime = now,

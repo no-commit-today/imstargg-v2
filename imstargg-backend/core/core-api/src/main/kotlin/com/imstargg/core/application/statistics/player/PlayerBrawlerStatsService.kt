@@ -4,7 +4,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.domain.statistics.player.PlayerBrawlerStats
 import com.imstargg.core.enums.BattleType
 import org.springframework.stereotype.Service
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Service
 class PlayerBrawlerStatsService(
@@ -13,8 +13,8 @@ class PlayerBrawlerStatsService(
     fun get(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): PlayerBrawlerStats =
         playerBrawlerStatsRepositoryWithCache.find(
             playerTag = playerTag,

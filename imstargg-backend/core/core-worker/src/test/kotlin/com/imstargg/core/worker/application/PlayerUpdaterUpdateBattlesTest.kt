@@ -16,8 +16,7 @@ import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Comp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.Instant
 
 class PlayerUpdaterUpdateBattlesTest(
     private val sut: PlayerUpdater,
@@ -38,8 +37,8 @@ class PlayerUpdaterUpdateBattlesTest(
 
         val battles =
             listOf(
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, Instant.parse("2024-01-01T10:00:00Z")),
+                createBattle(tag, Instant.parse("2024-01-01T11:00:00Z")),
             )
 
         // when
@@ -56,15 +55,15 @@ class PlayerUpdaterUpdateBattlesTest(
         val tag = "#PLAYER2"
         val player = playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
 
-        val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)
+        val existingBattleTime = Instant.parse("2024-01-01T12:00:00Z")
         battleRepository.save(createBattleEntity(player, existingBattleTime))
 
         val battles =
             listOf(
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, Instant.parse("2024-01-01T11:00:00Z")),
+                createBattle(tag, Instant.parse("2024-01-01T12:00:00Z")),
+                createBattle(tag, Instant.parse("2024-01-01T13:00:00Z")),
+                createBattle(tag, Instant.parse("2024-01-01T14:00:00Z")),
             )
 
         // when
@@ -72,9 +71,9 @@ class PlayerUpdaterUpdateBattlesTest(
 
         // then
         assertThat(result).hasSize(2)
-        assertThat(result.map { it.battleAt.toEpochSecond() }).containsExactlyInAnyOrder(
-            OffsetDateTime.of(2024, 1, 1, 13, 0, 0, 0, ZoneOffset.UTC).toEpochSecond(),
-            OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC).toEpochSecond(),
+        assertThat(result.map { it.battleAt.epochSecond }).containsExactlyInAnyOrder(
+            Instant.parse("2024-01-01T13:00:00Z").epochSecond,
+            Instant.parse("2024-01-01T14:00:00Z").epochSecond,
         )
         assertThat(battleRepository.count()).isEqualTo(3)
     }
@@ -85,13 +84,13 @@ class PlayerUpdaterUpdateBattlesTest(
         val tag = "#PLAYER3"
         val player = playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
 
-        val existingBattleTime = OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)
+        val existingBattleTime = Instant.parse("2024-01-01T15:00:00Z")
         battleRepository.save(createBattleEntity(player, existingBattleTime))
 
         val battles =
             listOf(
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 14, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 15, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, Instant.parse("2024-01-01T14:00:00Z")),
+                createBattle(tag, Instant.parse("2024-01-01T15:00:00Z")),
             )
 
         // when
@@ -125,9 +124,9 @@ class PlayerUpdaterUpdateBattlesTest(
 
     private fun createBattleEntity(
         player: PlayerEntity,
-        battleTime: OffsetDateTime,
+        battleTime: Instant,
     ) = aBattleEntity()
-        .withBattleKey("battle_key_${battleTime.toEpochSecond()}")
+        .withBattleKey("battle_key_${battleTime.epochSecond}")
         .withBattleAt(battleTime)
         .withPlayer(player)
         .withBattleRank(null)
@@ -136,9 +135,9 @@ class PlayerUpdaterUpdateBattlesTest(
 
     private fun createBattle(
         playerBrawlStarsTag: String,
-        battleTime: OffsetDateTime,
+        battleTime: Instant,
     ) = Battle(
-        battleKey = "battle_key_${battleTime.toEpochSecond()}",
+        battleKey = "battle_key_${battleTime.epochSecond}",
         battleAt = battleTime,
         event =
             BattleEvent(

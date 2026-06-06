@@ -7,7 +7,7 @@ import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Repository
 @Transactional(readOnly = true)
@@ -30,7 +30,7 @@ class RenewalRepository(
     fun request(
         tag: BrawlStarsTag,
         type: RenewalType,
-        requestedAt: OffsetDateTime,
+        requestedAt: Instant,
     ): Renewal {
         val entity = renewalJpaRepository.findByBrawlStarsTagAndType(tag.value, type)
         if (entity != null) {

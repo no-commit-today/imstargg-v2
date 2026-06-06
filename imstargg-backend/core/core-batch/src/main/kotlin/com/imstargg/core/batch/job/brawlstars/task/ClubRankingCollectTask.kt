@@ -9,7 +9,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRan
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Component
 class ClubRankingCollectTask(
@@ -21,7 +20,7 @@ class ClubRankingCollectTask(
     fun collect() {
         log.info("[{}] 시작", JOB_NAME)
         Country.entries.forEach { country ->
-            val collectedAt = OffsetDateTime.now(clock)
+            val collectedAt = clock.instant()
             val response = brawlStarsClient.getClubRanking(country.code)
             val ranking =
                 clubRankingJpaRepository.save(

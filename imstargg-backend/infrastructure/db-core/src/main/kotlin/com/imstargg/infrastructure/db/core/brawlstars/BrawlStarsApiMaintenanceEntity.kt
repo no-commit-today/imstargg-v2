@@ -8,7 +8,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -19,8 +19,8 @@ import java.time.OffsetDateTime
 )
 class BrawlStarsApiMaintenanceEntity(
     @Column(name = "start_time", updatable = false, nullable = false)
-    val startTime: OffsetDateTime,
-    endTime: OffsetDateTime,
+    val startTime: Instant,
+    endTime: Instant,
 ) : BaseTimeEntity() {
     init {
         require(!startTime.isAfter(endTime)) { "startTime must be before or equal to endTime" }
@@ -32,8 +32,8 @@ class BrawlStarsApiMaintenanceEntity(
     val id: Long? = null
 
     @Column(name = "end_time", nullable = false)
-    var endTime: OffsetDateTime = endTime
+    var endTime: Instant = endTime
         protected set
 
-    fun isActive(now: OffsetDateTime): Boolean = !now.isBefore(startTime) && !now.isAfter(endTime)
+    fun isActive(now: Instant): Boolean = !now.isBefore(startTime) && !now.isAfter(endTime)
 }

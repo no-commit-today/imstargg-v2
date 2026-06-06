@@ -8,15 +8,15 @@ import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
+import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 @MappedSuperclass
 abstract class BaseStatsBattleEntity(
     @Column(name = "battle_key", updatable = false, nullable = false)
     val battleKey: String,
     @Column(name = "battle_at", updatable = false, nullable = false)
-    val battleAt: OffsetDateTime,
+    val battleAt: Instant,
     @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
     val eventBrawlStarsId: Long,
     @Column(name = "event_mode_brawlstars_id", updatable = false, nullable = false)

@@ -50,7 +50,7 @@ class BrawlerBattleResultStatsTaskTest {
             )
         return StatsResultBattleEntity(
             battleKey = "battle-key",
-            battleAt = OffsetDateTime.parse("2026-05-01T09:00:00+09:00"),
+            battleAt = OffsetDateTime.parse("2026-05-01T09:00:00+09:00").toInstant(),
             eventBrawlStarsId = 1,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",

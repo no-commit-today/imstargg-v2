@@ -7,7 +7,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -26,7 +26,7 @@ import java.time.OffsetDateTime
 )
 class StatsRankBattleEntity(
     battleKey: String,
-    battleAt: OffsetDateTime,
+    battleAt: Instant,
     eventBrawlStarsId: Long,
     eventModeBrawlStarsId: Long,
     eventMap: String,

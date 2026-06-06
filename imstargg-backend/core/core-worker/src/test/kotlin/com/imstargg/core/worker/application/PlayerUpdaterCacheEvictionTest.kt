@@ -15,8 +15,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.Instant
 
 class PlayerUpdaterCacheEvictionTest(
     private val sut: PlayerUpdater,
@@ -40,7 +39,7 @@ class PlayerUpdaterCacheEvictionTest(
         // when
         sut.update(
             createPlayerResponse(tag),
-            listOf(createBattle(tag, OffsetDateTime.of(2026, 4, 1, 10, 0, 0, 0, ZoneOffset.UTC))),
+            listOf(createBattle(tag, Instant.parse("2026-04-01T10:00:00Z"))),
         )
 
         // then
@@ -83,9 +82,9 @@ class PlayerUpdaterCacheEvictionTest(
 
     private fun createBattle(
         playerBrawlStarsTag: String,
-        battleAt: OffsetDateTime,
+        battleAt: Instant,
     ) = Battle(
-        battleKey = "battle_key_${battleAt.toEpochSecond()}",
+        battleKey = "battle_key_${battleAt.epochSecond}",
         battleAt = battleAt,
         event =
             BattleEvent(

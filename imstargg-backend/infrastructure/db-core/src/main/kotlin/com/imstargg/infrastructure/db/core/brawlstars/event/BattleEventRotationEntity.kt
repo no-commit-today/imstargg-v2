@@ -8,7 +8,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
 )
 class BattleEventRotationEntity(
     @Column(name = "collected_at", updatable = false, nullable = false)
-    val collectedAt: OffsetDateTime,
+    val collectedAt: Instant,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

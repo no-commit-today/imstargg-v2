@@ -11,7 +11,6 @@ import com.imstargg.core.error.ErrorType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Service
 class RenewalService(
@@ -61,7 +60,7 @@ class RenewalService(
             throw CoreException(ErrorType.BRAWLSTARS_API_UNDER_MAINTENANCE)
         }
 
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         val existing = renewalRepository.find(tag, type)
 
         if (existing != null && !existing.canRenew(now)) {

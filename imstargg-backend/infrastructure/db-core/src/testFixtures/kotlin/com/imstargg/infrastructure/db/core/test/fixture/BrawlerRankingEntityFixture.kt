@@ -4,12 +4,12 @@ import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class BrawlerRankingEntityFixture {
     private var country: Country = Country.GLOBAL
     private var brawlerBrawlStarsId: Long = 16000000L
-    private var collectedAt: OffsetDateTime = OffsetDateTime.now()
+    private var collectedAt: Instant = Instant.now()
 
     companion object {
         fun aBrawlerRankingEntity() = BrawlerRankingEntityFixture()
@@ -19,7 +19,7 @@ class BrawlerRankingEntityFixture {
 
     fun withBrawlerBrawlStarsId(value: Long) = apply { brawlerBrawlStarsId = value }
 
-    fun withCollectedAt(value: OffsetDateTime) = apply { collectedAt = value }
+    fun withCollectedAt(value: Instant) = apply { collectedAt = value }
 
     fun build() =
         BrawlerRankingEntity(
