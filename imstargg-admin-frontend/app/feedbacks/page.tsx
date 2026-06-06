@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AdminLayout } from "../admin-layout";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,14 @@ import { toast } from "sonner";
 const PAGE_SIZE = 20;
 
 export default function FeedbackListPage() {
+  return (
+    <Suspense>
+      <FeedbackListContent />
+    </Suspense>
+  );
+}
+
+function FeedbackListContent() {
   const router = useRouter();
   const params = useSearchParams();
   const [data, setData] = useState<FeedbackListResponse | null>(null);

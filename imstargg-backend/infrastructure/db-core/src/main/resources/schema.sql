@@ -685,6 +685,16 @@ create table if not exists brawlstars_api_maintenance
 );
 create index if not exists ix_brawlstars_api_maintenance__end_time on brawlstars_api_maintenance (end_time);
 
+-- brawlstars_api_spec table
+create table if not exists brawlstars_api_spec
+(
+    brawlstars_api_spec_id bigint generated always as identity primary key,
+    content                text        not null,
+    collected_at           timestamptz not null,
+    created_at             timestamptz not null default now(),
+    updated_at             timestamptz not null default now()
+);
+
 -- brawler_gear_ownership_stats table
 create table if not exists brawler_gear_ownership_stats
 (

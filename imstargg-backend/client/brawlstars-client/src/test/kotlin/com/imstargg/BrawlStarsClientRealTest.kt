@@ -1,6 +1,7 @@
 package com.imstargg
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.TestPropertySource
 
@@ -65,5 +66,12 @@ class BrawlStarsClientRealTest(
     fun getClubRanking() {
         val result = brawlStarsClient.getClubRanking(COUNTRY)
         println(result)
+    }
+
+    @Test
+    fun getApiSpec() {
+        val result = brawlStarsClient.getApiSpec()
+        println(result.take(500))
+        assertThat(result).contains("swagger")
     }
 }

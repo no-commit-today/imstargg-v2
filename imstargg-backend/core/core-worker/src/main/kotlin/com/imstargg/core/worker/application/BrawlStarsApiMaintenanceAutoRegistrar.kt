@@ -1,7 +1,7 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
-import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiMaintenanceEntity
+import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock

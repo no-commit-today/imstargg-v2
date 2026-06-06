@@ -8,10 +8,10 @@ import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiMaintenanceEntity
+import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.ClubEntityFixture.Companion.aClubEntity

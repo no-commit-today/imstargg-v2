@@ -2,8 +2,8 @@ package com.imstargg.core.admin.application
 
 import com.imstargg.core.admin.request.MaintenanceRegisterRequest
 import com.imstargg.core.admin.response.MaintenanceResponse
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
-import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiMaintenanceEntity
+import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

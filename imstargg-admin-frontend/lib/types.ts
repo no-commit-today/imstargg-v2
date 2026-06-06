@@ -125,3 +125,19 @@ export interface FeedbackSearchParams {
   page?: number;
   size?: number;
 }
+
+export interface ApiSpecListItem {
+  id: number;
+  collectedAt: string;
+  sizeBytes: number;
+  lineCount: number;
+}
+
+export interface ApiSpecDetail {
+  id: number;
+  collectedAt: string;
+  content: string;
+  previousId: number | null;
+  previousCollectedAt: string | null;
+  previousContent: string | null;
+}

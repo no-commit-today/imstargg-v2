@@ -1,4 +1,4 @@
-package com.imstargg.infrastructure.db.core.brawlstars
+package com.imstargg.infrastructure.db.core.brawlstars.system
 
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column

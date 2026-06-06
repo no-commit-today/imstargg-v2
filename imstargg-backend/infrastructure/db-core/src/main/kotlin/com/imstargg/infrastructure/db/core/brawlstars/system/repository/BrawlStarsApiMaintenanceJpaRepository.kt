@@ -1,6 +1,6 @@
-package com.imstargg.infrastructure.db.core.brawlstars.repository
+package com.imstargg.infrastructure.db.core.brawlstars.system.repository
 
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
+import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiMaintenanceEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.Instant
 

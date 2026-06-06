@@ -12,6 +12,11 @@ spring.cloud.openfeign:
     max-connections: 2000
     max-connections-per-route: 500
 
+# Feign 의 Slf4jLogger 는 항상 DEBUG 레벨로만 출력하므로,
+# logger-level(basic/full) 이 적용되려면 클라이언트 인터페이스 로거가 DEBUG 여야 한다.
+logging.level:
+  com.imstargg.client.brawlstars.BrawlStarsApi: debug
+
 resilience4j.ratelimiter:
   instances:
     brawlstars:

@@ -43,6 +43,16 @@ jobs:
     schedule: "0 8 * * *"
     args:
       - "java -jar /app/app.jar --job.name=battleEventSyncJob"
+  - name: brawlstars-api-spec-track
+    schedule: "0 7 * * *"
+    args:
+      - "java -jar /app/app.jar --job.name=brawlStarsApiSpecTrackJob"
+# TODO(rankingCollectJob 전환): rankingCollectJob 이 포함된 core-batch 이미지가 배포된 뒤
+# 아래 랭킹 CronJob 3개를 다음 1개로 교체하고, 코드의 레거시 별칭 잡 3개를 제거한다.
+#   - name: ranking-collect
+#     schedule: "*/30 * * * *"
+#     args:
+#       - "java -jar /app/app.jar --job.name=rankingCollectJob window=$(($(date +%s)/1800))"
   - name: brawler-ranking-collect
     schedule: "*/30 * * * *"
     args:
