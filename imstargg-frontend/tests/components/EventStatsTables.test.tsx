@@ -30,7 +30,7 @@ describe("EventStatsTables", () => {
         items={[
           {
             brawler,
-            totalBattleCount: 275,
+            battleCount: 275,
             pickRate: 0.03,
             winRate: 0.713,
             starPlayerRate: 0.276,
@@ -55,7 +55,7 @@ describe("EventStatsTables", () => {
         items={[
           {
             brawler,
-            totalBattleCount: 275,
+            battleCount: 275,
             pickRate: 0.03,
             winRate: 0.713,
             starPlayerRate: 0.276,

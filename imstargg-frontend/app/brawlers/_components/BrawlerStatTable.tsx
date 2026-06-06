@@ -18,7 +18,7 @@ type SortKey =
   | "winRate"
   | "pickRate"
   | "starPlayerRate"
-  | "totalBattleCount";
+  | "battleCount";
 
 type Props = {
   rows: Row[];
@@ -38,8 +38,8 @@ function compareRows(a: Row, b: Row, sort: SortKey, order: SortOrder): number {
       return ((a.stat?.pickRate ?? 0) - (b.stat?.pickRate ?? 0)) * sign;
     case "starPlayerRate":
       return ((a.stat?.starPlayerRate ?? 0) - (b.stat?.starPlayerRate ?? 0)) * sign;
-    case "totalBattleCount":
-      return ((a.stat?.totalBattleCount ?? 0) - (b.stat?.totalBattleCount ?? 0)) * sign;
+    case "battleCount":
+      return ((a.stat?.battleCount ?? 0) - (b.stat?.battleCount ?? 0)) * sign;
     case "tier":
     default:
       return ((a.stat?.tierScore ?? 0) - (b.stat?.tierScore ?? 0)) * sign;
@@ -90,7 +90,7 @@ export function BrawlerStatTable({
         <SortableHeader column="winRate" label="승률" currentSort={sort} currentOrder={order} onSort={onSort} />
         <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} onSort={onSort} />
         <SortableHeader column="starPlayerRate" label={<StarIcon />} title="스타플레이어 비율" currentSort={sort} currentOrder={order} onSort={onSort} />
-        <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} onSort={onSort} />
+        <SortableHeader column="battleCount" label="전투수" currentSort={sort} currentOrder={order} onSort={onSort} />
       </div>
       {sorted.length === 0 ? (
         <div className="px-4 py-12 text-center text-sm text-[#5C6271]">

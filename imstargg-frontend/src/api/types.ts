@@ -234,7 +234,7 @@ export type BrawlerTrophyRangeDto =
 
 export interface BrawlerResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
-  totalBattleCount: number;
+  battleCount: number;
   pickRate: number;
   winRate: number;
   starPlayerRate: number;
@@ -256,7 +256,7 @@ export interface BrawlerRankStatisticsResponse {
 export interface BrawlerPairResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
   pairBrawler: BrawlerResponse | null;
-  totalBattleCount: number;
+  battleCount: number;
   pickRate: number;
   winRate: number;
 }
@@ -271,7 +271,7 @@ export interface BrawlerPairRankStatisticsResponse {
 export interface BrawlerEnemyResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
   enemyBrawler: BrawlerResponse | null;
-  totalBattleCount: number;
+  battleCount: number;
   pickRate: number;
   winRate: number;
 }
