@@ -16,7 +16,7 @@ import com.imstargg.core.enums.BrawlPassSeason
 import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.core.enums.SoloRankSeason
 import org.springframework.stereotype.Component
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Component
 class PlayerStatisticsQueryComposer(
@@ -30,8 +30,8 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerStatistics(
             playerTag = playerTag,
             battleType = BattleType.RANKED,
-            startAt = season.startAt,
-            endAt = season.endAt,
+            startAt = season.startAt.toInstant(),
+            endAt = season.endAt.toInstant(),
         )
 
     fun getSoloRankedBrawlerStatistics(
@@ -41,8 +41,8 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerStatistics(
             playerTag = playerTag,
             battleType = BattleType.SOLO_RANKED,
-            startAt = season.startAt,
-            endAt = season.endAt,
+            startAt = season.startAt.toInstant(),
+            endAt = season.endAt.toInstant(),
         )
 
     fun getRankedBrawlerRoleStatistics(
@@ -52,8 +52,8 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerRoleStatistics(
             playerTag = playerTag,
             battleType = BattleType.RANKED,
-            startAt = season.startAt,
-            endAt = season.endAt,
+            startAt = season.startAt.toInstant(),
+            endAt = season.endAt.toInstant(),
         )
 
     fun getSoloRankedBrawlerRoleStatistics(
@@ -63,15 +63,15 @@ class PlayerStatisticsQueryComposer(
         buildBrawlerRoleStatistics(
             playerTag = playerTag,
             battleType = BattleType.SOLO_RANKED,
-            startAt = season.startAt,
-            endAt = season.endAt,
+            startAt = season.startAt.toInstant(),
+            endAt = season.endAt.toInstant(),
         )
 
     private fun buildBrawlerStatistics(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): PlayerBrawlerStatisticsResponse {
         val stats =
             playerBrawlerStatsService.get(
@@ -104,8 +104,8 @@ class PlayerStatisticsQueryComposer(
     private fun buildBrawlerRoleStatistics(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): PlayerBrawlerRoleStatisticsResponse {
         val stats =
             playerBrawlerStatsService.get(

@@ -1,10 +1,11 @@
 package com.imstargg.infrastructure.db.core.brawlstars.ranking.repository
 
+import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingItemEntity
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface ClubRankingItemJpaRepository : JpaRepository<ClubRankingItemEntity, Long> {
-    fun findAllByClubRankingId(clubRankingId: Long): List<ClubRankingItemEntity>
+    fun findAllByClubRanking(clubRanking: ClubRankingEntity): List<ClubRankingItemEntity>
 
-    fun findAllByClubRankingIdIn(clubRankingIds: List<Long>): List<ClubRankingItemEntity>
+    fun findAllByClubRankingIn(clubRankings: Collection<ClubRankingEntity>): List<ClubRankingItemEntity>
 }

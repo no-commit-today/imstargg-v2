@@ -60,7 +60,7 @@ class StatisticsQueryComposer(
             BrawlerPairResultStatisticsItemResponse(
                 brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
                 pairBrawler = brawlers.find(item.pairBrawlerId)?.let { BrawlerResponse.of(it) },
-                totalBattleCount = item.totalBattleCount,
+                battleCount = item.battleCount,
                 pickRate = item.pickRate,
                 winRate = item.winRate,
             )
@@ -85,7 +85,7 @@ class StatisticsQueryComposer(
             BrawlerEnemyResultStatisticsItemResponse(
                 brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
                 enemyBrawler = brawlers.find(item.enemyBrawlerId)?.let { BrawlerResponse.of(it) },
-                totalBattleCount = item.totalBattleCount,
+                battleCount = item.battleCount,
                 pickRate = item.pickRate,
                 winRate = item.winRate,
             )

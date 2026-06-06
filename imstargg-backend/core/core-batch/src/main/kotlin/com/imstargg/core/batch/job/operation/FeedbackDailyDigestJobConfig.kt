@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.operation
 
+import com.imstargg.core.batch.domain.operation.FeedbackDigestMessage
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.core.enums.operation.FeedbackRating

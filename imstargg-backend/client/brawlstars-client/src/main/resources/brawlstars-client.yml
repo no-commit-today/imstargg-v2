@@ -41,12 +41,6 @@ spring:
   config.activate.on-profile:
     - prod
 
-  cloud.openfeign:
-    client:
-      config:
-        brawlstars:
-          logger-level: basic
-
 resilience4j.ratelimiter:
   instances:
     brawlstars:

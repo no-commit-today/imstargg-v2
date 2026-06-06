@@ -26,64 +26,70 @@ cronjob:
     limits:
       cpu: 1000m
       memory: 2Gi
+# CronJob 스케줄·args 의 date 파라미터 모두 UTC 기준 (쿠버네티스 CronJob·컨테이너 기본 타임존).
+# 우측 주석은 대응 KST(UTC+9). date 보정: KST 오늘=$(date -u -d '9 hours' ...), KST 전일=$(date -u -d '15 hours ago' ...).
 jobs:
   - name: partition-manage
-    schedule: "0 2 * * *"
+    schedule: "0 17 * * *"   # 02:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=partitionManageJob date=$(date +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=partitionManageJob date=$(date -u -d '9 hours' +%Y-%m-%d)"
   - name: battle-event-mode-sync
-    schedule: "0 8 * * *"
+    schedule: "0 23 * * *"   # 08:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=battleEventModeSyncJob"
+      - "java -jar /app/application.jar --job.name=battleEventModeSyncJob"
   - name: battle-event-rotation-sync
-    schedule: "0 * * * *"
+    schedule: "0 * * * *"    # 매시 정각
     args:
-      - "java -jar /app/app.jar --job.name=battleEventRotationSyncJob"
+      - "java -jar /app/application.jar --job.name=battleEventRotationSyncJob"
   - name: battle-event-sync
-    schedule: "0 8 * * *"
+    schedule: "0 23 * * *"   # 08:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=battleEventSyncJob"
-  - name: brawler-ranking-collect
-    schedule: "*/30 * * * *"
+      - "java -jar /app/application.jar --job.name=battleEventSyncJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
+  - name: brawlstars-api-spec-track
+    schedule: "0 22 * * *"   # 07:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerRankingCollectJob"
-  - name: club-ranking-collect
-    schedule: "*/30 * * * *"
+      - "java -jar /app/application.jar --job.name=brawlStarsApiSpecTrackJob"
+  - name: brawler-sync
+    schedule: "30 0 * * *"   # 09:30 KST
     args:
-      - "java -jar /app/app.jar --job.name=clubRankingCollectJob"
-  - name: player-ranking-collect
-    schedule: "*/30 * * * *"
+      - "java -jar /app/application.jar --job.name=brawlerSyncJob"
+  - name: ranking-collect
+    schedule: "*/30 * * * *" # 매 30분
     args:
-      - "java -jar /app/app.jar --job.name=playerRankingCollectJob"
+      - "java -jar /app/application.jar --job.name=rankingCollectJob window=$(($(date +%s)/1800))"
   - name: battle-rank-stats
-    schedule: "0 2 * * *"
+    schedule: "0 17 * * *"   # 02:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=brawlerBattleRankStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: battle-result-stats
-    schedule: "0 3 * * *"
+    schedule: "0 18 * * *"   # 03:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=brawlerBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: enemy-battle-result-stats
-    schedule: "0 4 * * *"
+    schedule: "0 19 * * *"   # 04:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerEnemyBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=brawlerEnemyBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: pair-battle-rank-stats
-    schedule: "0 6 * * *"
+    schedule: "0 21 * * *"   # 06:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerPairBattleRankStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=brawlerPairBattleRankStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: pair-battle-result-stats
-    schedule: "0 7 * * *"
+    schedule: "0 22 * * *"   # 07:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerPairBattleResultStatsJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=brawlerPairBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: brawler-item-ownership-stats
-    schedule: "0 8 * * *"
+    schedule: "0 23 * * *"   # 08:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=brawlerItemOwnershipStatsJob"
+      - "java -jar /app/application.jar --job.name=brawlerItemOwnershipStatsJob"
   - name: stats-player-sync
-    schedule: "0 9 * * *"
+    schedule: "0 0 * * *"    # 09:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=statsPlayerSyncJob date=$(date -d 'yesterday' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=statsPlayerSyncJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: stats-player-sync-from-ranking
-    schedule: "0 9 * * *"
+    schedule: "0 0 * * *"    # 09:00 KST
     args:
-      - "java -jar /app/app.jar --job.name=statsPlayerSyncFromRankingJob"
+      - "java -jar /app/application.jar --job.name=statsPlayerSyncFromRankingJob"
+  - name: feedback-daily-digest
+    schedule: "0 0 * * *"    # 09:00 KST
+    args:
+      - "java -jar /app/application.jar --job.name=feedbackDailyDigestJob"

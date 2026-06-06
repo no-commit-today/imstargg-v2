@@ -11,7 +11,7 @@ import com.imstargg.infrastructure.db.core.test.fixture.PlayerRankingItemEntityF
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class RankingServiceTest(
     private val sut: RankingService,
@@ -39,7 +39,7 @@ class RankingServiceTest(
         val ranking =
             aPlayerRankingEntity()
                 .withCountry(Country.GLOBAL)
-                .withCollectedAt(OffsetDateTime.now())
+                .withCollectedAt(Instant.now())
                 .build()
         playerRankingJpaRepository.save(ranking)
 
@@ -47,7 +47,7 @@ class RankingServiceTest(
         listOf(3, 1, 2).forEach { rank ->
             playerRankingItemJpaRepository.save(
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(ranking.id!!)
+                    .withPlayerRanking(ranking)
                     .withRank(rank)
                     .withPlayer(rankingPlayer("#R${"%03d".format(rank)}"))
                     .build(),

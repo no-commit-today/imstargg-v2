@@ -8,10 +8,10 @@ import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
-import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsApiMaintenanceEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiMaintenanceEntity
+import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.ClubEntityFixture.Companion.aClubEntity
@@ -26,8 +26,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
-import java.time.OffsetDateTime
 import java.time.ZoneId
 
 class RenewalServiceTest(
@@ -44,7 +44,7 @@ class RenewalServiceTest(
 
     private val fixedInstant: Instant = Instant.parse("2025-01-17T10:00:00Z")
     private val zone: ZoneId = ZoneId.of("Asia/Seoul")
-    private val now: OffsetDateTime get() = OffsetDateTime.ofInstant(fixedInstant, zone)
+    private val now: Instant get() = fixedInstant
 
     @BeforeEach
     fun setUp() {
@@ -77,8 +77,8 @@ class RenewalServiceTest(
             val tag = BrawlStarsTag("#PMNT")
             maintenanceJpaRepository.save(
                 BrawlStarsApiMaintenanceEntity(
-                    startTime = now.minusHours(1),
-                    endTime = now.plusHours(1),
+                    startTime = now.minus(Duration.ofHours(1)),
+                    endTime = now.plus(Duration.ofHours(1)),
                 ),
             )
 

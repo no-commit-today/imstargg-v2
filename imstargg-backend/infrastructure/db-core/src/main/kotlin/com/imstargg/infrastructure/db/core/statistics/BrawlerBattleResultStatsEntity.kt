@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
 
 /**
@@ -44,6 +45,17 @@ import java.time.LocalDate
         Index(
             name = "ix_brawler_battle_result_stats_2",
             columnList = "brawler_brawlstars_id, tier_range, battle_date",
+        ),
+    ],
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_brawler_battle_result_stats__1",
+            columnNames = [
+                "event_brawlstars_id",
+                "tier_range",
+                "battle_date",
+                "brawler_brawlstars_id",
+            ],
         ),
     ],
 )

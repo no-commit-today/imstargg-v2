@@ -14,7 +14,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import java.time.Clock
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -29,7 +29,7 @@ class RenewalEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "type", length = 25, updatable = false, nullable = false)
     val type: RenewalType,
-    requestedAt: OffsetDateTime,
+    requestedAt: Instant,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +37,7 @@ class RenewalEntity(
     val id: Long? = null
 
     @Column(name = "requested_at", nullable = false)
-    var requestedAt: OffsetDateTime = requestedAt
+    var requestedAt: Instant = requestedAt
         protected set
 
     @Enumerated(EnumType.STRING)
@@ -46,18 +46,18 @@ class RenewalEntity(
         protected set
 
     @Column(name = "executed_at", nullable = true)
-    var executedAt: OffsetDateTime? = null
+    var executedAt: Instant? = null
         protected set
 
     @Column(name = "completed_at", nullable = true)
-    var completedAt: OffsetDateTime? = null
+    var completedAt: Instant? = null
         protected set
 
     @Version
     @Column(name = "version", nullable = false)
     val version: Long = 0
 
-    fun reRequest(requestedAt: OffsetDateTime) {
+    fun reRequest(requestedAt: Instant) {
         this.requestedAt = requestedAt
         this.status = RenewalStatus.REQUESTED
         this.executedAt = null
@@ -75,7 +75,7 @@ class RenewalEntity(
         check(status == RenewalStatus.PENDING) {
             "Cannot transition to EXECUTING from $status"
         }
-        executedAt = OffsetDateTime.now(clock)
+        executedAt = clock.instant()
         status = RenewalStatus.EXECUTING
     }
 
@@ -83,7 +83,7 @@ class RenewalEntity(
         check(status == RenewalStatus.EXECUTING) {
             "Cannot transition to COMPLETED from $status"
         }
-        completedAt = OffsetDateTime.now(clock)
+        completedAt = clock.instant()
         status = RenewalStatus.COMPLETED
     }
 
@@ -91,7 +91,7 @@ class RenewalEntity(
         check(status == RenewalStatus.EXECUTING) {
             "Cannot transition to NOT_FOUND from $status"
         }
-        completedAt = OffsetDateTime.now(clock)
+        completedAt = clock.instant()
         status = RenewalStatus.NOT_FOUND
     }
 
@@ -99,7 +99,7 @@ class RenewalEntity(
         check(status.isProgressing()) {
             "Cannot transition to FAILED from $status"
         }
-        completedAt = OffsetDateTime.now(clock)
+        completedAt = clock.instant()
         status = RenewalStatus.FAILED
     }
 }

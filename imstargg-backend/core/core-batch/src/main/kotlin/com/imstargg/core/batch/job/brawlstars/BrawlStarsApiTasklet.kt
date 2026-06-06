@@ -15,7 +15,7 @@ import org.springframework.batch.infrastructure.repeat.RepeatStatus
  * finish normally so scheduled batch orchestration can continue.
  */
 class BrawlStarsApiTasklet(
-    private val jobName: String,
+    private val name: String,
     private val action: () -> Unit,
 ) : Tasklet {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -27,7 +27,7 @@ class BrawlStarsApiTasklet(
         try {
             action()
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
-            log.warn("[$jobName] 브롤스타즈 API 점검 중", ex)
+            log.warn("[$name] 브롤스타즈 API 점검 중", ex)
         }
         return RepeatStatus.FINISHED
     }

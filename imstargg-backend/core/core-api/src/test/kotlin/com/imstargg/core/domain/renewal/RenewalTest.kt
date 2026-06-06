@@ -5,11 +5,10 @@ import com.imstargg.core.enums.RenewalStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.Instant
 
 class RenewalTest {
-    private val baseTime = OffsetDateTime.of(2025, 1, 17, 10, 0, 0, 0, ZoneOffset.UTC)
+    private val baseTime = Instant.parse("2025-01-17T10:00:00Z")
 
     @Nested
     inner class CanRenew {

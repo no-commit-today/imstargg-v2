@@ -18,6 +18,10 @@ import jakarta.persistence.Table
     name = "player",
     indexes = [
         Index(name = "uk_player__brawlstarstag", columnList = "brawlstars_tag", unique = true),
+        // 아래 두 인덱스는 schema.sql 에서 varchar_pattern_ops(LIKE 패턴 검색용) 연산자 클래스를 사용 —
+        // JPA @Index 로는 연산자 클래스를 표현할 수 없어 columnList 는 컬럼명만 반영 (실제 DDL 은 schema.sql 참조)
+        Index(name = "ix_player__name", columnList = "name"),
+        Index(name = "ix_player__brawlstars_tag", columnList = "brawlstars_tag"),
     ],
 )
 class PlayerEntity(

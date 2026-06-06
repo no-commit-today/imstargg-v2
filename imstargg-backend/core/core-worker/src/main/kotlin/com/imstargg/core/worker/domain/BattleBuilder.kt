@@ -21,7 +21,7 @@ class BattleBuilder(
             ?: throw IllegalArgumentException("플레이어 정보가 없습니다. battleResponse=$battleResponse")
 
     private fun createBattleKey(teams: List<List<BattleResultPlayerResponse>>): String {
-        val battleTime = battleResponse.battleTime
+        val battleTime = battleResponse.battleTime.toInstant()
         val tags =
             if (battleResponse.battle.rank != null) {
                 val playerTeam =
@@ -44,7 +44,7 @@ class BattleBuilder(
         val event = battleResponse.event
         return Battle(
             battleKey = battleKey,
-            battleAt = battleResponse.battleTime,
+            battleAt = battleResponse.battleTime.toInstant(),
             event =
                 BattleEvent(
                     brawlStarsId = event.id,

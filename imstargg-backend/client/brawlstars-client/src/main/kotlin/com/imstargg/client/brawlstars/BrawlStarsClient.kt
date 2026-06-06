@@ -50,6 +50,8 @@ class BrawlStarsClient internal constructor(
             brawlStarsApi.getClubRankingsForACountryOrGlobalRankings(country, PagingParam.DEFAULT)
         }
 
+    fun getApiSpec(): String = execute("getApiSpec") { brawlStarsApi.getApiSpec() }
+
     private fun <T> execute(
         message: String,
         block: () -> T,

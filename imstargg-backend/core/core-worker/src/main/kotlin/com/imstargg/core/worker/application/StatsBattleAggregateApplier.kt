@@ -13,7 +13,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRes
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
-import java.time.OffsetDateTime
+import java.time.Duration
 
 @Component
 class StatsBattleAggregateApplier(
@@ -50,8 +50,8 @@ class StatsBattleAggregateApplier(
     }
 
     private fun canAggregate(battle: Battle): Boolean {
-        val now = OffsetDateTime.now(clock)
-        return battle.battleAt.isAfter(now.minusDays(BATTLE_MAX_AGE_DAYS))
+        val now = clock.instant()
+        return battle.battleAt.isAfter(now.minus(Duration.ofDays(BATTLE_MAX_AGE_DAYS)))
     }
 
     private fun canCreateStatsBattle(battle: Battle): Boolean {

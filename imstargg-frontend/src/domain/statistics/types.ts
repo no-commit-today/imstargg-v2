@@ -3,7 +3,7 @@ import type { StatTier } from "@/domain/statistics/tier";
 
 export interface BrawlerResultStat {
   brawler: Brawler | null;
-  totalBattleCount: number;
+  battleCount: number;
   pickRate: number;
   winRate: number;
   starPlayerRate: number;
@@ -25,7 +25,7 @@ export interface BrawlerRankStat {
 export interface PairResultStat {
   brawler: Brawler | null;
   pairBrawler: Brawler | null;
-  totalBattleCount: number;
+  battleCount: number;
   pickRate: number;
   winRate: number;
 }
@@ -40,7 +40,7 @@ export interface PairRankStat {
 export interface EnemyResultStat {
   brawler: Brawler | null;
   enemyBrawler: Brawler | null;
-  totalBattleCount: number;
+  battleCount: number;
   pickRate: number;
   winRate: number;
 }

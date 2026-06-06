@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerPairBattleRankStatsAggregator
+import com.imstargg.core.batch.domain.statistics.BrawlerPairBattleRankStatsAggregator
 import com.imstargg.core.enums.WeekRange
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

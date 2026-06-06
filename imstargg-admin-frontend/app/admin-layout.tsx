@@ -11,6 +11,7 @@ const navItems = [
   { href: "/events", label: "이벤트 관리" },
   { href: "/event-modes", label: "이벤트 모드 관리" },
   { href: "/maintenances", label: "API 점검 관리" },
+  { href: "/api-specs", label: "API 스펙 추적" },
   { href: "/feedbacks", label: "피드백" },
 ];
 

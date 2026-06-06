@@ -5,8 +5,8 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 data class BrawlerEnemyResultStatisticsItem(
     val brawlerId: BrawlStarsId,
     val enemyBrawlerId: BrawlStarsId,
-    /** 조회 범위의 게임 수 (분모와 동일). */
-    val totalBattleCount: Long,
+    /** 해당 매치업이 등장한 슬롯 수 (= 전투 기록 수). 전체 표본은 wrapper 의 `totalBattleCount` 참조. */
+    val battleCount: Long,
     val pickRate: Double,
     val winRate: Double,
 )
@@ -16,6 +16,9 @@ data class BrawlerEnemyResultStatisticsItem(
  *
  * `totalBattleCount` 의 의미: 조회 범위의 **게임 수** (2026-05-19 정정).
  * 픽률 = enemy 매치업 슬롯 수 / 게임 수.
+ *
+ * item 단위는 `battleCount`(매치업별 전투 수)로 구분한다 — 전역 게임 수가 item 에 복사되어
+ * 모든 행의 전투수가 동일 표시되던 버그 정정 (2026-06-06).
  */
 data class BrawlerEnemyResultStatistics(
     val totalBattleCount: Long,
@@ -33,7 +36,7 @@ data class BrawlerEnemyResultStatistics(
                     BrawlerEnemyResultStatisticsItem(
                         brawlerId = count.brawlerId,
                         enemyBrawlerId = count.enemyBrawlerId,
-                        totalBattleCount = totalBattleCount,
+                        battleCount = count.resultCount.totalCount,
                         pickRate = StatsRate.pickRate(count.resultCount.totalCount, totalBattleCount),
                         winRate = count.resultCount.winRate,
                     )

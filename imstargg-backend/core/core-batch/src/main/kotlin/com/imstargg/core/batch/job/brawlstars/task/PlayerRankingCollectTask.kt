@@ -10,7 +10,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerR
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Component
 class PlayerRankingCollectTask(
@@ -20,9 +19,9 @@ class PlayerRankingCollectTask(
     private val playerRankingItemJpaRepository: PlayerRankingItemJpaRepository,
 ) {
     fun collect() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info("[{}] 시작", STEP_NAME)
         Country.entries.forEach { country ->
-            val collectedAt = OffsetDateTime.now(clock)
+            val collectedAt = clock.instant()
             val response = brawlStarsClient.getPlayerRanking(country.code)
             val ranking =
                 playerRankingJpaRepository.save(
@@ -31,7 +30,7 @@ class PlayerRankingCollectTask(
             val items =
                 response.items.map { resp ->
                     PlayerRankingItemEntity(
-                        playerRankingId = ranking.id!!,
+                        playerRanking = ranking,
                         rank = resp.rank,
                         player =
                             RankingEntityPlayer(
@@ -49,13 +48,13 @@ class PlayerRankingCollectTask(
             val outdated = deleteOutdated(country)
             log.debug(
                 "[{}] 국가 {} 수집 - {}건 (정리: {}건)",
-                JOB_NAME,
+                STEP_NAME,
                 country,
                 items.size,
                 outdated,
             )
         }
-        log.info("[{}] 완료", JOB_NAME)
+        log.info("[{}] 완료", STEP_NAME)
     }
 
     private fun deleteOutdated(country: Country): Int {
@@ -64,15 +63,14 @@ class PlayerRankingCollectTask(
                 .findAllByCountryOrderByCollectedAtDesc(country)
                 .drop(SNAPSHOT_RETENTION_COUNT)
         if (outdated.isEmpty()) return 0
-        val outdatedIds = outdated.mapNotNull { it.id }
-        val outdatedItems = playerRankingItemJpaRepository.findAllByPlayerRankingIdIn(outdatedIds)
+        val outdatedItems = playerRankingItemJpaRepository.findAllByPlayerRankingIn(outdated)
         playerRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
         playerRankingJpaRepository.deleteAllInBatch(outdated)
         return outdated.size
     }
 
     companion object {
-        private const val JOB_NAME = "playerRankingCollectJob"
+        private const val STEP_NAME = "playerRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
         private val log = LoggerFactory.getLogger(PlayerRankingCollectTask::class.java)
     }

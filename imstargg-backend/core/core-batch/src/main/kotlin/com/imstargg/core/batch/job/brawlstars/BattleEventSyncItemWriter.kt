@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.brawlstars
 
+import com.imstargg.core.batch.domain.battle.SoloRankSeasonCache
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.core.enums.BattleType

@@ -91,7 +91,7 @@ export function PairStatsTable({
               </div>
               <PercentCell value={it.pickRate} />
               <PercentCell value={it.winRate} />
-              <CountCell value={it.totalBattleCount} />
+              <CountCell value={it.battleCount} />
             </Link>
           ) : null,
         )

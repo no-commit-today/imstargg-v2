@@ -23,5 +23,6 @@ __pycache__/
 
 ### Claude Code ###
 .claude/worktrees
+.claude/scheduled_tasks.lock
 .superpowers/
 .playwright-mcp
