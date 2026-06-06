@@ -32,6 +32,12 @@ import type { BattleEvent, BattleEventMode } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
 
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function EventListPage() {
   const [events, setEvents] = useState<BattleEvent[]>([]);
   const [eventModes, setEventModes] = useState<BattleEventMode[]>([]);
@@ -119,6 +125,7 @@ export default function EventListPage() {
             <TableHead>맵 이름</TableHead>
             <TableHead>맵 이름 (KO)</TableHead>
             <TableHead>맵 이름 (EN)</TableHead>
+            <TableHead>생성일</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -130,6 +137,7 @@ export default function EventListPage() {
               <TableCell>{e.mapName || "-"}</TableCell>
               <TableCell>{e.mapNames.KOREAN || "-"}</TableCell>
               <TableCell>{e.mapNames.ENGLISH || "-"}</TableCell>
+              <TableCell>{e.createdAt ? formatDateTime(e.createdAt) : "-"}</TableCell>
               <TableCell>
                 <Link href={`/events/${e.brawlStarsId}/edit`}>
                   <Button variant="outline" size="sm">편집</Button>

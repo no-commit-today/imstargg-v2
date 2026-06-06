@@ -73,6 +73,7 @@ export interface BattleEvent {
   modeBrawlStarsName: string | null;
   mapName: string | null;
   mapNames: Record<Language, string>;
+  createdAt: string | null;
 }
 
 export type BattleEventModeResultType = "RESULT" | "RANK";
