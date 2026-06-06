@@ -94,7 +94,7 @@ class BrawlerPairBattleResultStatsTaskTest {
             )
         return StatsResultBattleEntity(
             battleKey = "battle-key",
-            battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), java.time.ZoneOffset.ofHours(9)),
+            battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), java.time.ZoneOffset.ofHours(9)).toInstant(),
             eventBrawlStarsId = eventBrawlStarsId,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",

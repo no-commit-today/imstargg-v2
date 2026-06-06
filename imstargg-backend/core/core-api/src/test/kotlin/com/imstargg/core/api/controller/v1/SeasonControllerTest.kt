@@ -30,7 +30,7 @@ class SeasonControllerTest(
                 status { isOk() }
                 jsonPath("$.content") { isArray() }
                 jsonPath("$.content[0].number") { value(1) }
-                jsonPath("$.content[0].startAt") { value("2022-04-07T18:00:00+09:00") }
+                jsonPath("$.content[0].startAt") { value("2022-04-07T09:00:00Z") }
             }
     }
 

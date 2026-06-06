@@ -4,11 +4,11 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntityEvent
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class BattleEntityFixture {
     private var battleKey: String = "battle-key-12345"
-    private var battleAt: OffsetDateTime = OffsetDateTime.now()
+    private var battleAt: Instant = Instant.now()
     private var event: BattleEntityEvent? = defaultBattleEntityEvent()
     private var mode: String? = "gemGrab"
     private var type: String? = "ranked"
@@ -33,7 +33,7 @@ class BattleEntityFixture {
 
     fun withBattleKey(value: String) = apply { battleKey = value }
 
-    fun withBattleAt(value: OffsetDateTime) = apply { battleAt = value }
+    fun withBattleAt(value: Instant) = apply { battleAt = value }
 
     fun withEvent(value: BattleEntityEvent?) = apply { event = value }
 

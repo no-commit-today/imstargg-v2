@@ -4,12 +4,12 @@ import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class BrawlerRankingEntityFixture {
     private var country: Country = Country.GLOBAL
     private var brawlerBrawlStarsId: Long = 16000000L
-    private var collectedAt: OffsetDateTime = OffsetDateTime.now()
+    private var collectedAt: Instant = Instant.now()
 
     companion object {
         fun aBrawlerRankingEntity() = BrawlerRankingEntityFixture()
@@ -19,7 +19,7 @@ class BrawlerRankingEntityFixture {
 
     fun withBrawlerBrawlStarsId(value: Long) = apply { brawlerBrawlStarsId = value }
 
-    fun withCollectedAt(value: OffsetDateTime) = apply { collectedAt = value }
+    fun withCollectedAt(value: Instant) = apply { collectedAt = value }
 
     fun build() =
         BrawlerRankingEntity(
@@ -30,7 +30,7 @@ class BrawlerRankingEntityFixture {
 }
 
 class BrawlerRankingItemEntityFixture {
-    private var brawlerRankingId: Long? = null
+    private var brawlerRanking: BrawlerRankingEntity? = null
     private var rank: Int = 1
     private var player: RankingEntityPlayer = defaultRankingEntityPlayer()
     private var trophies: Int = 1500
@@ -48,7 +48,7 @@ class BrawlerRankingItemEntityFixture {
             )
     }
 
-    fun withBrawlerRankingId(value: Long) = apply { brawlerRankingId = value }
+    fun withBrawlerRanking(value: BrawlerRankingEntity) = apply { brawlerRanking = value }
 
     fun withRank(value: Int) = apply { rank = value }
 
@@ -57,9 +57,9 @@ class BrawlerRankingItemEntityFixture {
     fun withTrophies(value: Int) = apply { trophies = value }
 
     fun build(): BrawlerRankingItemEntity {
-        requireNotNull(brawlerRankingId) { "brawlerRankingId must be set" }
+        requireNotNull(brawlerRanking) { "brawlerRanking must be set" }
         return BrawlerRankingItemEntity(
-            brawlerRankingId = brawlerRankingId!!,
+            brawlerRanking = brawlerRanking!!,
             rank = rank,
             player = player,
             trophies = trophies,

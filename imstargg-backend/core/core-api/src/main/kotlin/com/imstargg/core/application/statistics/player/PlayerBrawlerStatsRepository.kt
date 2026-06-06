@@ -10,9 +10,10 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
+import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Repository
 @Transactional(readOnly = true)
@@ -23,8 +24,8 @@ class PlayerBrawlerStatsRepository(
     fun compute(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): PlayerBrawlerStats {
         val playerId = playerJpaRepository.findByBrawlStarsTag(playerTag.value)?.id
         val items =
@@ -36,8 +37,8 @@ class PlayerBrawlerStatsRepository(
         return PlayerBrawlerStats(
             playerTag = playerTag,
             battleType = battleType,
-            startBattleDate = startAt.toLocalDate(),
-            endBattleDate = endAt.toLocalDate(),
+            startBattleDate = startAt.toKoreaLocalDate(),
+            endBattleDate = endAt.toKoreaLocalDate(),
             items = items,
         )
     }
@@ -46,8 +47,8 @@ class PlayerBrawlerStatsRepository(
         playerId: Long,
         playerTag: String,
         battleType: BattleType,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): List<PlayerBrawlerStatsItem> =
         battleJpaRepository
             .aggregatePlayerBrawlerResults(

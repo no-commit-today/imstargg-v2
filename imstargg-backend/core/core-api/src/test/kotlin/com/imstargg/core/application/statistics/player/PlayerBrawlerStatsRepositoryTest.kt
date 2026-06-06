@@ -25,8 +25,8 @@ class PlayerBrawlerStatsRepositoryTest(
     private val battleJpaRepository: BattleJpaRepository,
     private val battleTeamPlayerJpaRepository: BattleTeamPlayerJpaRepository,
 ) : CoreApiContextTest() {
-    private val startAt = OffsetDateTime.parse("2026-04-01T00:00:00+09:00")
-    private val endAt = OffsetDateTime.parse("2026-05-01T00:00:00+09:00")
+    private val startAt = OffsetDateTime.parse("2026-04-01T00:00:00+09:00").toInstant()
+    private val endAt = OffsetDateTime.parse("2026-05-01T00:00:00+09:00").toInstant()
 
     @BeforeEach
     fun setUp() {
@@ -54,7 +54,7 @@ class PlayerBrawlerStatsRepositoryTest(
             battleJpaRepository.save(
                 aBattleEntity()
                     .withPlayer(player)
-                    .withBattleAt(OffsetDateTime.parse("2026-04-10T12:00:00+09:00"))
+                    .withBattleAt(OffsetDateTime.parse("2026-04-10T12:00:00+09:00").toInstant())
                     .withType("ranked")
                     .withResult("victory")
                     .withBattleKey("k1")

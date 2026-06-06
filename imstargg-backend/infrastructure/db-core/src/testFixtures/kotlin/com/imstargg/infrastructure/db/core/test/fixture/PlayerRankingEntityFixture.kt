@@ -4,11 +4,11 @@ import com.imstargg.core.enums.Country
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.PlayerRankingItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class PlayerRankingEntityFixture {
     private var country: Country = Country.GLOBAL
-    private var collectedAt: OffsetDateTime = OffsetDateTime.now()
+    private var collectedAt: Instant = Instant.now()
 
     companion object {
         fun aPlayerRankingEntity() = PlayerRankingEntityFixture()
@@ -16,7 +16,7 @@ class PlayerRankingEntityFixture {
 
     fun withCountry(value: Country) = apply { country = value }
 
-    fun withCollectedAt(value: OffsetDateTime) = apply { collectedAt = value }
+    fun withCollectedAt(value: Instant) = apply { collectedAt = value }
 
     fun build() =
         PlayerRankingEntity(
@@ -26,7 +26,7 @@ class PlayerRankingEntityFixture {
 }
 
 class PlayerRankingItemEntityFixture {
-    private var playerRankingId: Long? = null
+    private var playerRanking: PlayerRankingEntity? = null
     private var rank: Int = 1
     private var player: RankingEntityPlayer = defaultRankingEntityPlayer()
     private var trophies: Int = 50000
@@ -44,7 +44,7 @@ class PlayerRankingItemEntityFixture {
             )
     }
 
-    fun withPlayerRankingId(value: Long) = apply { playerRankingId = value }
+    fun withPlayerRanking(value: PlayerRankingEntity) = apply { playerRanking = value }
 
     fun withRank(value: Int) = apply { rank = value }
 
@@ -53,9 +53,9 @@ class PlayerRankingItemEntityFixture {
     fun withTrophies(value: Int) = apply { trophies = value }
 
     fun build(): PlayerRankingItemEntity {
-        requireNotNull(playerRankingId) { "playerRankingId must be set" }
+        requireNotNull(playerRanking) { "playerRanking must be set" }
         return PlayerRankingItemEntity(
-            playerRankingId = playerRankingId!!,
+            playerRanking = playerRanking!!,
             rank = rank,
             player = player,
             trophies = trophies,

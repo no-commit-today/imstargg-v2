@@ -12,6 +12,7 @@ import com.imstargg.infrastructure.db.core.test.fixture.BattleEntityFixture.Comp
 import com.imstargg.infrastructure.db.core.test.fixture.BattleTeamPlayerEntityFixture.Companion.aBattleTeamPlayerEntity
 import com.imstargg.infrastructure.db.core.test.fixture.BattleTeamPlayerEntityFixture.Companion.defaultBrawler
 import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
+import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheStore
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheValue
 import com.ninjasquad.springmockk.MockkBean
@@ -32,8 +33,8 @@ class PlayerBrawlerStatsServiceTest(
     @MockkBean(relaxed = true)
     private lateinit var cacheStore: PlayerBrawlerStatsCacheStore
 
-    private val startAt = OffsetDateTime.parse("2026-04-01T00:00:00+09:00")
-    private val endAt = OffsetDateTime.parse("2026-05-01T00:00:00+09:00")
+    private val startAt = OffsetDateTime.parse("2026-04-01T00:00:00+09:00").toInstant()
+    private val endAt = OffsetDateTime.parse("2026-05-01T00:00:00+09:00").toInstant()
 
     @BeforeEach
     fun setUp() {
@@ -50,7 +51,7 @@ class PlayerBrawlerStatsServiceTest(
             battleJpaRepository.save(
                 aBattleEntity()
                     .withPlayer(player)
-                    .withBattleAt(OffsetDateTime.parse("2026-04-10T12:00:00+09:00"))
+                    .withBattleAt(OffsetDateTime.parse("2026-04-10T12:00:00+09:00").toInstant())
                     .withType("ranked")
                     .withResult("victory")
                     .withBattleKey("k1")
@@ -75,14 +76,14 @@ class PlayerBrawlerStatsServiceTest(
                 .first()
                 .resultCount.victoryCount,
         ).isEqualTo(1L)
-        verify { cacheStore.put("#ME", BattleType.RANKED, startAt.toLocalDate(), endAt.toLocalDate(), any()) }
+        verify { cacheStore.put("#ME", BattleType.RANKED, startAt.toKoreaLocalDate(), endAt.toKoreaLocalDate(), any()) }
     }
 
     @Test
     fun `캐시 히트면 계산하지 않고 캐시 값을 반환한다`() {
         // given (DB 에는 배틀이 없지만 캐시가 값을 돌려줌 = 계산을 거치지 않음)
         every {
-            cacheStore.find("#ME", BattleType.RANKED, startAt.toLocalDate(), endAt.toLocalDate())
+            cacheStore.find("#ME", BattleType.RANKED, startAt.toKoreaLocalDate(), endAt.toKoreaLocalDate())
         } returns
             PlayerBrawlerStatsCacheValue(
                 items = listOf(PlayerBrawlerStatsCacheValue.Item(16000000L, 5L, 1L, 0L)),
@@ -114,7 +115,7 @@ class PlayerBrawlerStatsServiceTest(
 
         // then
         assertThat(result.items).isEmpty()
-        assertThat(result.startBattleDate).isEqualTo(startAt.toLocalDate())
-        assertThat(result.endBattleDate).isEqualTo(endAt.toLocalDate())
+        assertThat(result.startBattleDate).isEqualTo(startAt.toKoreaLocalDate())
+        assertThat(result.endBattleDate).isEqualTo(endAt.toKoreaLocalDate())
     }
 }

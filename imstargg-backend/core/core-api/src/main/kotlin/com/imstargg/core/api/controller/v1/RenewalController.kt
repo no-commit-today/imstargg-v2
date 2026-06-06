@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @RestController
 class RenewalController(
@@ -21,7 +20,7 @@ class RenewalController(
         @PathVariable tag: String,
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.getPlayerRenewal(BrawlStarsTag(tag))
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 
@@ -30,7 +29,7 @@ class RenewalController(
         @PathVariable tag: String,
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.getClubRenewal(BrawlStarsTag(tag))
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 
@@ -39,7 +38,7 @@ class RenewalController(
         @PathVariable tag: String,
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.renewPlayer(BrawlStarsTag(tag))
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 
@@ -48,7 +47,7 @@ class RenewalController(
         @PathVariable tag: String,
     ): ResponseEntity<RenewalResponse> {
         val renewal = renewalService.renewClub(BrawlStarsTag(tag))
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         return ResponseEntity.ok(RenewalResponse.of(renewal, now))
     }
 }

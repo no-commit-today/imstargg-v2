@@ -8,9 +8,9 @@ import java.time.ZonedDateTime
 
 class BattleKeyEmbeddedTest {
     private val battleTime =
-        ZonedDateTime.of(LocalDateTime.of(2021, 1, 1, 0, 0), ZoneId.systemDefault()).toOffsetDateTime()
+        ZonedDateTime.of(LocalDateTime.of(2021, 1, 1, 0, 0), ZoneId.systemDefault()).toInstant()
     private val anotherTime =
-        ZonedDateTime.of(LocalDateTime.of(2021, 1, 2, 0, 0), ZoneId.systemDefault()).toOffsetDateTime()
+        ZonedDateTime.of(LocalDateTime.of(2021, 1, 2, 0, 0), ZoneId.systemDefault()).toInstant()
 
     @Test
     fun `길이64의 배틀키를 생성한다`() {

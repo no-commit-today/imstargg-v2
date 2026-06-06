@@ -3,15 +3,15 @@ package com.imstargg.core.domain.renewal
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class RenewalFixture {
     private var tag: BrawlStarsTag = BrawlStarsTag("#TEST12345")
     private var type: RenewalType = RenewalType.PLAYER
     private var status: RenewalStatus = RenewalStatus.REQUESTED
-    private var requestedAt: OffsetDateTime = OffsetDateTime.now()
-    private var executedAt: OffsetDateTime? = null
-    private var completedAt: OffsetDateTime? = null
+    private var requestedAt: Instant = Instant.now()
+    private var executedAt: Instant? = null
+    private var completedAt: Instant? = null
 
     companion object {
         fun aRenewal() = RenewalFixture()
@@ -23,11 +23,11 @@ class RenewalFixture {
 
     fun withStatus(value: RenewalStatus) = apply { status = value }
 
-    fun withRequestedAt(value: OffsetDateTime) = apply { requestedAt = value }
+    fun withRequestedAt(value: Instant) = apply { requestedAt = value }
 
-    fun withExecutedAt(value: OffsetDateTime?) = apply { executedAt = value }
+    fun withExecutedAt(value: Instant?) = apply { executedAt = value }
 
-    fun withCompletedAt(value: OffsetDateTime?) = apply { completedAt = value }
+    fun withCompletedAt(value: Instant?) = apply { completedAt = value }
 
     fun build() =
         Renewal(

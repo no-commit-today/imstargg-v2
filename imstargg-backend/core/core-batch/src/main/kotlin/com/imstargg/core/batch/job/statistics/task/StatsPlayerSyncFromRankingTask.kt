@@ -43,27 +43,24 @@ class StatsPlayerSyncFromRankingTask(
     }
 
     private fun latestRankingTags(): List<String> {
-        val playerRankingIds =
+        val playerRankings =
             Country.entries.mapNotNull { country ->
-                playerRankingJpaRepository.findTopByCountryOrderByCollectedAtDesc(country)?.id
+                playerRankingJpaRepository.findTopByCountryOrderByCollectedAtDesc(country)
             }
-        val brawlerRankingIds =
-            brawlerRankingJpaRepository
-                .findAllLatestPerCountryAndBrawler()
-                .mapNotNull { it.id }
+        val brawlerRankings = brawlerRankingJpaRepository.findAllLatestPerCountryAndBrawler()
 
         return buildList {
-            if (playerRankingIds.isNotEmpty()) {
+            if (playerRankings.isNotEmpty()) {
                 addAll(
                     playerRankingItemJpaRepository
-                        .findAllByPlayerRankingIdIn(playerRankingIds)
+                        .findAllByPlayerRankingIn(playerRankings)
                         .map { it.player.brawlStarsTag },
                 )
             }
-            if (brawlerRankingIds.isNotEmpty()) {
+            if (brawlerRankings.isNotEmpty()) {
                 addAll(
                     brawlerRankingItemJpaRepository
-                        .findAllByBrawlerRankingIdIn(brawlerRankingIds)
+                        .findAllByBrawlerRankingIn(brawlerRankings)
                         .map { it.player.brawlStarsTag },
                 )
             }

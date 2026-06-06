@@ -13,7 +13,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Clock
-import java.time.OffsetDateTime
+import java.time.Duration
+import java.time.Instant
 
 class StatsBattleAggregateApplierTest(
     private val sut: StatsBattleAggregateApplier,
@@ -32,7 +33,7 @@ class StatsBattleAggregateApplierTest(
         @Test
         fun `rank 배틀을 같은 팀 A B C 가 동시에 수집해 넘겨도 1 row 만 저장된다`() {
             // given
-            val battleAt = OffsetDateTime.now(clock).minusHours(1)
+            val battleAt = clock.instant().minus(Duration.ofHours(1))
             val battleKey = "rank-battle-key"
             val battles =
                 listOf(
@@ -55,7 +56,7 @@ class StatsBattleAggregateApplierTest(
         @Test
         fun `result 배틀도 같은 battle_key 인 중복 수집은 1 row 만 저장된다`() {
             // given
-            val battleAt = OffsetDateTime.now(clock).minusHours(1)
+            val battleAt = clock.instant().minus(Duration.ofHours(1))
             val battleKey = "result-battle-key"
             val battles =
                 listOf(
@@ -73,7 +74,7 @@ class StatsBattleAggregateApplierTest(
 
     private fun createRankBattle(
         battleKey: String,
-        battleAt: OffsetDateTime,
+        battleAt: Instant,
         playerBrawlStarsTag: String,
     ) = Battle(
         battleKey = battleKey,
@@ -98,7 +99,7 @@ class StatsBattleAggregateApplierTest(
 
     private fun createResultBattle(
         battleKey: String,
-        battleAt: OffsetDateTime,
+        battleAt: Instant,
         playerBrawlStarsTag: String,
     ) = Battle(
         battleKey = battleKey,

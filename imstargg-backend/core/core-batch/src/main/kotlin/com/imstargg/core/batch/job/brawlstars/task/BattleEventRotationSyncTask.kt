@@ -8,7 +8,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEve
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Component
 class BattleEventRotationSyncTask(
@@ -19,7 +18,7 @@ class BattleEventRotationSyncTask(
 ) {
     fun sync() {
         log.info("[{}] 시작", JOB_NAME)
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         val rotations = brawlStarsClient.getEventRotation()
 
         val rotation =
@@ -30,15 +29,15 @@ class BattleEventRotationSyncTask(
         val items =
             rotations.map {
                 BattleEventRotationItemEntity(
-                    battleEventRotationId = rotation.id!!,
+                    battleEventRotation = rotation,
                     eventBrawlStarsId = it.event.id,
                     eventModeName = it.event.mode,
                     eventModeBrawlStarsId = it.event.modeId.toLong(),
                     eventMapName = it.event.map,
                     modifiers = it.event.modifiers ?: emptyList(),
                     slotId = it.slotId,
-                    startTime = it.startTime,
-                    endTime = it.endTime,
+                    startTime = it.startTime.toInstant(),
+                    endTime = it.endTime.toInstant(),
                 )
             }
         battleEventRotationItemJpaRepository.saveAll(items)

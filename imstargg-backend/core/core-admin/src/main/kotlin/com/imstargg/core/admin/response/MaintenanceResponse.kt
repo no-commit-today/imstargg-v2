@@ -1,11 +1,10 @@
 package com.imstargg.core.admin.response
 
 import java.time.Instant
-import java.time.OffsetDateTime
 
 data class MaintenanceResponse(
     val id: Long,
-    val startTime: OffsetDateTime,
-    val endTime: OffsetDateTime,
+    val startTime: Instant,
+    val endTime: Instant,
     val createdAt: Instant?,
 )

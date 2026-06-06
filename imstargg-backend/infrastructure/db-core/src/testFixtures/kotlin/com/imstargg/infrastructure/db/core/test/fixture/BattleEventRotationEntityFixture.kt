@@ -1,16 +1,16 @@
 package com.imstargg.infrastructure.db.core.test.fixture
 
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationEntity
-import java.time.OffsetDateTime
+import java.time.Instant
 
 class BattleEventRotationEntityFixture {
-    private var collectedAt: OffsetDateTime = OffsetDateTime.now()
+    private var collectedAt: Instant = Instant.now()
 
     companion object {
         fun aBattleEventRotationEntity() = BattleEventRotationEntityFixture()
     }
 
-    fun withCollectedAt(value: OffsetDateTime) = apply { collectedAt = value }
+    fun withCollectedAt(value: Instant) = apply { collectedAt = value }
 
     fun build() = BattleEventRotationEntity(collectedAt = collectedAt)
 }

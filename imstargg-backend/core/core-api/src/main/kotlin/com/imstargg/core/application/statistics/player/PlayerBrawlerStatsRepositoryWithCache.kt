@@ -6,11 +6,12 @@ import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.domain.statistics.player.PlayerBrawlerStats
 import com.imstargg.core.domain.statistics.player.PlayerBrawlerStatsItem
 import com.imstargg.core.enums.BattleType
+import com.imstargg.infrastructure.db.core.toKoreaLocalDate
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheStore
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheValue
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 /**
  * 모듈 간(core-api 읽기/쓰기, core-worker 무효화) 키 공유를 위해 Spring @Cacheable 대신
@@ -24,11 +25,11 @@ class PlayerBrawlerStatsRepositoryWithCache(
     fun find(
         playerTag: BrawlStarsTag,
         battleType: BattleType,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): PlayerBrawlerStats {
-        val startBattleDate = startAt.toLocalDate()
-        val endBattleDate = endAt.toLocalDate()
+        val startBattleDate = startAt.toKoreaLocalDate()
+        val endBattleDate = endAt.toKoreaLocalDate()
         cacheStore
             .find(
                 playerTag = playerTag.value,
