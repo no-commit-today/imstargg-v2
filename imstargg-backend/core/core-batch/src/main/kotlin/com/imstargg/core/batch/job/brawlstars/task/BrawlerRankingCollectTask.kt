@@ -37,7 +37,7 @@ class BrawlerRankingCollectTask(
                 val items =
                     response.items.map { resp ->
                         BrawlerRankingItemEntity(
-                            brawlerRankingId = ranking.id!!,
+                            brawlerRanking = ranking,
                             rank = resp.rank,
                             player =
                                 RankingEntityPlayer(
@@ -69,8 +69,7 @@ class BrawlerRankingCollectTask(
                     brawlerBrawlStarsId,
                 ).drop(SNAPSHOT_RETENTION_COUNT)
         if (outdated.isEmpty()) return
-        val outdatedIds = outdated.mapNotNull { it.id }
-        val outdatedItems = brawlerRankingItemJpaRepository.findAllByBrawlerRankingIdIn(outdatedIds)
+        val outdatedItems = brawlerRankingItemJpaRepository.findAllByBrawlerRankingIn(outdated)
         brawlerRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
         brawlerRankingJpaRepository.deleteAllInBatch(outdated)
     }

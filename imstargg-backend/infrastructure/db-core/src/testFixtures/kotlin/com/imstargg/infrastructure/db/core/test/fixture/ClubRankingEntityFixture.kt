@@ -25,7 +25,7 @@ class ClubRankingEntityFixture {
 }
 
 class ClubRankingItemEntityFixture {
-    private var clubRankingId: Long? = null
+    private var clubRanking: ClubRankingEntity? = null
     private var rank: Int = 1
     private var brawlStarsTag: String = "#CLUB12345"
     private var name: String = "테스트클럽"
@@ -37,7 +37,7 @@ class ClubRankingItemEntityFixture {
         fun aClubRankingItemEntity() = ClubRankingItemEntityFixture()
     }
 
-    fun withClubRankingId(value: Long) = apply { clubRankingId = value }
+    fun withClubRanking(value: ClubRankingEntity) = apply { clubRanking = value }
 
     fun withRank(value: Int) = apply { rank = value }
 
@@ -52,9 +52,9 @@ class ClubRankingItemEntityFixture {
     fun withMemberCount(value: Int) = apply { memberCount = value }
 
     fun build(): ClubRankingItemEntity {
-        requireNotNull(clubRankingId) { "clubRankingId must be set" }
+        requireNotNull(clubRanking) { "clubRanking must be set" }
         return ClubRankingItemEntity(
-            clubRankingId = clubRankingId!!,
+            clubRanking = clubRanking!!,
             rank = rank,
             brawlStarsTag = brawlStarsTag,
             name = name,

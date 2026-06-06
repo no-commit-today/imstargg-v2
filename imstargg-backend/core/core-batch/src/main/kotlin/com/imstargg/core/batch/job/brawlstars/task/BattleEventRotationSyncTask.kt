@@ -29,7 +29,7 @@ class BattleEventRotationSyncTask(
         val items =
             rotations.map {
                 BattleEventRotationItemEntity(
-                    battleEventRotationId = rotation.id!!,
+                    battleEventRotation = rotation,
                     eventBrawlStarsId = it.event.id,
                     eventModeName = it.event.mode,
                     eventModeBrawlStarsId = it.event.modeId.toLong(),

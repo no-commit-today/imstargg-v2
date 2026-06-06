@@ -29,7 +29,7 @@ class ClubRankingCollectTask(
             val items =
                 response.items.map { resp ->
                     ClubRankingItemEntity(
-                        clubRankingId = ranking.id!!,
+                        clubRanking = ranking,
                         rank = resp.rank,
                         brawlStarsTag = resp.tag,
                         name = resp.name,
@@ -58,8 +58,7 @@ class ClubRankingCollectTask(
                 .findAllByCountryOrderByCollectedAtDesc(country)
                 .drop(SNAPSHOT_RETENTION_COUNT)
         if (outdated.isEmpty()) return 0
-        val outdatedIds = outdated.mapNotNull { it.id }
-        val outdatedItems = clubRankingItemJpaRepository.findAllByClubRankingIdIn(outdatedIds)
+        val outdatedItems = clubRankingItemJpaRepository.findAllByClubRankingIn(outdated)
         clubRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
         clubRankingJpaRepository.deleteAllInBatch(outdated)
         return outdated.size

@@ -41,7 +41,7 @@ class RankingRepository(
 
         val latestItems =
             playerRankingItemJpaRepository
-                .findAllByPlayerRankingId(latestRanking.id!!)
+                .findAllByPlayerRanking(latestRanking)
 
         val previousRanking =
             playerRankingJpaRepository
@@ -51,9 +51,9 @@ class RankingRepository(
                 )
 
         val previousRankMap =
-            previousRanking?.id?.let { previousId ->
+            previousRanking?.let { previous ->
                 playerRankingItemJpaRepository
-                    .findAllByPlayerRankingId(previousId)
+                    .findAllByPlayerRanking(previous)
                     .associate { it.player.brawlStarsTag to it.rank }
             } ?: emptyMap()
 
@@ -75,7 +75,7 @@ class RankingRepository(
 
         val latestItems =
             brawlerRankingItemJpaRepository
-                .findAllByBrawlerRankingId(latestRanking.id!!)
+                .findAllByBrawlerRanking(latestRanking)
 
         val previousRanking =
             brawlerRankingJpaRepository
@@ -86,9 +86,9 @@ class RankingRepository(
                 )
 
         val previousRankMap =
-            previousRanking?.id?.let { previousId ->
+            previousRanking?.let { previous ->
                 brawlerRankingItemJpaRepository
-                    .findAllByBrawlerRankingId(previousId)
+                    .findAllByBrawlerRanking(previous)
                     .associate { it.player.brawlStarsTag to it.rank }
             } ?: emptyMap()
 
@@ -105,7 +105,7 @@ class RankingRepository(
 
         val latestItems =
             clubRankingItemJpaRepository
-                .findAllByClubRankingId(latestRanking.id!!)
+                .findAllByClubRanking(latestRanking)
 
         val previousRanking =
             clubRankingJpaRepository
@@ -115,9 +115,9 @@ class RankingRepository(
                 )
 
         val previousRankMap =
-            previousRanking?.id?.let { previousId ->
+            previousRanking?.let { previous ->
                 clubRankingItemJpaRepository
-                    .findAllByClubRankingId(previousId)
+                    .findAllByClubRanking(previous)
                     .associate { it.brawlStarsTag to it.rank }
             } ?: emptyMap()
 

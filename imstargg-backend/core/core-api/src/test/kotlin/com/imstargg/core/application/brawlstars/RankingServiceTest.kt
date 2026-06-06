@@ -47,7 +47,7 @@ class RankingServiceTest(
         listOf(3, 1, 2).forEach { rank ->
             playerRankingItemJpaRepository.save(
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(ranking.id!!)
+                    .withPlayerRanking(ranking)
                     .withRank(rank)
                     .withPlayer(rankingPlayer("#R${"%03d".format(rank)}"))
                     .build(),

@@ -30,7 +30,7 @@ class BrawlerRankingEntityFixture {
 }
 
 class BrawlerRankingItemEntityFixture {
-    private var brawlerRankingId: Long? = null
+    private var brawlerRanking: BrawlerRankingEntity? = null
     private var rank: Int = 1
     private var player: RankingEntityPlayer = defaultRankingEntityPlayer()
     private var trophies: Int = 1500
@@ -48,7 +48,7 @@ class BrawlerRankingItemEntityFixture {
             )
     }
 
-    fun withBrawlerRankingId(value: Long) = apply { brawlerRankingId = value }
+    fun withBrawlerRanking(value: BrawlerRankingEntity) = apply { brawlerRanking = value }
 
     fun withRank(value: Int) = apply { rank = value }
 
@@ -57,9 +57,9 @@ class BrawlerRankingItemEntityFixture {
     fun withTrophies(value: Int) = apply { trophies = value }
 
     fun build(): BrawlerRankingItemEntity {
-        requireNotNull(brawlerRankingId) { "brawlerRankingId must be set" }
+        requireNotNull(brawlerRanking) { "brawlerRanking must be set" }
         return BrawlerRankingItemEntity(
-            brawlerRankingId = brawlerRankingId!!,
+            brawlerRanking = brawlerRanking!!,
             rank = rank,
             player = player,
             trophies = trophies,

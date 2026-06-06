@@ -65,7 +65,7 @@ class RankingRepositoryTest(
 
             val item =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(ranking.id!!)
+                    .withPlayerRanking(ranking)
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -92,7 +92,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(previousRanking.id!!)
+                    .withPlayerRanking(previousRanking)
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -107,7 +107,7 @@ class RankingRepositoryTest(
 
             val newPlayerItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(latestRanking.id!!)
+                    .withPlayerRanking(latestRanking)
                     .withRank(2)
                     .withPlayer(createPlayer("#NEWPLAYER"))
                     .build()
@@ -134,7 +134,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(previousRanking.id!!)
+                    .withPlayerRanking(previousRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -149,7 +149,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(latestRanking.id!!)
+                    .withPlayerRanking(latestRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -176,7 +176,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(previousRanking.id!!)
+                    .withPlayerRanking(previousRanking)
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -191,7 +191,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(latestRanking.id!!)
+                    .withPlayerRanking(latestRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -218,7 +218,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(previousRanking.id!!)
+                    .withPlayerRanking(previousRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -233,7 +233,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aPlayerRankingItemEntity()
-                    .withPlayerRankingId(latestRanking.id!!)
+                    .withPlayerRanking(latestRanking)
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -277,7 +277,7 @@ class RankingRepositoryTest(
 
             val item =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(ranking.id!!)
+                    .withBrawlerRanking(ranking)
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -305,7 +305,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(previousRanking.id!!)
+                    .withBrawlerRanking(previousRanking)
                     .withRank(1)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -321,7 +321,7 @@ class RankingRepositoryTest(
 
             val newPlayerItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(latestRanking.id!!)
+                    .withBrawlerRanking(latestRanking)
                     .withRank(2)
                     .withPlayer(createPlayer("#NEWPLAYER"))
                     .build()
@@ -349,7 +349,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(previousRanking.id!!)
+                    .withBrawlerRanking(previousRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -365,7 +365,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(latestRanking.id!!)
+                    .withBrawlerRanking(latestRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -393,7 +393,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(previousRanking.id!!)
+                    .withBrawlerRanking(previousRanking)
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -409,7 +409,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(latestRanking.id!!)
+                    .withBrawlerRanking(latestRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -437,7 +437,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(previousRanking.id!!)
+                    .withBrawlerRanking(previousRanking)
                     .withRank(3)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -453,7 +453,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aBrawlerRankingItemEntity()
-                    .withBrawlerRankingId(latestRanking.id!!)
+                    .withBrawlerRanking(latestRanking)
                     .withRank(5)
                     .withPlayer(createPlayer("#PLAYER1"))
                     .build()
@@ -494,7 +494,7 @@ class RankingRepositoryTest(
 
             val item =
                 aClubRankingItemEntity()
-                    .withClubRankingId(ranking.id!!)
+                    .withClubRanking(ranking)
                     .withRank(1)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -521,7 +521,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(previousRanking.id!!)
+                    .withClubRanking(previousRanking)
                     .withRank(1)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -536,7 +536,7 @@ class RankingRepositoryTest(
 
             val newClubItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(latestRanking.id!!)
+                    .withClubRanking(latestRanking)
                     .withRank(2)
                     .withBrawlStarsTag("#NEWCLUB")
                     .build()
@@ -563,7 +563,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(previousRanking.id!!)
+                    .withClubRanking(previousRanking)
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -578,7 +578,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(latestRanking.id!!)
+                    .withClubRanking(latestRanking)
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -605,7 +605,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(previousRanking.id!!)
+                    .withClubRanking(previousRanking)
                     .withRank(5)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -620,7 +620,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(latestRanking.id!!)
+                    .withClubRanking(latestRanking)
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -647,7 +647,7 @@ class RankingRepositoryTest(
 
             val previousItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(previousRanking.id!!)
+                    .withClubRanking(previousRanking)
                     .withRank(3)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()
@@ -662,7 +662,7 @@ class RankingRepositoryTest(
 
             val latestItem =
                 aClubRankingItemEntity()
-                    .withClubRankingId(latestRanking.id!!)
+                    .withClubRanking(latestRanking)
                     .withRank(5)
                     .withBrawlStarsTag("#TESTCLUB1")
                     .build()

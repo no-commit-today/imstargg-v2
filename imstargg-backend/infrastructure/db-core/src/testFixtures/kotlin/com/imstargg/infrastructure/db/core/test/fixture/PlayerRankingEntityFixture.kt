@@ -26,7 +26,7 @@ class PlayerRankingEntityFixture {
 }
 
 class PlayerRankingItemEntityFixture {
-    private var playerRankingId: Long? = null
+    private var playerRanking: PlayerRankingEntity? = null
     private var rank: Int = 1
     private var player: RankingEntityPlayer = defaultRankingEntityPlayer()
     private var trophies: Int = 50000
@@ -44,7 +44,7 @@ class PlayerRankingItemEntityFixture {
             )
     }
 
-    fun withPlayerRankingId(value: Long) = apply { playerRankingId = value }
+    fun withPlayerRanking(value: PlayerRankingEntity) = apply { playerRanking = value }
 
     fun withRank(value: Int) = apply { rank = value }
 
@@ -53,9 +53,9 @@ class PlayerRankingItemEntityFixture {
     fun withTrophies(value: Int) = apply { trophies = value }
 
     fun build(): PlayerRankingItemEntity {
-        requireNotNull(playerRankingId) { "playerRankingId must be set" }
+        requireNotNull(playerRanking) { "playerRanking must be set" }
         return PlayerRankingItemEntity(
-            playerRankingId = playerRankingId!!,
+            playerRanking = playerRanking!!,
             rank = rank,
             player = player,
             trophies = trophies,
