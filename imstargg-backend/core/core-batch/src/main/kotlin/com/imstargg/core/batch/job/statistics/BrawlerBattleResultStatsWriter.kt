@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerBattleResultStatsAggregator
+import com.imstargg.core.batch.domain.statistics.BrawlerBattleResultStatsAggregator
 import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsEntity.Companion.brawlerBattleResultStatsEntity
 import org.springframework.stereotype.Component

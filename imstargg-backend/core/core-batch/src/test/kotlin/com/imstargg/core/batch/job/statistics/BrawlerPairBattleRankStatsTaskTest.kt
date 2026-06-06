@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerPairBattleRankStatsAggregator
+import com.imstargg.core.batch.domain.statistics.BrawlerPairBattleRankStatsAggregator
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.WeekRange
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
@@ -89,7 +89,7 @@ class BrawlerPairBattleRankStatsTaskTest {
         val teams = listOf(listOf(player(index = 1), player(index = 2)))
         return StatsRankBattleEntity(
             battleKey = "battle-key",
-            battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), java.time.ZoneOffset.ofHours(9)),
+            battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), java.time.ZoneOffset.ofHours(9)).toInstant(),
             eventBrawlStarsId = eventBrawlStarsId,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",

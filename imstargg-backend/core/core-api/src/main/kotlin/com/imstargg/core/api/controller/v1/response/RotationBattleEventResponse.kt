@@ -1,12 +1,12 @@
 package com.imstargg.core.api.controller.v1.response
 
 import com.imstargg.core.domain.brawlstars.event.RotationBattleEvent
-import java.time.OffsetDateTime
+import java.time.Instant
 
 data class RotationBattleEventResponse(
     val event: BattleEventResponse,
-    val startTime: OffsetDateTime,
-    val endTime: OffsetDateTime,
+    val startTime: Instant,
+    val endTime: Instant,
 ) {
     companion object {
         fun of(rotationBattleEvent: RotationBattleEvent) =

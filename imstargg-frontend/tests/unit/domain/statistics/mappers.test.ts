@@ -29,7 +29,7 @@ describe("toBrawlerResultStatistics", () => {
       items: [
         {
           brawler: fakeBrawler(16000000),
-          totalBattleCount: 100,
+          battleCount: 100,
           pickRate: 0.1,
           winRate: 0.55,
           starPlayerRate: 0.2,
@@ -41,6 +41,7 @@ describe("toBrawlerResultStatistics", () => {
     expect(result.totalBattleCount).toBe(1000);
     expect(result.items).toHaveLength(1);
     expect(result.items[0].brawler?.id).toBe(16000000);
+    expect(result.items[0].battleCount).toBe(100);
     expect(result.items[0].tier).toBe("S");
   });
 
@@ -50,7 +51,7 @@ describe("toBrawlerResultStatistics", () => {
       items: [
         {
           brawler: null,
-          totalBattleCount: 5,
+          battleCount: 5,
           pickRate: 0.01,
           winRate: 0.5,
           starPlayerRate: 0,
@@ -68,7 +69,7 @@ describe("toBrawlerResultStatistics", () => {
       items: [
         {
           brawler: null,
-          totalBattleCount: 1,
+          battleCount: 1,
           pickRate: 0,
           winRate: 0,
           starPlayerRate: 0,
@@ -98,7 +99,7 @@ describe("toPairResultStat", () => {
     const result = toPairResultStat({
       brawler: fakeBrawler(1),
       pairBrawler: fakeBrawler(2),
-      totalBattleCount: 100,
+      battleCount: 100,
       pickRate: 0.05,
       winRate: 0.6,
     });
@@ -124,7 +125,7 @@ describe("toEnemyResultStat", () => {
     const result = toEnemyResultStat({
       brawler: fakeBrawler(1),
       enemyBrawler: fakeBrawler(3),
-      totalBattleCount: 200,
+      battleCount: 200,
       pickRate: 0.08,
       winRate: 0.4,
     });

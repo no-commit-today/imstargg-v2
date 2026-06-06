@@ -24,7 +24,7 @@ import { parseTier } from "@/domain/statistics/tier";
 function toBrawlerResultStat(dto: BrawlerResultStatisticsItemResponse): BrawlerResultStat {
   return {
     brawler: dto.brawler ? toBrawler(dto.brawler) : null,
-    totalBattleCount: dto.totalBattleCount,
+    battleCount: dto.battleCount,
     pickRate: dto.pickRate,
     winRate: dto.winRate,
     starPlayerRate: dto.starPlayerRate,
@@ -56,7 +56,7 @@ export function toPairResultStat(
   return {
     brawler: dto.brawler ? toBrawler(dto.brawler) : null,
     pairBrawler: dto.pairBrawler ? toBrawler(dto.pairBrawler) : null,
-    totalBattleCount: dto.totalBattleCount,
+    battleCount: dto.battleCount,
     pickRate: dto.pickRate,
     winRate: dto.winRate,
   };
@@ -79,7 +79,7 @@ export function toEnemyResultStat(
   return {
     brawler: dto.brawler ? toBrawler(dto.brawler) : null,
     enemyBrawler: dto.enemyBrawler ? toBrawler(dto.enemyBrawler) : null,
-    totalBattleCount: dto.totalBattleCount,
+    battleCount: dto.battleCount,
     pickRate: dto.pickRate,
     winRate: dto.winRate,
   };

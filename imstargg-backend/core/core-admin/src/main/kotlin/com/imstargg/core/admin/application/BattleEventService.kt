@@ -44,6 +44,7 @@ class BattleEventService(
                 modeBrawlStarsName = event.mode?.brawlStarsName,
                 mapName = event.mapName,
                 mapNames = if (event.mapName != null) toNameMap(messagesByBrawlStarsId[event.brawlStarsId]) else emptyMap(),
+                createdAt = event.createdAt,
             )
         }
     }

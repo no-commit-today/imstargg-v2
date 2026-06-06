@@ -56,7 +56,7 @@ export function BrawlerStatRow({ rank, brawler, stat }: Props) {
       <PercentCell value={stat?.winRate ?? 0} />
       <PercentCell value={stat?.pickRate ?? 0} />
       <PercentCell value={stat?.starPlayerRate ?? 0} />
-      <CountCell value={stat?.totalBattleCount ?? 0} />
+      <CountCell value={stat?.battleCount ?? 0} />
     </Link>
   );
 }

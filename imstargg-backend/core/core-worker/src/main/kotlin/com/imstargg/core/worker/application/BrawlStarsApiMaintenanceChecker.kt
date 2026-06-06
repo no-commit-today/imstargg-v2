@@ -1,9 +1,8 @@
 package com.imstargg.core.worker.application
 
-import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsApiMaintenanceJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Component
 class BrawlStarsApiMaintenanceChecker(
@@ -11,7 +10,7 @@ class BrawlStarsApiMaintenanceChecker(
     private val clock: Clock,
 ) {
     fun isUnderMaintenance(): Boolean {
-        val now = OffsetDateTime.now(clock)
+        val now = clock.instant()
         return brawlStarsApiMaintenanceJpaRepository
             .existsByStartTimeLessThanEqualAndEndTimeGreaterThanEqual(now, now)
     }

@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.Clock
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 @Configuration
 class HealthCheckJobConfig(
@@ -40,7 +39,7 @@ class HealthCheckJobConfig(
                 log.info("<<<<<<<<<<<< 헬스체크 >>>>>>>>>>>>")
                 log.info("timezone: {}", clock.zone)
                 log.info("date: {}", LocalDate.now(clock))
-                log.info("time: {}", OffsetDateTime.now(clock))
+                log.info("time: {}", clock.instant())
                 RepeatStatus.FINISHED
             }, txManager)
             .build()

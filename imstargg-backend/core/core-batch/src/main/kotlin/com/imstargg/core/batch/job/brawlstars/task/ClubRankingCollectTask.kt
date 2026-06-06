@@ -9,7 +9,6 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRan
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
-import java.time.OffsetDateTime
 
 @Component
 class ClubRankingCollectTask(
@@ -19,9 +18,9 @@ class ClubRankingCollectTask(
     private val clubRankingItemJpaRepository: ClubRankingItemJpaRepository,
 ) {
     fun collect() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info("[{}] 시작", STEP_NAME)
         Country.entries.forEach { country ->
-            val collectedAt = OffsetDateTime.now(clock)
+            val collectedAt = clock.instant()
             val response = brawlStarsClient.getClubRanking(country.code)
             val ranking =
                 clubRankingJpaRepository.save(
@@ -30,7 +29,7 @@ class ClubRankingCollectTask(
             val items =
                 response.items.map { resp ->
                     ClubRankingItemEntity(
-                        clubRankingId = ranking.id!!,
+                        clubRanking = ranking,
                         rank = resp.rank,
                         brawlStarsTag = resp.tag,
                         name = resp.name,
@@ -44,13 +43,13 @@ class ClubRankingCollectTask(
             val outdated = deleteOutdated(country)
             log.debug(
                 "[{}] 국가 {} 수집 - {}건 (정리: {}건)",
-                JOB_NAME,
+                STEP_NAME,
                 country,
                 items.size,
                 outdated,
             )
         }
-        log.info("[{}] 완료", JOB_NAME)
+        log.info("[{}] 완료", STEP_NAME)
     }
 
     private fun deleteOutdated(country: Country): Int {
@@ -59,15 +58,14 @@ class ClubRankingCollectTask(
                 .findAllByCountryOrderByCollectedAtDesc(country)
                 .drop(SNAPSHOT_RETENTION_COUNT)
         if (outdated.isEmpty()) return 0
-        val outdatedIds = outdated.mapNotNull { it.id }
-        val outdatedItems = clubRankingItemJpaRepository.findAllByClubRankingIdIn(outdatedIds)
+        val outdatedItems = clubRankingItemJpaRepository.findAllByClubRankingIn(outdated)
         clubRankingItemJpaRepository.deleteAllInBatch(outdatedItems)
         clubRankingJpaRepository.deleteAllInBatch(outdated)
         return outdated.size
     }
 
     companion object {
-        private const val JOB_NAME = "clubRankingCollectJob"
+        private const val STEP_NAME = "clubRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
         private val log = LoggerFactory.getLogger(ClubRankingCollectTask::class.java)
     }

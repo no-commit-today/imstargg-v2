@@ -645,7 +645,7 @@ class BattleBuilderTest {
         val result = sut.build()
 
         // then
-        val expected = BattleKeyEmbedded.create(battleTime, listOf(collectedPlayerTag, "#B")).value
+        val expected = BattleKeyEmbedded.create(battleTime.toInstant(), listOf(collectedPlayerTag, "#B")).value
         assertThat(result.battleKey).isEqualTo(expected)
     }
 
@@ -689,7 +689,7 @@ class BattleBuilderTest {
 
         // then
         val expected =
-            BattleKeyEmbedded.create(battleTime, listOf("#A", "#B", "#C", "#D", "#E", "#F")).value
+            BattleKeyEmbedded.create(battleTime.toInstant(), listOf("#A", "#B", "#C", "#D", "#E", "#F")).value
         assertThat(result.battleKey).isEqualTo(expected)
     }
 
@@ -737,7 +737,7 @@ class BattleBuilderTest {
         actual: Battle,
         expected: BattleResponse,
     ) {
-        assertThat(actual.battleAt).isEqualTo(expected.battleTime)
+        assertThat(actual.battleAt).isEqualTo(expected.battleTime.toInstant())
         assertThat(actual.event).isNotNull
         assertThat(actual.event!!.brawlStarsId).isEqualTo(expected.event.id)
         assertThat(actual.event!!.modeBrawlStarsName).isEqualTo(expected.event.mode)

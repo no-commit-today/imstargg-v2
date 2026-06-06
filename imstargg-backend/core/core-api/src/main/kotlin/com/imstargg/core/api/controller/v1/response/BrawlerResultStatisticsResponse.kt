@@ -5,13 +5,17 @@ import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 
 data class BrawlerResultStatisticsItemResponse(
     val brawler: BrawlerResponse?,
-    val totalBattleCount: Long,
+    val battleCount: Long,
     val pickRate: Double,
     val winRate: Double,
     val starPlayerRate: Double,
     val tierScore: Int,
     val tier: String,
-)
+) {
+    /** 구버전 프론트 호환용 (= [battleCount]). 프론트의 battleCount 전환 배포 후 제거 예정. */
+    val totalBattleCount: Long
+        get() = battleCount
+}
 
 data class BrawlerResultStatisticsResponse(
     val totalBattleCount: Long,
@@ -27,7 +31,7 @@ data class BrawlerResultStatisticsResponse(
                 statistics.items.map { item ->
                     BrawlerResultStatisticsItemResponse(
                         brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
-                        totalBattleCount = item.totalBattleCount,
+                        battleCount = item.battleCount,
                         pickRate = item.pickRate,
                         winRate = item.winRate,
                         starPlayerRate = item.starPlayerRate,

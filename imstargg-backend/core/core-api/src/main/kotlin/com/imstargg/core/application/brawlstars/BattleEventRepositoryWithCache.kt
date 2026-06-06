@@ -25,7 +25,7 @@ class BattleEventRepositoryWithCache(
             battleEventRotationJpaRepository.findTopByOrderByCollectedAtDesc()
                 ?: return emptyList()
         return battleEventRotationItemJpaRepository
-            .findAllByBattleEventRotationId(latestRotation.id!!)
+            .findAllByBattleEventRotation(latestRotation)
             .distinctBy { it.eventBrawlStarsId }
             .mapNotNull { item ->
                 find(BrawlStarsId(item.eventBrawlStarsId))?.let { event ->

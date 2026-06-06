@@ -4,7 +4,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.QBattleEntity.Compa
 import com.imstargg.infrastructure.db.core.brawlstars.battle.QBattleTeamPlayerEntity.Companion.battleTeamPlayerEntity
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
-import java.time.OffsetDateTime
+import java.time.Instant
 
 internal class BattleJpaRepositoryCustomImpl(
     entityManager: EntityManager,
@@ -15,8 +15,8 @@ internal class BattleJpaRepositoryCustomImpl(
         playerId: Long,
         playerTag: String,
         battleTypeCode: String,
-        startAt: OffsetDateTime,
-        endAt: OffsetDateTime,
+        startAt: Instant,
+        endAt: Instant,
     ): List<PlayerBrawlerResultProjection> {
         val brawlerId = battleTeamPlayerEntity.brawler.brawlStarsId
         val result = battleEntity.result

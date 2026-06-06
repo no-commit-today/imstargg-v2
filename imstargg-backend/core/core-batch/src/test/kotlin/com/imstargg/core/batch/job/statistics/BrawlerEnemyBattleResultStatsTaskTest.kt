@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job.statistics
 
-import com.imstargg.core.batch.domain.BrawlerEnemyBattleResultStatsAggregator
+import com.imstargg.core.batch.domain.statistics.BrawlerEnemyBattleResultStatsAggregator
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.WeekRange
@@ -96,7 +96,7 @@ class BrawlerEnemyBattleResultStatsTaskTest {
             )
         return StatsResultBattleEntity(
             battleKey = "battle-key",
-            battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), ZoneOffset.ofHours(9)),
+            battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), ZoneOffset.ofHours(9)).toInstant(),
             eventBrawlStarsId = eventBrawlStarsId,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",

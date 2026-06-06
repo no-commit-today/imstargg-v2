@@ -4,10 +4,10 @@ import com.imstargg.core.domain.brawlstars.battle.Battle
 import com.imstargg.core.enums.BattleMode
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
-import java.time.OffsetDateTime
+import java.time.Instant
 
 data class BattleResponse(
-    val battleTime: OffsetDateTime,
+    val battleTime: Instant,
     val event: BattleEventResponse?,
     val mode: BattleMode,
     val type: BattleType?,

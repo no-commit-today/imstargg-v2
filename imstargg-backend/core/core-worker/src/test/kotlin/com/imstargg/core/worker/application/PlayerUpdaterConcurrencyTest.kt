@@ -19,8 +19,7 @@ import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Comp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.Instant
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -101,8 +100,8 @@ class PlayerUpdaterConcurrencyTest(
         playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
         val battles =
             listOf(
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 10, 0, 0, 0, ZoneOffset.UTC)),
-                createBattle(tag, OffsetDateTime.of(2024, 1, 1, 11, 0, 0, 0, ZoneOffset.UTC)),
+                createBattle(tag, Instant.parse("2024-01-01T10:00:00Z")),
+                createBattle(tag, Instant.parse("2024-01-01T11:00:00Z")),
             )
         val barrier = CyclicBarrier(2)
         val executor = Executors.newFixedThreadPool(2)
@@ -206,9 +205,9 @@ class PlayerUpdaterConcurrencyTest(
 
     private fun createBattle(
         playerBrawlStarsTag: String,
-        battleAt: OffsetDateTime,
+        battleAt: Instant,
     ) = Battle(
-        battleKey = "battle_key_${battleAt.toEpochSecond()}",
+        battleKey = "battle_key_${battleAt.epochSecond}",
         battleAt = battleAt,
         event =
             BattleEvent(

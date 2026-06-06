@@ -24,7 +24,7 @@ type SortKey =
   | "winRate"
   | "pickRate"
   | "starPlayerRate"
-  | "totalBattleCount";
+  | "battleCount";
 
 const resultGrid =
   "grid-cols-[26px_minmax(0,1fr)_36px_42px_42px_42px_52px] sm:grid-cols-[48px_minmax(0,1fr)_56px_72px_72px_72px_96px]";
@@ -44,7 +44,7 @@ function compareItems(a: BrawlerResultStat, b: BrawlerResultStat, sort: SortKey,
     case "winRate": return (a.winRate - b.winRate) * sign;
     case "pickRate": return (a.pickRate - b.pickRate) * sign;
     case "starPlayerRate": return (a.starPlayerRate - b.starPlayerRate) * sign;
-    case "totalBattleCount": return (a.totalBattleCount - b.totalBattleCount) * sign;
+    case "battleCount": return (a.battleCount - b.battleCount) * sign;
     case "tier":
     default: return (a.tierScore - b.tierScore) * sign;
   }
@@ -89,7 +89,7 @@ export function EventResultStatsTable({ items, selectedBrawlerId }: Props) {
         <SortableHeader column="winRate" label="승률" currentSort={sort} currentOrder={order} onSort={onSort} />
         <SortableHeader column="pickRate" label="픽률" currentSort={sort} currentOrder={order} onSort={onSort} />
         <SortableHeader column="starPlayerRate" label={<StarIcon />} title="스타플레이어 비율" currentSort={sort} currentOrder={order} onSort={onSort} />
-        <SortableHeader column="totalBattleCount" label="전투수" currentSort={sort} currentOrder={order} onSort={onSort} />
+        <SortableHeader column="battleCount" label="전투수" currentSort={sort} currentOrder={order} onSort={onSort} />
       </div>
       {sorted.length === 0 ? (
         <div className="px-4 py-12 text-center text-sm text-[#5C6271]">
@@ -126,7 +126,7 @@ export function EventResultStatsTable({ items, selectedBrawlerId }: Props) {
               <PercentCell value={it.winRate} />
               <PercentCell value={it.pickRate} />
               <PercentCell value={it.starPlayerRate} />
-              <CountCell value={it.totalBattleCount} />
+              <CountCell value={it.battleCount} />
             </button>
           );
         })

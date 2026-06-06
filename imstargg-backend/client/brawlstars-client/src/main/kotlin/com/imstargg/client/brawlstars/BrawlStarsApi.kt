@@ -136,4 +136,11 @@ internal interface BrawlStarsApi {
     fun getGameModes(
         @SpringQueryMap paging: PagingParam,
     ): ListResponse<EventTypeResponse>
+
+    /**
+     * Get the API specification (swagger 2.0 YAML).
+     * NOTE: The response content type is application/octet-stream.
+     */
+    @GetMapping(value = ["/v1"])
+    fun getApiSpec(): String
 }

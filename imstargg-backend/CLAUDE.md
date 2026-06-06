@@ -84,7 +84,7 @@ imstargg-backend/
 - **패키지**: `com.imstargg.*`
 - **테스트 베이스 클래스**: `CoreApiContextTest`, `BrawlStarsClientDevelopTest` 등 상속하여 사용
 - **JPA Entity**: allOpen 플러그인 적용 (`@Entity`, `@MappedSuperclass`, `@Embeddable`)
-- **엔티티 연관관계**: `@OneToMany` 사용 금지. 자식 엔티티는 부모의 ID 컬럼(Long 등)으로 참조하고, 필요한 경우 Repository 쿼리로 조회. (Domain ID Reference 원칙과 일치)
+- **엔티티 연관관계**: `@OneToMany` 사용 금지 (자식 컬렉션은 Repository 쿼리로 조회). 같은 도메인 내 자식→부모 참조는 `@ManyToOne(fetch = LAZY)` + `@JoinColumn(foreignKey = ForeignKey(ConstraintMode.NO_CONSTRAINT))` 사용 (DB FK 제약 없음, `optional`은 컬럼 null 여부에 맞춤 — 예: `PlayerBrawlerEntity.player`). 도메인 경계를 넘는 참조는 ID로 참조 (Domain ID Reference 원칙). 호출부가 부모 엔티티 없이 bare ID만 들고 조회해야 하는 경우에 한해 ID 컬럼 참조 허용.
 - **QueryDSL**: KSP 코드 생성 (`infrastructure/db-core`). Q-Class는 로컬 변수에 할당하지 않고 static import된 인스턴스를 직접 사용 (예: `statsResultBattleEntity.battleDate`)
 - **Application Layer Repository**: `core-api`의 Service는 JPA Repository를 직접 참조하지 않고, `application` 패키지의 Repository 클래스를 통해 접근. 캐시가 필요한 경우 `*WithCache` 래퍼 사용 (예: `EventRepository` → `EventRepositoryWithCache`)
 - **Service ↛ Service 의존 금지**: 같은 application 계층의 Service 끼리 직접 참조하지 않는다. 다른 도메인의 데이터가 필요하면 해당 Repository (`*WithCache` 포함) 를 직접 주입해 사용 — Service 가 다른 Service 의 얇은 위임 메서드를 호출하기 위해 늘어나는 것을 막고, 데이터 접근 책임을 Repository 계층에 일관되게 둔다.
@@ -107,6 +107,7 @@ imstargg-backend/
     - 예: `V260420__add_buffy_table.sql`
     - 같은 날 여러 변경이 있으면 title로 구분 (필요 시 `V260420a__...`, `V260420b__...` 형태로 순서를 드러내도 됨)
     - DDL은 `create ... if not exists`, DML은 `on conflict ... do nothing` 등 **멱등적**으로 작성
+- **@Table 인덱스 명시**: schema.sql 의 인덱스(PK 제외)는 엔티티 `@Table` 어노테이션에도 모두 반영한다. 일반 인덱스(`ix_`)는 `indexes = [Index(...)]`, 유니크 인덱스(`uk_`)는 `@Index(unique = true)` 또는 `uniqueConstraints = [UniqueConstraint(...)]` (둘 다 동등 — 통계 모듈의 복합 컬럼 유니크는 `UniqueConstraint` 관행). 정렬은 `columnList = "col desc"` 로 표현. `varchar_pattern_ops` 등 JPA `@Index` 로 표현 불가한 연산자 클래스/표현식 인덱스는 `columnList` 에 컬럼명만 두고 주석으로 연산자 클래스를 명시한다 (`ddl-auto: none` 이라 어노테이션은 문서화 목적).
 - **BaseEntity 상속**: 모든 엔티티는 `BaseEntity` 상속 (createdAt, updatedAt, deleted 필드 포함)
 - **변경 가능한 컬럼 패턴**: 생성자 파라미터 → `var` + `protected set`
 

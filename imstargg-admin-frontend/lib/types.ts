@@ -73,6 +73,7 @@ export interface BattleEvent {
   modeBrawlStarsName: string | null;
   mapName: string | null;
   mapNames: Record<Language, string>;
+  createdAt: string | null;
 }
 
 export type BattleEventModeResultType = "RESULT" | "RANK";
@@ -124,4 +125,20 @@ export interface FeedbackSearchParams {
   checked?: boolean;
   page?: number;
   size?: number;
+}
+
+export interface ApiSpecListItem {
+  id: number;
+  collectedAt: string;
+  sizeBytes: number;
+  lineCount: number;
+}
+
+export interface ApiSpecDetail {
+  id: number;
+  collectedAt: string;
+  content: string;
+  previousId: number | null;
+  previousCollectedAt: string | null;
+  previousContent: string | null;
 }

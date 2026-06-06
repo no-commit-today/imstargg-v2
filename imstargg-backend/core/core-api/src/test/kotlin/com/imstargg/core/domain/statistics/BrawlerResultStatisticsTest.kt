@@ -25,11 +25,11 @@ class BrawlerResultStatisticsTest {
             // when
             val sut = BrawlerResultStatistics.create(rows, gameSlots)
 
-            // then: totalBattleCount = 900/6 = 150
+            // then: totalBattleCount = 900/6 = 150, 브롤러 A 의 battleCount 는 자신의 슬롯 수
             assertThat(sut.totalBattleCount).isEqualTo(150)
             val itemA = sut.items.first { it.brawlerId == brawlerA }
             assertThat(itemA.pickRate).isEqualTo(2.0)
-            assertThat(itemA.totalBattleCount).isEqualTo(150)
+            assertThat(itemA.battleCount).isEqualTo(300)
         }
 
         @Test
@@ -60,6 +60,7 @@ class BrawlerResultStatisticsTest {
             assertThat(sut.totalBattleCount).isEqualTo(110)
             val item = sut.items.first { it.brawlerId == brawler }
             assertThat(item.pickRate).isEqualTo(1.0)
+            assertThat(item.battleCount).isEqualTo(110)
         }
 
         @Test

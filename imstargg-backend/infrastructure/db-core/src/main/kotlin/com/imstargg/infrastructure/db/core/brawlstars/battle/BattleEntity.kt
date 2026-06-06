@@ -15,7 +15,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Entity
 @Table(
@@ -28,7 +28,7 @@ class BattleEntity(
     @Column(name = "battle_key", updatable = false, nullable = false)
     val battleKey: String,
     @Column(name = "battle_at", updatable = false, nullable = false)
-    val battleAt: OffsetDateTime,
+    val battleAt: Instant,
     @Embedded
     val event: BattleEntityEvent?,
     @Column(name = "mode", length = 65, updatable = false)

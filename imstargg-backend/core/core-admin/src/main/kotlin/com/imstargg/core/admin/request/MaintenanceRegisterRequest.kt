@@ -1,8 +1,8 @@
 package com.imstargg.core.admin.request
 
-import java.time.OffsetDateTime
+import java.time.Instant
 
 data class MaintenanceRegisterRequest(
-    val startTime: OffsetDateTime,
-    val endTime: OffsetDateTime,
+    val startTime: Instant,
+    val endTime: Instant,
 )
