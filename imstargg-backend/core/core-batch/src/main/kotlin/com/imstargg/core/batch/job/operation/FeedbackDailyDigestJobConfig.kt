@@ -14,14 +14,12 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.transaction.PlatformTransactionManager
 import java.time.Clock
 import java.time.Duration
 
 @Configuration
 class FeedbackDailyDigestJobConfig(
     private val jobRepository: JobRepository,
-    private val txManager: PlatformTransactionManager,
     private val feedbackJpaRepository: FeedbackJpaRepository,
     private val alertManager: AlertManager,
     private val clock: Clock,
@@ -63,6 +61,6 @@ class FeedbackDailyDigestJobConfig(
                 }
 
                 RepeatStatus.FINISHED
-            }, txManager)
+            })
             .build()
 }

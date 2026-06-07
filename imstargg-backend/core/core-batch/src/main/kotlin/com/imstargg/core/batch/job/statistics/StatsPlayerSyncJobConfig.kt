@@ -75,7 +75,7 @@ class StatsPlayerSyncJobConfig(
             .tasklet({ _, _ ->
                 statsPlayerSyncFromRankingTask.sync()
                 RepeatStatus.FINISHED
-            }, txManager)
+            })
             .build()
 
     @Bean(RANK_BATTLE_STEP_NAME)

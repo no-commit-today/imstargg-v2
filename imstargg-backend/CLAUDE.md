@@ -91,6 +91,7 @@ imstargg-backend/
 - **Domain ID Reference**: 도메인 클래스에서 다른 도메인의 객체는 직접 참조하지 않고 ID로 참조
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출. Repository(`application` 패키지) 를 직접 참조하지 않고 Service 만 의존 — 데이터 접근은 Service 가 책임 (Application Layer Repository 패턴과 일관)
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
+- **배치 스텝 트랜잭션**: chunk 가 아닌 tasklet 스텝은 단일인자 `tasklet(tasklet)`(→ `ResourcelessTransactionManager`)을 쓴다. `tasklet(tasklet, txManager)` 는 tasklet 전체를 한 트랜잭션으로 묶어 느린 API 호출·대량 read 동안 커넥션이 `idle in transaction` 으로 장시간 점유되므로 금지. DB 쓰기는 repository 자체 트랜잭션으로 커밋되고, 다중 쓰기 원자성이 필요하면 task 안에서 `JpaBatchTransactionRunner` 로 짧게 래핑. 예외(트랜잭션 매니저 유지): chunk 스텝(`.transactionManager(txManager)` 필수), DDL 인 `PartitionManageJobConfig`.
 
 ### Cache Key Conventions
 

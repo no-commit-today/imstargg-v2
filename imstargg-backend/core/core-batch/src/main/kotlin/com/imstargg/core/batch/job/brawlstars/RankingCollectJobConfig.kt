@@ -6,16 +6,20 @@ import com.imstargg.core.batch.job.brawlstars.task.PlayerRankingCollectTask
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
-import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.transaction.PlatformTransactionManager
 
 /**
  * 클럽/플레이어/브롤러 랭킹 수집을 하나의 잡에서 순차 실행한다 (싼 스텝 먼저, 비싼 brawler 마지막).
+ *
+ * 각 스텝은 트랜잭션 매니저를 넘기지 않아 ResourcelessTransactionManager(no-op)로 동작한다.
+ * 스텝에 실 트랜잭션을 걸면 tasklet 전체(국가×브롤러 수천 회의 느린 API 호출 + insert)가 한
+ * 트랜잭션으로 묶여 API 응답 대기 동안 커넥션이 `idle in transaction` 으로 장시간 점유된다.
+ * 매니저를 제거하면 각 save/saveAll/deleteAllInBatch 가 자체 짧은 트랜잭션으로 즉시 커밋·반환된다
+ * (스텝 단위 원자성은 포기되지만 스냅샷 보존 + 윈도우 재시작으로 자가 치유).
  *
  * `RunIdIncrementer` 를 쓰지 않는 이유: Spring Boot 4 의 `JobLauncherApplicationRunner` 는
  * incrementer 가 있으면 직전 실행이 FAILED 여도 무조건 run.id+1 새 JobInstance 를 만들어
@@ -26,7 +30,6 @@ import org.springframework.transaction.PlatformTransactionManager
 @Configuration
 class RankingCollectJobConfig(
     private val jobRepository: JobRepository,
-    private val txManager: PlatformTransactionManager,
     private val clubRankingCollectTask: ClubRankingCollectTask,
     private val playerRankingCollectTask: PlayerRankingCollectTask,
     private val brawlerRankingCollectTask: BrawlerRankingCollectTask,
@@ -37,9 +40,6 @@ class RankingCollectJobConfig(
         private const val CLUB_STEP_NAME = "clubRankingCollectStep"
         private const val PLAYER_STEP_NAME = "playerRankingCollectStep"
         private const val BRAWLER_STEP_NAME = "brawlerRankingCollectStep"
-        private const val LEGACY_CLUB_JOB_NAME = "clubRankingCollectJob"
-        private const val LEGACY_PLAYER_JOB_NAME = "playerRankingCollectJob"
-        private const val LEGACY_BRAWLER_JOB_NAME = "brawlerRankingCollectJob"
     }
 
     @Bean(JOB_NAME)
@@ -62,7 +62,6 @@ class RankingCollectJobConfig(
                 BrawlStarsApiTasklet(CLUB_STEP_NAME) {
                     clubRankingCollectTask.collect()
                 },
-                txManager,
             ).build()
 
     @Bean(PLAYER_STEP_NAME)
@@ -72,7 +71,6 @@ class RankingCollectJobConfig(
                 BrawlStarsApiTasklet(PLAYER_STEP_NAME) {
                     playerRankingCollectTask.collect()
                 },
-                txManager,
             ).build()
 
     @Bean(BRAWLER_STEP_NAME)
@@ -82,35 +80,5 @@ class RankingCollectJobConfig(
                 BrawlStarsApiTasklet(BRAWLER_STEP_NAME) {
                     brawlerRankingCollectTask.collect()
                 },
-                txManager,
             ).build()
-
-    /**
-     * 구 잡 이름 호환용 레거시 별칭 잡 (아래 3개) — values.yaml 의 CronJob args 변경은 main 머지
-     * 시점에 클러스터에 반영되지만 이미지는 Deploy 워크플로 실행 시점에야 갱신되므로, 잡 이름
-     * 교체를 한 번에 하면 구 이미지가 [JOB_NAME] 을 찾지 못하는 공백이 생긴다. 그래서 2단계로
-     * 롤아웃한다: 이 클래스가 포함된 이미지를 먼저 배포한 뒤, values.yaml 의 랭킹 CronJob 3개를
-     * `ranking-collect` 1개로 전환하면서 아래 레거시 잡 3개를 함께 제거한다 (values.yaml 의
-     * TODO 주석 참조). 레거시 잡은 기존과 동일하게 단일 스텝 + [RunIdIncrementer] 로 동작한다.
-     */
-    @Bean(LEGACY_CLUB_JOB_NAME)
-    fun clubRankingCollectJob(): Job =
-        JobBuilder(LEGACY_CLUB_JOB_NAME, jobRepository)
-            .start(clubRankingCollectStep())
-            .incrementer(RunIdIncrementer())
-            .build()
-
-    @Bean(LEGACY_PLAYER_JOB_NAME)
-    fun playerRankingCollectJob(): Job =
-        JobBuilder(LEGACY_PLAYER_JOB_NAME, jobRepository)
-            .start(playerRankingCollectStep())
-            .incrementer(RunIdIncrementer())
-            .build()
-
-    @Bean(LEGACY_BRAWLER_JOB_NAME)
-    fun brawlerRankingCollectJob(): Job =
-        JobBuilder(LEGACY_BRAWLER_JOB_NAME, jobRepository)
-            .start(brawlerRankingCollectStep())
-            .incrementer(RunIdIncrementer())
-            .build()
 }
