@@ -9,12 +9,10 @@ import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class BattleEventRotationSyncJobConfig(
     private val jobRepository: JobRepository,
-    private val txManager: PlatformTransactionManager,
     private val task: BattleEventRotationSyncTask,
 ) {
     companion object {
@@ -36,6 +34,5 @@ class BattleEventRotationSyncJobConfig(
                 BrawlStarsApiTasklet(JOB_NAME) {
                     task.sync()
                 },
-                txManager,
             ).build()
 }

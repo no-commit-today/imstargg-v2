@@ -9,7 +9,6 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.transaction.PlatformTransactionManager
 import java.time.Clock
 import java.time.LocalDate
 
@@ -17,7 +16,6 @@ import java.time.LocalDate
 class HealthCheckJobConfig(
     private val clock: Clock,
     private val jobRepository: JobRepository,
-    private val txManager: PlatformTransactionManager,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -41,6 +39,6 @@ class HealthCheckJobConfig(
                 log.info("date: {}", LocalDate.now(clock))
                 log.info("time: {}", clock.instant())
                 RepeatStatus.FINISHED
-            }, txManager)
+            })
             .build()
 }
