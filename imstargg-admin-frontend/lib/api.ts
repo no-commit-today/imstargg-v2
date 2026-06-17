@@ -203,6 +203,9 @@ export const createEventMode = (data: {
   brawlStarsId: number;
   brawlStarsName: string;
   resultType?: BattleEventModeResultType;
+  names: Record<string, string>;
+  playerCounts: number[];
+  color: string;
 }) => request<void>("/event-modes", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventModeMessages = (brawlStarsId: number, messages: Record<string, string>) =>
