@@ -16,6 +16,26 @@ export default function SiteFooter() {
             priority={false}
           />
         </div>
+        <nav className="flex flex-wrap gap-x-4 gap-y-1 text-neutral-500 text-xs">
+          <Link
+            href="/about"
+            className="hover:text-neutral-700 underline-offset-2 hover:underline"
+          >
+            소개
+          </Link>
+          <Link
+            href="/terms"
+            className="hover:text-neutral-700 underline-offset-2 hover:underline"
+          >
+            이용약관
+          </Link>
+          <Link
+            href="/privacy"
+            className="hover:text-neutral-700 underline-offset-2 hover:underline"
+          >
+            개인정보처리방침
+          </Link>
+        </nav>
         <div className="text-neutral-500 text-xs">
           <p>이메일: {siteConfig.email}</p>
           <p className="mt-1">

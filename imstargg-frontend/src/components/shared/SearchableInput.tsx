@@ -25,8 +25,6 @@ export interface SearchableInputResult {
   trophies: number;
 }
 
-export type SearchableInputVariant = "default" | "topnav";
-
 interface Props {
   placeholder: string;
   inputAriaLabel: string;
@@ -36,7 +34,6 @@ interface Props {
   renderResult: (item: SearchableInputResult, active: boolean) => React.ReactNode;
   toDetailHref: (item: SearchableInputResult) => string;
   toSearchHref: (q: string) => string;
-  variant?: SearchableInputVariant;
 }
 
 export function SearchableInput({
@@ -48,7 +45,6 @@ export function SearchableInput({
   renderResult,
   toDetailHref,
   toSearchHref,
-  variant = "default",
 }: Props) {
   const router = useRouter();
   const [value, setValue] = useState(defaultValue);
@@ -172,11 +168,11 @@ export function SearchableInput({
     }
   }
 
-  const wrapperStyle: React.CSSProperties =
-    variant === "topnav"
-      ? { position: "relative" }
-      : { position: "relative", width: "100%", maxWidth: 448 };
-  const wrapperClassName = variant === "topnav" ? "topnav-search-wrap" : undefined;
+  const wrapperStyle: React.CSSProperties = {
+    position: "relative",
+    width: "100%",
+    maxWidth: 448,
+  };
 
   const commonInputProps = {
     value,
@@ -193,27 +189,13 @@ export function SearchableInput({
   };
 
   return (
-    <div ref={wrapperRef} className={wrapperClassName} style={wrapperStyle}>
-      {variant === "topnav" ? (
-        <form onSubmit={handleSubmit} className="topnav-search">
-          <Search aria-hidden="true" />
-          <input type="text" inputMode="text" {...commonInputProps} />
-          <button
-            type="submit"
-            className="topnav-search-submit"
-            aria-label={buttonAriaLabel}
-          >
-            <Search aria-hidden="true" />
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
-          <Input type="text" inputMode="text" {...commonInputProps} />
-          <Button type="submit" size="default" aria-label={buttonAriaLabel}>
-            <Search className="size-4" />
-          </Button>
-        </form>
-      )}
+    <div ref={wrapperRef} style={wrapperStyle}>
+      <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+        <Input type="text" inputMode="text" {...commonInputProps} />
+        <Button type="submit" size="default" aria-label={buttonAriaLabel}>
+          <Search className="size-4" />
+        </Button>
+      </form>
       {open && (
         <div id="search-dropdown">
           {showingLive ? (
@@ -222,7 +204,6 @@ export function SearchableInput({
               activeIndex={activeIndex}
               renderResult={renderResult}
               onSelect={handleSelectLive}
-              variant={variant}
             />
           ) : (
             <SearchHistoryDropdown
@@ -233,7 +214,6 @@ export function SearchableInput({
               onToggleFavorite={handleToggleFavorite}
               onClearRecents={handleClearRecents}
               isFavorite={readIsFavorite}
-              variant={variant}
             />
           )}
         </div>
@@ -242,50 +222,31 @@ export function SearchableInput({
   );
 }
 
-function dropdownPositionStyle(variant: SearchableInputVariant): React.CSSProperties {
-  if (variant === "topnav") {
-    return {
-      position: "absolute",
-      top: "100%",
-      right: 0,
-      marginTop: 6,
-      width: 320,
-      maxWidth: "calc(100vw - 24px)",
-      background: "#fff",
-      border: "1px solid #D8DCE5",
-      borderRadius: 12,
-      boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
-      zIndex: 100,
-    };
-  }
-  return {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    marginTop: 4,
-    background: "#fff",
-    border: "1px solid #D8DCE5",
-    borderRadius: 12,
-    boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
-    zIndex: 50,
-  };
-}
+const dropdownPositionStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "100%",
+  left: 0,
+  right: 0,
+  marginTop: 4,
+  background: "#fff",
+  border: "1px solid #D8DCE5",
+  borderRadius: 12,
+  boxShadow: "0 12px 32px rgba(20,22,27,0.12)",
+  zIndex: 50,
+};
 
 function LiveResultsDropdown({
   items,
   activeIndex,
   renderResult,
   onSelect,
-  variant,
 }: {
   items: Array<{ entry: SearchableInputResult; href: string }>;
   activeIndex: number;
   renderResult: (item: SearchableInputResult, active: boolean) => React.ReactNode;
   onSelect: (item: SearchableInputResult) => void;
-  variant: SearchableInputVariant;
 }) {
-  const baseStyle = dropdownPositionStyle(variant);
+  const baseStyle = dropdownPositionStyle;
   if (items.length === 0) {
     return (
       <div

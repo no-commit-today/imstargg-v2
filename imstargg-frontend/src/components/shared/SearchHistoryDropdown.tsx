@@ -13,7 +13,6 @@ interface Props {
   onToggleFavorite: (entry: Omit<SearchEntry, "addedAt">) => void;
   onClearRecents: () => void;
   isFavorite: (kind: SearchEntryKind, tag: string) => boolean;
-  variant?: "default" | "topnav";
 }
 
 function entryHref(e: SearchEntry): string {
@@ -22,32 +21,20 @@ function entryHref(e: SearchEntry): string {
 
 export function SearchHistoryDropdown({
   recents, favorites, activeIndex, onSelect, onToggleFavorite, onClearRecents, isFavorite,
-  variant = "default",
 }: Props) {
   if (recents.length === 0 && favorites.length === 0) return null;
 
   const recentsActiveIndex = activeIndex >= favorites.length ? activeIndex - favorites.length : -1;
   const favoritesActiveIndex = activeIndex < favorites.length ? activeIndex : -1;
 
-  const positionStyle: React.CSSProperties =
-    variant === "topnav"
-      ? {
-          position: "absolute",
-          top: "100%",
-          right: 0,
-          marginTop: 6,
-          width: 320,
-          maxWidth: "calc(100vw - 24px)",
-          zIndex: 100,
-        }
-      : {
-          position: "absolute",
-          top: "100%",
-          left: 0,
-          right: 0,
-          marginTop: 4,
-          zIndex: 50,
-        };
+  const positionStyle: React.CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    marginTop: 4,
+    zIndex: 50,
+  };
 
   return (
     <div

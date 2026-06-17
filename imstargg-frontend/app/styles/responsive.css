@@ -23,7 +23,6 @@ html, body { overflow-x: hidden; }
     padding: 0 16px;
     gap: 16px;
   }
-  .topnav-search { width: 180px; }
   .main { padding: 16px; }
 
   /* PlayerPage: stack sidebar + content */
@@ -92,10 +91,7 @@ html, body { overflow-x: hidden; }
   .topnav-logo img { height: 24px !important; }
   .topnav-links { display: none !important; }
   .topnav-spacer { display: none; }
-  .topnav-desktop-search { display: none; }
   .topnav-menu-button { display: inline-flex; margin-left: auto; }
-  .topnav-search { width: auto; padding: 6px 10px; }
-  .topnav-search input { font-size: 14px; }
 
   body { padding-bottom: 0; }
 
