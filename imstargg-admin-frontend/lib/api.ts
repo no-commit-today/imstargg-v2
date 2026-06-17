@@ -37,8 +37,13 @@ export const getBrawlers = () => request<BrawlerListItem[]>("/brawlers");
 export const getBrawlerDetail = (brawlStarsId: number) =>
   request<BrawlerDetail>(`/brawlers/${brawlStarsId}`);
 
-export const createBrawler = (data: { brawlStarsId: number; rarity: string; role: string }) =>
-  request<void>("/brawlers", { method: "POST", body: JSON.stringify(data) });
+export const createBrawler = (data: {
+  brawlStarsId: number;
+  rarity: string;
+  role: string;
+  names: Record<string, string>;
+  gearBrawlStarsIds: number[];
+}) => request<void>("/brawlers", { method: "POST", body: JSON.stringify(data) });
 
 export const updateBrawlerMessages = (brawlStarsId: number, messages: Record<string, string>) =>
   request<void>(`/brawlers/${brawlStarsId}/messages`, {
@@ -166,8 +171,11 @@ export const uploadHyperChargeImage = (
 // Gear
 export const getGears = () => request<Gear[]>("/gears");
 
-export const createGear = (data: { brawlStarsId: number; rarity: string }) =>
-  request<void>("/gears", { method: "POST", body: JSON.stringify(data) });
+export const createGear = (data: {
+  brawlStarsId: number;
+  rarity: string;
+  names: Record<string, string>;
+}) => request<void>("/gears", { method: "POST", body: JSON.stringify(data) });
 
 export const updateGearMessages = (brawlStarsId: number, messages: Record<string, string>) =>
   request<void>(`/gears/${brawlStarsId}/messages`, {
@@ -184,8 +192,12 @@ export const uploadGearImage = (brawlStarsId: number, file: File) => {
 // Event
 export const getEvents = () => request<BattleEvent[]>("/events");
 
-export const createEvent = (data: { brawlStarsId: number; modeId?: number; mapName?: string }) =>
-  request<void>("/events", { method: "POST", body: JSON.stringify(data) });
+export const createEvent = (data: {
+  brawlStarsId: number;
+  modeId?: number;
+  mapName?: string;
+  mapNames: Record<string, string>;
+}) => request<void>("/events", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventMessages = (brawlStarsId: number, messages: Record<string, string>) =>
   request<void>(`/events/${brawlStarsId}/messages`, {
@@ -200,6 +212,9 @@ export const createEventMode = (data: {
   brawlStarsId: number;
   brawlStarsName: string;
   resultType?: BattleEventModeResultType;
+  names: Record<string, string>;
+  playerCounts: number[];
+  color: string;
 }) => request<void>("/event-modes", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventModeMessages = (brawlStarsId: number, messages: Record<string, string>) =>

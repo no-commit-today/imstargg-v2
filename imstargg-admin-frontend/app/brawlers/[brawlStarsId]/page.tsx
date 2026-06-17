@@ -16,16 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
   getBrawlerDetail,
+  getGears,
   updateBrawlerMessages,
   uploadBrawlerImage,
   createBrawlerBuffy,
@@ -42,7 +34,7 @@ import {
   updateHyperChargeMessages,
   uploadHyperChargeImage,
 } from "@/lib/api";
-import type { BrawlerDetail, BuffyType, StarPower, Gadget, HyperCharge } from "@/lib/types";
+import type { BrawlerDetail, BuffyType, Gear, StarPower, Gadget, HyperCharge } from "@/lib/types";
 import { toast } from "sonner";
 import { ImageUploadField } from "@/components/image-upload-field";
 
@@ -53,17 +45,16 @@ const BUFFY_LABELS: Record<BuffyType, string> = {
   HYPER_CHARGE: "하이퍼차지 버피",
 };
 
-// Sub-item (StarPower/Gadget/HyperCharge) edit dialog
-function SubItemEditDialog({
+function SubItemRow({
   item,
-  label,
   onSaveMessages,
   onUploadImage,
+  onReload,
 }: {
   item: StarPower | Gadget | HyperCharge;
-  label: string;
   onSaveMessages: (messages: Record<string, string>) => Promise<void>;
   onUploadImage: (file: File) => Promise<void>;
+  onReload: () => void;
 }) {
   const [ko, setKo] = useState(item.names.KOREAN || "");
   const [en, setEn] = useState(item.names.ENGLISH || "");
@@ -72,19 +63,16 @@ function SubItemEditDialog({
     try {
       await onSaveMessages({ KOREAN: ko, ENGLISH: en });
       toast.success("이름이 저장되었습니다.");
+      onReload();
     } catch {
       toast.error("저장에 실패했습니다.");
     }
   };
 
   return (
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>
-          {label} 편집 - {item.brawlStarsId}
-        </DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4">
+    <div className="space-y-3 rounded-md border p-3">
+      <p className="text-xs text-muted-foreground">ID {item.brawlStarsId}</p>
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>이름 (KO)</Label>
           <Input value={ko} onChange={(e) => setKo(e.target.value)} />
@@ -93,37 +81,38 @@ function SubItemEditDialog({
           <Label>이름 (EN)</Label>
           <Input value={en} onChange={(e) => setEn(e.target.value)} />
         </div>
-        <Button onClick={handleSave}>이름 저장</Button>
-        <div>
-          <Label>이미지</Label>
-          <ImageUploadField
-            currentImageUrl={item.imageUrl}
-            onUpload={onUploadImage}
-            previewClassName="max-h-24"
-          />
-        </div>
       </div>
-    </DialogContent>
+      <Button size="sm" onClick={handleSave}>이름 저장</Button>
+      <div>
+        <Label>이미지</Label>
+        <ImageUploadField
+          currentImageUrl={item.imageUrl}
+          onUpload={onUploadImage}
+          onUploaded={onReload}
+          previewClassName="max-h-24"
+        />
+      </div>
+    </div>
   );
 }
 
-// Sub-item grid and management
 function SubItemSection({
   title,
   items,
   onAdd,
   onSaveMessages,
   onUploadImage,
+  onReload,
 }: {
   title: string;
   items: (StarPower | Gadget | HyperCharge)[];
   onAdd: (brawlStarsId: number) => Promise<void>;
   onSaveMessages: (itemBrawlStarsId: number, messages: Record<string, string>) => Promise<void>;
   onUploadImage: (itemBrawlStarsId: number, file: File) => Promise<void>;
+  onReload: () => void;
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [addId, setAddId] = useState("");
-  const [editItem, setEditItem] = useState<(StarPower | Gadget | HyperCharge) | null>(null);
 
   const handleAdd = async () => {
     const id = Number(addId);
@@ -142,11 +131,13 @@ function SubItemSection({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{title}</h3>
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <CardTitle>
+          {title} <span className="text-sm font-normal text-muted-foreground">· {items.length}</span>
+        </CardTitle>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger render={<Button size="sm" />}>{title} 등록</DialogTrigger>
+          <DialogTrigger render={<Button size="sm" />}>{title} 추가</DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{title} 등록</DialogTitle>
@@ -154,54 +145,28 @@ function SubItemSection({
             <div className="space-y-4">
               <div>
                 <Label>BrawlStars ID</Label>
-                <Input
-                  type="number"
-                  value={addId}
-                  onChange={(e) => setAddId(e.target.value)}
-                />
+                <Input type="number" value={addId} onChange={(e) => setAddId(e.target.value)} />
               </div>
               <Button onClick={handleAdd} className="w-full">등록</Button>
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>BrawlStars ID</TableHead>
-            <TableHead>이름 (KO)</TableHead>
-            <TableHead>이름 (EN)</TableHead>
-            <TableHead>이미지</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.brawlStarsId}>
-              <TableCell>{item.brawlStarsId}</TableCell>
-              <TableCell>{item.names.KOREAN || "-"}</TableCell>
-              <TableCell>{item.names.ENGLISH || "-"}</TableCell>
-              <TableCell><ImageThumbnail url={item.imageUrl} alt={item.names.KOREAN || String(item.brawlStarsId)} /></TableCell>
-              <TableCell>
-                <Dialog
-                  open={editItem?.brawlStarsId === item.brawlStarsId}
-                  onOpenChange={(open) => setEditItem(open ? item : null)}
-                >
-                  <DialogTrigger render={<Button variant="outline" size="sm" />}>편집</DialogTrigger>
-                  <SubItemEditDialog
-                    item={item}
-                    label={title}
-                    onSaveMessages={(msgs) => onSaveMessages(item.brawlStarsId, msgs)}
-                    onUploadImage={(file) => onUploadImage(item.brawlStarsId, file)}
-                  />
-                </Dialog>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {items.length === 0 && (
+          <p className="text-sm text-muted-foreground">등록된 항목이 없습니다.</p>
+        )}
+        {items.map((item) => (
+          <SubItemRow
+            key={item.brawlStarsId}
+            item={item}
+            onSaveMessages={(msgs) => onSaveMessages(item.brawlStarsId, msgs)}
+            onUploadImage={(file) => onUploadImage(item.brawlStarsId, file)}
+            onReload={onReload}
+          />
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -209,6 +174,7 @@ export default function BrawlerDetailPage() {
   const params = useParams();
   const brawlStarsId = Number(params.brawlStarsId);
   const [detail, setDetail] = useState<BrawlerDetail | null>(null);
+  const [gears, setGears] = useState<Gear[]>([]);
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
   const [selectedGearIds, setSelectedGearIds] = useState<Set<number>>(new Set());
@@ -224,6 +190,7 @@ export default function BrawlerDetailPage() {
 
   useEffect(() => {
     loadDetail();
+    getGears().then(setGears);
   }, [loadDetail]);
 
   if (!detail) return <AdminLayout><p>로딩 중...</p></AdminLayout>;
@@ -282,28 +249,14 @@ export default function BrawlerDetailPage() {
     <AdminLayout>
       <h2 className="mb-4 text-2xl font-bold">브롤러 상세 - {brawlStarsId}</h2>
 
-      <Tabs defaultValue="info" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="info">기본 정보</TabsTrigger>
-          <TabsTrigger value="star-powers">스타파워</TabsTrigger>
-          <TabsTrigger value="gadgets">가젯</TabsTrigger>
-          <TabsTrigger value="hyper-charges">하이퍼차지</TabsTrigger>
-          <TabsTrigger value="gears">기어</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="info" className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle>기본 정보</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p>BrawlStars ID: {detail.brawlStarsId}</p>
-              <p>Rarity: {detail.rarity}</p>
-              <p>Role: {detail.role}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>이름</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
+      <div className="max-w-3xl space-y-6">
+        <Card>
+          <CardHeader><CardTitle>이름 · 기본정보</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              ID {detail.brawlStarsId} · {detail.rarity} · {detail.role}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>이름 (KO)</Label>
                 <Input value={ko} onChange={(e) => setKo(e.target.value)} />
@@ -312,140 +265,125 @@ export default function BrawlerDetailPage() {
                 <Label>이름 (EN)</Label>
                 <Input value={en} onChange={(e) => setEn(e.target.value)} />
               </div>
-              <Button onClick={handleSaveMessages}>이름 저장</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>메인 이미지</CardTitle></CardHeader>
-            <CardContent>
+            </div>
+            <Button onClick={handleSaveMessages}>이름 저장</Button>
+            <div>
+              <Label>메인 이미지</Label>
               <ImageUploadField
                 currentImageUrl={detail.imageUrl}
                 onUpload={(file) => uploadBrawlerImage(brawlStarsId, file)}
                 onUploaded={loadDetail}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader><CardTitle>버피</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {BUFFY_TYPES.map((type) => {
-                const buffy = detail.buffies.find((b) => b.type === type);
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>기어</CardTitle>
+            <Button size="sm" onClick={handleSaveGears}>기어 연결 저장</Button>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {gears.map((gear) => {
+                const selected = selectedGearIds.has(gear.brawlStarsId);
                 return (
-                  <div
-                    key={type}
-                    className="flex items-start gap-4 border-b pb-4 last:border-b-0 last:pb-0"
+                  <button
+                    key={gear.brawlStarsId}
+                    type="button"
+                    onClick={() => toggleGear(gear.brawlStarsId)}
+                    className={`flex w-20 flex-col items-center gap-1 rounded-md border p-2 ${
+                      selected ? "border-primary ring-2 ring-primary" : "border-border"
+                    }`}
                   >
-                    <div className="flex-1 space-y-2">
-                      <p className="text-sm font-medium">{BUFFY_LABELS[type]}</p>
-                      {buffy ? (
-                        <ImageUploadField
-                          currentImageUrl={buffy.imageUrl}
-                          onUpload={(file) => uploadBrawlerBuffyImage(brawlStarsId, type, file)}
-                          onUploaded={loadDetail}
-                          previewClassName="max-h-24"
-                        />
-                      ) : (
-                        <p className="text-sm text-muted-foreground">미등록</p>
-                      )}
-                    </div>
-                    <div className="pt-5">
-                      {buffy ? (
-                        <Button variant="outline" size="sm" onClick={() => handleDeleteBuffy(type)}>
-                          삭제
-                        </Button>
-                      ) : (
-                        <Button size="sm" onClick={() => handleCreateBuffy(type)}>
-                          등록
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                    <ImageThumbnail url={gear.imageUrl} alt={gear.names.KOREAN || String(gear.brawlStarsId)} />
+                    <span className="w-full truncate text-center text-xs">
+                      {gear.names.KOREAN || gear.brawlStarsId}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">{gear.rarity}</span>
+                  </button>
                 );
               })}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="star-powers">
-          <SubItemSection
-            title="스타파워"
-            items={detail.starPowers}
-            onAdd={async (id) => {
-              await createStarPower(brawlStarsId, id);
-              loadDetail();
-            }}
-            onSaveMessages={async (itemId, msgs) => {
-              await updateStarPowerMessages(brawlStarsId, itemId, msgs);
-              loadDetail();
-            }}
-            onUploadImage={async (itemId, file) => {
-              await uploadStarPowerImage(brawlStarsId, itemId, file);
-              loadDetail();
-            }}
-          />
-        </TabsContent>
+        <SubItemSection
+          title="가젯"
+          items={detail.gadgets}
+          onAdd={async (id) => {
+            await createGadget(brawlStarsId, id);
+            loadDetail();
+          }}
+          onSaveMessages={(itemId, msgs) => updateGadgetMessages(brawlStarsId, itemId, msgs)}
+          onUploadImage={(itemId, file) => uploadGadgetImage(brawlStarsId, itemId, file)}
+          onReload={loadDetail}
+        />
 
-        <TabsContent value="gadgets">
-          <SubItemSection
-            title="가젯"
-            items={detail.gadgets}
-            onAdd={async (id) => {
-              await createGadget(brawlStarsId, id);
-              loadDetail();
-            }}
-            onSaveMessages={async (itemId, msgs) => {
-              await updateGadgetMessages(brawlStarsId, itemId, msgs);
-              loadDetail();
-            }}
-            onUploadImage={async (itemId, file) => {
-              await uploadGadgetImage(brawlStarsId, itemId, file);
-              loadDetail();
-            }}
-          />
-        </TabsContent>
+        <SubItemSection
+          title="스타파워"
+          items={detail.starPowers}
+          onAdd={async (id) => {
+            await createStarPower(brawlStarsId, id);
+            loadDetail();
+          }}
+          onSaveMessages={(itemId, msgs) => updateStarPowerMessages(brawlStarsId, itemId, msgs)}
+          onUploadImage={(itemId, file) => uploadStarPowerImage(brawlStarsId, itemId, file)}
+          onReload={loadDetail}
+        />
 
-        <TabsContent value="hyper-charges">
-          <SubItemSection
-            title="하이퍼차지"
-            items={detail.hyperCharges}
-            onAdd={async (id) => {
-              await createHyperCharge(brawlStarsId, id);
-              loadDetail();
-            }}
-            onSaveMessages={async (itemId, msgs) => {
-              await updateHyperChargeMessages(brawlStarsId, itemId, msgs);
-              loadDetail();
-            }}
-            onUploadImage={async (itemId, file) => {
-              await uploadHyperChargeImage(brawlStarsId, itemId, file);
-              loadDetail();
-            }}
-          />
-        </TabsContent>
+        <SubItemSection
+          title="하이퍼차지"
+          items={detail.hyperCharges}
+          onAdd={async (id) => {
+            await createHyperCharge(brawlStarsId, id);
+            loadDetail();
+          }}
+          onSaveMessages={(itemId, msgs) => updateHyperChargeMessages(brawlStarsId, itemId, msgs)}
+          onUploadImage={(itemId, file) => uploadHyperChargeImage(brawlStarsId, itemId, file)}
+          onReload={loadDetail}
+        />
 
-        <TabsContent value="gears">
-          <Card>
-            <CardHeader><CardTitle>기어 연결</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {detail.allGears.map((gear) => (
-                  <Button
-                    key={gear.brawlStarsId}
-                    variant={selectedGearIds.has(gear.brawlStarsId) ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleGear(gear.brawlStarsId)}
-                  >
-                    {gear.names?.KOREAN || gear.brawlStarsId} ({gear.rarity})
-                  </Button>
-                ))}
-              </div>
-              <Button onClick={handleSaveGears}>기어 연결 저장</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Card>
+          <CardHeader><CardTitle>버피</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {BUFFY_TYPES.map((type) => {
+              const buffy = detail.buffies.find((b) => b.type === type);
+              return (
+                <div
+                  key={type}
+                  className="flex items-start gap-4 border-b pb-4 last:border-b-0 last:pb-0"
+                >
+                  <div className="flex-1 space-y-2">
+                    <p className="text-sm font-medium">{BUFFY_LABELS[type]}</p>
+                    {buffy ? (
+                      <ImageUploadField
+                        currentImageUrl={buffy.imageUrl}
+                        onUpload={(file) => uploadBrawlerBuffyImage(brawlStarsId, type, file)}
+                        onUploaded={loadDetail}
+                        previewClassName="max-h-24"
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">미등록</p>
+                    )}
+                  </div>
+                  <div className="pt-5">
+                    {buffy ? (
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteBuffy(type)}>
+                        삭제
+                      </Button>
+                    ) : (
+                      <Button size="sm" onClick={() => handleCreateBuffy(type)}>
+                        등록
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
     </AdminLayout>
   );
 }

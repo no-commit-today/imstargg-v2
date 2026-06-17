@@ -82,8 +82,11 @@ class BattleEventService(
                 brawlStarsId = request.brawlStarsId,
                 brawlStarsName = request.brawlStarsName,
                 resultType = request.resultType,
+                playerCounts = request.playerCounts,
+                color = request.color,
             ),
         )
+        doUpdateMessages(MessageType.BATTLE_EVENT_MODE_NAME, request.brawlStarsId, request.names)
     }
 
     @Transactional
@@ -113,6 +116,7 @@ class BattleEventService(
     fun createEvent(request: BattleEventCreateRequest) {
         val mode = request.modeId?.let { battleEventModeJpaRepository.findByBrawlStarsId(it) }
         battleEventJpaRepository.save(BattleEventEntity(request.brawlStarsId, mode, request.mapName))
+        doUpdateMessages(MessageType.BATTLE_EVENT_NAME, request.brawlStarsId, request.mapNames)
     }
 
     @Transactional

@@ -178,6 +178,10 @@ class BrawlerService(
     @Transactional
     fun createBrawler(request: BrawlerCreateRequest) {
         brawlerJpaRepository.save(BrawlerEntity(request.brawlStarsId, request.rarity, request.role))
+        doUpdateMessages(MessageType.BRAWLER_NAME, request.brawlStarsId, request.names)
+        request.gearBrawlStarsIds.forEach { gearId ->
+            brawlerGearJpaRepository.save(BrawlerGearEntity(request.brawlStarsId, gearId))
+        }
     }
 
     @Transactional

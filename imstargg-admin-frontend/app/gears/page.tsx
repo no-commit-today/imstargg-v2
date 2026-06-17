@@ -27,8 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getGears, createGear } from "@/lib/api";
+import { getGears, createGear, uploadGearImage } from "@/lib/api";
 import { ImageThumbnail } from "@/components/image-thumbnail";
+import { PendingImageInput } from "@/components/pending-image-input";
 import type { Gear } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -38,7 +39,9 @@ const GEAR_RARITIES = ["SUPER_RARE", "EPIC", "MYTHIC"];
 export default function GearListPage() {
   const [gears, setGears] = useState<Gear[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ brawlStarsId: "", rarity: "" });
+  const [form, setForm] = useState({ brawlStarsId: "", rarity: "", ko: "", en: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const loadGears = () => getGears().then(setGears);
 
@@ -46,21 +49,41 @@ export default function GearListPage() {
     loadGears();
   }, []);
 
+  const resetForm = () => {
+    setForm({ brawlStarsId: "", rarity: "", ko: "", en: "" });
+    setImageFile(null);
+  };
+
   const handleCreate = async () => {
     const id = Number(form.brawlStarsId);
     if (!id || !form.rarity) {
-      toast.error("모든 필드를 입력해주세요.");
+      toast.error("ID와 rarity를 입력해주세요.");
       return;
     }
+    setSubmitting(true);
     try {
-      await createGear({ brawlStarsId: id, rarity: form.rarity });
-      toast.success("기어가 등록되었습니다.");
-      setOpen(false);
-      setForm({ brawlStarsId: "", rarity: "" });
-      loadGears();
+      await createGear({
+        brawlStarsId: id,
+        rarity: form.rarity,
+        names: { KOREAN: form.ko, ENGLISH: form.en },
+      });
     } catch {
       toast.error("등록에 실패했습니다.");
+      setSubmitting(false);
+      return;
     }
+    if (imageFile) {
+      try {
+        await uploadGearImage(id, imageFile);
+      } catch {
+        toast.error("등록은 됐지만 이미지 업로드에 실패했습니다. 편집에서 다시 업로드하세요.");
+      }
+    }
+    toast.success("기어가 등록되었습니다.");
+    setSubmitting(false);
+    setOpen(false);
+    resetForm();
+    loadGears();
   };
 
   return (
@@ -69,7 +92,7 @@ export default function GearListPage() {
         <h2 className="text-2xl font-bold">기어 관리</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger render={<Button />}>기어 등록</DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>기어 등록</DialogTitle>
             </DialogHeader>
@@ -93,7 +116,23 @@ export default function GearListPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleCreate} className="w-full">등록</Button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>이름 (KO)</Label>
+                  <Input value={form.ko} onChange={(e) => setForm({ ...form, ko: e.target.value })} />
+                </div>
+                <div>
+                  <Label>이름 (EN)</Label>
+                  <Input value={form.en} onChange={(e) => setForm({ ...form, en: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <Label>이미지 (선택)</Label>
+                <PendingImageInput file={imageFile} onChange={setImageFile} />
+              </div>
+              <Button onClick={handleCreate} className="w-full" disabled={submitting}>
+                {submitting ? "등록 중..." : "등록"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
