@@ -113,6 +113,7 @@ class BattleEventService(
     fun createEvent(request: BattleEventCreateRequest) {
         val mode = request.modeId?.let { battleEventModeJpaRepository.findByBrawlStarsId(it) }
         battleEventJpaRepository.save(BattleEventEntity(request.brawlStarsId, mode, request.mapName))
+        doUpdateMessages(MessageType.BATTLE_EVENT_NAME, request.brawlStarsId, request.mapNames)
     }
 
     @Transactional
