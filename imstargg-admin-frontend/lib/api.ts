@@ -166,8 +166,11 @@ export const uploadHyperChargeImage = (
 // Gear
 export const getGears = () => request<Gear[]>("/gears");
 
-export const createGear = (data: { brawlStarsId: number; rarity: string }) =>
-  request<void>("/gears", { method: "POST", body: JSON.stringify(data) });
+export const createGear = (data: {
+  brawlStarsId: number;
+  rarity: string;
+  names: Record<string, string>;
+}) => request<void>("/gears", { method: "POST", body: JSON.stringify(data) });
 
 export const updateGearMessages = (brawlStarsId: number, messages: Record<string, string>) =>
   request<void>(`/gears/${brawlStarsId}/messages`, {
