@@ -187,8 +187,12 @@ export const uploadGearImage = (brawlStarsId: number, file: File) => {
 // Event
 export const getEvents = () => request<BattleEvent[]>("/events");
 
-export const createEvent = (data: { brawlStarsId: number; modeId?: number; mapName?: string }) =>
-  request<void>("/events", { method: "POST", body: JSON.stringify(data) });
+export const createEvent = (data: {
+  brawlStarsId: number;
+  modeId?: number;
+  mapName?: string;
+  mapNames: Record<string, string>;
+}) => request<void>("/events", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventMessages = (brawlStarsId: number, messages: Record<string, string>) =>
   request<void>(`/events/${brawlStarsId}/messages`, {

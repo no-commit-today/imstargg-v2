@@ -42,7 +42,8 @@ export default function EventListPage() {
   const [events, setEvents] = useState<BattleEvent[]>([]);
   const [eventModes, setEventModes] = useState<BattleEventMode[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ brawlStarsId: "", modeId: "", mapName: "" });
+  const [form, setForm] = useState({ brawlStarsId: "", modeId: "", mapName: "", ko: "", en: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   const loadEvents = () => getEvents().then(setEvents);
 
@@ -57,19 +58,24 @@ export default function EventListPage() {
       toast.error("BrawlStars ID를 입력해주세요.");
       return;
     }
+    setSubmitting(true);
     try {
       await createEvent({
         brawlStarsId: id,
         modeId: form.modeId ? Number(form.modeId) : undefined,
         mapName: form.mapName || undefined,
+        mapNames: { KOREAN: form.ko, ENGLISH: form.en },
       });
-      toast.success("이벤트가 등록되었습니다.");
-      setOpen(false);
-      setForm({ brawlStarsId: "", modeId: "", mapName: "" });
-      loadEvents();
     } catch {
       toast.error("등록에 실패했습니다.");
+      setSubmitting(false);
+      return;
     }
+    toast.success("이벤트가 등록되었습니다.");
+    setSubmitting(false);
+    setOpen(false);
+    setForm({ brawlStarsId: "", modeId: "", mapName: "", ko: "", en: "" });
+    loadEvents();
   };
 
   return (
@@ -78,7 +84,7 @@ export default function EventListPage() {
         <h2 className="text-2xl font-bold">이벤트 관리</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger render={<Button />}>이벤트 등록</DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>이벤트 등록</DialogTitle>
             </DialogHeader>
@@ -111,7 +117,19 @@ export default function EventListPage() {
                   onChange={(e) => setForm({ ...form, mapName: e.target.value })}
                 />
               </div>
-              <Button onClick={handleCreate} className="w-full">등록</Button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>맵 이름 (KO)</Label>
+                  <Input value={form.ko} onChange={(e) => setForm({ ...form, ko: e.target.value })} />
+                </div>
+                <div>
+                  <Label>맵 이름 (EN)</Label>
+                  <Input value={form.en} onChange={(e) => setForm({ ...form, en: e.target.value })} />
+                </div>
+              </div>
+              <Button onClick={handleCreate} className="w-full" disabled={submitting}>
+                {submitting ? "등록 중..." : "등록"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
