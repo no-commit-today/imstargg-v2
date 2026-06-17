@@ -44,10 +44,12 @@
 
 - [ ] **Step 1: 공유 컴포넌트 생성** — `components/pending-image-input.tsx`:
 
+> 주의: 이 프로젝트의 eslint(`react-hooks/set-state-in-effect`)는 **effect 안에서 prop 파생값을 setState 하는 패턴을 에러로 막는다.** 따라서 미리보기 URL 은 렌더 중 `useMemo` 로 파생하고, revoke 는 setState 없는 cleanup 전용 effect 에서 처리한다(누수 방지). (기존 `ImageUploadField` 의 useState+useEffect 패턴은 로컬 state 기반이라 통과하지만, prop 기반인 이 컴포넌트는 통과하지 못함.)
+
 ```tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 
 interface PendingImageInputProps {
@@ -57,17 +59,13 @@ interface PendingImageInputProps {
 }
 
 export function PendingImageInput({ file, onChange, accept = "image/*" }: PendingImageInputProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // 렌더 중 파생(불필요한 effect 회피) + 변경/언마운트 시 revoke 로 blob 누수 방지.
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
 
   useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    if (!previewUrl) return;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   return (
     <div className="space-y-2">
