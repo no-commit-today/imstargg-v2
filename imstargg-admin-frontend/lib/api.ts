@@ -37,8 +37,13 @@ export const getBrawlers = () => request<BrawlerListItem[]>("/brawlers");
 export const getBrawlerDetail = (brawlStarsId: number) =>
   request<BrawlerDetail>(`/brawlers/${brawlStarsId}`);
 
-export const createBrawler = (data: { brawlStarsId: number; rarity: string; role: string }) =>
-  request<void>("/brawlers", { method: "POST", body: JSON.stringify(data) });
+export const createBrawler = (data: {
+  brawlStarsId: number;
+  rarity: string;
+  role: string;
+  names: Record<string, string>;
+  gearBrawlStarsIds: number[];
+}) => request<void>("/brawlers", { method: "POST", body: JSON.stringify(data) });
 
 export const updateBrawlerMessages = (brawlStarsId: number, messages: Record<string, string>) =>
   request<void>(`/brawlers/${brawlStarsId}/messages`, {

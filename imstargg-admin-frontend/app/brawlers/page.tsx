@@ -4,22 +4,6 @@ import { useEffect, useState } from "react";
 import { AdminLayout } from "../admin-layout";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -27,105 +11,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getBrawlers, createBrawler } from "@/lib/api";
+import { getBrawlers } from "@/lib/api";
 import { ImageThumbnail } from "@/components/image-thumbnail";
 import type { BrawlerListItem } from "@/lib/types";
 import Link from "next/link";
-import { toast } from "sonner";
-
-const RARITIES = [
-  "STARTING_BRAWLER",
-  "RARE",
-  "SUPER_RARE",
-  "EPIC",
-  "MYTHIC",
-  "LEGENDARY",
-  "ULTRA_LEGENDARY",
-];
-
-const ROLES = [
-  "TANK",
-  "ASSASSIN",
-  "SUPPORT",
-  "CONTROLLER",
-  "DAMAGE_DEALER",
-  "MARKSMAN",
-  "ARTILLERY",
-];
 
 export default function BrawlerListPage() {
   const [brawlers, setBrawlers] = useState<BrawlerListItem[]>([]);
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ brawlStarsId: "", rarity: "", role: "" });
-
-  const loadBrawlers = () => getBrawlers().then(setBrawlers);
 
   useEffect(() => {
-    loadBrawlers();
+    getBrawlers().then(setBrawlers);
   }, []);
-
-  const handleCreate = async () => {
-    const id = Number(form.brawlStarsId);
-    if (!id || !form.rarity || !form.role) {
-      toast.error("모든 필드를 입력해주세요.");
-      return;
-    }
-    try {
-      await createBrawler({ brawlStarsId: id, rarity: form.rarity, role: form.role });
-      toast.success("브롤러가 등록되었습니다.");
-      setOpen(false);
-      setForm({ brawlStarsId: "", rarity: "", role: "" });
-      loadBrawlers();
-    } catch {
-      toast.error("등록에 실패했습니다.");
-    }
-  };
 
   return (
     <AdminLayout>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold">브롤러 관리</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<Button />}>브롤러 등록</DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>브롤러 등록</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>BrawlStars ID</Label>
-                <Input
-                  type="number"
-                  value={form.brawlStarsId}
-                  onChange={(e) => setForm({ ...form, brawlStarsId: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Rarity</Label>
-                <Select value={form.rarity} onValueChange={(v) => setForm({ ...form, rarity: v ?? "" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {RARITIES.map((r) => (
-                      <SelectItem key={r} value={r}>{r}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Role</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v ?? "" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map((r) => (
-                      <SelectItem key={r} value={r}>{r}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleCreate} className="w-full">등록</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Link href="/brawlers/new">
+          <Button>브롤러 등록</Button>
+        </Link>
       </div>
 
       <Table>
