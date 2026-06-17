@@ -82,8 +82,11 @@ class BattleEventService(
                 brawlStarsId = request.brawlStarsId,
                 brawlStarsName = request.brawlStarsName,
                 resultType = request.resultType,
+                playerCounts = request.playerCounts,
+                color = request.color,
             ),
         )
+        doUpdateMessages(MessageType.BATTLE_EVENT_MODE_NAME, request.brawlStarsId, request.names)
     }
 
     @Transactional
