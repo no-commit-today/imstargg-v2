@@ -6,7 +6,7 @@ deployment:
   replicaCount: 1
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-worker
-    tag: "0.2.2-9f16c9d"
+    tag: "0.2.2-f9d6d91"
     pullPolicy: Always
   env:
     - name: SPRING_PROFILES_ACTIVE
