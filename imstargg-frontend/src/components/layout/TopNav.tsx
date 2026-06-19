@@ -11,7 +11,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useFeedbackDialog } from "@/hooks/use-feedback-dialog";
-import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 
 interface NavItem {
   href: string;
@@ -81,10 +80,6 @@ export default function TopNav() {
           <span className="hidden sm:inline">피드백</span>
         </button>
 
-        <div className="topnav-desktop-search">
-          <PlayerSearchInput variant="topnav" />
-        </div>
-
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <button
             type="button"
@@ -103,7 +98,7 @@ export default function TopNav() {
               <div>
                 <SheetTitle>메뉴</SheetTitle>
                 <SheetDescription className="sr-only">
-                  주요 페이지와 플레이어 검색
+                  주요 페이지
                 </SheetDescription>
               </div>
               <button

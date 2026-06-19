@@ -22,12 +22,13 @@ describe("TopNav", () => {
     window.localStorage.clear();
   });
 
-  it("renders desktop search and primary nav links", () => {
+  it("renders primary nav links without a search box", () => {
     render(<TopNav />);
 
+    // 헤더에서 검색을 제거했으므로 검색 입력이 없어야 한다
     expect(
-      screen.getAllByLabelText("플레이어 이름 또는 태그 입력").length,
-    ).toBeGreaterThan(0);
+      screen.queryByLabelText("플레이어 이름 또는 태그 입력"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("브롤러")).toBeInTheDocument();
     expect(screen.getByText("이벤트")).toBeInTheDocument();
     expect(screen.getByText("플레이어")).toBeInTheDocument();
@@ -41,10 +42,10 @@ describe("TopNav", () => {
     await user.click(screen.getByRole("button", { name: "모바일 메뉴 열기" }));
 
     expect(screen.getByRole("dialog", { name: "메뉴" })).toBeInTheDocument();
-    // 드로어에는 검색이 없으므로 검색 입력은 데스크탑 1개만 존재
+    // 헤더·드로어 어디에도 검색 입력이 없다
     expect(
-      screen.getAllByLabelText("플레이어 이름 또는 태그 입력").length,
-    ).toBe(1);
+      screen.queryByLabelText("플레이어 이름 또는 태그 입력"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "브롤러 페이지로 이동" }),
     ).toBeInTheDocument();

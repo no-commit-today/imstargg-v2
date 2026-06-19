@@ -50,6 +50,7 @@ class GearService(
     @Transactional
     fun create(request: GearCreateRequest) {
         gearJpaRepository.save(GearEntity(request.brawlStarsId, request.rarity))
+        doUpdateMessages(MessageType.GEAR_NAME, request.brawlStarsId, request.names)
     }
 
     @Transactional

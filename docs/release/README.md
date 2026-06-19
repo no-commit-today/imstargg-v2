@@ -20,6 +20,7 @@
 
 ## 인덱스
 
+- [2026.06.3](2026.06.3.md) — 2026-06-19. frontend 신뢰 페이지 추가(`/about`·`/privacy`·`/terms` + 푸터 법적 링크·sitemap, 애드센스 정책 대응), 헤더 검색창 제거·검색 입력 variant 통합(리팩터).
 - [2026.06.2](2026.06.2.md) — 2026-06-07. core-batch tasklet 트랜잭션 제거로 `idle in transaction` 해소(버그 수정), 통계 잡 기능별 하위 패키지 재구성(리팩터).
 - [2026.06.1](2026.06.1.md) — 2026-06-06. 결과형 통계 item 전투수 버그 수정(`battleCount` rename + 캐시 v2), core-batch 잡 재설계(brawler sync 통합·rankingCollectJob 통합·API 스펙 추적 추가), OffsetDateTime→Instant 전환.
 - [2026.06.0](2026.06.0.md) — 2026-06-05. 게임 모드 색상 백엔드 DB 관리(`battle_event_mode.color` 추가 + API 응답 + 프론트 연동), 이벤트 카드 모바일 최적화·배틀 실제시간 툴팁 등 프론트 개선.
