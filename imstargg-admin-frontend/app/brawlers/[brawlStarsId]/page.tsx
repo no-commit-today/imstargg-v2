@@ -218,6 +218,11 @@ export default function BrawlerDetailPage() {
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
   const [selectedGearIds, setSelectedGearIds] = useState<Set<number>>(new Set());
+  const [buffyFiles, setBuffyFiles] = useState<Record<BuffyType, File | null>>({
+    GADGET: null,
+    STAR_POWER: null,
+    HYPER_CHARGE: null,
+  });
 
   const loadDetail = useCallback(() => {
     getBrawlerDetail(brawlStarsId).then((d) => {
@@ -248,11 +253,21 @@ export default function BrawlerDetailPage() {
   const handleCreateBuffy = async (type: BuffyType) => {
     try {
       await createBrawlerBuffy(brawlStarsId, type);
-      toast.success("버피가 등록되었습니다.");
-      loadDetail();
     } catch {
       toast.error("등록에 실패했습니다.");
+      return;
     }
+    const file = buffyFiles[type];
+    if (file) {
+      try {
+        await uploadBrawlerBuffyImage(brawlStarsId, type, file);
+      } catch {
+        toast.error("등록됐지만 이미지 업로드에 실패했습니다. 이미지를 다시 업로드하세요.");
+      }
+    }
+    toast.success("버피가 등록되었습니다.");
+    setBuffyFiles((prev) => ({ ...prev, [type]: null }));
+    loadDetail();
   };
 
   const handleDeleteBuffy = async (type: BuffyType) => {
@@ -401,7 +416,10 @@ export default function BrawlerDetailPage() {
                         previewClassName="max-h-24"
                       />
                     ) : (
-                      <p className="text-sm text-muted-foreground">미등록</p>
+                      <PendingImageInput
+                        file={buffyFiles[type]}
+                        onChange={(f) => setBuffyFiles((prev) => ({ ...prev, [type]: f }))}
+                      />
                     )}
                   </div>
                   <div className="pt-5">
