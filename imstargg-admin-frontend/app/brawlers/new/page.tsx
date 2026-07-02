@@ -14,7 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getGears, createBrawler, uploadBrawlerImage } from "@/lib/api";
+import {
+  getGears,
+  createBrawler,
+  uploadBrawlerImage,
+  createGadget,
+  uploadGadgetImage,
+  createStarPower,
+  uploadStarPowerImage,
+  createHyperCharge,
+  uploadHyperChargeImage,
+} from "@/lib/api";
 import { ImageThumbnail } from "@/components/image-thumbnail";
 import { PendingImageInput } from "@/components/pending-image-input";
 import type { Gear } from "@/lib/types";
@@ -40,12 +50,99 @@ const ROLES = [
   "ARTILLERY",
 ];
 
+type PendingSubItem = {
+  key: number;
+  brawlStarsId: string;
+  ko: string;
+  en: string;
+  file: File | null;
+};
+
+let pendingSubItemKey = 0;
+const nextPendingSubItemKey = () => ++pendingSubItemKey;
+
+function PendingSubItemsCard({
+  title,
+  items,
+  onChange,
+}: {
+  title: string;
+  items: PendingSubItem[];
+  onChange: (items: PendingSubItem[]) => void;
+}) {
+  const updateItem = (key: number, patch: Partial<PendingSubItem>) =>
+    onChange(items.map((it) => (it.key === key ? { ...it, ...patch } : it)));
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <CardTitle>{title} (선택)</CardTitle>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() =>
+            onChange([
+              ...items,
+              { key: nextPendingSubItemKey(), brawlStarsId: "", ko: "", en: "", file: null },
+            ])
+          }
+        >
+          행 추가
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {items.length === 0 && (
+          <p className="text-sm text-muted-foreground">함께 등록할 항목이 없으면 비워두세요.</p>
+        )}
+        {items.map((item) => (
+          <div key={item.key} className="space-y-3 rounded-md border p-3">
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label>BrawlStars ID</Label>
+                <Input
+                  type="number"
+                  value={item.brawlStarsId}
+                  onChange={(e) => updateItem(item.key, { brawlStarsId: e.target.value })}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onChange(items.filter((it) => it.key !== item.key))}
+              >
+                삭제
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>이름 (KO)</Label>
+                <Input value={item.ko} onChange={(e) => updateItem(item.key, { ko: e.target.value })} />
+              </div>
+              <div>
+                <Label>이름 (EN)</Label>
+                <Input value={item.en} onChange={(e) => updateItem(item.key, { en: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label>이미지 (선택)</Label>
+              <PendingImageInput file={item.file} onChange={(f) => updateItem(item.key, { file: f })} />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function BrawlerCreatePage() {
   const router = useRouter();
   const [gears, setGears] = useState<Gear[]>([]);
   const [form, setForm] = useState({ brawlStarsId: "", rarity: "", role: "", ko: "", en: "" });
   const [selectedGearIds, setSelectedGearIds] = useState<number[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [gadgets, setGadgets] = useState<PendingSubItem[]>([]);
+  const [starPowers, setStarPowers] = useState<PendingSubItem[]>([]);
+  const [hyperCharges, setHyperCharges] = useState<PendingSubItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -58,10 +155,20 @@ export default function BrawlerCreatePage() {
     );
   };
 
+  const subItemGroups = [
+    { label: "가젯", items: gadgets, create: createGadget, upload: uploadGadgetImage },
+    { label: "스타파워", items: starPowers, create: createStarPower, upload: uploadStarPowerImage },
+    { label: "하이퍼차지", items: hyperCharges, create: createHyperCharge, upload: uploadHyperChargeImage },
+  ];
+
   const handleCreate = async () => {
     const id = Number(form.brawlStarsId);
     if (!id || !form.rarity || !form.role) {
       toast.error("ID, rarity, role을 입력해주세요.");
+      return;
+    }
+    if (subItemGroups.some((group) => group.items.some((item) => !Number(item.brawlStarsId)))) {
+      toast.error("하위 아이템의 BrawlStars ID를 입력해주세요. 필요 없는 행은 삭제하세요.");
       return;
     }
     setSubmitting(true);
@@ -78,12 +185,34 @@ export default function BrawlerCreatePage() {
       setSubmitting(false);
       return;
     }
+    const failed: string[] = [];
     if (imageFile) {
       try {
         await uploadBrawlerImage(id, imageFile);
       } catch {
-        toast.error("등록은 됐지만 이미지 업로드에 실패했습니다. 상세에서 다시 업로드하세요.");
+        failed.push("브롤러 이미지");
       }
+    }
+    for (const group of subItemGroups) {
+      for (const item of group.items) {
+        const itemId = Number(item.brawlStarsId);
+        try {
+          await group.create(id, itemId, { KOREAN: item.ko, ENGLISH: item.en });
+        } catch {
+          failed.push(`${group.label} ${itemId} 등록`);
+          continue;
+        }
+        if (item.file) {
+          try {
+            await group.upload(id, itemId, item.file);
+          } catch {
+            failed.push(`${group.label} ${itemId} 이미지`);
+          }
+        }
+      }
+    }
+    if (failed.length > 0) {
+      toast.error(`일부 항목에 실패했습니다: ${failed.join(", ")} — 상세 페이지에서 다시 시도하세요.`);
     }
     toast.success("브롤러가 등록되었습니다.");
     router.push(`/brawlers/${id}`);
@@ -162,6 +291,10 @@ export default function BrawlerCreatePage() {
             </div>
           </CardContent>
         </Card>
+
+        <PendingSubItemsCard title="가젯" items={gadgets} onChange={setGadgets} />
+        <PendingSubItemsCard title="스타파워" items={starPowers} onChange={setStarPowers} />
+        <PendingSubItemsCard title="하이퍼차지" items={hyperCharges} onChange={setHyperCharges} />
 
         <Card>
           <CardHeader><CardTitle>이미지 (선택)</CardTitle></CardHeader>
