@@ -212,10 +212,11 @@ export default function BrawlerCreatePage() {
       }
     }
     if (failed.length > 0) {
-      toast.error(`일부 항목에 실패했습니다: ${failed.join(", ")} — 상세 페이지에서 다시 시도하세요.`);
+      toast.error(`브롤러는 등록됐지만 일부 항목에 실패했습니다: ${failed.join(", ")} — 상세 페이지에서 다시 시도하세요.`);
+    } else {
+      toast.success("브롤러가 등록되었습니다.");
     }
     setSubmitting(false);
-    toast.success("브롤러가 등록되었습니다.");
     router.push(`/brawlers/${id}`);
   };
 
