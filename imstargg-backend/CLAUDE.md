@@ -32,7 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Local Development
 
 ```bash
-# 로컬 인프라 실행 (PostgreSQL, Redis)
+# 로컬 인프라 실행 (PostgreSQL, Valkey(Redis 호환), floci(S3 에뮬레이터))
 docker-compose up -d
 
 # 로컬 DB 접속
@@ -42,7 +42,7 @@ docker-compose up -d
 
 ## Project Architecture
 
-멀티모듈 Spring Boot Kotlin 프로젝트 (team-dodn/spring-boot-kotlin-template 기반)
+멀티모듈 Spring Boot 4 + Kotlin 프로젝트, Java 21 (team-dodn/spring-boot-kotlin-template 기반)
 
 ```text
 imstargg-backend/
@@ -54,7 +54,9 @@ imstargg-backend/
 │   └── core-enum/            # 공유 Enum (외부 모듈에서 참조)
 ├── infrastructure/
 │   ├── db-core/              # JPA + QueryDSL (PostgreSQL)
-│   └── redis-core/           # Redis 캐시/세션
+│   ├── redis-core/           # Redis 캐시/세션
+│   ├── aws-s3/               # S3 클라이언트 (이미지 업로드)
+│   └── aws-sqs/              # SQS 클라이언트
 ├── client/
 │   └── brawlstars-client/    # BrawlStars API 클라이언트 (OpenFeign)
 └── support/
@@ -64,10 +66,11 @@ imstargg-backend/
 
 ### Module Dependencies
 
-- `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*`
+- `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*` (api·worker 는 `redis-core`, `aws-sqs` 추가 의존)
+- `core-admin` → `core-enum`, `db-core`, `aws-s3` (redis-core·support 미의존)
 - `db-core` → `core-enum`
 - `brawlstars-client`: 독립적 (OpenFeign 기반 HTTP 클라이언트)
-- **Docker 이미지**: 루트 단일 `Dockerfile`(`ARG GRADLE_MODULE`)이 core-api/worker/batch 를 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY .../build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
+- **Docker 이미지**: backend 루트 단일 `Dockerfile`(`ARG GRADLE_MODULE`)이 core-api/worker/batch 를 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY .../build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
 
 ### Code Organization
 
@@ -103,7 +106,7 @@ imstargg-backend/
 
 - **스키마 관리**: DB 변경사항 발생 시 다음 두 파일에 모두 반영
   - `infrastructure/db-core/src/main/resources/schema.sql`: 전체 현재 스키마 스냅샷 (신규 환경 프로비저닝용)
-  - `infrastructure/db-core/src/main/resources/db/migration/V{yyMMdd}__{title}.sql`: 증분 마이그레이션 파일 (운영 DB에 적용할 DDL/DML)
+  - `infrastructure/db-core/src/main/resources/db/migration/V{yyMMdd}__{title}.sql`: 증분 마이그레이션 파일 (운영 DB에 수동 적용할 DDL/DML — Flyway 등 자동 마이그레이션 미사용)
     - 예: `V260420__add_buffy_table.sql`
     - 같은 날 여러 변경이 있으면 title로 구분 (필요 시 `V260420a__...`, `V260420b__...` 형태로 순서를 드러내도 됨)
     - DDL은 `create ... if not exists`, DML은 `on conflict ... do nothing` 등 **멱등적**으로 작성
