@@ -190,6 +190,7 @@ class BrawlerService(
         request: BrawlerSubItemCreateRequest,
     ) {
         starPowerJpaRepository.save(StarPowerEntity(request.brawlStarsId, brawlerBrawlStarsId))
+        doUpdateMessages(MessageType.STARPOWER_NAME, request.brawlStarsId, request.names)
     }
 
     @Transactional
@@ -198,6 +199,7 @@ class BrawlerService(
         request: BrawlerSubItemCreateRequest,
     ) {
         gadgetJpaRepository.save(GadgetEntity(request.brawlStarsId, brawlerBrawlStarsId))
+        doUpdateMessages(MessageType.GADGET_NAME, request.brawlStarsId, request.names)
     }
 
     @Transactional
@@ -206,6 +208,7 @@ class BrawlerService(
         request: BrawlerSubItemCreateRequest,
     ) {
         hyperChargeJpaRepository.save(HyperChargeEntity(request.brawlStarsId, brawlerBrawlStarsId))
+        doUpdateMessages(MessageType.HYPERCHARGE_NAME, request.brawlStarsId, request.names)
     }
 
     @Transactional
