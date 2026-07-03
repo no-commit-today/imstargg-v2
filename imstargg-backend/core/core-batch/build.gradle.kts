@@ -12,6 +12,7 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework:spring-web")
+    implementation("org.yaml:snakeyaml")
 
     // Test
     testImplementation("io.github.openfeign:feign-core")
