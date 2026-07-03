@@ -104,7 +104,7 @@ class BrawlStarsApiSpecTrackTaskTest {
         val thrown = catchThrowableOfType(IllegalStateException::class.java) { sut.track() }
 
         // then
-        assertThat(thrown).isNotNull()
+        assertThat(thrown).hasMessageContaining("비어있습니다")
         verify(exactly = 0) { brawlStarsApiSpecJpaRepository.save(any()) }
         verify(exactly = 0) { alertManager.alert(any()) }
     }
