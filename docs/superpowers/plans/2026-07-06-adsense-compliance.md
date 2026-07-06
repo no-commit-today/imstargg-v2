@@ -1686,7 +1686,16 @@ gh pr create --base develop --head feature/adsense-compliance \
 
 PR 병합 → main 배포 후:
 
-1. **배치 스케줄 등록**: 운영 스케줄러(K8s CronJob)에 `--job.name=playerRankingRenewalJob --date=<당일>` 일 1회, `rankingCollectJob` 이후 시간대로 등록. 배포 환경변수 `CORE_API_URL`(core-api 내부 주소) 설정 필수.
+1. **배치 스케줄 등록** — `imstargg-deploy/apps/prod/core-batch/values.yaml` (이 리포에서 git 으로 관리, "운영자 액션"이 아니라 코드 커밋):
+   - `cronjob.env` 에 `CORE_API_URL`(core-api 내부 서비스 주소, 예: `http://<core-api 서비스명>` 또는 `https://api.imstargg.com`) 추가 — **미설정 시 기본값 `http://localhost:8080` 으로 전건 FAILED 카운트만 남기고 잡은 성공 처리되는 silent no-op 이 된다**
+   - `jobs:` 에 항목 추가 (기존 date 잡 패턴과 동일):
+     ```yaml
+     - name: player-ranking-renewal
+       schedule: "30 0 * * *"   # 09:30 KST — ranking-collect(매 30분) 직후 아무 시점
+       args:
+         - "java -jar /app/application.jar --job.name=playerRankingRenewalJob date=$(date -u -d '9 hours' +%Y-%m-%d)"
+     ```
+   - **반영 순서 주의**: core-batch 새 이미지가 Deploy 워크플로로 배포된 **이후에** 이 항목을 반영할 것 — 구 이미지는 잡 이름을 몰라 NoSuchJob 으로 매일 실패한다
    - 주의: 같은 `date` 로 이미 COMPLETED 된 잡을 재트리거하면 `JobInstanceAlreadyCompleteException` 으로 비정상 종료 코드가 난다 — 무해한 already-complete 신호이므로 실패 알림으로 오인하지 말 것. 같은 날 실패 후 재실행은 정상적으로 실패 스텝부터 재개된다. CronJob 재시도 정책이 종료 코드를 재시도 트리거로 쓰면 성공한 날의 중복 트리거가 반복 실패로 보일 수 있으니 재시도 횟수를 보수적으로.
 2. **AdSense 콘솔**: 자동 광고 **OFF** 확인 → 광고 유닛(디스플레이) 9개 생성 → 슬롯 ID 를 `src/components/ads/slots.ts` 의 `AD_SLOTS` 에 채워 재배포.
 3. **라이브 검증** (browse/브라우저):
