@@ -24,6 +24,7 @@ describe("HomeRankingSection", () => {
       "href",
       "/players/%23TAG0",
     );
+    expect(screen.getByText("99,999")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "더 보기" })).toHaveAttribute(
       "href",
       "/players",

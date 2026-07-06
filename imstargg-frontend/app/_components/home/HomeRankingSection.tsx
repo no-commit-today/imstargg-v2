@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { PlayerRanking } from "@/domain/ranking/types";
 import { toUrlPath } from "@/lib/tag";
-import { formatNumber } from "@/lib/format";
+import Trophy from "@/components/primitives/Trophy";
 
 type Props = { rankings: PlayerRanking[] };
 
@@ -32,8 +32,8 @@ export function HomeRankingSection({ rankings }: Props) {
             >
               <span className="font-num font-bold tabular-nums">{r.rank}</span>
               <span className="truncate font-semibold">{r.player.name}</span>
-              <span className="text-right font-num font-bold tabular-nums">
-                {formatNumber(r.trophies)}
+              <span className="flex justify-end">
+                <Trophy value={r.trophies} size={14} />
               </span>
             </Link>
           </li>
