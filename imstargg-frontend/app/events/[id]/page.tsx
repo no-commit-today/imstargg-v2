@@ -7,6 +7,8 @@ import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { EventContent } from "./_components/EventContent";
 import { EventStatsSection } from "./_components/EventStatsSection";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -65,6 +67,7 @@ export default async function EventPage({
     <main className="mx-auto w-full max-w-7xl px-4 pb-10">
       <EventContent initialEvent={event} />
       <EventStatsSection event={event} searchParams={sp} />
+      <AdUnit slot={AD_SLOTS.eventDetail} className="mt-6" />
     </main>
   );
 }

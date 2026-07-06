@@ -13,6 +13,8 @@ import { sortByName } from "@/domain/brawler/filters";
 import { buildMetadata } from "@/lib/seo";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
 import { BrawlerStatTable } from "./_components/BrawlerStatTable";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 export const metadata: Metadata = buildMetadata({
   title: "브롤러 메타 | ImStarGG",
@@ -55,6 +57,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
         <StatRangeSelector tier={tierRange} date={dateRange} />
       </header>
       <BrawlerStatTable rows={rows} totalBattleCount={stats.totalBattleCount} />
+      <AdUnit slot={AD_SLOTS.brawlerMeta} className="mt-5" />
     </main>
   );
 }
