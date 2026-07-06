@@ -50,6 +50,8 @@ spring:
 app:
   alert:
     type: NO_OPS
+  core-api:
+    url: ${CORE_API_URL:http://localhost:8080}
 
 server:
   shutdown: graceful

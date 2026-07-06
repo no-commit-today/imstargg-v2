@@ -36,3 +36,7 @@ app:
       url: http://localhost
       api-keys:
         - test-api-key
+  core-api:
+    url: http://localhost:0
+  player-ranking-renewal:
+    request-interval-millis: 0
