@@ -52,6 +52,8 @@ app:
     type: NO_OPS
   core-api:
     url: ${CORE_API_URL:http://localhost:8080}
+  player-ranking-renewal:
+    request-interval-millis: ${PLAYER_RANKING_RENEWAL_REQUEST_INTERVAL_MILLIS:1000}
 
 server:
   shutdown: graceful
