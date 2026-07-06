@@ -7,13 +7,15 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.method
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
+import org.springframework.test.web.client.response.MockRestResponseCreators.withException
 import org.springframework.test.web.client.response.MockRestResponseCreators.withStatus
 import org.springframework.web.client.RestClient
+import java.io.IOException
 
 class CoreApiClientTest {
     private val builder = RestClient.builder()
     private val server = MockRestServiceServer.bindTo(builder).build()
-    private val sut = CoreApiClient(restClientBuilder = builder, coreApiUrl = "")
+    private val sut = CoreApiClient(restClient = builder.build())
 
     @Test
     fun `2xx 응답이면 ACCEPTED 를 반환하고 태그를 URL 인코딩해 호출한다`() {
@@ -75,6 +77,20 @@ class CoreApiClientTest {
         server
             .expect(requestTo("/v1/players/%23AAA/renewal"))
             .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR))
+
+        // when
+        val result = sut.renewPlayer("#AAA")
+
+        // then
+        assertThat(result).isEqualTo(PlayerRenewalResult.FAILED)
+    }
+
+    @Test
+    fun `네트워크 오류가 발생하면 FAILED 를 반환한다`() {
+        // given
+        server
+            .expect(requestTo("/v1/players/%23AAA/renewal"))
+            .andRespond(withException(IOException("connection refused")))
 
         // when
         val result = sut.renewPlayer("#AAA")

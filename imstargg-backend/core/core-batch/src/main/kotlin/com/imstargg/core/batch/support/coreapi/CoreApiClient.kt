@@ -1,7 +1,6 @@
 package com.imstargg.core.batch.support.coreapi
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestClient
@@ -15,11 +14,8 @@ import org.springframework.web.client.RestClientException
  */
 @Component
 class CoreApiClient(
-    restClientBuilder: RestClient.Builder,
-    @Value("\${app.core-api.url}") coreApiUrl: String,
+    private val restClient: RestClient,
 ) {
-    private val restClient = restClientBuilder.baseUrl(coreApiUrl).build()
-
     fun renewPlayer(tag: String): PlayerRenewalResult =
         try {
             restClient
