@@ -21,7 +21,7 @@ export default defineConfig({
       // E2E 에서는 dev 서버 자체가 백엔드 프록시 역할을 수행한다.
       // 클라이언트 fetch 가 same-origin 으로 가도록 base URL 을 localhost:3000/proxy-api 로 지정.
       NEXT_PUBLIC_API_BASE_URL: "http://localhost:3000/proxy-api",
-      PROXY_API_TARGET: "https://core-api.imstargg.com",
+      PROXY_API_TARGET: "https://api.imstargg.com",
     },
   },
 });
