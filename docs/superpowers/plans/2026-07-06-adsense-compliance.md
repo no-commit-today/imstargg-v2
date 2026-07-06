@@ -1687,6 +1687,7 @@ gh pr create --base develop --head feature/adsense-compliance \
 PR 병합 → main 배포 후:
 
 1. **배치 스케줄 등록**: 운영 스케줄러(K8s CronJob)에 `--job.name=playerRankingRenewalJob --date=<당일>` 일 1회, `rankingCollectJob` 이후 시간대로 등록. 배포 환경변수 `CORE_API_URL`(core-api 내부 주소) 설정 필수.
+   - 주의: 같은 `date` 로 이미 COMPLETED 된 잡을 재트리거하면 `JobInstanceAlreadyCompleteException` 으로 비정상 종료 코드가 난다 — 무해한 already-complete 신호이므로 실패 알림으로 오인하지 말 것. 같은 날 실패 후 재실행은 정상적으로 실패 스텝부터 재개된다. CronJob 재시도 정책이 종료 코드를 재시도 트리거로 쓰면 성공한 날의 중복 트리거가 반복 실패로 보일 수 있으니 재시도 횟수를 보수적으로.
 2. **AdSense 콘솔**: 자동 광고 **OFF** 확인 → 광고 유닛(디스플레이) 9개 생성 → 슬롯 ID 를 `src/components/ads/slots.ts` 의 `AD_SLOTS` 에 채워 재배포.
 3. **라이브 검증** (browse/브라우저):
    - `https://imstargg.com/players/%23RRRRRRRRR` (미갱신): `ins.adsbygoogle` 0개, adsbygoogle 스크립트 미로드
