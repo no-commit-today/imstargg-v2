@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { env } from "@/config/env";
 import { buildMetadata } from "@/lib/seo";
-import { GoogleAdsenseScript } from "@/components/ads/GoogleAdsenseScript";
 import { GoogleAnalyticsScript } from "@/components/analytics/GoogleAnalyticsScript";
 
 export const metadata: Metadata = {
@@ -27,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <GoogleAdsenseScript />
         <GoogleAnalyticsScript />
         <QueryProvider>
           <div className="app">
