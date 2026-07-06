@@ -12,7 +12,7 @@ test("홈 페이지가 로드되고 메타데이터가 노출된다", async ({ p
 
 test("플레이어 태그 검색 후 상세 페이지로 이동한다", async ({ page }) => {
   await page.goto("/");
-  const input = page.getByLabel("플레이어 태그 입력");
+  const input = page.getByLabel("플레이어 이름 또는 태그 입력");
   await input.fill(TEST_TAGS.player);
   await page.getByRole("button", { name: "플레이어 검색" }).click();
   await expect(page).toHaveURL(new RegExp(TEST_TAGS.playerEncoded));
