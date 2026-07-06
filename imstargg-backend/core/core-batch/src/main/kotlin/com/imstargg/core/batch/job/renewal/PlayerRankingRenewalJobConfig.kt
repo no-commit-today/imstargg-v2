@@ -1,6 +1,7 @@
 package com.imstargg.core.batch.job.renewal
 
 import com.imstargg.core.batch.job.renewal.task.PlayerRankingRenewalTask
+import com.imstargg.core.batch.support.parameter.DateJobParameter
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
@@ -27,7 +28,7 @@ class PlayerRankingRenewalJobConfig(
 ) {
     companion object {
         const val JOB_NAME = "playerRankingRenewalJob"
-        const val DATE_PARAMETER_NAME = "date"
+        const val DATE_PARAMETER_NAME = DateJobParameter.KEY
         private const val STEP_NAME = "playerRankingRenewalStep"
     }
 
