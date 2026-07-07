@@ -7,7 +7,6 @@ import {
   usePlayerBrawlerRoleStatistics,
   type PlayerStatBattleType,
 } from "@/hooks/queries/usePlayerStatistics";
-import { toPlayerBrawlerRoleStat, toPlayerBrawlerStat } from "@/domain/statistics/player";
 import { PlayerStatisticsControls } from "./PlayerStatisticsControls";
 import { PlayerBrawlerRoleSummary } from "./PlayerBrawlerRoleSummary";
 import { PlayerBrawlerStatsList } from "./PlayerBrawlerStatsList";
@@ -47,17 +46,8 @@ export function PlayerStatistics({ tag }: { tag: string }) {
     tag, battleType, brawlPassSeasonNumber, soloRankSeasonKey,
   });
 
-  const brawlerItems = useMemo(
-    () =>
-      (brawlerQuery.data?.items ?? [])
-        .map(toPlayerBrawlerStat)
-        .sort((a, b) => b.winRate - a.winRate),
-    [brawlerQuery.data],
-  );
-  const roleItems = useMemo(
-    () => (roleQuery.data?.items ?? []).map(toPlayerBrawlerRoleStat),
-    [roleQuery.data],
-  );
+  const brawlerItems = brawlerQuery.data ?? [];
+  const roleItems = roleQuery.data ?? [];
 
   const isError = brawlerQuery.isError || roleQuery.isError;
 
