@@ -18,5 +18,16 @@ class GameSlotRepository(
             ?.let(::GameSlot)
             ?: GameSlot.default()
 
-    fun findAllByEventIds(eventIds: List<BrawlStarsId>): GameSlots = GameSlots(eventIds.distinct().associateWith { find(it) })
+    fun findAllByEventIds(eventIds: List<BrawlStarsId>): GameSlots {
+        val slotByEventId =
+            battleEventRepositoryWithCache
+                .findAll()
+                .associate { event -> event.id to (event.mode?.playerCounts?.let(::GameSlot) ?: GameSlot.default()) }
+        return GameSlots(
+            eventIds
+                .distinct()
+                .mapNotNull { id -> slotByEventId[id]?.let { id to it } }
+                .toMap(),
+        )
+    }
 }
