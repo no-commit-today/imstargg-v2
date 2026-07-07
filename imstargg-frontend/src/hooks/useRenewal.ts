@@ -66,5 +66,6 @@ export function useRenewal(kind: RenewalKind, tag: string) {
     renewedAt: renewalQuery.data?.renewedAt ?? null,
     trigger: () => trigger.mutate(),
     triggering: trigger.isPending,
+    triggerFailed: trigger.isError,
   };
 }
