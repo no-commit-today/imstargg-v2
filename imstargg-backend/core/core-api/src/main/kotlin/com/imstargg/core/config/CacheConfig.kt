@@ -69,6 +69,7 @@ class CacheConfig : CachingConfigurer {
             .cacheDefaults(statisticsConfig)
             .initialCacheNames(setOf(CacheNames.STATISTICS))
             .disableCreateOnMissingCache()
+            .enableStatistics()
             .build()
     }
 
