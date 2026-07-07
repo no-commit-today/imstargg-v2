@@ -43,7 +43,7 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
 - **네트워크 경계만 모킹**(MSW). 우리 코드(`src/api/*`, `src/hooks/*`, 컴포넌트)는 모킹 금지.
 - **사용자 관점**(Testing Library의 role/text 쿼리). 구현 상세 검증 금지.
 - 단위 테스트는 순수 함수만(`lib/`, `domain/*/mappers`).
-- E2E는 dev 서버의 `/proxy-api` rewrite(`PROXY_API_TARGET`, playwright.config.ts 에서 설정)를 통해 prod core-api 호출. 테스트 태그: `tests/e2e/fixtures/tags.ts` (플레이어 `#88J8Q9RPV`, 클럽 `#2U8CVLQQ9`).
+- E2E는 dev 서버의 `/proxy-api` Route Handler(`app/proxy-api/[...path]/route.ts`, `PROXY_API_TARGET` 은 playwright.config.ts 에서 설정)를 통해 prod core-api(`https://api.imstargg.com`) 호출. rewrite 가 아닌 Route Handler 인 이유는 브라우저 POST 의 `Origin` 헤더를 업스트림에 전달하지 않기 위함(prod CORS 는 imstargg.com 만 허용). 테스트 태그: `tests/e2e/fixtures/tags.ts` (플레이어 `#88J8Q9RPV`, 클럽 `#2U8CVLQQ9`).
 
 ## UI
 
