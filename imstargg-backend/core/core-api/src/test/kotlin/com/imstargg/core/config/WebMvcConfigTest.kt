@@ -7,6 +7,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -29,5 +30,31 @@ class WebMvcConfigTest(
                     .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"),
             ).andExpect(status().isOk)
             .andExpect(header().string("Access-Control-Allow-Origin", "https://imstargg.com"))
+    }
+
+    @Test
+    fun `브롤러 목록 GET 응답에 Cache-Control 헤더가 붙는다`() {
+        mockMvc
+            .perform(get("/v1/brawlers"))
+            .andExpect(status().isOk)
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "max-age=300, stale-while-revalidate=60"))
+    }
+
+    @Test
+    fun `브롤러 통계 GET 응답에 Cache-Control 헤더가 붙는다`() {
+        mockMvc
+            .perform(
+                get("/v1/statistics/brawler/result")
+                    .param("tierRange", "TROPHY_1000_PLUS")
+                    .param("dateRange", "THIS_WEEK"),
+            ).andExpect(status().isOk)
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "max-age=1800, stale-while-revalidate=300"))
+    }
+
+    @Test
+    fun `플레이어 조회 응답에는 Cache-Control 헤더가 없다`() {
+        mockMvc
+            .perform(get("/v1/players/%23NOPE"))
+            .andExpect(header().doesNotExist(HttpHeaders.CACHE_CONTROL))
     }
 }
