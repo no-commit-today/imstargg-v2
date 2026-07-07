@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
+import com.imstargg.core.batch.domain.statistics.ownership.PlayerBrawlerOwnershipSnapshot
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerBuffyEntity.Companion.playerBrawlerBuffyEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerEntity.Companion.playerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerGadgetEntity.Companion.playerBrawlerGadgetEntity

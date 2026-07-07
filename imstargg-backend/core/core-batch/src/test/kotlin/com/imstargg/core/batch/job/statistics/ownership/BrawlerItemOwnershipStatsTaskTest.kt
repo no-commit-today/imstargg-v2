@@ -1,5 +1,7 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
+import com.imstargg.core.batch.domain.statistics.ownership.BrawlerItemOwnershipStatsResult
+import com.imstargg.core.batch.domain.statistics.ownership.PlayerBrawlerOwnershipSnapshot
 import com.imstargg.core.enums.BuffyType
 import io.mockk.Runs
 import io.mockk.every
