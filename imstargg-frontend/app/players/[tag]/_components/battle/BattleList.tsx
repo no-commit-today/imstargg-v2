@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/button";
 import { BattleRow } from "./BattleRow";
 import { BattleSkeleton } from "./BattleSkeleton";
 import { usePlayerBattles } from "@/hooks/queries/usePlayerBattles";
+import type { BattleResponse, SliceResponse } from "@/api/types";
 
 interface Props {
   tag: string;
+  initialBattles?: SliceResponse<BattleResponse>;
+  battlesFetchedAt?: number;
 }
 
-export function BattleList({ tag }: Props) {
+export function BattleList({ tag, initialBattles, battlesFetchedAt }: Props) {
   const {
     data, isLoading, isError, error,
     fetchNextPage, hasNextPage, isFetchingNextPage, refetch,
-  } = usePlayerBattles(tag);
+  } = usePlayerBattles(tag, { initialPage: initialBattles, fetchedAt: battlesFetchedAt });
 
   useEffect(() => {
     if (isError) toast.error("배틀 기록을 불러오지 못했어요");

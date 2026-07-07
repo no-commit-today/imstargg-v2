@@ -7,13 +7,14 @@ import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { normalizeTag, toUrlPath } from "@/lib/tag";
 import { formatNumber } from "@/lib/format";
+import { CACHE_SECONDS } from "@/config/cache";
 import { ClubContent } from "./_components/ClubContent";
 import { ClubNotFoundView } from "./_components/ClubNotFoundView";
 
 type Params = { params: Promise<{ tag: string }> };
 
 async function loadClub(tag: string) {
-  return clubApi.get(tag, { next: { revalidate: 60 } });
+  return clubApi.get(tag, { next: { revalidate: CACHE_SECONDS.SHORT } });
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -39,23 +40,29 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ClubPage({ params }: Params) {
   const { tag } = await params;
-  let dto;
-  try {
-    dto = await loadClub(tag);
-  } catch (e) {
-    if (e instanceof NotFoundError) {
+  const [clubResult, renewalResult] = await Promise.allSettled([
+    loadClub(tag),
+    renewalApi.getClub(tag, { next: { revalidate: 0 } }),
+  ]);
+
+  if (clubResult.status === "rejected") {
+    if (clubResult.reason instanceof NotFoundError) {
       return <ClubNotFoundView tag={normalizeTag(tag)} />;
     }
-    throw e;
+    throw clubResult.reason;
   }
-  const renewal = await renewalApi
-    .getClub(tag, { next: { revalidate: 0 } })
-    .catch((e: unknown) => (e instanceof NotFoundError ? emptyRenewal(tag) : null));
+
+  const renewal =
+    renewalResult.status === "fulfilled"
+      ? renewalResult.value
+      : renewalResult.reason instanceof NotFoundError
+        ? emptyRenewal(tag)
+        : null;
 
   return (
     <ClubContent
       tag={normalizeTag(tag)}
-      initialClub={toClub(dto)}
+      initialClub={toClub(clubResult.value)}
       initialRenewal={renewal}
     />
   );
