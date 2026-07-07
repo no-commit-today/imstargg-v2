@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.club
 
 import com.imstargg.client.brawlstars.response.ClubResponse
 import com.imstargg.core.worker.domain.Club

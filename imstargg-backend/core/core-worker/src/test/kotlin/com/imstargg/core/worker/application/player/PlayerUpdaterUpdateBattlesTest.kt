@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.player
 
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.client.brawlstars.response.BrawlerStatResponse

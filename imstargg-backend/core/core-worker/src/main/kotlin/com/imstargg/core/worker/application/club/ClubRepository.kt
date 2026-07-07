@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.club
 
 import com.imstargg.core.worker.domain.Club
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository

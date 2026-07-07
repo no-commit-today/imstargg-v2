@@ -1,8 +1,11 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.stats
 
 import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceAutoRegistrar
+import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceChecker
+import com.imstargg.core.worker.application.player.PlayerDeactivator
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
 import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity

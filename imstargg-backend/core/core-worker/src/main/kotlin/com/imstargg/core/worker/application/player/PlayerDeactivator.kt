@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.player
 
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository

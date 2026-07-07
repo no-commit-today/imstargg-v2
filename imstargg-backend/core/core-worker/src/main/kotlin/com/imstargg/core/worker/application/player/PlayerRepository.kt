@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.player
 
 import com.imstargg.core.worker.domain.Player
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository

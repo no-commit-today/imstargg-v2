@@ -1,10 +1,12 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.club
 
 import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
+import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceAutoRegistrar
+import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceChecker
 import com.imstargg.core.worker.application.renewal.RenewalFinder
 import com.imstargg.core.worker.application.renewal.RenewalProcessor
 import com.imstargg.infrastructure.db.core.renewal.RenewalEntity

@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.player
 
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.client.brawlstars.BrawlStarsClient
@@ -9,6 +9,7 @@ import com.imstargg.client.brawlstars.response.PlayerIconResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
+import com.imstargg.core.worker.application.stats.StatsBattleAggregator
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.RenewalEntityFixture.Companion.aRenewalEntity
