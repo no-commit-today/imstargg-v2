@@ -31,7 +31,8 @@ test("갱신 버튼 클릭 시 진행 캡션 → 폴링 → 최근 업데이트 
   await page.goto(`/clubs/${TEST_TAGS.clubEncoded}`);
   const renewBtn = page.getByRole("button", { name: "클럽 정보 갱신" });
   await renewBtn.waitFor({ state: "visible", timeout: 15_000 });
-  await expect(renewBtn).toBeEnabled({ timeout: 15_000 });
+  // 이전 실행이 남긴 갱신이 진행 중이면 완료(canRenew)까지 대기
+  await expect(renewBtn).toBeEnabled({ timeout: 60_000 });
   await renewBtn.click();
   // 토스트는 제거됨 — RenewalStatus 캡션이 진행/완료 상태를 노출한다
   await expect(page.getByText("최근 업데이트: 진행 중…")).toBeVisible({
