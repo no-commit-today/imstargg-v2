@@ -1,25 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
 @import "tailwindcss";
 
-/* ============================================================
-   Fonts (local)
-   ============================================================ */
-@font-face {
-  font-family: 'KoBrawl Gothic';
-  src: url('/fonts/KoBrawl_Gothic40.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Lilita One';
-  src: url('/fonts/lilitaone-regular-webfont__2_.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* 폰트는 next/font 로 self-host + preload 된다 (app/fonts.ts, app/layout.tsx).
+   CSS 변수(--font-kobrawl 등)가 <html> 에 주입되고, 아래 --font-* 토큰이 참조한다. */
 
 /* ============================================================
    Design tokens — exposed both as Tailwind theme vars and
@@ -55,11 +37,11 @@
   --color-neutral-100: #ECEEF3;
   --color-neutral-50: #F6F7FA;
 
-  --font-display: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
-  --font-title: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
-  --font-body: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-num: 'Bricolage Grotesque', 'Pretendard Variable', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: var(--font-kobrawl), var(--font-lilita), var(--font-pretendard), system-ui, sans-serif;
+  --font-title: var(--font-kobrawl), var(--font-lilita), var(--font-pretendard), system-ui, sans-serif;
+  --font-body: var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-num: var(--font-bricolage), var(--font-pretendard), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
 :root {
@@ -176,11 +158,11 @@
   --dur-base: 200ms;
   --dur-slow: 360ms;
 
-  --font-display: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
-  --font-title: 'KoBrawl Gothic', 'Lilita One', 'Pretendard Variable', system-ui, sans-serif;
-  --font-body: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-num: 'Bricolage Grotesque', 'Pretendard Variable', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: var(--font-kobrawl), var(--font-lilita), var(--font-pretendard), system-ui, sans-serif;
+  --font-title: var(--font-kobrawl), var(--font-lilita), var(--font-pretendard), system-ui, sans-serif;
+  --font-body: var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-num: var(--font-bricolage), var(--font-pretendard), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   --fs-xs: 12px;
   --fs-sm: 14px;
