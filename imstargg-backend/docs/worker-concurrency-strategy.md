@@ -39,16 +39,16 @@ Worker A: SELECT → null → INSERT player
 Worker B: SELECT → null → INSERT player (race!)
 ```
 
-이 경우 `uk_player__brawlstarstag` 유니크 제약 위반으로 한쪽이 `DataIntegrityViolationException`을 발생시키고 트랜잭션이 롤백됩니다. 재시도는 상위 호출자(큐 재처리)에서 처리하며, 다음 시도에서는 이미 row가 존재하므로 `SELECT FOR UPDATE`가 정상 동작합니다.
+이 경우 `uk_player__brawlstarstag` 유니크 제약 위반으로 한쪽이 `DataIntegrityViolationException`을 발생시키고 트랜잭션이 롤백됩니다. `PlayerUpdater.update()`/`ClubUpdater.update()`에 선언된 `@Retryable(retryFor = [DataIntegrityViolationException::class], maxAttempts = 2)`이 새 트랜잭션으로 1회 재시도하며(Spring Retry 인터셉터가 트랜잭션 인터셉터 바깥에 적용), 재시도 시점에는 이미 row가 존재하므로 `SELECT FOR UPDATE`가 정상 동작합니다. API 응답 객체는 이미 확보된 상태라 BrawlStars API 재호출 없이 DB 갱신만 재시도됩니다.
 
-이 상황은 신규 플레이어가 처음 등록될 때만 발생하며 빈도가 낮아 수용 가능한 트레이드오프로 판단했습니다.
+이 상황은 신규 플레이어/클럽이 처음 등록될 때만 발생하며, 재시도 1회로 흡수됩니다.
 
 ### 2.3 관련 코드
 
 - `PlayerUpdater` (application): 얇은 `@Transactional` 오케스트레이터. `update` / `updatePlayer` / `updateBattles` 제공
 - `Player` (domain): `PlayerEntity` + brawlers/accessory 엔티티들을 감싸는 쓰기 애그리거트. `create(response)` 팩터리 및 `update(response)` 로직 보유
 - `PlayerRepository` (application): `findWithLockByBrawlStarsTag` + `save`. PlayerEntity, PlayerBrawler, 5종 accessory에 대한 `saveAll` 수행 (dirty checking으로 기존 엔티티는 변경 시에만 UPDATE, 신규는 INSERT)
-- `PlayerRenewalService`: 배틀 빌드 및 `statsBattleAggregator.asyncAggregate()` 호출 (트랜잭션 바깥)
+- `PlayerRenewalService`: 배틀 빌드 및 `statsBattleAggregator.aggregate()` 호출 (트랜잭션 바깥, COMPLETED 후 예외 격리)
 
 ---
 
@@ -103,5 +103,5 @@ Worker B는 `ObjectOptimisticLockingFailureException`을 catch하고, WARN 로�
 ### 4.3 관련 코드
 
 - `RenewalEntity`: `@Version` 필드
-- `PlayerRenewalService.renew()`: `executing()` 호출 시 `ObjectOptimisticLockingFailureException` catch
-- `ClubRenewalService.renew()`: 동일 패턴
+- `RenewalProcessor` (application/renewal): Player/Club 공통 상태 전이 + 트랜잭션 경계. NOT_FOUND 시 비활성화는 호출부가 deactivate 액션으로 주입
+- `PlayerRenewalService.renew()` / `ClubRenewalService.renew()`: `executing()` 호출 시 `ObjectOptimisticLockingFailureException` catch (동일 패턴)
