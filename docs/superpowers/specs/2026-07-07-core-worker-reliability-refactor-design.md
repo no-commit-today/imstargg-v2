@@ -55,7 +55,7 @@ core-worker 전체 코드 리뷰(소스 37개 파일, 의존 인프라, 기존 �
 1. **통계 집계 유실 경로 제거**: `@Async` 제거(동기 전환) + 실행 격리 + transient 재시도
 2. **INSERT race 를 재시도로 흡수**: 사용자 재요청 없이 1회 재시도로 성공시키고 문서와 일치화
 3. **filterNewBattles 경계 보강**: 같은 초 엣지 제거
-4. **renewal 골격 통합**: Finder/Processor 통합 + `RenewalWorkflow` 컴포지션 추출
+4. **renewal 중복 정리**: Finder/Processor 통합. 골격(`RenewalWorkflow`) 추출은 검토 후 기각 (§4.4 결정 기록)
 5. **하위 도메인 패키지 분리**: `application/{player,club,renewal,stats,maintenance}`
 
 비목표(non-goal): 성능 튜닝(P1–P3), 메트릭 추가(O1), 도메인→인프라 의존 방향 정리(A3),
@@ -81,8 +81,12 @@ outbox 기반 무유실 집계. §8 에 기록.
 - **재시도 확대**: `retryFor = [DataIntegrityViolationException::class, TransientDataAccessException::class]`.
   select-then-insert 레이스(유니크 충돌)에 더해 락 타임아웃·순단 같은 일시 오류를 3회×100ms
   백오프로 흡수한다. 동기 전환 후 호출 스레드 점유 증가는 최대 수백 ms 수준.
-- **호출 지점**: `PlayerRenewalService` 는 COMPLETED 확정 후 `afterCompleted` 훅(§4.4)에서
-  `statsBattleAggregator.aggregate(savedBattles)` 를 호출한다.
+- **호출 지점과 격리**: `PlayerRenewalService` 는 COMPLETED 확정 후
+  `statsBattleAggregator.aggregate(savedBattles)` 를 **자체 try-catch 로 감싸** 호출한다(error
+  로그만 남기고 삼킴). COMPLETED 이후의 예외가 `fail()` 전이 시도(`IllegalStateException` →
+  SQS 리스너 전파 → 무의미한 재전달)로 번지는 기존 함정을 제거하기 위한 격리이며, 이 계약은
+  해당 메서드 KDoc 과 `renewal-flow.md` 에 기록한다. COMPLETED 후 부가 작업이 있는 곳은 player
+  한 곳뿐이므로 격리 코드의 중복은 없다.
   `StatsBattleAccumulationService.accumulate()` 는 rename 반영 외 변경 없음.
 - **성능 판단 근거**: 처리량 병목은 rate limiter(prod 10 req/s)이지 리스너 처리 시간이 아니다.
   renewal 1건당 집계는 SELECT 2회 + batch INSERT (hibernate `batch_size: 100`) 수준으로 수십 ms.
@@ -97,11 +101,18 @@ outbox 기반 무유실 집계. §8 에 기록.
 - 발생 지점: `PlayerUpdater.update()`/`ClubUpdater.update()` 트랜잭션 커밋 시 신규 row 동시
   INSERT 로 인한 유니크 충돌(`DataIntegrityViolationException`). `SELECT FOR UPDATE` 는 존재하는
   row 만 잠글 수 있어 신규 케이스에서만 발생한다.
-- 처리: `RenewalWorkflow`(§4.4)가 action 실행 중 `DataIntegrityViolationException` 을 잡으면
-  **action 전체를 1회 재실행**한다. 재시도 시점에는 row 가 존재하므로 비관적 락이 정상 동작한다.
-- 재시도 단위를 action 전체(API 호출 포함)로 두는 이유: fetch/apply 분리는 워크플로 시그니처를
-  복잡하게 만들고, 이 race 는 "신규 태그 최초 동시 갱신"이라는 희귀 케이스라 API 2콜 재소모가
-  무시 가능하기 때문. 재시도 후에도 실패하면 기존과 같이 FAILED 처리한다.
+- 처리: 두 메서드에 `@Retryable(retryFor = [DataIntegrityViolationException::class], maxAttempts = 2)`
+  를 직접 선언한다 (총 2회 시도 = 1회 재시도). 재시도 시점에는 row 가 존재하므로 두 번째 시도의
+  `SELECT FOR UPDATE` 가 승자의 커밋을 대기한 뒤 정상 갱신한다. API 응답 객체는 이미 확보된
+  상태이므로 **BrawlStars API 재호출 없이** DB 갱신만 재시도된다.
+- 어드바이스 순서: Spring Retry 인터셉터(기본 order `LOWEST_PRECEDENCE - 1`)가 트랜잭션
+  인터셉터(`LOWEST_PRECEDENCE`)보다 바깥에 적용되어 재시도마다 새 트랜잭션이 열린다. 이 동작은
+  동시성 테스트 갱신으로 실증 검증한다(§5).
+- backoff 는 두지 않는다 — 두 번째 시도의 `SELECT FOR UPDATE` 가 승자 커밋까지 자연 대기한다.
+- 재시도 소진 시(비정상적 반복 충돌)에는 기존과 같이 서비스의 generic catch 로 흘러 FAILED
+  처리된다.
+- `PlayerUpdater.updatePlayer()`(refresh 경로)는 기존 ACTIVE 플레이어만 대상이라 신규 INSERT
+  race 가 없으므로 재시도를 붙이지 않는다.
 
 ### 4.3 filterNewBattles 경계 보강 (R3)
 
@@ -124,80 +135,33 @@ return candidates.filter { it.battleKey !in existingKeys }
 - 멱등성 근거: battleKey 는 `SHA-256(battleTime + sorted tags)` 라 같은 초·같은 구성 재대결이
   물리적으로 불가능한 도메인 특성상 충돌하지 않는다.
 
-### 4.4 Renewal 골격 통합 (A2) — `application/renewal/`
+### 4.4 Renewal 중복 정리 (A2) — `application/renewal/`
 
-동작이 완전히 동일한 중복 쌍을 통합하고, 공통 흐름을 컴포지션으로 추출한다.
+동작이 완전히 동일한 중복 쌍만 통합한다. 두 서비스의 renew() 골격은 각자 소유한 채 남긴다.
 
 | 기존 | 변경 |
 |------|------|
 | `PlayerRenewalFinder` + `ClubRenewalFinder` | `RenewalFinder.findByTag(tag, type)` — type 파라미터화 |
 | `PlayerRenewalProcessor` + `ClubRenewalProcessor` | `RenewalProcessor` — 상태 전이 + `@Transactional`. `notFound(renewal, deactivate: () -> Unit)` 로 deactivate 를 호출부가 주입 (트랜잭션 내 실행 의미 유지) |
-| 두 Service 의 골격 ~70줄×2 | `RenewalWorkflow.execute(...)` 한 곳 |
+
+호출부는 여전히 직선적으로 읽힌다:
 
 ```kotlin
-@Component
-class RenewalWorkflow(
-    private val renewalFinder: RenewalFinder,
-    private val renewalProcessor: RenewalProcessor,
-    private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
-    private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
-) {
-    fun <T> execute(
-        tag: String,
-        type: RenewalType,
-        logPrefix: String,                 // "플레이어 갱신" / "클럽 갱신" — 기존 로그 형식 보존
-        onNotFound: () -> Unit,            // deactivator 호출 (NOT_FOUND 트랜잭션 내)
-        afterCompleted: (T) -> Unit = {},  // COMPLETED 확정 후 부가 작업 — 예외 격리 보장
-        action: () -> T,                   // API 호출 + 업데이트 본문 — DataIntegrityViolation 1회 재시도
-    )
-}
+renewal = renewalProcessor.executing(renewal)
+renewalProcessor.notFound(renewal) { playerDeactivator.deactivate(brawlStarsTag) }
 ```
 
-골격 순서는 기존과 동일하다:
+**결정 기록 — `RenewalWorkflow`(골격 컴포지션 추출)는 검토 후 기각.**
 
-1. `renewalFinder.findByTag(tag, type)` — 없으면 `IllegalArgumentException` (기존 동일: 리스너로
-   전파되어 SQS 재전달. producer 가 항상 row 를 만들므로 실질 발생 없음)
-2. `status != PENDING` → info 로그 후 종료 (중복 메시지)
-3. 점검 중 → fail 처리 후 종료
-4. `executing()` — `ObjectOptimisticLockingFailureException` 시 warn 로그 후 종료
-5. `action()` 실행 — `DataIntegrityViolationException` 1회 재시도
-6. 성공 → `complete()` — 낙관적 락 충돌 시 상태 갱신만 포기(기존 `updateRenewalStatus` 의미),
-   성공 시에만 `afterCompleted(result)` 호출
-7. `afterCompleted` 의 예외는 **error 로그만 남기고 삼킨다** — COMPLETED 이후의 예외가
-   `fail()` 전이 시도(`IllegalStateException`)나 SQS 재전달로 번지는 기존 함정을 구조적으로 제거
-8. `NotFound` → `notFound(renewal, onNotFound)` / `ServiceUnavailable` → 점검 자동 등록 + fail /
-   기타 예외 → error 로그 + fail
-
-서비스는 본문만 소유한다:
-
-```kotlin
-// PlayerRenewalService.renew(brawlStarsTag)
-renewalWorkflow.execute(
-    tag = brawlStarsTag,
-    type = RenewalType.PLAYER,
-    logPrefix = "플레이어 갱신",
-    onNotFound = { playerDeactivator.deactivate(brawlStarsTag) },
-    afterCompleted = { savedBattles -> statsBattleAggregator.aggregate(savedBattles) },
-    action = {
-        val playerResponse = brawlStarsClient.getPlayerInformation(brawlStarsTag)
-        val battles = brawlStarsClient.getPlayerRecentBattles(brawlStarsTag)
-            .items.map { BattleBuilder(playerResponse.tag, it).build() }
-        playerUpdater.update(playerResponse, battles)
-    },
-)
-
-// ClubRenewalService.renew(brawlStarsTag)
-renewalWorkflow.execute(
-    tag = brawlStarsTag,
-    type = RenewalType.CLUB,
-    logPrefix = "클럽 갱신",
-    onNotFound = { clubDeactivator.deactivate(brawlStarsTag) },
-    action = { clubUpdater.update(brawlStarsClient.getClub(brawlStarsTag)) },
-)
-```
-
-`afterCompleted` 격리(§4.1)와 action 재시도(§4.2)가 골격 한 곳에 있으므로, 갱신 대상이
-추가되어도 같은 보증을 자동으로 얻는다.
+- 사용처가 2곳뿐이고(rule of three 미달), 가변부(action/onNotFound/완료 후 처리)가 어차피
+  호출부에서 람다로 주입되므로 서비스 파일의 코드량은 거의 줄지 않으면서 제어 흐름만 두 파일로
+  갈라진다. 재시도·격리 시맨틱이 골격 내부 규칙이 되어 읽는 사람의 학습 비용이 생긴다.
+- 완료 후 처리 훅(제네릭 `<T>` + `afterCompleted`)은 player 한 곳만 쓰는 프로토콜이었다.
+- 골격 없이도 신뢰성 보증은 더 정밀한 위치에 둘 수 있다 — 재시도는 Updater `@Retryable`(§4.2,
+  API 재호출 없음), 격리는 `PlayerRenewalService` 한 곳(§4.1).
+- 두 서비스의 renew() 골격 중복(PENDING 확인·점검 확인·EXECUTING 전환·예외 분류·
+  `updateRenewalStatus` 헬퍼, 약 40줄×2)은 **수용한다**. 세 번째 갱신 유형이 등장하면 골격
+  추출을 재검토한다(rule of three).
 
 ### 4.5 패키지 구조 (A1)
 
@@ -207,7 +171,7 @@ core/worker/
 │   ├── player/       PlayerRenewalService, PlayerUpdater, PlayerRepository,
 │   │                 PlayerDeactivator, PlayerRefreshService
 │   ├── club/         ClubRenewalService, ClubUpdater, ClubRepository, ClubDeactivator
-│   ├── renewal/      RenewalFinder, RenewalProcessor, RenewalWorkflow          ← 신규
+│   ├── renewal/      RenewalFinder, RenewalProcessor                          ← 신규(통합)
 │   ├── stats/        StatsBattleAccumulationService, StatsBattleAggregator,
 │   │                 StatsBattleAggregateApplier
 │   └── maintenance/  BrawlStarsApiMaintenanceChecker, BrawlStarsApiMaintenanceAutoRegistrar
@@ -219,25 +183,25 @@ core/worker/
                       (AsyncConfig, AsyncExceptionHandler 삭제)
 ```
 
-- 의존 방향: `player`/`club` → `renewal`(공통 골격) → `maintenance`. `stats` 는 `player` 와
-  `schedule` 에서 사용된다. 하위 도메인 간 직접 참조는 골격을 통해서만 흐른다.
+- 의존 방향: `player`/`club` → `renewal`(공통 상태 전이) 및 `maintenance`. `stats` 는
+  `player`(갱신 후 집계)와 `schedule`(축적 스케줄)에서 사용된다.
 - 테스트 패키지도 동일 구조로 이동한다. 파일당 1클래스 원칙 유지.
 
 ### 4.6 에러 처리 총괄
 
-`RenewalWorkflow` 기준. **굵은 행**만 기존 동작에서 달라진다.
+각 서비스의 renew() 흐름 기준 (골격은 각 서비스 소유). **굵은 행**만 기존 동작에서 달라진다.
 
 | 상황 | 처리 | 결과 상태 |
 |---|---|---|
 | status ≠ PENDING | info 로그 후 스킵 (중복 메시지) | 불변 |
 | API 점검 중 | fail 처리 | FAILED |
 | EXECUTING 전환 낙관적 락 충돌 | warn 로그 후 스킵 | 불변 |
-| **action 중 `DataIntegrityViolationException`** | **1회 재시도, 재실패 시 FAILED** | **COMPLETED 또는 FAILED** |
-| action 중 `BrawlStarsApiClientException.NotFound` | deactivate + NOT_FOUND | NOT_FOUND |
-| action 중 `BrawlStarsApiServerException.ServiceUnavailable` | 점검 자동 등록 + fail | FAILED |
-| action 중 기타 예외 | error 로그 + fail | FAILED |
-| **afterCompleted 예외** | **error 로그만, 상태 불변 (격리)** | **COMPLETED** |
-| **통계 집계 transient 오류** | **`@Retryable` 3회×100ms 후 afterCompleted 격리로 흡수** | **COMPLETED** |
+| **갱신 중 유니크 충돌 (`DataIntegrityViolationException`)** | **Updater `@Retryable` 1회 재시도, 재실패 시 서비스 generic catch → FAILED** | **COMPLETED 또는 FAILED** |
+| 갱신 중 `BrawlStarsApiClientException.NotFound` | deactivate + NOT_FOUND | NOT_FOUND |
+| 갱신 중 `BrawlStarsApiServerException.ServiceUnavailable` | 점검 자동 등록 + fail | FAILED |
+| 갱신 중 기타 예외 | error 로그 + fail | FAILED |
+| **COMPLETED 후 통계 집계 예외** | **error 로그만, 상태 불변 (`PlayerRenewalService` 내 격리)** | **COMPLETED** |
+| **통계 집계 transient 오류** | **`@Retryable` 3회×100ms 재시도 후 남으면 위 격리로 흡수** | **COMPLETED** |
 
 ## 5. 테스트 전략
 
@@ -247,10 +211,11 @@ core/worker/
 
 | 구분 | 테스트 | 내용 |
 |---|---|---|
-| 신규 | `RenewalWorkflowTest` | 골격 분기 전수: PENDING 아님 스킵 / 점검 중 FAILED / NotFound / 503 자동 등록 / DataIntegrityViolation 1회 재시도 성공·재실패 / afterCompleted 예외 격리(COMPLETED 유지) |
+| 신규 | `PlayerRenewalServiceTest` | COMPLETED 후 집계 예외 격리 검증 — aggregate 가 예외를 던져도 renewal 은 COMPLETED 유지 (BrawlStars client 는 MockK) |
 | 이동+rename | `PlayerRenewalProcessorConcurrencyTest` → `RenewalProcessorConcurrencyTest` | 낙관적 락 시나리오 유지 |
+| 보강 | `PlayerUpdaterConcurrencyTest`, `ClubUpdaterConcurrencyTest` | 동시 신규 INSERT race 기대 결과를 "`@Retryable` 재시도로 양쪽 모두 성공, row 는 1개"로 갱신 (어드바이스 순서 실증 검증) |
 | 보강 | `PlayerUpdaterUpdateBattlesTest` | "같은 초 신규 배틀 포함, 기존 battleKey 제외" 케이스 추가 |
-| 유지(이동만) | `PlayerUpdaterConcurrencyTest`, `ClubUpdaterConcurrencyTest`, `StatsBattleAggregateApplierTest`, `PlayerUpdaterCacheEvictionTest`, `BattleBuilderTest` | 패키지 이동 외 불변 |
+| 유지(이동만) | `StatsBattleAggregateApplierTest`, `PlayerUpdaterCacheEvictionTest`, `BattleBuilderTest` | 패키지 이동 외 불변 |
 | 삭제 | `AsyncConfigTest` | AsyncConfig 삭제에 따름 |
 
 검증 명령: `./gradlew :core:core-worker:test` 및 `./gradlew ktlintCheck`.
@@ -261,17 +226,17 @@ core/worker/
 이번 변경으로 서술이 낡는 문서만 갱신한다.
 
 - `imstargg-backend/docs/renewal-flow.md`: `statsBattleAggregator.asyncAggregate() (비동기)` →
-  동기 집계 + afterCompleted 격리 서술, `RenewalWorkflow` 구조 반영
+  동기 집계 + COMPLETED 후 격리 서술, 통합 클래스명(RenewalFinder/RenewalProcessor) 반영
 - `imstargg-backend/docs/worker-concurrency-strategy.md`: INSERT race 의 "재시도는 상위
-  호출자(큐 재처리)에서 처리" → "`RenewalWorkflow` 가 1회 재시도" 로 정정, 통합 클래스명 반영
+  호출자(큐 재처리)에서 처리" → "Updater `@Retryable` 이 1회 재시도" 로 정정, 통합 클래스명 반영
 
 ## 7. 예상 변경 파일
 
 | 구분 | 파일 |
 |---|---|
-| 신규 | `application/renewal/RenewalFinder.kt`, `application/renewal/RenewalProcessor.kt`, `application/renewal/RenewalWorkflow.kt`, `RenewalWorkflowTest.kt` |
+| 신규 | `application/renewal/RenewalFinder.kt`, `application/renewal/RenewalProcessor.kt`, `PlayerRenewalServiceTest.kt` |
 | 삭제 | `PlayerRenewalFinder.kt`, `ClubRenewalFinder.kt`, `PlayerRenewalProcessor.kt`, `ClubRenewalProcessor.kt`, `StatsBattleAggregator.kt`(async 래퍼), `config/AsyncConfig.kt`, `config/AsyncExceptionHandler.kt`, `AsyncConfigTest.kt` |
-| 수정 | `PlayerRenewalService.kt`, `ClubRenewalService.kt`, `StatsBattleRetryableAggregator.kt`(→rename), `StatsBattleAccumulationService.kt`, `PlayerUpdater.kt`, `db-core .../BattleJpaRepository.kt` |
+| 수정 | `PlayerRenewalService.kt`, `ClubRenewalService.kt`, `StatsBattleRetryableAggregator.kt`(→rename), `StatsBattleAccumulationService.kt`, `PlayerUpdater.kt`, `ClubUpdater.kt`, `db-core .../BattleJpaRepository.kt` |
 | 이동 | application/도메인별 하위 패키지로 소스·테스트 전체 |
 | 문서 | `renewal-flow.md`, `worker-concurrency-strategy.md` |
 
