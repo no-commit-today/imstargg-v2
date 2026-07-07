@@ -43,13 +43,13 @@
 **brawlers/[id]**
 
 - `page.tsx`: `searchParams` prop 과 `parseTrophyRange` 등 모든 searchParams 소비를 제거. 브롤러 상세 + **기본 필터값 통계**만 서버 페치.
-- `BrawlerStatsSection`(RSC 유지): 기본 필터(`DEFAULT_TIER_RANGE`/`DEFAULT_DATE_RANGE`) 통계 3종(daily/pair/enemy)을 기존처럼 `Promise.all` + `revalidate: CACHE_SECONDS.SHORT` 로 페치 → 화면 모델로 매핑해 새 클라이언트 컴포넌트에 전달.
+- 페이지(RSC)가 기본 필터(`DEFAULT_TIER_RANGE`/`DEFAULT_DATE_RANGE`/`DEFAULT_TROPHY_RANGE`) 데이터(통계 3종 + 아이템 소유율)를 `Promise.all` + `revalidate: CACHE_SECONDS.SHORT` 로 페치 → 화면 모델로 매핑해 새 클라이언트 패널에 전달. (기존 `BrawlerStatsSection` 은 패널로 흡수 — 브롤러 fetch 후 나머지를 전부 병렬화해 3단 체인을 2단으로 줄이기 위함.)
 - 신규 `BrawlerStatsPanel`("use client"):
-  - 필터 상태를 `useSearchParams()` 로 읽는다(사용처를 `<Suspense>` 로 감싸 SSG 셸과 호환).
-  - 필터 변경은 `router.replace` 대신 **`window.history.replaceState`** (Next 지원 shallow routing) — 서버 왕복 없이 URL 동기화 유지.
+  - 필터 상태는 **`useState`(기본값 초기화) + mount/popstate 시 `window.location.search` 동기화**로 관리한다. `useSearchParams()` 를 쓰지 않는 이유: 정적 프리렌더에서 CSR bailout 이 일어나 기본값 통계가 정적 HTML 에서 빠지기 때문 (SEO 목표와 충돌).
+  - 필터 변경은 `router.replace` 대신 **`window.history.replaceState`** (Next 지원 shallow routing) — 서버 왕복 없이 URL 동기화 유지. 딥링크는 mount 동기화로 처리(기본값 → 필터 결과 교체).
   - 필터가 기본값이면 서버에서 받은 `initialData` 를 그대로 사용, 기본값이 아니면 신규 훅으로 클라이언트 페치.
-- `StatRangeSelector`: 컴포넌트 내부의 `router.replace` 를 `window.history.replaceState` 로 교체한다 — 브롤러·이벤트 상세 두 사용처 모두 동일 동작이 필요하므로 내부 단일 수정으로 처리.
-- `sp.trophy` 를 소비하던 영역(랭킹 탭 등)도 동일하게 클라이언트로 이동.
+- `StatRangeSelector`: `/brawlers` **목록 페이지도 이 셀렉터를 공유**하며 그쪽은 서버가 searchParams 로 통계를 렌더하므로 내비게이션이 필요하다. 따라서 프레젠테이션 전용 `StatRangeSelectorView`(onSelect 콜백, 내비게이션 훅 없음)를 분리하고, 기존 `StatRangeSelector` 는 목록 페이지용 래퍼(router.replace 유지)로 남긴다. 상세 페이지 패널은 View 를 직접 사용.
+- `sp.trophy` 를 소비하던 아이템 소유율 영역(`BrawlerItems` + `TrophyRangeSelector`)도 동일 패턴으로 클라이언트화 (`TrophyRangeSelector` 는 사용처가 상세 페이지뿐이라 controlled 컴포넌트로 전환).
 
 **events/[id]**
 
@@ -58,8 +58,8 @@
 
 **신규 데이터 레이어** (Spec B 의 레이어 규칙을 선제 준수)
 
-- `queryKeys` 에 statistics 도메인 키를 추가한다: `queryKeys.statistics.brawler(brawlerId, tier, date)` / `queryKeys.statistics.event(eventId, filters)` (plan 단계에서 기존 키와 충돌이 확인될 때만 이름 조정).
-- 신규 훅 `useBrawlerStats(brawlerId, { tier, date }, initial?)` / `useEventStats(eventId, filters, initial?)` — `src/hooks/queries/` 에 배치, `statisticsApi` 경유, 반환은 domain mapper 를 통과한 화면 모델.
+- 쿼리 키는 **기존 `queryKeys.statistics.*`** (daily/pairResult/enemyResult/brawlerResult/brawlerRank/pairRank/itemOwnership — 이미 전부 정의돼 있음)를 그대로 사용한다. 신설 없음.
+- 신규 훅 `useBrawlerStats(brawlerId, filter, initial?)` / `useItemOwnership(brawlerId, trophy, initial?)` / `useEventResultStats·useEventRankStats·useEventSelectedStats` — `src/hooks/queries/` 에 배치, `statisticsApi` 경유, 반환은 domain mapper 를 통과한 화면 모델.
 
 **부수 정리**: 여전히 동적으로 남는 목록 페이지의 route-level `revalidate`(`app/brawlers/page.tsx:26`)는 오독 방지를 위해 제거(fetch-level 캐시는 유지). 상세 페이지의 것은 실효되므로 유지.
 
@@ -107,8 +107,8 @@
 | Bricolage Grotesque | Google Fonts `@import` | `next/font/google` |
 | JetBrains Mono | Google Fonts `@import` | `next/font/google` |
 | Lilita One | 로컬 TTF `@font-face` | `next/font/google` (동일 서체, 관리 단순화) |
-| Pretendard Variable | jsdelivr `@import` | npm `pretendard` 패키지의 Variable WOFF2 + `next/font/local` |
-| KoBrawl Gothic | 950KB OTF `@font-face` | **서브셋 WOFF2** + `next/font/local` |
+| Pretendard Variable | jsdelivr `@import` (동적 서브셋 CSS) | npm `pretendard` 패키지 원본을 **KS X 1001 서브셋 Variable WOFF2** 로 변환 + `next/font/local` (원본 ~2MB 를 그대로 쓰면 오히려 악화되므로 서브셋 필수. 서브셋 밖 글리프는 시스템 폰트 폴백) |
+| KoBrawl Gothic | 950KB OTF `@font-face` | **서브셋 WOFF2** + `next/font/local` (원본 OTF 는 재생성용으로 `scripts/fonts-src/` 에 보존) |
 
 - KoBrawl 서브셋: fonttools `pyftsubset`(uv 환경)으로 **KS X 1001 완성형 한글 2,350자 + Basic Latin + 숫자·문장부호** 를 WOFF2 로 추출해 커밋. 생성 커맨드는 재현 가능하도록 리포에 기록(스크립트 또는 문서). 원본 OTF·Lilita TTF 는 삭제.
 - 서브셋 밖 글리프(희귀 한글 음절이 든 플레이어 닉네임 등)는 폰트 스택 폴백(Pretendard)으로 렌더 — 디스플레이 서체와 결이 다르지만 깨지지 않는다. 의도된 트레이드오프.
