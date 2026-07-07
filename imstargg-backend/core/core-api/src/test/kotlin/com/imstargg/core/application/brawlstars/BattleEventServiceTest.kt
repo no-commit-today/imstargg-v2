@@ -106,6 +106,28 @@ class BattleEventServiceTest(
     }
 
     @Test
+    fun `search 는 map_name 컬럼이 null 인 이벤트를 이름 메시지가 있어도 노출하지 않는다`() {
+        // given - map_name null + 이름 메시지 존재 (admin 의 mapName null 게이팅과 동일 규약)
+        battleEventJpaRepository.save(
+            BattleEventEntity(brawlStarsId = 15_000_779L, mode = null, mapName = null),
+        )
+        messageJpaRepository.save(
+            MessageEntity(
+                type = MessageType.BATTLE_EVENT_NAME,
+                brawlStarsId = 15_000_779L,
+                lang = Language.DEFAULT,
+                content = "Hidden Cave",
+            ),
+        )
+
+        // when
+        val result = sut.search("cave")
+
+        // then
+        assertThat(result).isEmpty()
+    }
+
+    @Test
     fun `getCurrentRotationEvents 는 로테이션 데이터가 없으면 빈 리스트를 반환한다`() {
         // when
         val result = sut.getCurrentRotationEvents()

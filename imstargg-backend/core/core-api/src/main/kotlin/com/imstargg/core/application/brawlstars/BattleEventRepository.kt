@@ -25,6 +25,12 @@ class BattleEventRepository(
     private val brawlStarsImageJpaRepository: BrawlStarsImageJpaRepository,
     private val cloudFrontProperties: CloudFrontProperties,
 ) {
+    /**
+     * 전체 이벤트를 메시지·아이콘과 함께 벌크 조립한다 (요청당 상수 쿼리).
+     *
+     * LAZY `mode` 프록시는 접근 시 초기화되지만 `default_batch_fetch_size`(300) 배치 페치로
+     * 이벤트 수와 무관하게 상수 회수의 IN 쿼리로 묶인다.
+     */
     fun findAll(): List<BattleEvent> {
         val eventEntities = battleEventJpaRepository.findAll().toList()
         if (eventEntities.isEmpty()) return emptyList()
