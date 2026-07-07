@@ -4,11 +4,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
-data class WeekRange(
-    val start: LocalDate,
-    val end: LocalDate,
-)
-
 object StatsWeekRange {
     fun weekRange(date: LocalDate): WeekRange {
         val monday = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
