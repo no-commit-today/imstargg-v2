@@ -27,12 +27,8 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
         return queryFactory
             .select(eventId, totalSlotSum)
             .from(brawlerBattleResultStatsEntity)
-            .where(
-                eventBrawlStarsId?.let { brawlerBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerBattleResultStatsEntity.battleDate.goe(startDate),
-                brawlerBattleResultStatsEntity.battleDate.loe(endDate),
-            ).groupBy(eventId)
+            .where(*conditions(eventBrawlStarsId, tierRange, startDate, endDate))
+            .groupBy(eventId)
             .fetch()
             .map { tuple ->
                 EventSlotSumProjection(
@@ -58,12 +54,8 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
         return queryFactory
             .select(eventId, brawlerId, victorySum, defeatSum, drawSum, starPlayerSum)
             .from(brawlerBattleResultStatsEntity)
-            .where(
-                eventBrawlStarsId?.let { brawlerBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerBattleResultStatsEntity.battleDate.goe(startDate),
-                brawlerBattleResultStatsEntity.battleDate.loe(endDate),
-            ).groupBy(eventId, brawlerId)
+            .where(*conditions(eventBrawlStarsId, tierRange, startDate, endDate))
+            .groupBy(eventId, brawlerId)
             .fetch()
             .map { tuple ->
                 BrawlerEventResultProjection(
@@ -76,4 +68,16 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
                 )
             }
     }
+
+    private fun conditions(
+        eventBrawlStarsId: Long?,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ) = arrayOf(
+        eventBrawlStarsId?.let { brawlerBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
+        brawlerBattleResultStatsEntity.tierRange.eq(tierRange),
+        brawlerBattleResultStatsEntity.battleDate.goe(startDate),
+        brawlerBattleResultStatsEntity.battleDate.loe(endDate),
+    )
 }
