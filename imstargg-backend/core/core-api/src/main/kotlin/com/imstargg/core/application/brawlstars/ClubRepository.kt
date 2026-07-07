@@ -10,6 +10,7 @@ import com.imstargg.core.enums.ClubMemberRole
 import com.imstargg.core.enums.ClubStatus
 import com.imstargg.core.enums.ClubType
 import com.imstargg.core.enums.EnumCodeType
+import com.imstargg.core.infrastructure.jpa.toPageable
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository

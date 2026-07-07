@@ -13,6 +13,7 @@ import com.imstargg.core.domain.brawlstars.player.PlayerBrawlerItem
 import com.imstargg.core.domain.brawlstars.player.PlayerClub
 import com.imstargg.core.enums.BuffyType
 import com.imstargg.core.enums.PlayerStatus
+import com.imstargg.core.infrastructure.jpa.toPageable
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository
