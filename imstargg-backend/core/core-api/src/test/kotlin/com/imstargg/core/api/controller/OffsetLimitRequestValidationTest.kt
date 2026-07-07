@@ -25,12 +25,15 @@ class OffsetLimitRequestValidationTest(
     }
 
     @Test
-    fun `limit 이 100 을 초과하면 400`() {
+    fun `limit 이 100 을 초과하면 400 과 필드 에러를 반환한다`() {
         mockMvc
             .get("/v1/player/search") {
                 param("q", "test")
                 param("limit", "101")
-            }.andExpect { status { isBadRequest() } }
+            }.andExpect {
+                status { isBadRequest() }
+                jsonPath("$.fields[0].field") { value("limit") }
+            }
     }
 
     @Test
@@ -67,6 +70,15 @@ class OffsetLimitRequestValidationTest(
                 param("q", "test")
                 param("offset", "10000")
                 param("limit", "100")
+            }.andExpect { status { isOk() } }
+    }
+
+    @Test
+    fun `하한 경계값 limit 1 은 200`() {
+        mockMvc
+            .get("/v1/player/search") {
+                param("q", "test")
+                param("limit", "1")
             }.andExpect { status { isOk() } }
     }
 
