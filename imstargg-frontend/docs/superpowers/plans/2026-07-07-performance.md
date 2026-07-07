@@ -1163,22 +1163,16 @@ export function BrawlerItems({ items, brawlerId, initialOwnership }: Props) {
 }
 ```
 
-- [ ] **Step 4: 검증 — typecheck + 전체 테스트 + 프로덕션 빌드**
+- [ ] **Step 4: 검증 — typecheck + 전체 테스트**
+
+> ⚠️ **빌드 검증은 이 태스크에서 하지 않는다.** `next build` 는 타입 에러에 실패하는데(next.config.ts 에 `ignoreBuildErrors` 없음), 이 시점에는 `EventStatsSection.tsx` 의 타입 에러 2건(Task 4가 유발, Task 8에서 해소)이 남아 있어 빌드가 불가능하다. `/brawlers/[id]` ISR 복구 여부는 코드가 타입 클린이 되는 **Task 8 에서 브롤러·이벤트를 함께 빌드 검증**한다.
 
 ```bash
-pnpm --dir imstargg-frontend typecheck && pnpm --dir imstargg-frontend test:run
+pnpm --dir imstargg-frontend typecheck ; pnpm --dir imstargg-frontend test:run
 ```
-Expected: typecheck 에러 0 (Task 3 에서 예고한 BrawlerItems 에러 해소), 테스트 전부 통과
-
-**프로덕션 빌드** 실행 후 라우트 테이블에서 확인:
-- `/brawlers/[id]` 가 `●` (SSG/ISR) + Revalidate `1m` 로 표기되고 `(+106 more paths)` 류의 경로 수가 보일 것
-- 만약 빌드가 `useSearchParams() should be wrapped in a suspense boundary` 에러로 실패하면 원인 컴포넌트를 확인하라 — `BrawlerRankingTab`(비활성 탭이라 프리렌더에서 렌더되지 않아 정상적으로는 발생하지 않음)이 원인이면 `BrawlerContent.tsx` 의 `<TabsContent value="ranking">` 내부를 `<Suspense fallback={null}>` 로 감싼다 (`import { Suspense } from "react"` 추가)
-
-추가 확인 (산출물에 HTML 이 실제로 존재하는지):
-```bash
-python3 -c "import json; m = json.load(open('imstargg-frontend/.next/prerender-manifest.json')); print(sum(1 for k in m['routes'] if k.startswith('/brawlers/')))"
-```
-Expected: 100 내외 (0 이 아니어야 함)
+Expected:
+- typecheck: 에러가 정확히 **2건**만 남는다 — 둘 다 `app/events/[id]/_components/EventStatsSection.tsx`(테이블에 `onToggleBrawler` 누락, Task 8에서 해소). **`BrawlerItems.tsx` 의 에러는 사라져야 한다**(Task 3에서 예고한 것 해소). 만약 brawler 계열 파일에서 새 타입 에러가 나오면 이 태스크의 결함이므로 수정.
+- test:run: 전부 통과.
 
 - [ ] **Step 5: 커밋**
 
@@ -1610,17 +1604,28 @@ export default async function EventPage({ params }: Params) {
 ```
 (`export const revalidate = 60;` 는 import 블록 아래, `generateStaticParams` 위에 배치한다.)
 
-- [ ] **Step 3: 검증 — typecheck + 전체 테스트 + 프로덕션 빌드**
+- [ ] **Step 3: 검증 — typecheck + 전체 테스트**
 
 ```bash
 pnpm --dir imstargg-frontend typecheck && pnpm --dir imstargg-frontend test:run
 ```
-Expected: 에러 0, 전부 통과 (Task 4 에서 예고한 EventStatsSection typecheck 에러 해소)
+Expected: **typecheck 에러 0** (Task 3의 BrawlerItems, Task 4의 EventStatsSection 에러가 모두 이 시점까지 해소됨 — 코드베이스가 처음으로 완전히 타입 클린), 테스트 전부 통과. 에러가 남으면 다음 빌드가 실패하므로 반드시 0을 확인하고 넘어간다.
 
-**프로덕션 빌드** 후 라우트 테이블 확인:
+- [ ] **Step 4: 프로덕션 빌드로 브롤러·이벤트 ISR 동시 검증**
+
+이제 타입 클린이므로 빌드가 가능하다. **프로덕션 빌드**(실행에 수 분 소요, 실 API GET 호출 — 안전)를 실행하고 라우트 테이블에서 확인:
+- `/brawlers/[id]` 가 `●`(SSG/ISR) + Revalidate `1m` (Task 6 의 정적화 결과)
 - `/events/[id]` 가 `●` + Revalidate `1m`
 
-- [ ] **Step 4: 커밋**
+빌드가 `useSearchParams() should be wrapped in a suspense boundary` 로 실패하면 원인 컴포넌트를 확인한다 — `BrawlerRankingTab`(비활성 탭이라 프리렌더에서 언마운트되어 보통은 문제없음)이 원인이면 `app/brawlers/[id]/_components/BrawlerContent.tsx` 의 `<TabsContent value="ranking">` 내부를 `<Suspense fallback={null}>` 로 감싼다(`import { Suspense } from "react"` 추가) 후 재빌드.
+
+산출물에 실제 HTML 이 존재하는지 확인:
+```bash
+python3 -c "import json; m=json.load(open('imstargg-frontend/.next/prerender-manifest.json')); print('brawlers', sum(1 for k in m['routes'] if k.startswith('/brawlers/')), '| events', sum(1 for k in m['routes'] if k.startswith('/events/')))"
+```
+Expected: `brawlers` 100 내외(0 아님) + `events` 1 이상.
+
+- [ ] **Step 5: 커밋** (BrawlerContent 에 Suspense 를 추가했다면 그 변경도 포함)
 
 ```bash
 git add -A imstargg-frontend/app
