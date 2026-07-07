@@ -3,9 +3,14 @@ package com.imstargg.core.application.brawlstars
 import com.imstargg.CoreApiContextTest
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.enums.Language
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
+import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
+import com.imstargg.infrastructure.db.core.brawlstars.MessageType
+import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.BattleEventEntityFixture.Companion.aBattleEventEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -18,6 +23,7 @@ class BattleEventServiceTest(
     private val sut: BattleEventService,
     private val cleanUp: CleanUp,
     private val battleEventJpaRepository: BattleEventJpaRepository,
+    private val messageJpaRepository: MessageJpaRepository,
     private val cacheManager: CacheManager,
 ) : CoreApiContextTest() {
     @BeforeEach
@@ -63,6 +69,40 @@ class BattleEventServiceTest(
 
         // then
         assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `search 는 맵 이름 메시지에 부분 일치(대소문자 무시)하는 이벤트를 반환한다`() {
+        // given
+        battleEventJpaRepository.save(
+            BattleEventEntity(brawlStarsId = 15_000_777L, mode = null, mapName = "Hard Rock Mine"),
+        )
+        battleEventJpaRepository.save(
+            BattleEventEntity(brawlStarsId = 15_000_778L, mode = null, mapName = "Snake Prairie"),
+        )
+        messageJpaRepository.save(
+            MessageEntity(
+                type = MessageType.BATTLE_EVENT_NAME,
+                brawlStarsId = 15_000_777L,
+                lang = Language.DEFAULT,
+                content = "Hard Rock Mine",
+            ),
+        )
+        messageJpaRepository.save(
+            MessageEntity(
+                type = MessageType.BATTLE_EVENT_NAME,
+                brawlStarsId = 15_000_778L,
+                lang = Language.DEFAULT,
+                content = "Snake Prairie",
+            ),
+        )
+
+        // when
+        val result = sut.search("rock")
+
+        // then
+        assertThat(result).hasSize(1)
+        assertThat(result.first().id.value).isEqualTo(15_000_777L)
     }
 
     @Test

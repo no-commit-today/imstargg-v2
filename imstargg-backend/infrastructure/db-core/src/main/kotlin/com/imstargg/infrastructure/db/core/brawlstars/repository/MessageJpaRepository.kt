@@ -15,11 +15,6 @@ interface MessageJpaRepository : JpaRepository<MessageEntity, Long> {
         brawlStarsIds: Collection<Long>,
     ): List<MessageEntity>
 
-    fun findAllByTypeAndContentContainingIgnoreCase(
-        type: MessageType,
-        content: String,
-    ): List<MessageEntity>
-
     fun deleteAllByTypeAndBrawlStarsId(
         type: MessageType,
         brawlStarsId: Long,

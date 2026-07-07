@@ -20,6 +20,9 @@ class BattleEventRepositoryWithCache(
     @Cacheable(cacheNames = [CacheNames.BATTLE_EVENT], key = "#id")
     fun find(id: BrawlStarsId): BattleEvent? = battleEventRepository.find(id)
 
+    @Cacheable(cacheNames = [CacheNames.BATTLE_EVENT], key = "'all'")
+    fun findAll(): List<BattleEvent> = battleEventRepository.findAll()
+
     fun findAllCurrentRotationEvents(): List<RotationBattleEvent> {
         val latestRotation =
             battleEventRotationJpaRepository.findTopByOrderByCollectedAtDesc()
