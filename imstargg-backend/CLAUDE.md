@@ -108,6 +108,7 @@ imstargg-backend/
 - **로컬 캐시는 버전 관리 불필요**: Caffeine 로컬 캐시(`brawler`, `battleEvent` 등) 는 프로세스 재시작 시 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
 - **Redis 캐시는 메서드별 버전 prefix**: Redis 영속 캐시(`statistics` 등) 는 캐싱 객체 형태 변경 시 역직렬화 오류 방지를 위해 키에 `v{N}:` prefix 를 둔다. `RedisCacheConfiguration.computePrefixWith` 같은 전역 버전이 아니라 **각 `@Cacheable(key=...)` 의 키 prefix 에 메서드 단위로** 둔다. 한 메서드의 반환 객체 구조만 바뀌어도 같은 cacheName 의 다른 메서드 캐시까지 함께 무효화되는 부담을 피하기 위함.
 - **키 형식**: `cacheName::v{N}:methodKey:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+- **키-파라미터 동기화**: `@Cacheable` 메서드의 파라미터 변경 시 key 표현식도 함께 갱신 — 누락·형식 변경은 `StatisticsCacheKeyTest` 가 검증
 
 ### DB & Entity Conventions
 
