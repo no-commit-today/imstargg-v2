@@ -365,9 +365,10 @@ create table if not exists battle_event
 create unique index if not exists uk_battle_event__brawlstarsid on battle_event (brawlstars_id);
 
 -- 일별 브롤러별 전투 결과 통계
+create sequence if not exists brawler_battle_result_stats_seq increment by 100;
 create table if not exists brawler_battle_result_stats
 (
-    brawler_battle_result_stats_id bigint generated always as identity primary key,
+    brawler_battle_result_stats_id bigint primary key default nextval('brawler_battle_result_stats_seq'),
     event_brawlstars_id           bigint       not null,
     tier_range                    varchar(45)  not null,
     battle_date                   date         not null,
@@ -384,11 +385,13 @@ create index if not exists ix_brawler_battle_result_stats_1 on brawler_battle_re
 create index if not exists ix_brawler_battle_result_stats_2 on brawler_battle_result_stats (brawler_brawlstars_id, tier_range, battle_date);
 create unique index if not exists uk_brawler_battle_result_stats__1
     on brawler_battle_result_stats (event_brawlstars_id, tier_range, battle_date, brawler_brawlstars_id);
+alter sequence brawler_battle_result_stats_seq owned by brawler_battle_result_stats.brawler_battle_result_stats_id;
 
 -- 일별 브롤러 전투 랭크 통계
+create sequence if not exists brawler_battle_rank_stats_seq increment by 100;
 create table if not exists brawler_battle_rank_stats
 (
-    brawler_battle_rank_stats_id bigint generated always as identity primary key,
+    brawler_battle_rank_stats_id bigint primary key default nextval('brawler_battle_rank_stats_seq'),
     event_brawlstars_id          bigint       not null,
     tier_range                   varchar(45)  not null,
     battle_date                  date         not null,
@@ -401,11 +404,13 @@ create table if not exists brawler_battle_rank_stats
 create index if not exists ix_brawler_battle_rank_stats on brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date);
 create unique index if not exists uk_brawler_battle_rank_stats__1
     on brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date, brawler_brawlstars_id);
+alter sequence brawler_battle_rank_stats_seq owned by brawler_battle_rank_stats.brawler_battle_rank_stats_id;
 
 -- 브롤러 vs 적 브롤러 전투 결과 통계
+create sequence if not exists brawler_enemy_battle_result_stats_seq increment by 100;
 create table if not exists brawler_enemy_battle_result_stats
 (
-    brawler_enemy_battle_result_stats_id bigint generated always as identity primary key,
+    brawler_enemy_battle_result_stats_id bigint primary key default nextval('brawler_enemy_battle_result_stats_seq'),
     event_brawlstars_id                  bigint       not null,
     tier_range                           varchar(45)  not null,
     start_battle_date                    date         not null,
@@ -425,11 +430,13 @@ create unique index if not exists uk_brawler_enemy_battle_result_stats__1
         event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
         brawler_brawlstars_id, enemy_brawler_brawlstars_id
     );
+alter sequence brawler_enemy_battle_result_stats_seq owned by brawler_enemy_battle_result_stats.brawler_enemy_battle_result_stats_id;
 
 -- 브롤러 pair 전투 결과 통계 (기준 브롤러 관점의 방향성 팀원 통계)
+create sequence if not exists brawler_pair_battle_result_stats_seq increment by 100;
 create table if not exists brawler_pair_battle_result_stats
 (
-    brawler_pair_battle_result_stats_id bigint generated always as identity primary key,
+    brawler_pair_battle_result_stats_id bigint primary key default nextval('brawler_pair_battle_result_stats_seq'),
     event_brawlstars_id                 bigint      not null,
     tier_range                          varchar(45) not null,
     start_battle_date                   date        not null,
@@ -451,11 +458,13 @@ create unique index if not exists uk_brawler_pair_battle_result_stats__1
         event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
         brawler_brawlstars_id, pair_brawler_brawlstars_id
     );
+alter sequence brawler_pair_battle_result_stats_seq owned by brawler_pair_battle_result_stats.brawler_pair_battle_result_stats_id;
 
 -- 브롤러 pair 전투 랭크 통계 (기준 브롤러 관점의 방향성 팀원 통계)
+create sequence if not exists brawler_pair_battle_rank_stats_seq increment by 100;
 create table if not exists brawler_pair_battle_rank_stats
 (
-    brawler_pair_battle_rank_stats_id bigint generated always as identity primary key,
+    brawler_pair_battle_rank_stats_id bigint primary key default nextval('brawler_pair_battle_rank_stats_seq'),
     event_brawlstars_id               bigint      not null,
     tier_range                        varchar(45) not null,
     start_battle_date                 date        not null,
@@ -475,6 +484,7 @@ create unique index if not exists uk_brawler_pair_battle_rank_stats__1
         event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
         brawler_brawlstars_id, pair_brawler_brawlstars_id
     );
+alter sequence brawler_pair_battle_rank_stats_seq owned by brawler_pair_battle_rank_stats.brawler_pair_battle_rank_stats_id;
 
 create table if not exists battle_event_rotation
 (
@@ -637,9 +647,10 @@ create table if not exists brawlstars_api_spec
 );
 
 -- brawler_gear_ownership_stats table
+create sequence if not exists brawler_gear_ownership_stats_seq increment by 100;
 create table if not exists brawler_gear_ownership_stats
 (
-    brawler_gear_ownership_stats_id bigint generated always as identity primary key,
+    brawler_gear_ownership_stats_id bigint primary key default nextval('brawler_gear_ownership_stats_seq'),
     brawler_brawlstars_id           bigint      not null,
     trophy_range                    varchar(45) not null,
     gear_brawlstars_id              bigint      not null,
@@ -649,11 +660,13 @@ create table if not exists brawler_gear_ownership_stats
     updated_at                      timestamptz not null default now()
 );
 create unique index if not exists uk_brawler_gear_ownership_stats_1 on brawler_gear_ownership_stats (brawler_brawlstars_id, trophy_range, gear_brawlstars_id);
+alter sequence brawler_gear_ownership_stats_seq owned by brawler_gear_ownership_stats.brawler_gear_ownership_stats_id;
 
 -- brawler_gadget_ownership_stats table
+create sequence if not exists brawler_gadget_ownership_stats_seq increment by 100;
 create table if not exists brawler_gadget_ownership_stats
 (
-    brawler_gadget_ownership_stats_id bigint generated always as identity primary key,
+    brawler_gadget_ownership_stats_id bigint primary key default nextval('brawler_gadget_ownership_stats_seq'),
     brawler_brawlstars_id             bigint      not null,
     trophy_range                      varchar(45) not null,
     gadget_brawlstars_id              bigint      not null,
@@ -663,11 +676,13 @@ create table if not exists brawler_gadget_ownership_stats
     updated_at                        timestamptz not null default now()
 );
 create unique index if not exists uk_brawler_gadget_ownership_stats_1 on brawler_gadget_ownership_stats (brawler_brawlstars_id, trophy_range, gadget_brawlstars_id);
+alter sequence brawler_gadget_ownership_stats_seq owned by brawler_gadget_ownership_stats.brawler_gadget_ownership_stats_id;
 
 -- brawler_star_power_ownership_stats table
+create sequence if not exists brawler_star_power_ownership_stats_seq increment by 100;
 create table if not exists brawler_star_power_ownership_stats
 (
-    brawler_star_power_ownership_stats_id bigint generated always as identity primary key,
+    brawler_star_power_ownership_stats_id bigint primary key default nextval('brawler_star_power_ownership_stats_seq'),
     brawler_brawlstars_id                 bigint      not null,
     trophy_range                          varchar(45) not null,
     star_power_brawlstars_id              bigint      not null,
@@ -677,11 +692,13 @@ create table if not exists brawler_star_power_ownership_stats
     updated_at                            timestamptz not null default now()
 );
 create unique index if not exists uk_brawler_star_power_ownership_stats_1 on brawler_star_power_ownership_stats (brawler_brawlstars_id, trophy_range, star_power_brawlstars_id);
+alter sequence brawler_star_power_ownership_stats_seq owned by brawler_star_power_ownership_stats.brawler_star_power_ownership_stats_id;
 
 -- brawler_hyper_charge_ownership_stats table
+create sequence if not exists brawler_hyper_charge_ownership_stats_seq increment by 100;
 create table if not exists brawler_hyper_charge_ownership_stats
 (
-    brawler_hyper_charge_ownership_stats_id bigint generated always as identity primary key,
+    brawler_hyper_charge_ownership_stats_id bigint primary key default nextval('brawler_hyper_charge_ownership_stats_seq'),
     brawler_brawlstars_id                   bigint      not null,
     trophy_range                            varchar(45) not null,
     hyper_charge_brawlstars_id              bigint      not null,
@@ -691,11 +708,13 @@ create table if not exists brawler_hyper_charge_ownership_stats
     updated_at                              timestamptz not null default now()
 );
 create unique index if not exists uk_brawler_hyper_charge_ownership_stats_1 on brawler_hyper_charge_ownership_stats (brawler_brawlstars_id, trophy_range, hyper_charge_brawlstars_id);
+alter sequence brawler_hyper_charge_ownership_stats_seq owned by brawler_hyper_charge_ownership_stats.brawler_hyper_charge_ownership_stats_id;
 
 -- brawler_buffy_ownership_stats table
+create sequence if not exists brawler_buffy_ownership_stats_seq increment by 100;
 create table if not exists brawler_buffy_ownership_stats
 (
-    brawler_buffy_ownership_stats_id bigint generated always as identity primary key,
+    brawler_buffy_ownership_stats_id bigint primary key default nextval('brawler_buffy_ownership_stats_seq'),
     brawler_brawlstars_id            bigint      not null,
     trophy_range                     varchar(45) not null,
     buffy_type                       varchar(25) not null,
@@ -705,6 +724,7 @@ create table if not exists brawler_buffy_ownership_stats
     updated_at                       timestamptz not null default now()
 );
 create unique index if not exists uk_brawler_buffy_ownership_stats_1 on brawler_buffy_ownership_stats (brawler_brawlstars_id, trophy_range, buffy_type);
+alter sequence brawler_buffy_ownership_stats_seq owned by brawler_buffy_ownership_stats.brawler_buffy_ownership_stats_id;
 
 -- feedback table
 create table if not exists feedback
