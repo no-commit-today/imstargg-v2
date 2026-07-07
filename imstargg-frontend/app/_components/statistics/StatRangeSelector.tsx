@@ -59,7 +59,7 @@ export function StatRangeSelector({ tier, date }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select value={tier} onValueChange={(v) => navigate({ tier: v as StatsTierRange })}>
-        <SelectTrigger className="w-40 text-sm">
+        <SelectTrigger aria-label="티어 범위 선택" className="w-40 text-sm">
           <SelectValue>
             <span className="inline-flex items-center gap-1.5">
               <TierIcon tier={tier} />
@@ -79,7 +79,7 @@ export function StatRangeSelector({ tier, date }: Props) {
         </SelectContent>
       </Select>
       <Select value={date} onValueChange={(v) => navigate({ date: v as StatsDateRange })}>
-        <SelectTrigger className="w-32 text-sm">
+        <SelectTrigger aria-label="기간 선택" className="w-32 text-sm">
           <SelectValue>{DATE_RANGE_LABELS[date]}</SelectValue>
         </SelectTrigger>
         <SelectContent>
