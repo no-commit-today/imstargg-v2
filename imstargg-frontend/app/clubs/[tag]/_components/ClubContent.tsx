@@ -10,6 +10,8 @@ import { sortMembers } from "@/domain/club/members";
 import { ClubHeader } from "./ClubHeader";
 import { ClubMembers } from "./ClubMembers";
 import { ClubTrophyDistribution } from "./ClubTrophyDistribution";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type Props = {
   tag: string;
@@ -38,6 +40,7 @@ export function ClubContent({ tag, initialClub, initialRenewal }: Props) {
         <ClubTrophyDistribution members={club.members} className="lg:order-2" />
         <ClubMembers members={sorted} className="lg:order-1" />
       </div>
+      <AdUnit slot={AD_SLOTS.clubDetail} />
     </main>
   );
 }

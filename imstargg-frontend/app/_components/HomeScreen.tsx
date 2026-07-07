@@ -7,12 +7,12 @@ export default function HomeScreen() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 60px)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "flex-start",
-        paddingTop: 60,
+        paddingTop: 48,
+        paddingBottom: 24,
         position: "relative",
         overflow: "hidden",
       }}

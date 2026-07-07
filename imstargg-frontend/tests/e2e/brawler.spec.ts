@@ -11,7 +11,7 @@ test("이름 검색이 결과를 좁힌다", async ({ page }) => {
   await page.goto("/brawlers");
   const input = page.getByPlaceholder("브롤러 이름 검색");
   await input.waitFor({ state: "visible", timeout: 15_000 });
-  await input.fill("셸리");
+  await input.fill("쉘리");
   await expect(page.locator('a[href^="/brawlers/"]')).toHaveCount(1, { timeout: 5_000 });
 });
 

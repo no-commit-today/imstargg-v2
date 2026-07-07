@@ -9,4 +9,9 @@ interface RenewalJpaRepository : JpaRepository<RenewalEntity, Long> {
         brawlStarsTag: String,
         type: RenewalType,
     ): RenewalEntity?
+
+    fun findAllByTypeAndBrawlStarsTagIn(
+        type: RenewalType,
+        brawlStarsTags: Collection<String>,
+    ): List<RenewalEntity>
 }

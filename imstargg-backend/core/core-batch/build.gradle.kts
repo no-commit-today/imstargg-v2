@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":client:brawlstars-client"))
 
     implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation("org.springframework.boot:spring-boot-restclient")
     implementation("org.springframework:spring-web")
     implementation("org.yaml:snakeyaml")
 

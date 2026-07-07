@@ -11,6 +11,8 @@ import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { BrawlerContent } from "./_components/BrawlerContent";
 import { BrawlerStatsSection } from "./_components/BrawlerStatsSection";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type Params = { params: Promise<{ id: string }> };
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -77,6 +79,7 @@ export default async function BrawlerPage({
     <main className="mx-auto w-full max-w-6xl px-4 pb-10">
       <BrawlerContent initialDetail={detail} ownership={ownership} trophy={trophy} />
       <BrawlerStatsSection brawler={detail.brawler} searchParams={sp} />
+      <AdUnit slot={AD_SLOTS.brawlerDetail} className="mt-6" />
     </main>
   );
 }

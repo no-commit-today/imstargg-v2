@@ -6,6 +6,8 @@ import { toClubRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
 import { CountrySelect } from "@/components/ranking/CountrySelect";
 import { ClubRankingList } from "@/components/ranking/ClubRankingList";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type SearchParams = Promise<{ country?: string }>;
 
@@ -53,6 +55,7 @@ export default async function Page({
         </div>
         <ClubRankingList rankings={rankings} />
       </section>
+      <AdUnit slot={AD_SLOTS.clubRanking} />
     </main>
   );
 }

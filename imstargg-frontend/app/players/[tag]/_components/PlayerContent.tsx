@@ -12,6 +12,8 @@ import { PlayerBrawlers } from "./PlayerBrawlers";
 import { PlayerBattles } from "./PlayerBattles";
 import { PlayerStatistics } from "./statistics/PlayerStatistics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type Props = {
   tag: string;
@@ -72,6 +74,7 @@ export function PlayerContent({
           <PlayerStatistics tag={tag} />
         </TabsContent>
       </Tabs>
+      <AdUnit slot={AD_SLOTS.playerDetail} />
     </main>
   );
 }

@@ -6,13 +6,13 @@ test.describe("Ranking domain", () => {
     await expect(
       page.getByRole("heading", { name: /글로벌 랭킹/ }),
     ).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "국가 선택" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "국가 선택" })).toBeVisible();
   });
 
-  test("플래그 칩으로 국가를 전환하면 URL이 바뀐다", async ({ page }) => {
+  test("국가 셀렉트로 국가를 전환하면 URL이 바뀐다", async ({ page }) => {
     await page.goto("/players");
-    const pills = page.getByRole("navigation", { name: "국가 선택" });
-    await pills.getByRole("link", { name: /한국/ }).click();
+    await page.getByRole("combobox", { name: "국가 선택" }).click();
+    await page.getByRole("option", { name: "한국" }).click();
     await page.waitForURL(/country=kr/);
     await expect(
       page.getByRole("heading", { name: /한국 랭킹/ }),

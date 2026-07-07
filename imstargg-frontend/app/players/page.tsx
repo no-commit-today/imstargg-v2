@@ -6,6 +6,8 @@ import { toPlayerRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
 import { CountrySelect } from "@/components/ranking/CountrySelect";
 import { PlayerRankingList } from "@/components/ranking/PlayerRankingList";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type SearchParams = Promise<{ country?: string }>;
 
@@ -53,6 +55,7 @@ export default async function Page({
         </div>
         <PlayerRankingList rankings={rankings} />
       </section>
+      <AdUnit slot={AD_SLOTS.playerRanking} />
     </main>
   );
 }
