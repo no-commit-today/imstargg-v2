@@ -9,6 +9,7 @@ import com.imstargg.core.enums.RenewalType
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.time.Clock
 
@@ -61,13 +62,12 @@ class RenewalService(
         }
 
         val now = clock.instant()
-        val existing = renewalRepository.find(tag, type)
-
-        if (existing != null && !existing.canRenew(now)) {
-            throw CoreException(ErrorType.RENEWAL_ALREADY_IN_PROGRESS, "tag=$tag, type=$type")
-        }
-
-        val renewal = renewalRepository.request(tag, type, now)
+        val renewal =
+            try {
+                renewalRepository.request(tag, type, now)
+            } catch (e: DataIntegrityViolationException) {
+                null
+            } ?: throw CoreException(ErrorType.RENEWAL_ALREADY_IN_PROGRESS, "tag=$tag, type=$type")
 
         publishAction()
 

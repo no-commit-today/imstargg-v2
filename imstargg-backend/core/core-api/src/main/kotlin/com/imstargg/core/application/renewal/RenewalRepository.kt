@@ -26,14 +26,20 @@ class RenewalRepository(
         return toRenewal(entity)
     }
 
+    /**
+     * 갱신 요청을 저장한다. 진행 중(재요청 불가) 갱신이 이미 있으면 null.
+     * 최초 요청 동시 경합은 uk_renewal__brawlstarstag_type 제약 위반(DataIntegrityViolationException)으로
+     * 드러나며 호출부(RenewalService)가 RENEWAL_ALREADY_IN_PROGRESS 로 매핑한다.
+     */
     @Transactional
     fun request(
         tag: BrawlStarsTag,
         type: RenewalType,
         requestedAt: Instant,
-    ): Renewal {
+    ): Renewal? {
         val entity = renewalJpaRepository.findByBrawlStarsTagAndType(tag.value, type)
         if (entity != null) {
+            if (!toRenewal(entity).canRenew(requestedAt)) return null
             entity.reRequest(requestedAt)
             return toRenewal(entity)
         }

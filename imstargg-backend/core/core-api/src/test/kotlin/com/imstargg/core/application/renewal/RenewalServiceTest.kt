@@ -129,6 +129,27 @@ class RenewalServiceTest(
 
             verify { renewalProducer.producePlayerRenewal(tag) }
         }
+
+        @Test
+        fun `stale 상태의 기존 갱신은 재요청되어 PENDING 이 된다`() {
+            // given - 임계(10초)를 넘긴 오래된 요청
+            val tag = BrawlStarsTag("#PSTL")
+            renewalJpaRepository.save(
+                aRenewalEntity()
+                    .withBrawlStarsTag(tag.value)
+                    .withType(RenewalType.PLAYER)
+                    .withRequestedAt(now.minus(Duration.ofHours(1)))
+                    .build(),
+            )
+
+            // when
+            val result = sut.renewPlayer(tag)
+
+            // then
+            assertThat(result.status).isEqualTo(RenewalStatus.PENDING)
+            assertThat(result.requestedAt).isEqualTo(now)
+            verify { renewalProducer.producePlayerRenewal(tag) }
+        }
     }
 
     @Nested
