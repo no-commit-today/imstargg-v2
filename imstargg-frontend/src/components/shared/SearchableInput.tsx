@@ -18,6 +18,7 @@ import { SearchHistoryDropdown } from "@/components/shared/SearchHistoryDropdown
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { queryKeys } from "@/hooks/queries/queryKeys";
 import { routes } from "@/config/routes";
+import { QUERY_STALE_TIME } from "@/config/cache";
 
 const DEBOUNCE_MS = 250;
 const MIN_QUERY_LEN = 2;
@@ -81,7 +82,7 @@ export function SearchableInput({
     queryKey: queryKeys.liveSearch(liveKind, debounced),
     queryFn: () => fetchLiveResults(debounced),
     enabled: debounced.length >= MIN_QUERY_LEN,
-    staleTime: 60_000,
+    staleTime: QUERY_STALE_TIME.SHORT,
   });
   const liveResults = useMemo(() => liveQuery.data ?? [], [liveQuery.data]);
 

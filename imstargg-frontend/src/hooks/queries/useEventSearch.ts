@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { eventApi } from "@/api/endpoints/event";
 import { toBattleEvent } from "@/domain/event/mappers";
 import { queryKeys } from "@/hooks/queries/queryKeys";
+import { QUERY_STALE_TIME } from "@/config/cache";
 
 export function useEventSearch(name: string) {
   const trimmed = name.trim();
@@ -12,6 +13,6 @@ export function useEventSearch(name: string) {
     queryFn: ({ signal }) =>
       eventApi.search(trimmed, { signal }).then((r) => r.content.map(toBattleEvent)),
     enabled: trimmed.length > 0,
-    staleTime: 60_000,
+    staleTime: QUERY_STALE_TIME.SHORT,
   });
 }

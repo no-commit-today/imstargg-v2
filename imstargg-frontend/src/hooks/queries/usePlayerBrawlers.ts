@@ -5,6 +5,7 @@ import { playerApi } from "@/api/endpoints/player";
 import { toPlayerBrawler } from "@/domain/player/mappers";
 import type { PlayerBrawler } from "@/domain/player/types";
 import { queryKeys } from "@/hooks/queries/queryKeys";
+import { QUERY_STALE_TIME } from "@/config/cache";
 
 export function usePlayerBrawlers(
   tag: string,
@@ -15,6 +16,6 @@ export function usePlayerBrawlers(
     queryFn: ({ signal }) =>
       playerApi.getBrawlers(tag, { signal }).then((res) => res.content.map(toPlayerBrawler)),
     initialData: options?.initialData,
-    staleTime: 60_000,
+    staleTime: QUERY_STALE_TIME.SHORT,
   });
 }
