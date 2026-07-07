@@ -58,6 +58,8 @@ export const queryKeys = {
     brawlPass: () => [...queryKeys.season.all, "brawl-pass"] as const,
     soloRank: () => [...queryKeys.season.all, "solo-rank"] as const,
   },
+  liveSearch: (kind: string, query: string) =>
+    ["live-search", kind, query] as const,
   statistics: {
     all: ["statistics"] as const,
     brawlerResult: (params: Record<string, unknown>) =>

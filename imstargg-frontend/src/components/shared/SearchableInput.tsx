@@ -16,6 +16,7 @@ import {
 import { getFavorites, isFavorite as readIsFavorite, toggleFavorite } from "@/lib/favorites";
 import { SearchHistoryDropdown } from "@/components/shared/SearchHistoryDropdown";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { queryKeys } from "@/hooks/queries/queryKeys";
 
 const DEBOUNCE_MS = 250;
 const MIN_QUERY_LEN = 2;
@@ -76,7 +77,7 @@ export function SearchableInput({
   // 디바운스된 라이브 검색
   const debounced = useDebouncedValue(value.trim(), DEBOUNCE_MS);
   const liveQuery = useQuery({
-    queryKey: ["live-search", liveKind, debounced],
+    queryKey: queryKeys.liveSearch(liveKind, debounced),
     queryFn: () => fetchLiveResults(debounced),
     enabled: debounced.length >= MIN_QUERY_LEN,
     staleTime: 60_000,
