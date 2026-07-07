@@ -20,6 +20,25 @@ function installFetchSignalShim() {
   Object.defineProperty(window, "fetch", { writable: true, value: wrapped });
 }
 
+// Node 23+ ships its own Web Storage on globalThis (localStorage stays
+// undefined unless --localstorage-file is given). vitest's jsdom environment
+// skips window keys that already exist on the global, so tests would see
+// Node's storage instead of jsdom's. Re-point both at the jsdom window.
+function installJsdomStorage() {
+  const win = (globalThis as { jsdom?: { window: Window } }).jsdom?.window;
+  if (!win) return;
+  for (const key of ["localStorage", "sessionStorage"] as const) {
+    if (globalThis[key] !== win[key]) {
+      Object.defineProperty(globalThis, key, {
+        configurable: true,
+        enumerable: true,
+        get: () => win[key],
+      });
+    }
+  }
+}
+installJsdomStorage();
+
 if (typeof window !== "undefined" && !window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
