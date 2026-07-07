@@ -9,14 +9,15 @@
 
 core-batch 전체(잡 16개, k8s CronJob 실행)를 예방적으로 검토했다. 현재 체감되는 성능 문제는 없으며, 데이터 증가에 대비한 성능 보강과 코드 품질 정리가 목적이다.
 
-통계 잡 6종(일별 battleresult/battlerank, 주간 pair×2/enemy, ownership)은 "키셋 읽기 → 인메모리 집계 → delete+insert 교체" 패턴으로 정착되어 있고, 이 구조는 2026-05-22 평탄화 설계의 의도적 결정이다. 당시 정책 **"과도한 추상화보다는 중복이 더 괜찮음"** 은 이번 설계에서도 유지한다 — 공통화는 잡 의도(쿼리·삭제 조건)를 숨기지 않는 기계적 보일러플레이트로 한정한다.
+통계 잡 6종(일별 battleresult/battlerank, 주간 pair×2/enemy, ownership)은 "키셋 읽기 → 인메모리 집계 → delete+insert 교체" 패턴으로 정착되어 있고, 이 구조는 2026-05-22 평탄화 설계의 의도적 결정이다. 당시 정책 **"과도한 추상화보다는 중복이 더 괜찮음"** 은 이번 설계에서도 유지한다 — 스펙 리뷰에서 공통화 후보(KeysetScanner·StatsReplaceWriter)를 이 정책 기준으로 재심사해 **전부 철회**했고, 통계 수직의 클론 구조는 그대로 둔다(§4.1 결정 기록). 유일한 리더 계층 변경은 support 유틸의 알고리즘 교정(offset→keyset, §3.3)이다.
 
 ## 1. 범위
 
 포함한다.
 
 - 성능 3건: 통계 INSERT 배칭 복구(SEQUENCE 전환), ownership 리더 쿼리 안전화, offset→keyset 페이징 전환
-- 구조 4건: 기계적 보일러플레이트 공통화, ownership 집계 도메인 위치 정렬, 데드코드 제거(trio 휴면 테이블·엔티티 포함), 파티션 보존↔주간 룩백 가드
+- 구조 3건: ownership 집계 도메인 위치 정렬, 데드코드 제거(trio 휴면 테이블·엔티티 포함), 파티션 보존↔주간 룩백 가드
+- 결정 기록 1건: 통계 수직 공통화 재심사 결과 — 하지 않기로 결정 (§4.1)
 
 포함하지 않는다 (§10 향후 제안 참조).
 
@@ -33,7 +34,7 @@ core-batch 전체(잡 16개, k8s CronJob 실행)를 예방적으로 검토했다
 | 현재 페인포인트 | 없음 — 예방적 개선 |
 | DB 스키마 변경 | 허용 (수동 마이그레이션 포함) |
 | 접근법 | A. 타깃 개선 (프레임워크화 B, 파이프라인 재설계 C 기각) |
-| 공통화 수준 | 기계적 보일러플레이트만 — Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지 |
+| 공통화 수준 | 1차 "기계적 보일러플레이트만(KeysetScanner·StatsReplaceWriter)" → 스펙 리뷰 재심사에서 **철회**. 통계 Reader/Writer 클론 유지, `KeysetItemReader`(support 유틸 교정)만 진행 |
 | SEQUENCE 전환 대상 | 집계 테이블 10종 (trio 2종은 제거 대상이라 전환 불필요) |
 | trio 통계 테이블 | 사용처 전무 확인(엔티티 참조·리포지토리·프론트엔드 0) → 테이블·엔티티 제거 (스펙 리뷰에서 범위 편입) |
 
@@ -74,21 +75,26 @@ core-batch 전체(잡 16개, k8s CronJob 실행)를 예방적으로 검토했다
 
 **변경**:
 
-- `support/querydsl/KeysetItemReader<T>` 신설: Spring Batch `ItemStreamReader` 구현. `(lastId, JPAQueryFactory) -> JPAQuery<T>` 빌더를 받아 키셋으로 페이지를 읽는다. 기존 `QuerydslEntityCursorItemReader` 의 키셋 접근을 계승하되(05-22 "추후 사용 예정 보존" 의도의 실현), 다음을 바로잡는다:
+- `support/querydsl/KeysetItemReader<T>` 신설: Spring Batch `ItemStreamReader` 구현. 기존 `QuerydslEntityCursorItemReader` 의 키셋 접근을 계승하되(05-22 "추후 사용 예정 보존" 의도의 실현), 다음을 바로잡는다:
   - offset 리더 상속 + `UnsupportedOperationException` 해킹 제거 (독립 구현)
+  - **키셋 계약을 리더가 소유**: 생성자에서 id path(`NumberPath<Long>`)를 받아 `id > lastId` 조건·`order by id asc`·`limit` 을 리더가 직접 주입 — 호출자는 base 쿼리(from/where)만 제공하므로 키셋 조건 누락 실수가 원천 차단된다
   - `lastId` 를 ExecutionContext 에 저장해 **스텝 재시작 시 이어 읽기** 지원 (기존 offset 리더가 제공하던 재시작성 유지)
+
+이 항목은 수직 공통화가 아니라 support 계층 유틸의 결함 교정이다 — 대체 대상인 offset 리더 3종도 같은 계층의 기존 추상화였고, 교체 후 클래스 수는 순감한다(3→1).
 - `BattleEventSyncJobConfig`, `StatsPlayerSyncJobConfig` 의 리더 빈 4개를 교체. 스텝 이름·chunk 크기·잡 파라미터 불변.
 
 ## 4. 구조 정리
 
-### 4.1 기계적 보일러플레이트 공통화
+### 4.1 통계 수직 공통화 — 재심사 후 하지 않기로 결정 (기록)
 
-Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는 것은 잡 의도가 없는 순수 기계 부분 2가지뿐이다.
+이번 설계 과정에서 공통화 후보 2건을 검토했으나, 05-22 평탄화 설계의 실패 기준 — (a) 람다 조립로 잡 의도 분산, (b) 제네릭 타입 압박, (c) 한 추상화에 책임 집중 — 에 재대조한 결과 **모두 채택하지 않는다**. 통계 Reader 6종·Writer 5종의 클론 구조를 그대로 유지한다.
 
-- `support/querydsl/KeysetScanner`: 자체 EntityManager 생성/정리 + `while { em.clear(); fetch(lastId); consume }` 루프. 통계 Reader 6종(배틀 5 + ownership)의 동일한 키셋 루프가 이걸 호출하는 3~5줄로 줄어든다. 각 Reader 파일에는 **자기 쿼리(where 조건)가 그대로 남는다**.
-- `job/statistics/support/StatsReplaceWriter`: `JpaBatchTransactionRunner` 위에서 `delete(조건) → aggregator.flushEntityChunks(persist+flush+clear)` 를 실행하는 헬퍼. 배틀 통계 Writer 5종은 자기 삭제 조건을 정의하고 이 헬퍼에 위임한다. ownership Writer 는 이미 자체 `replaceTable` 헬퍼(repository 기반 전체 교체)를 갖고 있어 대상에서 제외한다.
+| 후보 | 탈락 사유 |
+|---|---|
+| `KeysetScanner` (키셋 루프 추출) | 키셋 핵심 조건(`id.gt(lastId)` + `orderBy`)이 호출자 람다 안에 있어야 하는 **새는 계약** — 누락 시 무한 루프라는, 현재는 존재하지 않는 버그 표면이 생긴다. 계약을 강제하려면 Q-path 제네릭 배관이 필요한데 이는 기준 (b) 위반. 절감량(리더당 ~10줄)이 이 비용을 정당화하지 못한다 |
+| `StatsReplaceWriter` (delete+flush 헬퍼) | 공유 가치가 있는 mechanics 는 이미 추출되어 있다 — 트랜잭션은 `JpaBatchTransactionRunner`, 청킹은 `BattleStatsAggregator.flushEntityChunks`. Writer 에 남은 것은 삭제 조건(=잡 의도) + `persist/flush/clear` 3줄뿐이라, 헬퍼-위-헬퍼 계층만 늘어난다 |
 
-`KeysetItemReader`(§3.3)와 `KeysetScanner` 는 같은 키셋 규약을 공유하되, Spring Batch 스텝용/tasklet 콜백용으로 소비 형태가 다르다.
+결론: 현재 코드는 이미 정책상 최적 고도에 있다. 향후 유사 공통화 제안이 나오면 이 표의 기준으로 먼저 심사한다. (`KeysetItemReader` 는 수직 공통화가 아닌 support 유틸 결함 교정으로 별개 — §3.3 참조.)
 
 ### 4.2 ownership 집계 도메인 위치 정렬
 
@@ -118,17 +124,14 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 ## 5. 파일 변경 맵
 
 **신규**
-- `core-batch/support/querydsl/KeysetScanner.kt`, `KeysetItemReader.kt`
-- `core-batch/job/statistics/support/StatsReplaceWriter.kt`
+- `core-batch/support/querydsl/KeysetItemReader.kt`
 - `core-enum/.../WeekRange.kt` (분리)
 - `db-core/.../db/migration/V260707__stats_identity_to_sequence.sql`
 - `db-core/.../db/migration/V260707__drop_trio_stats_tables.sql` (같은 날짜 파일은 제목으로 구분 — 실제 반영일 기준으로 날짜 조정)
-- 테스트: `KeysetScannerTest`, `KeysetItemReaderTest`(재시작 포함), `StatsReplaceWriterTest`, 룩백 가드 테스트, ownership 리더 컨텍스트 테스트
+- 테스트: `KeysetItemReaderTest`(재시작 포함), 룩백 가드 테스트, ownership 리더 컨텍스트 테스트
 
 **수정**
-- 배틀 통계 Reader 5종 → `KeysetScanner` 사용 (쿼리 정의는 잔류)
-- 배틀 통계 Writer 5종 → `StatsReplaceWriter` 사용 (삭제 조건은 잔류)
-- `BrawlerItemOwnershipStatsReader` → `KeysetScanner` + tag join + 프로젝션 (§3.2)
+- `BrawlerItemOwnershipStatsReader` → tag join + 프로젝션 (§3.2, 자체 키셋 루프는 유지)
 - `BattleEventSyncJobConfig`, `StatsPlayerSyncJobConfig` → `KeysetItemReader` (§3.3)
 - 통계 엔티티 10종 → `@SequenceGenerator` (§3.1), `db-core/schema.sql` 갱신 (시퀀스 반영 + trio 테이블 블록 제거)
 - ownership 도메인 클래스 6종 패키지 이동 (§4.2) 및 참조 갱신
@@ -141,6 +144,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 
 **불변 (호환성 보장)**
 - 잡 이름·스텝 이름·잡 파라미터(`date`, `window`)·검증기 — k8s CronJob `--job.name` 및 `BATCH_*` 메타데이터 호환
+- 통계 배틀 Reader 5종·Writer 5종·Task 6종 — 클론 구조 그대로 (§4.1 결정)
 - `domain/statistics` 집계기 6종과 그 테스트
 - 집계 결과 값 (동작 보존 리팩터링)
 
@@ -160,7 +164,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 | PR | 내용 | 위험 |
 |---|---|---|
 | PR1 | 데드코드 제거(PlayerCombinator, QueryDSL 리더는 PR2 로 연기) + trio 테이블·엔티티 제거(drop 마이그레이션 포함 — 미사용 테이블이라 DDL 적용 시점이 앱 배포와 무관) + WeekRange 분리 + 룩백 가드 + ownership 도메인 이동 | 없음 (동작 무관) |
-| PR2 | KeysetScanner/StatsReplaceWriter/KeysetItemReader + Reader·Writer 정리 + ownership 쿼리 개선 + offset 리더 3종 삭제 | 낮음 (코드만, 테스트로 보존 증명) |
+| PR2 | KeysetItemReader + 리더 빈 교체(battleEventSync/statsPlayerSync) + ownership 쿼리 개선 + offset 리더 3종 삭제 | 낮음 (코드만, 테스트로 보존 증명) |
 | PR3 | SEQUENCE 전환 (DDL + 엔티티 10종 + schema.sql) | 중간 (운영 DDL 선적용 절차 필요) |
 
 ## 9. 리스크와 완화
@@ -169,7 +173,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 |---|---|
 | SEQUENCE 전환 후 ID 충돌 | `setval` 을 max(id) 이상으로 초기화, `default nextval` 안전망, DDL 선적용 순서 |
 | keyset 전환으로 읽기 결과 차이 | 두 방식 모두 `order by id` 전제 — 스냅샷 격리 하 동일 결과. 컨텍스트 테스트로 검증 |
-| 공통화가 잡 의도를 흐림 | 쿼리·삭제 조건을 각 파일에 잔류시키는 경계(§4.1)로 차단. 과거 정책 준수 |
+| 공통화가 잡 의도를 흐림 | §4.1 재심사에서 수직 공통화 자체를 철회 — 리스크 원천 제거. `KeysetItemReader` 는 키셋 계약을 리더가 소유해 오용 차단 |
 | 재시작 동작 회귀 | `KeysetItemReader` 재시작 테스트로 offset 리더의 재시작성 등가 보장 |
 | trio 테이블 drop 비가역 | 적용 전 row count 0 확인을 마이그레이션 주석에 명시. 스키마 복원은 git 이력(`V260426a`)으로 가능 |
 
