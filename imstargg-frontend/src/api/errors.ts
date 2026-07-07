@@ -16,7 +16,7 @@ export class NotFoundError extends ApiError {
   }
 }
 
-export class ServerError extends ApiError {
+class ServerError extends ApiError {
   constructor(status: number, path: string) {
     super(status, path, `Server error ${status}: ${path}`);
     this.name = "ServerError";
