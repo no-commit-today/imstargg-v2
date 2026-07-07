@@ -169,9 +169,8 @@ class BattleResultStatisticsRepository(
                                 brawlerId = brawlerId,
                                 resultCount =
                                     grouped
-                                        .map { it.resultCount }
-                                        .reduce { acc, r -> acc + r }
-                                        .toResultCount(),
+                                        .map { it.resultCount.toResultCount() }
+                                        .reduce(ResultCount::merge),
                                 starPlayerCount = grouped.sumOf { it.starPlayerCount },
                             ),
                     )
