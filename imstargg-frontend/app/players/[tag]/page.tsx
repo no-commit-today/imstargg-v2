@@ -10,8 +10,8 @@ import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { normalizeTag, toUrlPath } from "@/lib/tag";
 import { formatNumber } from "@/lib/format";
+import { NotFoundView } from "@/components/shared/NotFoundView";
 import { PlayerContent } from "./_components/PlayerContent";
-import { PlayerNotFoundView } from "./_components/PlayerNotFoundView";
 
 type Params = { params: Promise<{ tag: string }> };
 
@@ -60,7 +60,7 @@ export default async function PlayerPage({ params }: Params) {
   // player 404 → 갱신 유도 화면 (기존 동작)
   if (playerResult.status === "rejected") {
     if (playerResult.reason instanceof NotFoundError) {
-      return <PlayerNotFoundView tag={normalizeTag(tag)} />;
+      return <NotFoundView kind="player" tag={normalizeTag(tag)} />;
     }
     throw playerResult.reason;
   }

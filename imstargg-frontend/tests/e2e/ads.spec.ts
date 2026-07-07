@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 // 유효한 태그 문자셋(0289PYLQGRJCUV)이지만 실존하지 않는 태그 →
-// core-api 404 → PlayerNotFoundView (콘텐츠 없는 화면)
+// core-api 404 → NotFoundView (콘텐츠 없는 화면)
 const UNKNOWN_TAG_ENCODED = "%23RRRRRRRRR";
 
 test("미갱신 플레이어 페이지에는 광고 요소가 없다", async ({ page }) => {

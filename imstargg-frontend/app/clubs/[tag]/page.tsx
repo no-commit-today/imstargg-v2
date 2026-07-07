@@ -8,8 +8,8 @@ import { buildMetadata } from "@/lib/seo";
 import { normalizeTag, toUrlPath } from "@/lib/tag";
 import { formatNumber } from "@/lib/format";
 import { CACHE_SECONDS } from "@/config/cache";
+import { NotFoundView } from "@/components/shared/NotFoundView";
 import { ClubContent } from "./_components/ClubContent";
-import { ClubNotFoundView } from "./_components/ClubNotFoundView";
 
 type Params = { params: Promise<{ tag: string }> };
 
@@ -47,7 +47,7 @@ export default async function ClubPage({ params }: Params) {
 
   if (clubResult.status === "rejected") {
     if (clubResult.reason instanceof NotFoundError) {
-      return <ClubNotFoundView tag={normalizeTag(tag)} />;
+      return <NotFoundView kind="club" tag={normalizeTag(tag)} />;
     }
     throw clubResult.reason;
   }

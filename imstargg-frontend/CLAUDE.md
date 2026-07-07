@@ -36,7 +36,8 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
 
 ## 갱신(Renewal)
 
-`POST /v1/{players|clubs}/{tag}/renewal` 트리거 → `progressing=true` 동안 1초 폴링 → `false`로 전환 시 자동 invalidate. 훅: `usePlayerRenewal`.
+`POST /v1/{players|clubs}/{tag}/renewal` 트리거 → `progressing=true` 동안 1초 폴링 → `false`로 전환 시 자동 invalidate. 훅: `useRenewal(kind, tag)`.
+미동기 플레이어/클럽은 페이지가 `notFound()` 대신 인라인 `NotFoundView` 를 반환해 갱신을 유도한다(HTTP 200 + generateMetadata noindex) — 그래서 `not-found.tsx` 를 쓰지 않는다.
 
 ## 테스트 원칙
 
