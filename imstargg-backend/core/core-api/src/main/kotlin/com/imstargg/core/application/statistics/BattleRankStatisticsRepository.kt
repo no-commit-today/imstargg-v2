@@ -25,21 +25,20 @@ class BattleRankStatisticsRepository(
         startDate: LocalDate,
         endDate: LocalDate,
     ): BrawlerRankStatistics {
-        val items =
+        val counts =
             soloBattleRankJpaRepository
                 .findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
                     eventId.value,
                     tierRange,
                     startDate,
                     endDate,
-                ).groupBy { it.brawlerBrawlStarsId }
-                .map { (brawlerBrawlStarsId, grouped) ->
+                ).map { entity ->
                     BrawlerRankCount(
-                        brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                        rankCount = grouped.map { it.rankCounts }.reduce { acc, r -> acc + r }.toRankCount(),
+                        brawlerId = BrawlStarsId(entity.brawlerBrawlStarsId),
+                        rankCount = entity.rankCounts.toRankCount(),
                     )
-                }.map { it.toStatisticsItem() }
-        return BrawlerRankStatistics(items = items)
+                }
+        return BrawlerRankStatistics.create(counts)
     }
 
     fun findBrawlerPairRankStatistics(

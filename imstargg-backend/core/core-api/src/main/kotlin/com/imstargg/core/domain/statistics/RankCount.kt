@@ -12,4 +12,10 @@ data class RankCount(
             } else {
                 0.0
             }
+
+    fun merge(other: RankCount): RankCount {
+        val merged = counts.toMutableMap()
+        other.counts.forEach { (rank, count) -> merged.merge(rank, count, Long::plus) }
+        return RankCount(merged)
+    }
 }
