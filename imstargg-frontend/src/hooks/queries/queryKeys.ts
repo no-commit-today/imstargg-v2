@@ -11,6 +11,8 @@ export const queryKeys = {
       [...queryKeys.player.all, "renewal", normalizeTag(tag)] as const,
     battles: (tag: string) =>
       [...queryKeys.player.all, "battles", normalizeTag(tag)] as const,
+    search: (query: string) =>
+      [...queryKeys.player.all, "search", query] as const,
     statistics: {
       brawler: (tag: string, battleType: string, season: string) =>
         [...queryKeys.player.all, "statistics-brawler", normalizeTag(tag), battleType, season] as const,
@@ -24,6 +26,8 @@ export const queryKeys = {
       [...queryKeys.club.all, "detail", normalizeTag(tag)] as const,
     renewal: (tag: string) =>
       [...queryKeys.club.all, "renewal", normalizeTag(tag)] as const,
+    search: (query: string) =>
+      [...queryKeys.club.all, "search", query] as const,
   },
   brawler: {
     all: ["brawler"] as const,
