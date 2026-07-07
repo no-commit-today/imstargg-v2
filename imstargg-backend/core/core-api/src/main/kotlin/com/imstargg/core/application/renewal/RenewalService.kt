@@ -66,6 +66,7 @@ class RenewalService(
             try {
                 renewalRepository.request(tag, type, now)
             } catch (e: DataIntegrityViolationException) {
+                log.debug("[갱신 요청 경합] type={} tag={}", type, tag.value, e)
                 null
             } ?: throw CoreException(ErrorType.RENEWAL_ALREADY_IN_PROGRESS, "tag=$tag, type=$type")
 

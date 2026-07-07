@@ -57,4 +57,23 @@ class WebMvcConfigTest(
             .perform(get("/v1/players/%23NOPE"))
             .andExpect(header().doesNotExist(HttpHeaders.CACHE_CONTROL))
     }
+
+    @Test
+    fun `매칭 경로의 404 응답에는 Cache-Control 헤더가 없다`() {
+        mockMvc
+            .perform(get("/v1/events/99999999"))
+            .andExpect(status().isNotFound)
+            .andExpect(header().doesNotExist(HttpHeaders.CACHE_CONTROL))
+    }
+
+    @Test
+    fun `매칭 경로의 400 응답에는 Cache-Control 헤더가 없다`() {
+        mockMvc
+            .perform(
+                get("/v1/statistics/brawler/result")
+                    .param("tierRange", "INVALID")
+                    .param("dateRange", "THIS_WEEK"),
+            ).andExpect(status().isBadRequest)
+            .andExpect(header().doesNotExist(HttpHeaders.CACHE_CONTROL))
+    }
 }
