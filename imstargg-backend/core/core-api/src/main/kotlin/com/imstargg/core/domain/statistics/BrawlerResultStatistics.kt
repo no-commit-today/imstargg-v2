@@ -13,13 +13,7 @@ data class BrawlerResultStatisticsItem(
 )
 
 /**
- * 결과형 통계 - 브롤러 단위.
- *
- * `totalBattleCount` 의 의미: 조회 범위의 **게임 수** (이전엔 슬롯 합이었음 — 2026-05-19 정정).
- * 픽률 = 해당 브롤러가 등장한 슬롯 수 / 게임 수 → 3v3 의 경우 픽률 합이 ≈ 6.0.
- *
- * item 단위는 `battleCount`(브롤러별 전투 수)로 구분한다 — 2026-05-19 정정 때 item 에도 전역 게임 수를
- * 복사하는 바람에 프론트 "전투수" 컬럼이 전 브롤러 동일 값으로 표시됐던 버그가 있었음 (2026-06-06 정정).
+ * 결과형 통계 - 브롤러 단위. 분모·battleCount 의미와 정정 이력은 [StatsRate.pickRate] 가 정본.
  */
 data class BrawlerResultStatistics(
     val totalBattleCount: Long,
