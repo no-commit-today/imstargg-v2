@@ -14,6 +14,7 @@ import com.imstargg.core.domain.brawlstars.player.PlayerClub
 import com.imstargg.core.enums.BuffyType
 import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.core.infrastructure.jpa.toPageable
+import com.imstargg.core.infrastructure.jpa.toSlice
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository
@@ -57,7 +58,7 @@ class PlayerRepository(
                 brawlStarsTag = tagPrefix.value,
                 pageable = offsetLimit.toPageable(),
             )
-        return Slice.from(slice.map { toPlayer(it) })
+        return slice.map { toPlayer(it) }.toSlice()
     }
 
     fun searchByName(
@@ -69,7 +70,7 @@ class PlayerRepository(
                 name = namePrefix,
                 pageable = offsetLimit.toPageable(),
             )
-        return Slice.from(slice.map { toPlayer(it) })
+        return slice.map { toPlayer(it) }.toSlice()
     }
 
     fun findAllPlayerBrawler(tag: BrawlStarsTag): List<PlayerBrawler> {

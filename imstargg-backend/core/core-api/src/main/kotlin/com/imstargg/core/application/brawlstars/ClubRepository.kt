@@ -11,6 +11,7 @@ import com.imstargg.core.enums.ClubStatus
 import com.imstargg.core.enums.ClubType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.infrastructure.jpa.toPageable
+import com.imstargg.core.infrastructure.jpa.toSlice
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.ClubMemberEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
@@ -68,7 +69,7 @@ class ClubRepository(
             } else {
                 clubMemberJpaRepository.findAllByClubIn(entities).groupBy { it.club.id }
             }
-        return Slice.from(slice.map { toClub(it, membersByClubId[it.id] ?: emptyList()) })
+        return slice.map { toClub(it, membersByClubId[it.id] ?: emptyList()) }.toSlice()
     }
 
     private fun toClub(
