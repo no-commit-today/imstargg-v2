@@ -4,6 +4,9 @@
 -- `set default nextval` 은 IDENTITY 를 기대하는 구버전 앱과의 호환 안전망이다 (DDL 선적용 → 앱 배포).
 -- setval 은 max(id)+100 으로 초기화해 배포 전환 구간의 잔여 insert 와도 충돌하지 않는다.
 -- 멱등: 재실행 시 setval 만 +100 재상승 (무해).
+-- 주의: 이 프로젝트는 수동 적용(Flyway 미사용)이다. setval 은 실행 시점 max(id) 기준이라 앞으로만 이동하나,
+--       신버전 앱이 이미 캐시한 [seq, seq+99] 블록을 소진하기 전 재적용하면 극히 드물게 채번 충돌 여지가 있으니
+--       재적용은 배치 무중단 채번 중이 아닐 때 수행한다.
 
 create sequence if not exists brawler_battle_result_stats_seq increment by 100 owned by brawler_battle_result_stats.brawler_battle_result_stats_id;
 alter table brawler_battle_result_stats alter column brawler_battle_result_stats_id drop identity if exists;
