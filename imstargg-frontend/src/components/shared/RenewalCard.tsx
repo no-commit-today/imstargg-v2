@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { isValidTag } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import { toast } from "sonner";
 import { renewalApi } from "@/api/endpoints/renewal";
 
@@ -35,8 +36,7 @@ export function RenewalCard({ kind, defaultTag = "" }: Props) {
         await renewalApi.renewClub(trimmed);
       }
       toast.success("갱신 요청 접수 — 잠시 후 결과 페이지에서 확인하세요.");
-      const detailBase = kind === "player" ? "/players" : "/clubs";
-      router.push(`${detailBase}/${trimmed.replace(/^#/, "")}`);
+      router.push(kind === "player" ? routes.player(trimmed) : routes.club(trimmed));
     } catch {
       toast.error("갱신 요청 실패 — 잠시 후 다시 시도해 주세요.");
     } finally {

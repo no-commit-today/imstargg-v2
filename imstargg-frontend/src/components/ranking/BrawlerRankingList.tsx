@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { toUrlPath } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import type { BrawlerRanking } from "@/domain/ranking/types";
 import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
 import { PlayerAvatar } from "@/components/primitives/PlayerAvatar";
@@ -41,7 +41,7 @@ export function BrawlerRankingList({ rankings }: Props) {
       {rankings.map((r) => (
         <Link
           key={r.player.tag}
-          href={`/players/${toUrlPath(r.player.tag)}`}
+          href={routes.player(r.player.tag)}
           data-rail={railFor(r.rank)}
           className={`data-row text-[13px] sm:text-sm ${GRID}`}
         >

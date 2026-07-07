@@ -5,7 +5,8 @@ import { toClub } from "@/domain/club/mappers";
 import { emptyRenewal } from "@/domain/renewal/empty";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
-import { normalizeTag, toUrlPath } from "@/lib/tag";
+import { normalizeTag } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import { formatNumber } from "@/lib/format";
 import { CACHE_SECONDS } from "@/config/cache";
 import { NotFoundView } from "@/components/shared/NotFoundView";
@@ -25,14 +26,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return buildMetadata({
       title: `${display} | ImStarGG`,
       description: `${display} — 트로피 ${formatNumber(dto.trophies)}, 멤버 ${dto.members.length}/30. 브롤스타즈 클럽 통계.`,
-      path: `/clubs/${toUrlPath(tag)}`,
+      path: routes.club(tag),
       dynamicOg: true,
     });
   } catch {
     return buildMetadata({
       title: "클럽을 찾을 수 없음 | ImStarGG",
       description: "요청하신 클럽을 찾을 수 없습니다.",
-      path: `/clubs/${toUrlPath(tag)}`,
+      path: routes.club(tag),
       noindex: true,
     });
   }

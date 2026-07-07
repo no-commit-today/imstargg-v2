@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { toUrlPath } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import type { ClubRanking } from "@/domain/ranking/types";
 import Trophy from "@/components/primitives/Trophy";
 import { RankNumber } from "@/components/ranking/RankNumber";
@@ -41,7 +41,7 @@ export function ClubRankingList({ rankings }: Props) {
       {rankings.map((r) => (
         <Link
           key={r.tag}
-          href={`/clubs/${toUrlPath(r.tag)}`}
+          href={routes.club(r.tag)}
           data-rail={railFor(r.rank)}
           className={`data-row text-[13px] sm:text-sm ${GRID}`}
         >

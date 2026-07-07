@@ -4,6 +4,7 @@ import { SearchableInput } from "@/components/shared/SearchableInput";
 import type { SearchableInputResult } from "@/components/shared/SearchableInput";
 import { renderSearchResultRow } from "@/components/shared/searchResultRow";
 import { playerApi } from "@/api/endpoints/player";
+import { routes } from "@/config/routes";
 
 const LIVE_LIMIT = 5;
 
@@ -27,7 +28,7 @@ export function PlayerSearchInput({ defaultValue = "" }: { defaultValue?: string
       liveKind="player"
       fetchLiveResults={fetchPlayers}
       renderResult={renderSearchResultRow}
-      toDetailHref={(item) => `/players/${item.tag.replace(/^#/, "")}`}
+      toDetailHref={(item) => routes.player(item.tag)}
       toSearchHref={(q) => `/players/search?q=${encodeURIComponent(q)}`}
     />
   );

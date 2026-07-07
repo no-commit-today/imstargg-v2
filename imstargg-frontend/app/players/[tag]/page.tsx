@@ -8,7 +8,8 @@ import { toPlayer, toPlayerBrawler } from "@/domain/player/mappers";
 import { emptyRenewal } from "@/domain/renewal/empty";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
-import { normalizeTag, toUrlPath } from "@/lib/tag";
+import { normalizeTag } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import { formatNumber } from "@/lib/format";
 import { NotFoundView } from "@/components/shared/NotFoundView";
 import { PlayerContent } from "./_components/PlayerContent";
@@ -27,14 +28,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return buildMetadata({
       title: `${display} | ImStarGG`,
       description: `${display} — 트로피 ${formatNumber(dto.trophies)}, ${dto.club?.name ?? "클럽 없음"}. 브롤스타즈 플레이어 통계.`,
-      path: `/players/${toUrlPath(tag)}`,
+      path: routes.player(tag),
       dynamicOg: true,
     });
   } catch {
     return buildMetadata({
       title: "플레이어를 찾을 수 없음 | ImStarGG",
       description: "요청하신 플레이어를 찾을 수 없습니다.",
-      path: `/players/${toUrlPath(tag)}`,
+      path: routes.player(tag),
       noindex: true,
     });
   }

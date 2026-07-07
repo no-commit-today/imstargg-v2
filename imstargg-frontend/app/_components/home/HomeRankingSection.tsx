@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { PlayerRanking } from "@/domain/ranking/types";
-import { toUrlPath } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import Trophy from "@/components/primitives/Trophy";
 
 type Props = { rankings: PlayerRanking[] };
@@ -27,7 +27,7 @@ export function HomeRankingSection({ rankings }: Props) {
         {top.map((r) => (
           <li key={r.player.tag}>
             <Link
-              href={`/players/${toUrlPath(r.player.tag)}`}
+              href={routes.player(r.player.tag)}
               className="grid grid-cols-[44px_minmax(0,1fr)_110px] items-center gap-2 px-4 py-2.5"
             >
               <span className="font-num font-bold tabular-nums">{r.rank}</span>

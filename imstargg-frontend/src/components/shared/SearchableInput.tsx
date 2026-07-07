@@ -17,6 +17,7 @@ import { getFavorites, isFavorite as readIsFavorite, toggleFavorite } from "@/li
 import { SearchHistoryDropdown } from "@/components/shared/SearchHistoryDropdown";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { queryKeys } from "@/hooks/queries/queryKeys";
+import { routes } from "@/config/routes";
 
 const DEBOUNCE_MS = 250;
 const MIN_QUERY_LEN = 2;
@@ -152,8 +153,8 @@ export function SearchableInput({
       const entry = flat[activeIndex];
       const href =
         entry.kind === "player"
-          ? `/players/${entry.tag.replace(/^#/, "")}`
-          : `/clubs/${entry.tag.replace(/^#/, "")}`;
+          ? routes.player(entry.tag)
+          : routes.club(entry.tag);
       setOpen(false);
       router.push(href);
     }

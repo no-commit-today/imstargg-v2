@@ -4,6 +4,7 @@ import { SearchableInput } from "@/components/shared/SearchableInput";
 import type { SearchableInputResult } from "@/components/shared/SearchableInput";
 import { renderSearchResultRow } from "@/components/shared/searchResultRow";
 import { clubApi } from "@/api/endpoints/club";
+import { routes } from "@/config/routes";
 
 const LIVE_LIMIT = 5;
 
@@ -27,7 +28,7 @@ export function ClubSearchInput({ defaultValue = "" }: { defaultValue?: string }
       liveKind="club"
       fetchLiveResults={fetchClubs}
       renderResult={renderSearchResultRow}
-      toDetailHref={(item) => `/clubs/${item.tag.replace(/^#/, "")}`}
+      toDetailHref={(item) => routes.club(item.tag)}
       toSearchHref={(q) => `/clubs/search?q=${encodeURIComponent(q)}`}
     />
   );
