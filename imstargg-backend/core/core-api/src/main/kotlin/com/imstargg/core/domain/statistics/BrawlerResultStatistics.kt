@@ -35,12 +35,11 @@ data class BrawlerResultStatistics(
             }
 
             val totalBattleCount: Long =
-                rows
-                    .groupBy { it.eventId }
-                    .map { (eventId, eventRows) ->
-                        val eventSlotSum = eventRows.sumOf { it.resultCount.totalCount }
-                        eventSlotSum / gameSlots[eventId].resultSlotsPerGame
-                    }.sum()
+                gameSlots.totalGameCount(
+                    rows
+                        .groupBy { it.eventId }
+                        .mapValues { (_, eventRows) -> eventRows.sumOf { it.resultCount.totalCount } },
+                )
 
             val brawlerAggregates =
                 rows
