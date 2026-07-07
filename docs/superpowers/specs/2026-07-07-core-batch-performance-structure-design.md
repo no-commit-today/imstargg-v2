@@ -16,14 +16,13 @@ core-batch 전체(잡 16개, k8s CronJob 실행)를 예방적으로 검토했다
 포함한다.
 
 - 성능 3건: 통계 INSERT 배칭 복구(SEQUENCE 전환), ownership 리더 쿼리 안전화, offset→keyset 페이징 전환
-- 구조 4건: 기계적 보일러플레이트 공통화, ownership 집계 도메인 위치 정렬, 데드코드 제거, 파티션 보존↔주간 룩백 가드
+- 구조 4건: 기계적 보일러플레이트 공통화, ownership 집계 도메인 위치 정렬, 데드코드 제거(trio 휴면 테이블·엔티티 포함), 파티션 보존↔주간 룩백 가드
 
 포함하지 않는다 (§10 향후 제안 참조).
 
 - single-pass 집계 파이프라인 재설계, 통계 잡 프레임워크화 (정책상 부적합)
 - 배치 메트릭/알림 확장 (04-30 설계의 "Grafana 등 별도 도구" 방침 유지), `BATCH_*` 메타테이블 정리
 - worker 가 쓰는 원본 `stats_rank_battle`/`stats_result_battle` 의 ID 전략 (파티션 함수 `OVERRIDING SYSTEM VALUE` 가 IDENTITY 전제)
-- trio 통계 테이블 2종 (휴면 — schema.sql 에 "현재 API/배치 미제공" 주석)
 - RankingCollect 3태스크 통합, 집계기(`domain/statistics`) 로직 변경
 
 ## 2. 결정 로그
@@ -35,7 +34,8 @@ core-batch 전체(잡 16개, k8s CronJob 실행)를 예방적으로 검토했다
 | DB 스키마 변경 | 허용 (수동 마이그레이션 포함) |
 | 접근법 | A. 타깃 개선 (프레임워크화 B, 파이프라인 재설계 C 기각) |
 | 공통화 수준 | 기계적 보일러플레이트만 — Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지 |
-| SEQUENCE 전환 대상 | 집계 테이블 10종 (trio 2종 제외) |
+| SEQUENCE 전환 대상 | 집계 테이블 10종 (trio 2종은 제거 대상이라 전환 불필요) |
+| trio 통계 테이블 | 사용처 전무 확인(엔티티 참조·리포지토리·프론트엔드 0) → 테이블·엔티티 제거 (스펙 리뷰에서 범위 편입) |
 
 ## 3. 성능 개선
 
@@ -102,6 +102,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 | 대상 | 처리 | 근거 |
 |---|---|---|
 | `PlayerCombinator` (+테스트) | 삭제 | 사용처 0. trio 통계(휴면) 잔재 — 부활 시 git 에서 복원 |
+| trio 통계 테이블·엔티티 2종 | 삭제 (`BrawlerTrioBattleResultStatsEntity`, `BrawlerTrioBattleRankStatsEntity` + schema.sql 블록 + `drop table if exists` 마이그레이션) | 사용처 전무 — API/배치 미제공 휴면 상태. 부활 시 git 에서 복원. 과거 생성 마이그레이션(`V260426a`)은 이력이므로 불변 |
 | `QuerydslEntityCursorItemReader` | 삭제 (`KeysetItemReader` 로 계승) | §3.3 — 05-22 의 "추후 사용" 의도를 정비된 형태로 실현 |
 | `QuerydslZeroPagingItemReader` | 삭제 | 사용처 0. read-and-delete 용도인데 해당 패턴의 잡이 없음 |
 | `QuerydslPagingItemReader` | 삭제 | §3.3 전환 후 사용처 0 (offset 페이징 근절) |
@@ -121,6 +122,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 - `core-batch/job/statistics/support/StatsReplaceWriter.kt`
 - `core-enum/.../WeekRange.kt` (분리)
 - `db-core/.../db/migration/V260707__stats_identity_to_sequence.sql`
+- `db-core/.../db/migration/V260707__drop_trio_stats_tables.sql` (같은 날짜 파일은 제목으로 구분 — 실제 반영일 기준으로 날짜 조정)
 - 테스트: `KeysetScannerTest`, `KeysetItemReaderTest`(재시작 포함), `StatsReplaceWriterTest`, 룩백 가드 테스트, ownership 리더 컨텍스트 테스트
 
 **수정**
@@ -128,13 +130,14 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 - 배틀 통계 Writer 5종 → `StatsReplaceWriter` 사용 (삭제 조건은 잔류)
 - `BrawlerItemOwnershipStatsReader` → `KeysetScanner` + tag join + 프로젝션 (§3.2)
 - `BattleEventSyncJobConfig`, `StatsPlayerSyncJobConfig` → `KeysetItemReader` (§3.3)
-- 통계 엔티티 10종 → `@SequenceGenerator` (§3.1), `db-core/schema.sql` 갱신
+- 통계 엔티티 10종 → `@SequenceGenerator` (§3.1), `db-core/schema.sql` 갱신 (시퀀스 반영 + trio 테이블 블록 제거)
 - ownership 도메인 클래스 6종 패키지 이동 (§4.2) 및 참조 갱신
 - `PartitionManageJobConfig`, `StatsWeekRange` KDoc (§4.4)
 
 **삭제**
 - `PlayerCombinator.kt` + `PlayerCombinatorTest.kt`
 - `QuerydslPagingItemReader.kt`, `QuerydslEntityCursorItemReader.kt`, `QuerydslZeroPagingItemReader.kt`
+- `db-core/.../statistics/BrawlerTrioBattleResultStatsEntity.kt`, `BrawlerTrioBattleRankStatsEntity.kt`
 
 **불변 (호환성 보장)**
 - 잡 이름·스텝 이름·잡 파라미터(`date`, `window`)·검증기 — k8s CronJob `--job.name` 및 `BATCH_*` 메타데이터 호환
@@ -156,7 +159,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 
 | PR | 내용 | 위험 |
 |---|---|---|
-| PR1 | 데드코드 제거(PlayerCombinator, QueryDSL 리더는 PR2 로 연기) + WeekRange 분리 + 룩백 가드 + ownership 도메인 이동 | 없음 (동작 무관) |
+| PR1 | 데드코드 제거(PlayerCombinator, QueryDSL 리더는 PR2 로 연기) + trio 테이블·엔티티 제거(drop 마이그레이션 포함 — 미사용 테이블이라 DDL 적용 시점이 앱 배포와 무관) + WeekRange 분리 + 룩백 가드 + ownership 도메인 이동 | 없음 (동작 무관) |
 | PR2 | KeysetScanner/StatsReplaceWriter/KeysetItemReader + Reader·Writer 정리 + ownership 쿼리 개선 + offset 리더 3종 삭제 | 낮음 (코드만, 테스트로 보존 증명) |
 | PR3 | SEQUENCE 전환 (DDL + 엔티티 10종 + schema.sql) | 중간 (운영 DDL 선적용 절차 필요) |
 
@@ -168,6 +171,7 @@ Reader/Writer/Task/JobConfig 클래스는 6종 각자 유지한다. 추출하는
 | keyset 전환으로 읽기 결과 차이 | 두 방식 모두 `order by id` 전제 — 스냅샷 격리 하 동일 결과. 컨텍스트 테스트로 검증 |
 | 공통화가 잡 의도를 흐림 | 쿼리·삭제 조건을 각 파일에 잔류시키는 경계(§4.1)로 차단. 과거 정책 준수 |
 | 재시작 동작 회귀 | `KeysetItemReader` 재시작 테스트로 offset 리더의 재시작성 등가 보장 |
+| trio 테이블 drop 비가역 | 적용 전 row count 0 확인을 마이그레이션 주석에 명시. 스키마 복원은 git 이력(`V260426a`)으로 가능 |
 
 ## 10. 향후 제안 (이번 비범위, 기록만)
 
