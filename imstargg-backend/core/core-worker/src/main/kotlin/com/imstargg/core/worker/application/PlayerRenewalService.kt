@@ -4,6 +4,7 @@ import com.imstargg.client.brawlstars.BrawlStarsApiClientException
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
+import com.imstargg.core.worker.domain.Battle
 import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import org.slf4j.LoggerFactory
@@ -51,7 +52,7 @@ class PlayerRenewalService(
             val savedBattles = playerUpdater.update(playerResponse, battles)
 
             if (updateRenewalStatus(renewal) { playerRenewalProcessor.complete(it) }) {
-                statsBattleAggregator.asyncAggregate(savedBattles)
+                aggregateStats(brawlStarsTag, savedBattles)
             }
         } catch (ex: BrawlStarsApiClientException.NotFound) {
             updateRenewalStatus(renewal) { playerRenewalProcessor.notFound(it) }
@@ -62,6 +63,23 @@ class PlayerRenewalService(
         } catch (ex: Exception) {
             log.error("[플레이어 갱신] 실패 tag={}", brawlStarsTag, ex)
             updateRenewalStatus(renewal) { playerRenewalProcessor.fail(it) }
+        }
+    }
+
+    /**
+     * 통계 집계는 renewal COMPLETED 확정 이후의 부가 작업이다. 예외가 전파되면 완료된 renewal 에
+     * fail 전이를 시도(IllegalStateException)하고 SQS 재전달로 이어지므로 로그만 남기고 삼킨다.
+     * 재시도(@Retryable) 소진 후의 실패는 허용된 드문 유실이다 — 대상 플레이어가 stats_player 에
+     * 있으면 축적 스케줄러가 7일 내 재수집할 수 있다.
+     */
+    private fun aggregateStats(
+        brawlStarsTag: String,
+        battles: List<Battle>,
+    ) {
+        try {
+            statsBattleAggregator.aggregate(battles)
+        } catch (ex: Exception) {
+            log.error("[플레이어 갱신] 통계 집계 실패 (renewal 은 COMPLETED 유지) tag={}", brawlStarsTag, ex)
         }
     }
 
