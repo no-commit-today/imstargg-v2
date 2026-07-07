@@ -27,12 +27,20 @@ test("SEO 메타데이터: title에 클럽 태그가 포함되고 canonical 태�
   await expect(canonical).toHaveCount(1);
 });
 
-test("갱신 버튼 클릭 시 토스트 → 폴링 → 완료 토스트", async ({ page }) => {
+test("갱신 버튼 클릭 시 진행 중 캡션 → 폴링 → 완료 후 방금 전 캡션", async ({ page }) => {
   await page.goto(`/clubs/${TEST_TAGS.clubEncoded}`);
   const renewBtn = page.getByRole("button", { name: "클럽 정보 갱신" });
   await renewBtn.waitFor({ state: "visible", timeout: 15_000 });
-  await expect(renewBtn).toBeEnabled({ timeout: 15_000 });
+  // 이전 실행이 남긴 갱신이 진행 중이면 완료(canRenew)까지 대기
+  await expect(renewBtn).toBeEnabled({ timeout: 60_000 });
   await renewBtn.click();
-  await expect(page.getByText(/갱신 요청됨/)).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByText(/갱신 완료/)).toBeVisible({ timeout: 60_000 });
+
+  // 갱신 접수: progressing 동안 RenewalStatus 캡션이 진행 중으로 전환된다
+  await expect(page.getByText(/최근 업데이트: 진행 중/)).toBeVisible({
+    timeout: 15_000,
+  });
+  // 폴링 종료: renewedAt 이 갱신되어 방금 전으로 전환된다
+  await expect(page.getByText(/최근 업데이트: 방금 전/)).toBeVisible({
+    timeout: 60_000,
+  });
 });
