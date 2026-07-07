@@ -12,6 +12,8 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTe
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheStore
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
@@ -28,6 +30,12 @@ class PlayerUpdater(
         private val log = LoggerFactory.getLogger(PlayerUpdater::class.java)
     }
 
+    /**
+     * 신규 플레이어 동시 INSERT race(유니크 충돌) 는 1회 재시도로 흡수한다. Spring Retry
+     * 인터셉터가 트랜잭션 인터셉터 바깥에 적용되어 재시도마다 새 트랜잭션이 열리고,
+     * 재시도 시점에는 row 가 존재해 SELECT FOR UPDATE 가 정상 동작한다.
+     */
+    @Retryable(retryFor = [DataIntegrityViolationException::class], maxAttempts = 2)
     @Transactional
     fun update(
         playerResponse: PlayerResponse,
