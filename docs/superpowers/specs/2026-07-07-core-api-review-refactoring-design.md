@@ -33,8 +33,9 @@ core-api는 선언된 컨벤션(Controller → QueryComposer → Service → app
 발견사항 요약: 정합성 트랩(A) 3건, 도메인 경계(B) 3건, statistics 유지보수성(S) 6건,
 성능 위생(C) 6건, 선택 제안(D) 3건 중 1건 채택 — 총 19개 구현 항목.
 
-statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 심층 검토를 수행했고(§4 Phase 2),
-"새 통계 종류 하나 추가 = 13개 파일 생성·수정"인 현재 구조의 반복·분산 문제를 구조적으로 줄인다.
+statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 심층 검토를 수행했다(§4 Phase 2).
+재검토("중복 > 과도한 추상화" 피드백)를 거쳐, 통합·추상화 대신 **계산 로직의 위치 규칙 통일과
+사본별 테스트 고정**으로 유지보수성을 확보하는 방향으로 확정했다.
 
 ## 3. 아키텍처 구조 결정 (승인: 옵션 2)
 
@@ -106,12 +107,19 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
    db-core에 `BrawlerTrioBattleResultStatsEntity`가 이미 존재 — Trio 노출 시 세 번째 복사본 위험.
 3. **파라미터 튜플 반복** — `(eventId?, tierRange, startDate, endDate)`가 13개 이상 메서드
    시그니처(Service·WithCache·Repository)와 6개 QueryDSL CustomImpl where 절에 반복.
+   → 재검토 결과 **수용**: 명시적 시그니처가 파라미터 객체(그랩백 위험)보다 유지보수에 낫다고 판정.
 4. **캐시 키 수작업 조립** — WithCache SpEL 키의 파라미터 문자열 연결. 파라미터 추가 시 키 갱신을
    빠뜨리면 컴파일러가 못 잡는 잘못된 캐시 히트 발생. (메서드별 `v{N}:` prefix는 의도된 컨벤션 — 유지)
 5. **집계 idiom 불일치** — 도메인 매핑 후 `reduce(ResultCount::merge)` vs 인프라 embeddable
    `+` 합산 후 `toResultCount()` 변환이 혼재.
 
-적용 규칙: **"조회·매핑은 리포지토리, 계산·집계는 도메인"**.
+적용 규칙 두 가지 (2026-07-07 재검토 — "중복이 과도한 통합·추상화보다 낫다" 피드백 반영):
+
+1. **"조회·매핑은 리포지토리, 계산·집계는 도메인"** — 코드 위치 규칙.
+2. **"불일치가 곧 버그가 되는 규칙만 통합하고, 우연히 닮은 코드는 중복 유지 + 테스트로 고정"** —
+   통합·추상화 판정 기준. 이에 따라 S-2·S-3·S-4는 통합 없이 축소 수행하며, Phase 2 전체에서
+   신규 공용 추상화(파라미터 객체, 크로스 엔티티 헬퍼, 제네릭 빌더)를 도입하지 않는다.
+   이 기준은 Phase 3 이후 작업에도 동일하게 적용한다.
 
 **A-3. 총 게임 수 계산 로직 단일화**
 - 근거: 동일 수식(이벤트별 슬롯 합 ÷ `resultSlotsPerGame`)이 두 곳에 이중 구현 —
@@ -126,30 +134,34 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 - `BrawlerRankStatistics.create(counts)` / `BrawlerPairRankStatistics.create(...)`를 신설해
   그룹핑·평균 순위 계산을 리포지토리에서 도메인으로 이동. 결과형과 대칭 구조 확보, 단위 테스트 가능화.
 
-**S-2. Pair/Enemy 결과 통계의 공통 집계 추출**
-- 도메인 타입명은 유지(pair/enemy는 도메인 언어)하되 동일한 items 생성 로직(battleCount·pickRate·winRate
-  산출)을 공용 함수로 추출. 픽률 분모 히스토리 KDoc도 한 곳으로 통합. 향후 Trio 노출 시 재사용.
+**S-2. Pair/Enemy 결과 통계 — 코드 중복 유지 + 문서 정본화 (재검토로 축소)**
+- 판정: 두 통계는 현재 닮았지만 의미가 다름(pair winRate = 함께일 때 승률, enemy winRate = 상대로
+  만났을 때 승률) — 독립적으로 진화할 수 있는 "우연한 중복". 공유가 필요한 수식(`StatsRate.pickRate`,
+  `ResultCount.winRate`)은 이미 공유되어 있고, 남는 중복은 얇은 `create()` 껍데기 수준.
+- 수정: 코드 통합하지 않음. 픽률 분모 히스토리 KDoc은 `StatsRate.pickRate`를 정본으로 삼고
+  각 통계 클래스는 `@see`로 참조. 사본별 드리프트는 S-6의 단위 테스트로 고정.
 
-**S-3. 통계 조회 조건 값 객체 도입 (`StatsQuery` 류)**
-- `eventId?/brawlerId?/pairBrawlerId?/tierRange/기간`을 담는 도메인 값 객체로
-  Controller→QueryComposer→Service→WithCache→Repository 시그니처 통일. Service는 `StatsDateRange`→기간
-  해석을 유지한 채 객체를 완성해 하위로 전달.
-- 캐시 키는 값 객체가 파생(예: `#query.cacheKey`) — 필드 추가 시 키가 자동 반영되어 문제 4를 구조적으로 차단.
-  메서드별 `v{N}:` prefix 컨벤션은 유지하며, 키 형식 변경이므로 해당 메서드들의 v를 범프.
-- 경계: db-core는 core-api 도메인을 모르므로 application Repository에서 JPA/QueryDSL 파라미터로 언팩.
-- 적용 범위: 결과형·순위형 통계 조회 경로. 아이템 소유율 통계(`brawlerId`·`trophyRange`)와
-  플레이어 통계는 파라미터 세트가 달라 제외.
+**S-3. 캐시 키 드리프트 가드 — 값 객체 도입 없이 (재검토로 축소)**
+- 판정: 전 계층 공용 `StatsQuery` 값 객체는 일부 조회에만 유효한 널러블 필드가 쌓이는 그랩백이
+  되기 쉬움(잘못된 조합이 표현 가능한 타입). 명시적 SpEL 키는 greppable하고 CLAUDE.md의
+  메서드별 키 컨벤션과도 일치 — 시그니처·키 구조는 현행 유지.
+- 수정: (1) WithCache 캐시 키 문자열 회귀 테스트(S-6에 포함)로 키-파라미터 대응을 고정,
+  (2) 각 `@Cacheable` 키 옆에 "파라미터 추가 시 키 갱신 필수" 경고 주석.
 
-**S-4. QueryDSL 공통 조건 헬퍼 (db-core)**
-- 6개 CustomImpl에 반복되는 nullable eventId·tierRange·날짜 범위 predicate를 db-core 통계
-  리포지토리 패키지 내 헬퍼로 추출.
+**S-4. QueryDSL 반복 정리 — 파일 내 사설 함수만 (재검토로 축소)**
+- 판정: 테이블마다 날짜 필드명이 달라(`battleDate` vs `startBattleDate/endBattleDate`) 크로스
+  엔티티 공용 헬퍼는 Q-path를 파라미터로 받는 얇은 간접층일 뿐 — 도입하지 않음.
+- 수정: 같은 파일 안에서 동일 where 절이 반복되는 곳(예:
+  `BrawlerBattleResultStatsJpaRepositoryCustomImpl`의 3회 반복)만 사설 함수로 정리.
 
 **S-5. 집계 idiom 통일**
 - "projection/entity → 도메인 Count 매핑 → 도메인에서 merge"로 단일화. S-1·S-2 작업에 포함해 진행.
 
-**S-6. 도메인 단위 테스트 보강**
-- Pair/Enemy/Rank `create()` 단위 테스트 신설(정정 이력이 있는 민감 계산 커버),
-  S-3의 캐시 키 파생 로직 테스트.
+**S-6. 도메인 단위 테스트 보강 (중복 유지의 안전망)**
+- Pair/Enemy/Rank `create()` 단위 테스트 신설 — 중복을 유지하기로 한 사본들(S-2)의 드리프트를
+  각각 고정. 정정 이력이 있는 민감 계산(픽률 분모, 전투수 의미) 커버.
+- WithCache 캐시 키 문자열 회귀 테스트(S-3) — 키에 포함돼야 할 파라미터가 빠지면 테스트
+  diff로 드러나게 함.
 
 ### Phase 3 — 성능 위생 (C)
 
@@ -215,7 +227,8 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 - **PlayerBrawlerStats의 명시적 cache-aside**(`PlayerBrawlerStatsCacheStore`): `@Cacheable` 대신
   수작업 캐시를 쓰는 것은 core-worker와 캐시를 공유하기 위한 의도된 설계 — 문서화만.
 - **Trio 통계 엔티티 미노출**: db-core에 `BrawlerTrioBattle*StatsEntity`가 존재하나 core-api 미노출.
-  향후 노출 시 S-2의 공용 집계를 재사용할 것.
+  향후 노출 시에도 판정 기준(§4 Phase 2)에 따라 Pair/Enemy처럼 독립 도메인 클래스로 만들고
+  단위 테스트로 고정한다 (공용 추상화를 만들지 않음).
 - **Enemy/Pair 통계 테이블의 날짜 필드명 차이**(`startBattleDate/endBattleDate` vs `battleDate`):
   사전 집계 단위 차이에서 온 것 — 스키마 변경 없이 유지.
 
@@ -223,8 +236,8 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 
 - 순서: Phase 1 → Phase 2 → Phase 3 → Phase 4. 각 Phase는 독립 커밋(Conventional Commits) 단위.
 - Phase 2(statistics)는 동작 보존 리팩터링 — 기존 통계 응답이 리팩터링 전후 동일함을 기존
-  Repository 컨텍스트 테스트 + 신설 도메인 단위 테스트로 확인. S-3의 캐시 키 형식 변경은
-  컨벤션대로 v prefix 범프로 처리(구 키는 Redis TTL 30분 후 자연 소멸).
+  Repository 컨텍스트 테스트 + 신설 도메인 단위 테스트로 확인. 재검토로 S-3을 축소해 캐시
+  키·메서드 시그니처를 변경하지 않으므로 캐시 무효화 이슈 없음.
 - 브랜치: Git 전략 준수 — `develop` 기준 feature 브랜치에서 작업, 완료 후 `develop` PR
   (`pr-test.yml`이 backend 테스트 수행).
 - 테스트 게이트: 변경 영역마다 단위/컨텍스트 테스트 추가(내부 데이터 계층은 실 DB
