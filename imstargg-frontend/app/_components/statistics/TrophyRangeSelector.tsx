@@ -37,7 +37,7 @@ export function TrophyRangeSelector({ trophy, paramName = "trophy" }: Props) {
 
   return (
     <Select value={trophy} onValueChange={(v) => navigate(v as BrawlerTrophyRange)}>
-      <SelectTrigger className="w-28 text-sm">
+      <SelectTrigger aria-label="트로피 구간 선택" className="w-28 text-sm">
         <SelectValue>
           <span className="inline-flex items-center gap-1.5">
             <Image
