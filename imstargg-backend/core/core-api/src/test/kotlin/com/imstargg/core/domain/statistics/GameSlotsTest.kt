@@ -62,6 +62,25 @@ class GameSlotsTest {
     }
 
     @Test
+    fun `totalGameCount 는 이벤트 단위로 내림한 뒤 합산한다`() {
+        // given - 3v3(slots=6) 8슬롯 → 1게임, 솔로 쇼다운(slots=10) 12슬롯 → 1게임
+        // 합산 후 나누기(20/16=1)로 회귀하면 값이 갈라진다: 올바른 값은 1+1=2
+        val sut =
+            GameSlots(
+                mapOf(
+                    BrawlStarsId(1L) to GameSlot(listOf(3, 3)),
+                    BrawlStarsId(2L) to GameSlot(List(10) { 1 }),
+                ),
+            )
+
+        // when
+        val result = sut.totalGameCount(mapOf(BrawlStarsId(1L) to 8L, BrawlStarsId(2L) to 12L))
+
+        // then
+        assertThat(result).isEqualTo(2L)
+    }
+
+    @Test
     fun `totalGameCount 는 빈 입력이면 0`() {
         // when
         val result = GameSlots(emptyMap()).totalGameCount(emptyMap())
