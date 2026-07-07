@@ -1,19 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { EventResultStatsTable } from "@app/events/[id]/_components/EventResultStatsTable";
 import { EventRankStatsTable } from "@app/events/[id]/_components/EventRankStatsTable";
 import type { Brawler } from "@/domain/brawler/types";
-
-const nav = vi.hoisted(() => ({
-  replace: vi.fn(),
-  searchParams: new URLSearchParams(""),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: nav.replace }),
-  usePathname: () => "/events/15001021",
-  useSearchParams: () => nav.searchParams,
-}));
 
 const brawler: Brawler = {
   id: 16000104,
@@ -39,6 +29,7 @@ describe("EventStatsTables", () => {
           },
         ]}
         selectedBrawlerId={null}
+        onToggleBrawler={vi.fn()}
       />,
     );
 
@@ -64,6 +55,7 @@ describe("EventStatsTables", () => {
           },
         ]}
         selectedBrawlerId={16000104}
+        onToggleBrawler={vi.fn()}
       />,
     );
 
@@ -83,11 +75,35 @@ describe("EventStatsTables", () => {
           },
         ]}
         selectedBrawlerId={16000104}
+        onToggleBrawler={vi.fn()}
       />,
     );
 
     const row = screen.getByRole("button", { pressed: true });
     expect(within(row).getByText("2.14")).toBeInTheDocument();
     expect(within(row).getByText("275")).toBeInTheDocument();
+  });
+
+  it("결과형 행 클릭 시 onToggleBrawler 로 브롤러 id 를 전달한다", async () => {
+    const onToggle = vi.fn();
+    render(
+      <EventResultStatsTable
+        items={[
+          {
+            brawler,
+            battleCount: 275,
+            pickRate: 0.03,
+            winRate: 0.713,
+            starPlayerRate: 0.276,
+            tierScore: 100,
+            tier: "S",
+          },
+        ]}
+        selectedBrawlerId={null}
+        onToggleBrawler={onToggle}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /데미안/ }));
+    expect(onToggle).toHaveBeenCalledWith(16000104);
   });
 });
