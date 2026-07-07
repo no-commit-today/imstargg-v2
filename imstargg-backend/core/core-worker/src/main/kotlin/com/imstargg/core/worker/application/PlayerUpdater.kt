@@ -78,6 +78,10 @@ class PlayerUpdater(
         }
     }
 
+    /**
+     * 최신 저장 배틀과 같은 초(경계)의 배틀도 후보에 포함하고, battleKey 로 이미 저장된
+     * 것을 제외한다. battleAt 단순 비교(>)만으로는 같은 초에 걸친 미저장 배틀이 누락된다.
+     */
     private fun filterNewBattles(
         player: PlayerEntity,
         battles: List<Battle>,
@@ -87,7 +91,16 @@ class PlayerUpdater(
                 .findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
                 ?.battleAt
                 ?: return battles
-        return battles.filter { it.battleAt.isAfter(latestBattleTime) }
+        val candidates = battles.filter { !it.battleAt.isBefore(latestBattleTime) }
+        if (candidates.isEmpty()) {
+            return emptyList()
+        }
+        val existingKeys =
+            battleJpaRepository
+                .findAllByPlayerIdAndBattleAtGreaterThanEqual(player.id!!, latestBattleTime)
+                .map { it.battleKey }
+                .toSet()
+        return candidates.filter { it.battleKey !in existingKeys }
     }
 
     private fun updateBattles(

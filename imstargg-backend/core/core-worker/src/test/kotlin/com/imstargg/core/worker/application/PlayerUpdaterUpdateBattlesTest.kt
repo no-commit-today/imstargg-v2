@@ -101,6 +101,36 @@ class PlayerUpdaterUpdateBattlesTest(
         assertThat(battleRepository.count()).isEqualTo(1)
     }
 
+    @Test
+    fun `최신_배틀과_같은_시각의_미저장_배틀도_저장한다`() {
+        // given
+        val tag = "#PLAYER4"
+        val player = playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+
+        val boundaryTime = Instant.parse("2024-01-01T12:00:00Z")
+        battleRepository.save(createBattleEntity(player, boundaryTime))
+
+        val battles =
+            listOf(
+                // 같은 초에 종료됐지만 아직 저장되지 않은 다른 배틀
+                createBattle(tag, boundaryTime, battleKey = "battle_key_boundary_other"),
+                // 이미 저장된 배틀과 같은 키 — 중복 저장 금지
+                createBattle(tag, boundaryTime),
+                createBattle(tag, Instant.parse("2024-01-01T13:00:00Z")),
+            )
+
+        // when
+        val result = sut.update(createPlayerResponse(tag), battles)
+
+        // then
+        assertThat(result).hasSize(2)
+        assertThat(result.map { it.battleKey }).containsExactlyInAnyOrder(
+            "battle_key_boundary_other",
+            "battle_key_${Instant.parse("2024-01-01T13:00:00Z").epochSecond}",
+        )
+        assertThat(battleRepository.count()).isEqualTo(3)
+    }
+
     private fun createPlayerResponse(tag: String) =
         PlayerResponse(
             tag = tag,
@@ -136,8 +166,9 @@ class PlayerUpdaterUpdateBattlesTest(
     private fun createBattle(
         playerBrawlStarsTag: String,
         battleTime: Instant,
+        battleKey: String = "battle_key_${battleTime.epochSecond}",
     ) = Battle(
-        battleKey = "battle_key_${battleTime.epochSecond}",
+        battleKey = battleKey,
         battleAt = battleTime,
         event =
             BattleEvent(
