@@ -170,7 +170,7 @@ ImStarGG의 시그니처 모션은 "스티커 그림자(`0 3px 0 0 rgba(0,0,0,0.
 - **Page padding**: desktop 24px / tablet 16px / mobile 12px
 - 플레이어 페이지: `aside 320px` + 콘텐츠 1fr (모바일에서 스택)
 - 브롤러 그리드: 7–8 col(role 탭) → 5 → 3 → 2 → 1
-- 표 레이아웃은 모두 inline-style grid-template-columns로 정의 후, `responsive.css`에서 `[style*=...]` 셀렉터로 모바일 변환
+- 표 레이아웃은 Tailwind 반응형 클래스(`grid-cols-[...] sm:grid-cols-[...]`)로 데스크탑/모바일 컬럼을 직접 정의. `responsive.css`는 이제 인라인-스타일 어트리뷰트 셀렉터가 아니라, TopNav·카드·탭 등 클래스 기반 반응형 규칙과 배틀 팀 그리드(`battle.css`가 못 커버하는 team-count 예외 케이스)의 소수 안전망만 보유
 
 ### Whitespace
 - **데이터 페이지의 밀도**: op.gg 트랙처럼 행 패딩 8–10px / 14–18px로 타이트하게. 휴식 공간은 카드 사이 거터로만.
