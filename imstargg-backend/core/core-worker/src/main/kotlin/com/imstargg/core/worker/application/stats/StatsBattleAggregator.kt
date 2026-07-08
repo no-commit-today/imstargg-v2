@@ -1,28 +1,26 @@
 package com.imstargg.core.worker.application.stats
 
 import com.imstargg.core.worker.domain.Battle
-import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.dao.TransientDataAccessException
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
 /**
- * 통계 배틀 집계 진입점 (동기). select-then-insert 레이스(유니크 충돌)와 일시적 DB 오류를
- * 짧은 재시도로 흡수한다. 재시도 소진 후의 예외는 호출측이 격리한다 — renewal 경로는
- * COMPLETED 유지 + error 로그(허용된 드문 유실, 대상 플레이어가 stats_player 에 있으면
- * 축적 스케줄러가 7일 내 재수집 가능), 축적 스케줄러 경로는 per-player catch.
+ * 통계 배틀 집계 진입점. renewal 경로는 비동기(asyncAggregate)로 호출해 SQS 리스너 스레드를 빠르게
+ * 반환시키고, 축적 스케줄러는 이미 백그라운드 루프이므로 동기(aggregate)로 호출한다.
+ *
+ * 재시도는 별도 빈([StatsBattleRetryableAggregator])에 위임한다 — @Async 와 @Retryable 은 모두
+ * 프록시 기반이라 한 클래스 안에 함께 두면 self-invocation 으로 재시도 어드바이스가 적용되지 않는다.
  */
 @Component
 class StatsBattleAggregator(
-    private val statsBattleAggregateApplier: StatsBattleAggregateApplier,
+    private val statsBattleRetryableAggregator: StatsBattleRetryableAggregator,
 ) {
-    @Retryable(
-        retryFor = [DataIntegrityViolationException::class, TransientDataAccessException::class],
-        maxAttempts = 3,
-        backoff = Backoff(delay = 100),
-    )
+    @Async
+    fun asyncAggregate(battles: List<Battle>) {
+        statsBattleRetryableAggregator.aggregate(battles)
+    }
+
     fun aggregate(battles: List<Battle>) {
-        statsBattleAggregateApplier.apply(battles)
+        statsBattleRetryableAggregator.aggregate(battles)
     }
 }

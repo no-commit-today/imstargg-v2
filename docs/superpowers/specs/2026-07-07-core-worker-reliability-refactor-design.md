@@ -52,7 +52,7 @@ core-worker 전체 코드 리뷰(소스 37개 파일, 의존 인프라, 기존 �
 
 ## 3. 확정 범위와 목표
 
-1. **통계 집계 유실 경로 제거**: `@Async` 제거(동기 전환) + 실행 격리 + transient 재시도
+1. **통계 집계 유실 경로 제거**: `@Async` 유지 + 제출 예외 격리 + transient 재시도 (§4.1 — 최초 동기 전환에서 결정 변경)
 2. **INSERT race 를 재시도로 흡수**: 사용자 재요청 없이 1회 재시도로 성공시키고 문서와 일치화
 3. **filterNewBattles 경계 보강**: 같은 초 엣지 제거
 4. **renewal 중복 정리**: Finder/Processor 통합. 골격(`RenewalWorkflow`) 추출은 검토 후 기각 (§4.4 결정 기록)
@@ -63,38 +63,44 @@ outbox 기반 무유실 집계. §8 에 기록.
 
 ## 4. 설계
 
-### 4.1 통계 집계 동기 전환 (R1)
+### 4.1 통계 집계 비동기 유지 + 제출 격리 (R1)
+
+> **결정 변경 (2026-07-08)**: 최초 설계는 동기 전환이었으나, 사용자 피드백("전투 데이터는 통계용
+> 이라 약간의 누락 허용, 비동기 처리도 OK")에 따라 **비동기(`@Async`)를 유지**하고 실제 결함만
+> 고치는 방향으로 조정했다. 동기 전환은 버그 수정에 필요하지 않은 단순화였고, async 는 SQS 리스너
+> 스레드를 빠르게 반환시키는 이점이 있어 유지가 합당하다.
 
 ```text
-현재: renew() ─complete─▶ StatsBattleAggregator.asyncAggregate()   @Async (worker-task- 풀)
+유지: renew() ─complete─▶ StatsBattleAggregator.asyncAggregate()   @Async (worker-task- 풀)
                              └▶ StatsBattleRetryableAggregator.aggregate()   @Retryable
                                    └▶ StatsBattleAggregateApplier.apply()    @Transactional
-
-변경: renew() ─complete─▶ StatsBattleAggregator.aggregate()   동기 (기존 Retryable 클래스를 rename)
-                             └▶ StatsBattleAggregateApplier.apply()          @Transactional (불변)
 ```
 
-- **삭제**: `StatsBattleAggregator`(async 래퍼), `config/AsyncConfig`, `config/AsyncExceptionHandler`,
-  `AsyncConfigTest`. `@Async` 사용처가 이 한 곳뿐이므로 비동기 인프라 전체를 제거한다.
-- **rename**: `StatsBattleRetryableAggregator` → `StatsBattleAggregator`. `@Retryable` 은 유지하며
-  `RetryConfig`(`@EnableRetry`)와 `spring-boot-starter-aspectj` 의존도 유지한다.
-- **재시도 확대**: `retryFor = [DataIntegrityViolationException::class, TransientDataAccessException::class]`.
-  select-then-insert 레이스(유니크 충돌)에 더해 락 타임아웃·순단 같은 일시 오류를 3회×100ms
-  백오프로 흡수한다. 동기 전환 후 호출 스레드 점유 증가는 최대 수백 ms 수준.
-- **호출 지점과 격리**: `PlayerRenewalService` 는 COMPLETED 확정 후
-  `statsBattleAggregator.aggregate(savedBattles)` 를 **자체 try-catch 로 감싸** 호출한다(error
-  로그만 남기고 삼킴). COMPLETED 이후의 예외가 `fail()` 전이 시도(`IllegalStateException` →
-  SQS 리스너 전파 → 무의미한 재전달)로 번지는 기존 함정을 제거하기 위한 격리이며, 이 계약은
-  해당 메서드 KDoc 과 `renewal-flow.md` 에 기록한다. COMPLETED 후 부가 작업이 있는 곳은 player
-  한 곳뿐이므로 격리 코드의 중복은 없다.
-  `StatsBattleAccumulationService.accumulate()` 는 rename 반영 외 변경 없음.
-- **성능 판단 근거**: 처리량 병목은 rate limiter(prod 10 req/s)이지 리스너 처리 시간이 아니다.
-  renewal 1건당 집계는 SELECT 2회 + batch INSERT (hibernate `batch_size: 100`) 수준으로 수십 ms.
-- **허용된 유실의 명문화**: 재시도 소진 후에도 실패하면 그 배틀 묶음은 통계에 반영되지 않는다
-  (배틀은 `battle` 테이블에 저장돼 재갱신 시 신규로 잡히지 않음). 해당 플레이어가
-  `stats_player` 대상이면 축적 스케줄러가 7일 내 재수집할 수 있다. 이 성질을
-  `StatsBattleAggregator` KDoc 과 `renewal-flow.md` 에 "error 로그를 남기는 허용된 드문 유실"로
-  기록한다.
+원래 async 구조의 실제 결함 2가지만 고친다:
+
+- **결함 1 — 제출 예외 전파**: `asyncAggregate()` 태스크 제출은 executor 큐(10,000) 포화 시
+  `TaskRejectedException` 을 **호출 스레드(=`renew()`)로 동기 전파**한다. 이게 `catch (Exception)`
+  으로 흘러 이미 COMPLETED 인 renewal 에 `fail()` 전이를 시도 → `IllegalStateException` → SQS
+  리스너 전파 → 무의미한 재전달로 번진다. (집계 **로직 내부** 예외는 원래도 `AsyncExceptionHandler`
+  가 잡아 격리돼 있었다 — 문제는 제출 예외뿐이었다.)
+  → **수정**: `PlayerRenewalService.aggregateStats` 가 `asyncAggregate()` 호출을 try-catch 로 감싸
+  제출 실패를 error 로그만 남기고 삼킨다. 이 격리가 큐 포화·종료 중 거부 등 모든 제출 실패를
+  COMPLETED 이후로부터 차단한다. KDoc 과 `renewal-flow.md` 에 기록.
+- **결함 2 — transient 미재시도**: 기존 `StatsBattleRetryableAggregator` 의 `retryFor` 는
+  `DataIntegrityViolationException` 뿐이라 락 타임아웃·순단 같은 일시 오류는 즉시 유실됐다.
+  → **수정**: `retryFor = [DataIntegrityViolationException::class, TransientDataAccessException::class]`
+  로 확대 (3회×100ms). 유실 표면을 줄인다.
+
+구조는 원래대로 2빈 유지 — `StatsBattleAggregator`(@Async 래퍼 `asyncAggregate` + 동기 `aggregate`)
+와 `StatsBattleRetryableAggregator`(@Retryable). `@Async`·`@Retryable` 이 모두 프록시 기반이라 같은
+클래스 self-invocation 으로는 어드바이스가 적용되지 않기 때문이다. `config/AsyncConfig`(executor 풀)
+와 `config/AsyncExceptionHandler`(태스크 내부 예외 로깅)도 유지. `StatsBattleAccumulationService`
+(축적 스케줄러, 이미 백그라운드 루프)는 동기 `aggregate()` 를 그대로 쓴다.
+
+- **허용된 유실의 명문화**: 재시도 소진 후 실패한 배틀 묶음은 통계에 반영되지 않는다(배틀은
+  `battle` 테이블에 저장돼 재갱신 시 신규로 잡히지 않음). 해당 플레이어가 `stats_player` 대상이면
+  축적 스케줄러가 7일 내 재수집할 수 있다. 이 성질을 `StatsBattleRetryableAggregator` KDoc 과
+  `renewal-flow.md` 에 "허용된 드문 유실"로 기록한다.
 
 ### 4.2 INSERT race 1회 재시도 (R2)
 
@@ -173,14 +179,14 @@ core/worker/
 │   ├── club/         ClubRenewalService, ClubUpdater, ClubRepository, ClubDeactivator
 │   ├── renewal/      RenewalFinder, RenewalProcessor                          ← 신규(통합)
 │   ├── stats/        StatsBattleAccumulationService, StatsBattleAggregator,
-│   │                 StatsBattleAggregateApplier
+│   │                 StatsBattleRetryableAggregator, StatsBattleAggregateApplier
 │   └── maintenance/  BrawlStarsApiMaintenanceChecker, BrawlStarsApiMaintenanceAutoRegistrar
 ├── domain/           Battle, BattleBuilder, Player, Club   (4개뿐이라 분리하지 않음)
 ├── consumer/         (유지)
 ├── schedule/         (유지)
-└── config/           ClockConfig, RetryConfig, ScheduleConfig,
+└── config/           ClockConfig, RetryConfig, ScheduleConfig, AsyncConfig, AsyncExceptionHandler,
                       PlayerRefreshScheduleProperties, StatsBattleScheduleProperties
-                      (AsyncConfig, AsyncExceptionHandler 삭제)
+                      (async 인프라 유지 — §4.1 결정 변경)
 ```
 
 - 의존 방향: `player`/`club` → `renewal`(공통 상태 전이) 및 `maintenance`. `stats` 는
@@ -211,12 +217,12 @@ core/worker/
 
 | 구분 | 테스트 | 내용 |
 |---|---|---|
-| 신규 | `PlayerRenewalServiceTest` | COMPLETED 후 집계 예외 격리 검증 — aggregate 가 예외를 던져도 renewal 은 COMPLETED 유지 (BrawlStars client 는 MockK) |
+| 신규 | `PlayerRenewalServiceTest` | 집계 태스크 **제출 실패** 시 격리 검증 — `asyncAggregate` 가 예외를 던져도 renewal 은 COMPLETED 유지 (BrawlStars client 는 MockK) |
 | 이동+rename | `PlayerRenewalProcessorConcurrencyTest` → `RenewalProcessorConcurrencyTest` | 낙관적 락 시나리오 유지 |
 | 보강 | `PlayerUpdaterConcurrencyTest`, `ClubUpdaterConcurrencyTest` | 동시 신규 INSERT race 기대 결과를 "`@Retryable` 재시도로 양쪽 모두 성공, row 는 1개"로 갱신 (어드바이스 순서 실증 검증) |
 | 보강 | `PlayerUpdaterUpdateBattlesTest` | "같은 초 신규 배틀 포함, 기존 battleKey 제외" 케이스 추가 |
 | 유지(이동만) | `StatsBattleAggregateApplierTest`, `PlayerUpdaterCacheEvictionTest`, `BattleBuilderTest` | 패키지 이동 외 불변 |
-| 삭제 | `AsyncConfigTest` | AsyncConfig 삭제에 따름 |
+| 유지 | `AsyncConfigTest` | async 인프라 유지 (§4.1 결정 변경) |
 
 검증 명령: `./gradlew :core:core-worker:test` 및 `./gradlew ktlintCheck`.
 (모노레포 규칙상 API 스펙 변경이 없으므로 프론트엔드 동기화는 불필요.)
@@ -225,8 +231,8 @@ core/worker/
 
 이번 변경으로 서술이 낡는 문서만 갱신한다.
 
-- `imstargg-backend/docs/renewal-flow.md`: `statsBattleAggregator.asyncAggregate() (비동기)` →
-  동기 집계 + COMPLETED 후 격리 서술, 통합 클래스명(RenewalFinder/RenewalProcessor) 반영
+- `imstargg-backend/docs/renewal-flow.md`: 비동기 집계 + 제출 예외 격리 서술, 통합
+  클래스명(RenewalFinder/RenewalProcessor) 반영
 - `imstargg-backend/docs/worker-concurrency-strategy.md`: INSERT race 의 "재시도는 상위
   호출자(큐 재처리)에서 처리" → "Updater `@Retryable` 이 1회 재시도" 로 정정, 통합 클래스명 반영
 
@@ -235,8 +241,11 @@ core/worker/
 | 구분 | 파일 |
 |---|---|
 | 신규 | `application/renewal/RenewalFinder.kt`, `application/renewal/RenewalProcessor.kt`, `PlayerRenewalServiceTest.kt` |
-| 삭제 | `PlayerRenewalFinder.kt`, `ClubRenewalFinder.kt`, `PlayerRenewalProcessor.kt`, `ClubRenewalProcessor.kt`, `StatsBattleAggregator.kt`(async 래퍼), `config/AsyncConfig.kt`, `config/AsyncExceptionHandler.kt`, `AsyncConfigTest.kt` |
-| 수정 | `PlayerRenewalService.kt`, `ClubRenewalService.kt`, `StatsBattleRetryableAggregator.kt`(→rename), `StatsBattleAccumulationService.kt`, `PlayerUpdater.kt`, `ClubUpdater.kt`, `db-core .../BattleJpaRepository.kt` |
+| 삭제 | `PlayerRenewalFinder.kt`, `ClubRenewalFinder.kt`, `PlayerRenewalProcessor.kt`, `ClubRenewalProcessor.kt` |
+| 수정 | `PlayerRenewalService.kt`(제출 격리), `ClubRenewalService.kt`, `StatsBattleRetryableAggregator.kt`(retryFor 확대), `StatsBattleAccumulationService.kt`, `PlayerUpdater.kt`, `ClubUpdater.kt`, `db-core .../BattleJpaRepository.kt` |
+
+> §4.1 결정 변경으로 async 인프라(`StatsBattleAggregator` async 래퍼, `config/AsyncConfig`,
+> `config/AsyncExceptionHandler`, `AsyncConfigTest`)는 삭제하지 않고 유지한다.
 | 이동 | application/도메인별 하위 패키지로 소스·테스트 전체 |
 | 문서 | `renewal-flow.md`, `worker-concurrency-strategy.md` |
 

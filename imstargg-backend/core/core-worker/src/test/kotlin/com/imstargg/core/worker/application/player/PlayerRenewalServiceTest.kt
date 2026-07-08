@@ -34,7 +34,7 @@ class PlayerRenewalServiceTest(
     }
 
     @Test
-    fun `통계 집계가 실패해도 renewal 은 COMPLETED 를 유지한다`() {
+    fun `통계 집계 태스크 제출이 실패해도 renewal 은 COMPLETED 를 유지한다`() {
         // given
         val tag = "#RENEW1"
         val renewal = aRenewalEntity().withBrawlStarsTag(tag).build()
@@ -44,7 +44,7 @@ class PlayerRenewalServiceTest(
         every { brawlStarsClient.getPlayerInformation(tag) } returns createPlayerResponse(tag)
         every { brawlStarsClient.getPlayerRecentBattles(tag) } returns
             ListResponse(items = emptyList(), paging = null)
-        every { statsBattleAggregator.aggregate(any()) } throws IllegalStateException("집계 실패")
+        every { statsBattleAggregator.asyncAggregate(any()) } throws IllegalStateException("제출 실패")
 
         // when
         sut.renew(tag)

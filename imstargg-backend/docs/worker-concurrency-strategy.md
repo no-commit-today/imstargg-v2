@@ -48,7 +48,7 @@ Worker B: SELECT → null → INSERT player (race!)
 - `PlayerUpdater` (application): 얇은 `@Transactional` 오케스트레이터. `update` / `updatePlayer` / `updateBattles` 제공
 - `Player` (domain): `PlayerEntity` + brawlers/accessory 엔티티들을 감싸는 쓰기 애그리거트. `create(response)` 팩터리 및 `update(response)` 로직 보유
 - `PlayerRepository` (application): `findWithLockByBrawlStarsTag` + `save`. PlayerEntity, PlayerBrawler, 5종 accessory에 대한 `saveAll` 수행 (dirty checking으로 기존 엔티티는 변경 시에만 UPDATE, 신규는 INSERT)
-- `PlayerRenewalService`: 배틀 빌드 및 `statsBattleAggregator.aggregate()` 호출 (트랜잭션 바깥, COMPLETED 후 예외 격리)
+- `PlayerRenewalService`: 배틀 빌드 및 `statsBattleAggregator.asyncAggregate()` 호출 (트랜잭션 바깥, 비동기 — 제출 실패는 `aggregateStats` 에서 격리해 COMPLETED 유지)
 
 ---
 

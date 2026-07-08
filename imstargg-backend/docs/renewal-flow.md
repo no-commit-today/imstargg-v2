@@ -51,14 +51,19 @@
   │   ├─ BrawlStars API 호출 (player 정보 + 최근 배틀)
   │   ├─ PlayerUpdater.update() (비관적 락 보호)
   │   ├─ toCompleted() → COMPLETED
-  │   └─ statsBattleAggregator.aggregate() (동기 — 예외 격리, 실패해도 COMPLETED 유지)
+  │   └─ statsBattleAggregator.asyncAggregate() (비동기 — 제출 격리, 실패해도 COMPLETED 유지)
   └─ 완료
 ```
 
-통계 집계는 COMPLETED 확정 이후의 부가 작업이다. 집계 예외는 `PlayerRenewalService` 가 error
-로그만 남기고 삼킨다 — 완료된 renewal 에 FAILED 전이를 시도해 SQS 재전달로 번지는 것을 막기
-위한 격리다. 재시도(`@Retryable`, 유니크 충돌·일시 오류 대상) 소진 후의 실패는 허용된 드문
-유실이며, 해당 플레이어가 `stats_player` 대상이면 축적 스케줄러가 7일 내 재수집할 수 있다.
+통계 집계는 COMPLETED 확정 이후의 부가 작업이며 비동기(`@Async`)로 처리한다 — SQS 리스너 스레드를
+빠르게 반환시키기 위함이다. 집계 로직 내부 예외는 `@Async` 스레드에서 `AsyncExceptionHandler` 가
+로그만 남기고(허용된 드문 유실), 재시도(`StatsBattleRetryableAggregator`, 유니크 충돌·일시 DB 오류
+대상) 소진 후의 실패도 여기서 흡수된다. 유실된 플레이어가 `stats_player` 대상이면 축적 스케줄러가
+7일 내 재수집할 수 있다.
+
+단, 태스크 제출 자체의 실패(executor 큐 포화 시 `TaskRejectedException`, 종료 중 거부)는 호출
+스레드로 동기 전파되므로 `PlayerRenewalService.aggregateStats` 가 error 로그만 남기고 격리한다 —
+격리하지 않으면 이미 COMPLETED 인 renewal 에 FAILED 전이를 시도해 SQS 재전달로 번진다.
 
 ## 4. 재요청 타임아웃
 
