@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/button";
 import { BattleRow } from "./BattleRow";
 import { BattleSkeleton } from "./BattleSkeleton";
 import { usePlayerBattles } from "@/hooks/queries/usePlayerBattles";
+import type { BattleResponse, SliceResponse } from "@/api/types";
 
 interface Props {
   tag: string;
+  initialBattles?: SliceResponse<BattleResponse>;
+  battlesFetchedAt?: number;
 }
 
-export function BattleList({ tag }: Props) {
+export function BattleList({ tag, initialBattles, battlesFetchedAt }: Props) {
   const {
-    data, isLoading, isError, error,
+    data, isLoading, isError,
     fetchNextPage, hasNextPage, isFetchingNextPage, refetch,
-  } = usePlayerBattles(tag);
+  } = usePlayerBattles(tag, { initialPage: initialBattles, fetchedAt: battlesFetchedAt });
 
   useEffect(() => {
     if (isError) toast.error("배틀 기록을 불러오지 못했어요");
@@ -28,9 +31,6 @@ export function BattleList({ tag }: Props) {
       <div className="card" style={{ padding: 24, textAlign: "center" }}>
         <p style={{ color: "#5C6271", marginBottom: 12 }}>
           배틀 기록을 불러오지 못했어요.
-        </p>
-        <p style={{ color: "#8A90A0", fontSize: 12, marginBottom: 12 }}>
-          {(error as Error)?.message ?? ""}
         </p>
         <Button variant="outline" onClick={() => refetch()}>다시 시도</Button>
       </div>

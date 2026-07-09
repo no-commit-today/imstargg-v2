@@ -25,8 +25,9 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
         src/domain/  (DTO → 화면 모델 매퍼)
 ```
 
-- 컴포넌트/RSC는 `src/api/`를 직접 부르지 않고 훅 또는 endpoint 객체 (`playerApi` 등)를 통해서만 호출.
-- TanStack Query 키는 `src/hooks/queries/queryKeys.ts`에서만 생성.
+- **RSC(서버 컴포넌트, `page.tsx` 등)**: `apiFetch` 기반 endpoint 객체(`playerApi` 등)를 직접 호출해도 된다. DTO→화면 모델 매핑은 페이지에서 mapper 를 호출하거나 훅에 위임한다.
+- **`"use client"` 컴포넌트**: `src/api/`·endpoint 를 직접 호출하지 말고 반드시 `src/hooks/` 훅을 경유한다(캐싱·중복 제거·취소를 TanStack Query 에 맡기기 위함). 매핑은 훅 내부(`select` 또는 `queryFn.then(mapper)`)에서 수행.
+- TanStack Query 키는 `src/hooks/queries/queryKeys.ts`에서만 생성 — 인라인 배열 리터럴 금지(ESLint `no-restricted-syntax` 로 강제).
 - 백엔드 응답 DTO 타입은 `src/api/types.ts`. 변경 시 `src/domain/*/mappers.ts`도 함께 수정.
 
 ## 데이터 패칭
@@ -36,7 +37,8 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
 
 ## 갱신(Renewal)
 
-`POST /v1/{players|clubs}/{tag}/renewal` 트리거 → `progressing=true` 동안 1초 폴링 → `false`로 전환 시 자동 invalidate. 훅: `usePlayerRenewal`.
+`POST /v1/{players|clubs}/{tag}/renewal` 트리거 → `progressing=true` 동안 1초 폴링 → `false`로 전환 시 자동 invalidate. 훅: `useRenewal(kind, tag)`.
+미동기 플레이어/클럽은 페이지가 `notFound()` 대신 인라인 `NotFoundView` 를 반환해 갱신을 유도한다(HTTP 200 + generateMetadata noindex) — 그래서 `not-found.tsx` 를 쓰지 않는다.
 
 ## 테스트 원칙
 

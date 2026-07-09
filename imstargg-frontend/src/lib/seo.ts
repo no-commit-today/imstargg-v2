@@ -8,8 +8,6 @@ const SITE = {
   locale: "ko_KR",
 } as const;
 
-export const SITE_INFO = SITE;
-
 type Input = {
   title: string;
   description: string;

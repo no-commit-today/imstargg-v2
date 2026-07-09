@@ -22,9 +22,6 @@ export const metadata: Metadata = buildMetadata({
   path: "/brawlers",
 });
 
-// Primary brawler list can cache reference data, but statistics use a shorter fetch cache.
-export const revalidate = 60;
-
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {

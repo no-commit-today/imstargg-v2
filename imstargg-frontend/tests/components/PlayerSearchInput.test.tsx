@@ -1,5 +1,9 @@
+import type { ReactNode } from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { http, HttpResponse } from "msw";
+import { server } from "../setup/msw";
 import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 import { addRecent } from "@/lib/searchHistory";
 import { toggleFavorite } from "@/lib/favorites";
@@ -14,6 +18,12 @@ vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() },
 }));
 
+// useDebouncedValue + useQuery 로 라이브 검색을 하므로 QueryClientProvider 필요
+function wrap(ui: ReactNode) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  return <QueryClientProvider client={qc}>{ui}</QueryClientProvider>;
+}
+
 describe("PlayerSearchInput", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -21,14 +31,14 @@ describe("PlayerSearchInput", () => {
   });
 
   it("초기 상태에서 포커스해도 빈 드롭다운은 안 보임", () => {
-    render(<PlayerSearchInput />);
+    render(wrap(<PlayerSearchInput />));
     fireEvent.focus(screen.getByLabelText("플레이어 이름 또는 태그 입력"));
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
   it("최근 검색이 있으면 포커스 시 드롭다운 노출", () => {
     addRecent({ kind: "player", tag: "#ABC", name: "야옹이", trophies: 50000 });
-    render(<PlayerSearchInput />);
+    render(wrap(<PlayerSearchInput />));
     fireEvent.focus(screen.getByLabelText("플레이어 이름 또는 태그 입력"));
     expect(screen.getByRole("menu")).toBeInTheDocument();
     expect(screen.getByText("#ABC")).toBeInTheDocument();
@@ -36,14 +46,14 @@ describe("PlayerSearchInput", () => {
 
   it("즐겨찾기가 있으면 즐겨찾기 섹션 노출", () => {
     toggleFavorite({ kind: "player", tag: "#FAV", name: "즐찾이", trophies: 10000 });
-    render(<PlayerSearchInput />);
+    render(wrap(<PlayerSearchInput />));
     fireEvent.focus(screen.getByLabelText("플레이어 이름 또는 태그 입력"));
     expect(screen.getByText("즐겨찾기")).toBeInTheDocument();
     expect(screen.getByText("#FAV")).toBeInTheDocument();
   });
 
   it("폼 제출 시 검색 결과 페이지로 이동", () => {
-    render(<PlayerSearchInput />);
+    render(wrap(<PlayerSearchInput />));
     const input = screen.getByLabelText("플레이어 이름 또는 태그 입력") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "야옹이" } });
     fireEvent.submit(input.closest("form")!);
@@ -52,7 +62,7 @@ describe("PlayerSearchInput", () => {
 
   it("드롭다운 항목 별표 클릭 시 즐겨찾기 토글", () => {
     addRecent({ kind: "player", tag: "#X", name: "엑스", trophies: 1000 });
-    render(<PlayerSearchInput />);
+    render(wrap(<PlayerSearchInput />));
     fireEvent.focus(screen.getByLabelText("플레이어 이름 또는 태그 입력"));
     const starBtn = screen.getByLabelText("즐겨찾기에 추가");
     fireEvent.click(starBtn);
@@ -61,10 +71,30 @@ describe("PlayerSearchInput", () => {
 
   it("최근 항목 링크가 올바른 href 를 가짐", () => {
     addRecent({ kind: "player", tag: "#XYZ", name: "엑스와이지", trophies: 5000 });
-    render(<PlayerSearchInput />);
+    render(wrap(<PlayerSearchInput />));
     fireEvent.focus(screen.getByLabelText("플레이어 이름 또는 태그 입력"));
     const link = screen.getByRole("menuitem", { name: /XYZ/ });
     // SearchHistoryDropdown 은 routes.player(tag) → toUrlPath → %23XYZ 를 사용
     expect(link).toHaveAttribute("href", "/players/%23XYZ");
+  });
+
+  it("2자 이상 입력 후 디바운스가 지나면 라이브 검색 결과가 드롭다운에 노출된다", async () => {
+    server.use(
+      http.get("*/v1/player/search", () =>
+        HttpResponse.json({
+          content: [{ tag: "#LIVE1", name: "라이브결과", trophies: 12345 }],
+          hasNext: false,
+        }),
+      ),
+    );
+    render(wrap(<PlayerSearchInput />));
+    const input = screen.getByLabelText("플레이어 이름 또는 태그 입력") as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "라이브" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("라이브결과")).toBeInTheDocument();
+    });
+    expect(screen.getByText("#LIVE1")).toBeInTheDocument();
   });
 });

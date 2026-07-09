@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { rankingApi } from "@/api/endpoints/ranking";
+import { CACHE_SECONDS } from "@/config/cache";
 import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toPlayerRanking } from "@/domain/ranking/mappers";
@@ -31,7 +32,9 @@ export default async function Page({
   searchParams: SearchParams;
 }) {
   const country = parseCountry((await searchParams).country);
-  const dto = await rankingApi.players(country, { cache: "no-store" });
+  const dto = await rankingApi.players(country, {
+    next: { revalidate: CACHE_SECONDS.SHORT },
+  });
   const rankings = dto.content.map(toPlayerRanking);
 
   return (

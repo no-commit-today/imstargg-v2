@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { BrawlerRankStat } from "@/domain/statistics/types";
 import type { SortOrder } from "@/domain/statistics/sort";
 import { toggleSortOrder } from "@/domain/statistics/sort";
@@ -15,6 +14,7 @@ import {
 type Props = {
   items: BrawlerRankStat[];
   selectedBrawlerId: number | null;
+  onToggleBrawler: (id: number) => void;
 };
 
 type SortKey = "averageRank" | "totalBattleCount";
@@ -40,11 +40,7 @@ function compareItems(a: BrawlerRankStat, b: BrawlerRankStat, sort: SortKey, ord
   }
 }
 
-export function EventRankStatsTable({ items, selectedBrawlerId }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-
+export function EventRankStatsTable({ items, selectedBrawlerId, onToggleBrawler }: Props) {
   const [sort, setSort] = useState<SortKey>("averageRank");
   const [order, setOrder] = useState<SortOrder>("ASC");
 
@@ -55,14 +51,6 @@ export function EventRankStatsTable({ items, selectedBrawlerId }: Props) {
       setSort(column);
       setOrder(column === "averageRank" ? "ASC" : "DESC");
     }
-  }
-
-  function toggleBrawler(id: number) {
-    const sp = new URLSearchParams(params);
-    if (selectedBrawlerId === id) sp.delete("brawlerId");
-    else sp.set("brawlerId", String(id));
-    const qs = sp.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   const sorted = useMemo(
@@ -91,7 +79,7 @@ export function EventRankStatsTable({ items, selectedBrawlerId }: Props) {
               key={`${id}-${i}`}
               type="button"
               aria-pressed={isActive}
-              onClick={() => id > 0 && toggleBrawler(id)}
+              onClick={() => id > 0 && onToggleBrawler(id)}
               data-rail={rowRail(i + 1)}
               data-selected={isActive ? "true" : undefined}
               className={`data-row grid w-full items-center gap-1 text-left text-[13px] sm:gap-2 sm:text-sm ${rankGrid}`}

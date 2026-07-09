@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import type { ClubMember } from "@/domain/club/types";
 import type { ClubMemberRole } from "@/api/types";
 import { Button } from "@/components/ui/button";
-import { stripHash } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import Trophy from "@/components/primitives/Trophy";
 import { cn } from "@/lib/cn";
 
@@ -18,7 +18,7 @@ const ROLE_INFO: Record<ClubMemberRole, { label: string; color: string } | null>
 
 export function ClubMembers({ members, className }: { members: ClubMember[]; className?: string }) {
   const router = useRouter();
-  const goPlayer = (tag: string) => router.push(`/players/${stripHash(tag)}`);
+  const goPlayer = (tag: string) => router.push(routes.player(tag));
 
   return (
     <section className={cn("card", className)}>

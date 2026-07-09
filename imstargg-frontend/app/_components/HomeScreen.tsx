@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import { PlayerSearchInput } from "@/components/shared/PlayerSearchInput";
 

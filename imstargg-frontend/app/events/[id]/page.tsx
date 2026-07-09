@@ -12,6 +12,8 @@ import { AD_SLOTS } from "@/components/ads/slots";
 
 type Params = { params: Promise<{ id: string }> };
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   const [rotation, soloRank] = await Promise.all([
     eventApi.rotation({ next: { revalidate: CACHE_SECONDS.SEO_REFERENCE } }),
@@ -26,7 +28,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
-    const dto = await eventApi.get(id, { cache: "no-store" });
+    const dto = await eventApi.get(id, { next: { revalidate: CACHE_SECONDS.SHORT } });
     const event = toBattleEvent(dto);
     const modeName = event.mode?.name ?? "이벤트";
     const resultLabel = event.mode?.resultType === "RANK" ? "순위형" : "결과형";
@@ -46,18 +48,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
-export default async function EventPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function EventPage({ params }: Params) {
   const { id } = await params;
-  const sp = await searchParams;
   let dto;
   try {
-    dto = await eventApi.get(id, { cache: "no-store" });
+    dto = await eventApi.get(id, { next: { revalidate: CACHE_SECONDS.SHORT } });
   } catch (e) {
     if (e instanceof NotFoundError) notFound();
     throw e;
@@ -66,7 +61,7 @@ export default async function EventPage({
   return (
     <main className="mx-auto w-full max-w-7xl px-4 pb-10">
       <EventContent initialEvent={event} />
-      <EventStatsSection event={event} searchParams={sp} />
+      <EventStatsSection event={event} />
       <AdUnit slot={AD_SLOTS.eventDetail} className="mt-6" />
     </main>
   );

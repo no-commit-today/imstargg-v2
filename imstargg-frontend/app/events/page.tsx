@@ -20,7 +20,7 @@ export const metadata: Metadata = buildMetadata({
 
 export default async function Page() {
   const [rotationDto, soloRankDto] = await Promise.all([
-    eventApi.rotation({ cache: "no-store" }),
+    eventApi.rotation({ next: { revalidate: CACHE_SECONDS.SHORT } }),
     eventApi.soloRank({ next: { revalidate: CACHE_SECONDS.SHORT } }),
   ]);
   const initialRotation = rotationDto.content.map(toRotationEvent);
