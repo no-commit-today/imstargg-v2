@@ -27,8 +27,13 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         return queryFactory
             .select(brawlerId, enemyBrawlerId, victorySum, defeatSum, drawSum)
             .from(brawlerEnemyBattleResultStatsEntity)
-            .where(*conditions(eventBrawlStarsId, brawlerBrawlStarsId, tierRange, startDate, endDate))
-            .groupBy(brawlerId, enemyBrawlerId)
+            .where(
+                eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
+                brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
+                brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
+                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
+            ).groupBy(brawlerId, enemyBrawlerId)
             .orderBy(enemyBrawlerId.asc())
             .fetch()
             .map { tuple ->
@@ -52,20 +57,11 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         queryFactory
             .select(brawlerEnemyBattleResultStatsEntity.enemyBrawlerBrawlStarsId.countDistinct())
             .from(brawlerEnemyBattleResultStatsEntity)
-            .where(*conditions(eventBrawlStarsId, brawlerBrawlStarsId, tierRange, startDate, endDate))
-            .fetchOne() ?: 0L
-
-    private fun conditions(
-        eventBrawlStarsId: Long?,
-        brawlerBrawlStarsId: Long,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ) = arrayOf(
-        eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-        brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
-        brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-        brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
-        brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
-    )
+            .where(
+                eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
+                brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
+                brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
+                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
+                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
+            ).fetchOne() ?: 0L
 }
