@@ -206,6 +206,17 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 - 수정: Caffeine/Redis 캐시 히트율이 Prometheus 메트릭으로 노출되는지 확인, 미노출 시
   `CacheMetricsRegistrar` 연동. 이후 TTL 튜닝의 근거 데이터 확보 목적.
 
+### 구현 후 제거 (2026-07-08, 사용자 피드백)
+
+- **C-5 Cache-Control 전체 제거**: 구현·리뷰까지 마쳤으나 이득 대비 기계장치가 과하다고 판정해 되돌림.
+  (1) API 앞단에 CDN 이 없어(CloudFront 는 S3 이미지 전용) 개별 브라우저에만 영향, (2) 프론트가
+  react-query 로 이미 클라이언트 캐싱·중복제거, (3) preHandle 인터셉터가 에러 응답까지 캐시하는 버그를
+  유발해 `ResponseBodyAdvice` 재작성까지 낳았음. `CacheControlResponseAdvice` 와 관련 테스트 5개를
+  제거하고 `WebMvcConfig` 를 CORS 전용으로 복원. **브라우저 캐싱이 실익이 되는 시점(예: API CDN 도입) 에 재검토.**
+- **D-2 캐시 메트릭 테스트 제거** (설정은 유지): `.enableStatistics()`(Redis 히트율 Prometheus 노출)는
+  D-2 기능이라 유지하되, Boot 자동 바인딩 동작을 검증하던 `CacheMetricsTest` 와 그 컴파일용
+  `micrometer-core` 테스트 의존성은 저가치라 제거. (프레임워크 동작 검증 < 유지 비용)
+
 ## 5. 기록만 하는 발견사항 (이번에 실행하지 않음)
 
 - **read model의 빈약함은 문제 아님**: 조회 컨텍스트의 data class는 적절한 설계. 계산이 필요한

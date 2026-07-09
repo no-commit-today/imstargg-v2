@@ -25,5 +25,4 @@ dependencies {
     // Test
     testImplementation(testFixtures(project(":infrastructure:db-core")))
     testImplementation("org.springframework.boot:spring-boot-webmvc-test")
-    testImplementation("io.micrometer:micrometer-core")
 }
