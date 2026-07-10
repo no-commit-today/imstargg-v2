@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.player
 
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.client.brawlstars.response.AccessoryResponse
@@ -37,7 +37,7 @@ class PlayerUpdaterConcurrencyTest(
     }
 
     @Test
-    fun `동시에 같은 태그로 처음 update하면 하나만 저장된다`() {
+    fun `동시에 같은 태그로 처음 update하면 재시도로 모두 성공하고 하나만 저장된다`() {
         // given
         val tag = "#PLAYER1"
         val barrier = CyclicBarrier(2)
@@ -60,7 +60,7 @@ class PlayerUpdaterConcurrencyTest(
         executor.shutdown()
 
         // then
-        assertThat(results.count { it != null }).isEqualTo(1)
+        assertThat(results).allMatch { it == null }
         assertThat(playerRepository.count()).isEqualTo(1)
     }
 

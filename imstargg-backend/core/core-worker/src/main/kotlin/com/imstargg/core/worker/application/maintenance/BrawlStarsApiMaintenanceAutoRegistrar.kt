@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.maintenance
 
 import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiMaintenanceEntity
 import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository

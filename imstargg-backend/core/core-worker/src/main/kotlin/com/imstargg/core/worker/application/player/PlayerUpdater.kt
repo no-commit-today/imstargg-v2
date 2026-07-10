@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.player
 
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.worker.domain.Battle
@@ -12,6 +12,8 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTe
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheStore
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
@@ -28,6 +30,12 @@ class PlayerUpdater(
         private val log = LoggerFactory.getLogger(PlayerUpdater::class.java)
     }
 
+    /**
+     * 신규 플레이어 동시 INSERT race(유니크 충돌) 는 1회 재시도로 흡수한다. Spring Retry
+     * 인터셉터가 트랜잭션 인터셉터 바깥에 적용되어 재시도마다 새 트랜잭션이 열리고,
+     * 재시도 시점에는 row 가 존재해 SELECT FOR UPDATE 가 정상 동작한다.
+     */
+    @Retryable(retryFor = [DataIntegrityViolationException::class], maxAttempts = 2)
     @Transactional
     fun update(
         playerResponse: PlayerResponse,
@@ -70,6 +78,10 @@ class PlayerUpdater(
         }
     }
 
+    /**
+     * 최신 저장 배틀과 같은 초(경계)의 배틀도 후보에 포함하고, battleKey 로 이미 저장된
+     * 것을 제외한다. battleAt 단순 비교(>)만으로는 같은 초에 걸친 미저장 배틀이 누락된다.
+     */
     private fun filterNewBattles(
         player: PlayerEntity,
         battles: List<Battle>,
@@ -79,7 +91,16 @@ class PlayerUpdater(
                 .findTopByPlayerIdOrderByBattleAtDesc(player.id!!)
                 ?.battleAt
                 ?: return battles
-        return battles.filter { it.battleAt.isAfter(latestBattleTime) }
+        val candidates = battles.filter { !it.battleAt.isBefore(latestBattleTime) }
+        if (candidates.isEmpty()) {
+            return emptyList()
+        }
+        val existingKeys =
+            battleJpaRepository
+                .findAllByPlayerIdAndBattleAtGreaterThanEqual(player.id!!, latestBattleTime)
+                .map { it.battleKey }
+                .toSet()
+        return candidates.filter { it.battleKey !in existingKeys }
     }
 
     private fun updateBattles(

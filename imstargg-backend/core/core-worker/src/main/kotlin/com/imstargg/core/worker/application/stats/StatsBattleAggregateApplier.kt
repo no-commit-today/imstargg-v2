@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.stats
 
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType

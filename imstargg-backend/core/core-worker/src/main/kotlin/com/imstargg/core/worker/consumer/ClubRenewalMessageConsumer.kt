@@ -1,6 +1,6 @@
 package com.imstargg.core.worker.consumer
 
-import com.imstargg.core.worker.application.ClubRenewalService
+import com.imstargg.core.worker.application.club.ClubRenewalService
 import com.imstargg.infrastructure.aws.sqs.message.ClubRenewalMessage
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.LoggerFactory

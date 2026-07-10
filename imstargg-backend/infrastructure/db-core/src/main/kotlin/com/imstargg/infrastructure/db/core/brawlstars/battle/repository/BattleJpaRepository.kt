@@ -4,6 +4,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import java.time.Instant
 
 interface BattleJpaRepository :
     JpaRepository<BattleEntity, Long>,
@@ -14,4 +15,9 @@ interface BattleJpaRepository :
         playerId: Long,
         pageable: Pageable,
     ): Slice<BattleEntity>
+
+    fun findAllByPlayerIdAndBattleAtGreaterThanEqual(
+        playerId: Long,
+        battleAt: Instant,
+    ): List<BattleEntity>
 }

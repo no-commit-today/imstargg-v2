@@ -1,4 +1,4 @@
-package com.imstargg.core.worker.application
+package com.imstargg.core.worker.application.renewal
 
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.core.enums.RenewalStatus
@@ -14,8 +14,8 @@ import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class PlayerRenewalProcessorConcurrencyTest(
-    private val sut: PlayerRenewalProcessor,
+class RenewalProcessorConcurrencyTest(
+    private val sut: RenewalProcessor,
     private val renewalRepository: RenewalJpaRepository,
     private val cleanUp: CleanUp,
 ) : CoreWorkerContextTest() {
