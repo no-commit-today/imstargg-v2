@@ -95,12 +95,20 @@ imstargg-backend/
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출. Repository(`application` 패키지) 를 직접 참조하지 않고 Service 만 의존 — 데이터 접근은 Service 가 책임 (Application Layer Repository 패턴과 일관)
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
 
+### Bounded Context & 도메인 모델
+
+- **core-api `domain`** — 조회(read) 컨텍스트의 도메인 모델. JPA 엔티티와 격리된 불변 모델이며 Spring 프레임워크에 의존하지 않는다 (Pageable/Slice 변환은 `core-api` 의 `infrastructure/jpa` 확장 함수 담당).
+- **core-worker `domain`** — 수집·동기화(write) 컨텍스트의 도메인 모델. BrawlStars API 응답과 DB 상태를 diff·갱신하기 위해 JPA 엔티티를 직접 보유하는 것이 **의도된 설계**다. core-api 모델과 이름이 같아도(예: `Player`) 책임이 다른 별개 bounded context 모델이므로 통합·공유 모듈 추출을 하지 않는다.
+- **통합·추상화 판정 기준**: 사본 간 불일치가 곧 버그가 되는 비즈니스 규칙(예: 픽률 분모 = 총 게임 수 계산)만 통합한다. 우연히 닮은 코드(예: Pair/Enemy 통계)는 중복을 유지하고 단위 테스트로 각 사본을 고정한다.
+- **통계 로직 위치 규칙**: 조회·매핑은 리포지토리, 계산·집계는 도메인(`create()` 등).
+
 ### Cache Key Conventions
 
 - **Redis 키 컨벤션 준수**: 로컬 캐시(Caffeine)에서도 향후 Redis 전환을 고려하여 Redis 키 컨벤션(`:` 구분자) 사용
 - **로컬 캐시는 버전 관리 불필요**: Caffeine 로컬 캐시(`brawler`, `battleEvent` 등) 는 프로세스 재시작 시 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
 - **Redis 캐시는 메서드별 버전 prefix**: Redis 영속 캐시(`statistics` 등) 는 캐싱 객체 형태 변경 시 역직렬화 오류 방지를 위해 키에 `v{N}:` prefix 를 둔다. `RedisCacheConfiguration.computePrefixWith` 같은 전역 버전이 아니라 **각 `@Cacheable(key=...)` 의 키 prefix 에 메서드 단위로** 둔다. 한 메서드의 반환 객체 구조만 바뀌어도 같은 cacheName 의 다른 메서드 캐시까지 함께 무효화되는 부담을 피하기 위함.
 - **키 형식**: `cacheName::v{N}:methodKey:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+- **키-파라미터 동기화**: `@Cacheable` 메서드의 파라미터 변경 시 key 표현식도 함께 갱신 — 누락·형식 변경은 `StatisticsCacheKeyTest` 가 검증
 
 ### DB & Entity Conventions
 

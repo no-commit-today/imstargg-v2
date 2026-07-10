@@ -15,6 +15,7 @@ import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.SoloRankTier
+import com.imstargg.core.infrastructure.jpa.toPageable
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.battle.BattleTeamPlayerEntityBrawler

@@ -2,6 +2,7 @@ package com.imstargg.core.application.statistics
 
 import com.imstargg.CoreApiContextTest
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.StatsRate
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
@@ -219,5 +220,46 @@ class BattleResultStatisticsRepositoryTest(
 
         assertThat(result.items).hasSize(1)
         assertThat(result.items.first().date).isEqualTo(date)
+    }
+
+    @Test
+    fun `findBrawlerDailyResultStatistics - 같은 날짜의 여러 이벤트 row 를 병합한다`() {
+        val event1 = save3v3Event(eventId = 105L)
+        val event2 = save3v3Event(eventId = 106L)
+        resultStatsJpaRepository.save(
+            BrawlerBattleResultStatsEntity(
+                eventBrawlStarsId = event1.value,
+                tierRange = tierRange,
+                battleDate = date,
+                brawlerBrawlStarsId = 10L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 1, drawCount = 0),
+                starPlayerCount = 1,
+            ),
+        )
+        resultStatsJpaRepository.save(
+            BrawlerBattleResultStatsEntity(
+                eventBrawlStarsId = event2.value,
+                tierRange = tierRange,
+                battleDate = date,
+                brawlerBrawlStarsId = 10L,
+                resultCount = ResultCountEmbedded.create(victoryCount = 5, defeatCount = 2, drawCount = 1),
+                starPlayerCount = 2,
+            ),
+        )
+
+        val result =
+            sut.findBrawlerDailyResultStatistics(
+                brawlerId = BrawlStarsId(10L),
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        assertThat(result.items).hasSize(1)
+        val item = result.items.first()
+        assertThat(item.date).isEqualTo(date)
+        assertThat(item.totalBattleCount).isEqualTo(12)
+        assertThat(item.winRate).isEqualTo(StatsRate.winRate(victoryCount = 8, defeatCount = 3))
+        assertThat(item.starPlayerRate).isEqualTo(0.25)
     }
 }

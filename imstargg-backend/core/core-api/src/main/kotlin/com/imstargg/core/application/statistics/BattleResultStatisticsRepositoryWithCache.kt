@@ -11,6 +11,10 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 
+/**
+ * 주의: @Cacheable 메서드에 파라미터를 추가/삭제하면 key 표현식도 함께 갱신할 것 —
+ * 누락은 `StatisticsCacheKeyTest` 가 잡는다. 키 형식 변경 시 해당 메서드의 `v{N}:` prefix 를 범프한다.
+ */
 @Repository
 class BattleResultStatisticsRepositoryWithCache(
     private val battleResultStatisticsRepository: BattleResultStatisticsRepository,

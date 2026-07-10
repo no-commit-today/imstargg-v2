@@ -61,12 +61,6 @@ class RenewalService(
         }
 
         val now = clock.instant()
-        val existing = renewalRepository.find(tag, type)
-
-        if (existing != null && !existing.canRenew(now)) {
-            throw CoreException(ErrorType.RENEWAL_ALREADY_IN_PROGRESS, "tag=$tag, type=$type")
-        }
-
         val renewal = renewalRepository.request(tag, type, now)
 
         publishAction()

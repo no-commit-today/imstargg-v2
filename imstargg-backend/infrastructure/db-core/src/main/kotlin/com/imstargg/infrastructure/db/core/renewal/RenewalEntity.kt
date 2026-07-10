@@ -57,11 +57,20 @@ class RenewalEntity(
     @Column(name = "version", nullable = false)
     val version: Long = 0
 
-    fun reRequest(requestedAt: Instant) {
+    /**
+     * 도메인이 계산한 요청-측 상태를 그대로 반영한다 (요청/재요청). 상태 전이 규칙은 도메인이 소유하며
+     * 이 메서드는 필드 동기화만 한다. 모듈 경계상(db-core ↛ core-api) 도메인 객체 대신 필드를 받는다.
+     */
+    fun update(
+        status: RenewalStatus,
+        requestedAt: Instant,
+        executedAt: Instant?,
+        completedAt: Instant?,
+    ) {
+        this.status = status
         this.requestedAt = requestedAt
-        this.status = RenewalStatus.REQUESTED
-        this.executedAt = null
-        this.completedAt = null
+        this.executedAt = executedAt
+        this.completedAt = completedAt
     }
 
     fun toPending() {

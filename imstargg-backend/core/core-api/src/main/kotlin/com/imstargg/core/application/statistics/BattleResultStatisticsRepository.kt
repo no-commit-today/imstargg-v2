@@ -169,9 +169,8 @@ class BattleResultStatisticsRepository(
                                 brawlerId = brawlerId,
                                 resultCount =
                                     grouped
-                                        .map { it.resultCount }
-                                        .reduce { acc, r -> acc + r }
-                                        .toResultCount(),
+                                        .map { it.resultCount.toResultCount() }
+                                        .reduce(ResultCount::merge),
                                 starPlayerCount = grouped.sumOf { it.starPlayerCount },
                             ),
                     )
@@ -179,30 +178,22 @@ class BattleResultStatisticsRepository(
         return BrawlerResultDailyStatistics.create(brawlerId = brawlerId, dailyCounts = dailyCounts)
     }
 
-    /**
-     * 조회 범위의 총 게임 수.
-     *
-     * Pair / Enemy 통계의 분모도 동일한 게임 수를 사용하므로 항상
-     * `brawler_battle_result_stats` (Result 슬롯) + [com.imstargg.core.domain.statistics.GameSlot.resultSlotsPerGame] 로 계산한다.
-     * 수학적으로 `pair_slot/pairSlotsPerGame == enemy_slot/enemySlotsPerGame == result_slot/resultSlotsPerGame == gameCount`
-     * 가 보장되므로 Result 테이블을 단일 진실 출처로 사용한다.
-     */
+    /** 총 게임 수 — 계산 규칙은 [GameSlots.totalGameCount] 가 단일 진실 출처. */
     private fun computeTotalGameCount(
         eventId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
     ): Long {
-        val sums =
-            battleResultJpaRepository.findEventTotalSlotSums(
-                eventBrawlStarsId = eventId?.value,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            )
-        val gameSlots = gameSlotRepository.findAllByEventIds(sums.map { BrawlStarsId(it.eventBrawlStarsId) })
-        return sums.sumOf { projection ->
-            projection.totalSlotCount / gameSlots[BrawlStarsId(projection.eventBrawlStarsId)].resultSlotsPerGame
-        }
+        val slotSumByEventId =
+            battleResultJpaRepository
+                .findEventTotalSlotSums(
+                    eventBrawlStarsId = eventId?.value,
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                ).associate { BrawlStarsId(it.eventBrawlStarsId) to it.totalSlotCount }
+        val gameSlots = gameSlotRepository.findAllByEventIds(slotSumByEventId.keys.toList())
+        return gameSlots.totalGameCount(slotSumByEventId)
     }
 }

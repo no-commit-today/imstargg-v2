@@ -56,8 +56,7 @@ class BrawlerRepository(
                 .groupBy { it.brawlStarsId }
         val portraits =
             brawlStarsImageJpaRepository
-                .findAll()
-                .filter { it.type == BrawlStarsImageType.BRAWLER_PORTRAIT }
+                .findAllByTypeIn(listOf(BrawlStarsImageType.BRAWLER_PORTRAIT))
                 .associateBy { it.brawlStarsId }
 
         return brawlerEntities.map { entity ->
@@ -102,7 +101,10 @@ class BrawlerRepository(
                 .findAllByTypeAndBrawlStarsIdIn(MessageType.HYPERCHARGE_NAME, hyperChargeIds)
                 .groupBy { it.brawlStarsId }
 
-        val imagesByKey = brawlStarsImageJpaRepository.findAll().associateBy { it.type to it.brawlStarsId }
+        val imagesByKey =
+            brawlStarsImageJpaRepository
+                .findAllByTypeIn(ITEM_IMAGE_TYPES)
+                .associateBy { it.type to it.brawlStarsId }
 
         val gadgetsByBrawlerId = gadgetEntities.groupBy { it.brawlerBrawlStarsId }
         val starPowersByBrawlerId = starPowerEntities.groupBy { it.brawlerBrawlStarsId }
@@ -209,4 +211,17 @@ class BrawlerRepository(
         )
 
     private fun BrawlStarsImageEntity.toImageUrl(): String = "${cloudFrontProperties.baseUrl}/$storedName"
+
+    companion object {
+        private val ITEM_IMAGE_TYPES =
+            listOf(
+                BrawlStarsImageType.GADGET,
+                BrawlStarsImageType.GEAR,
+                BrawlStarsImageType.STARPOWER,
+                BrawlStarsImageType.HYPERCHARGE,
+                BrawlStarsImageType.BUFFY_GADGET,
+                BrawlStarsImageType.BUFFY_STAR_POWER,
+                BrawlStarsImageType.BUFFY_HYPER_CHARGE,
+            )
+    }
 }

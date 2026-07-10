@@ -1,6 +1,7 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.CoreApiContextTest
+import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.GameSlot
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
@@ -10,14 +11,22 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEve
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.cache.CacheManager
 
 class GameSlotRepositoryTest(
     private val sut: GameSlotRepository,
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val cleanUp: CleanUp,
+    private val cacheManager: CacheManager,
 ) : CoreApiContextTest() {
+    @BeforeEach
+    fun setUp() {
+        cacheManager.getCache(CacheNames.BATTLE_EVENT)?.clear()
+    }
+
     @AfterEach
     fun tearDown() {
         cleanUp.all()

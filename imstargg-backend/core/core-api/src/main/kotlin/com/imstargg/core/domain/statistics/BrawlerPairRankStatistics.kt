@@ -13,4 +13,25 @@ data class BrawlerPairRankStatistics(
     val totalBattleCount: Long,
     val totalElementCount: Long,
     val items: List<BrawlerPairRankStatisticsItem>,
-)
+) {
+    companion object {
+        fun create(
+            totalBattleCount: Long,
+            totalElementCount: Long,
+            counts: List<BrawlerPairRankCount>,
+        ): BrawlerPairRankStatistics =
+            BrawlerPairRankStatistics(
+                totalBattleCount = totalBattleCount,
+                totalElementCount = totalElementCount,
+                items =
+                    counts.map { count ->
+                        BrawlerPairRankStatisticsItem(
+                            brawlerId = count.brawlerId,
+                            pairBrawlerId = count.pairBrawlerId,
+                            totalBattleCount = count.totalCount,
+                            averageRank = count.averageRank,
+                        )
+                    },
+            )
+    }
+}

@@ -14,101 +14,44 @@ class RenewalEntityTest {
     private val fixedClock = Clock.fixed(Instant.parse("2025-01-17T10:00:00Z"), ZoneId.of("UTC"))
 
     @Nested
-    inner class ReRequest {
+    inner class Update {
         @Test
-        fun `COMPLETED 상태에서 호출하면 REQUESTED로 변경되고 requestedAt이 갱신되고 executedAt과 completedAt이 null이 된다`() {
+        fun `전달된 상태와 시각들로 필드를 덮어쓴다`() {
             // given
             val sut = aRenewalEntity().build()
-            sut.toPending()
-            sut.toExecuting(fixedClock)
-            sut.toCompleted(fixedClock)
-            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
+            val requestedAt = Instant.parse("2025-01-18T10:00:00Z")
+            val executedAt = Instant.parse("2025-01-18T10:00:05Z")
+            val completedAt = Instant.parse("2025-01-18T10:00:10Z")
 
             // when
-            sut.reRequest(newRequestedAt)
+            sut.update(
+                status = RenewalStatus.EXECUTING,
+                requestedAt = requestedAt,
+                executedAt = executedAt,
+                completedAt = completedAt,
+            )
 
             // then
-            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
-            assertThat(sut.requestedAt).isEqualTo(newRequestedAt)
-            assertThat(sut.executedAt).isNull()
-            assertThat(sut.completedAt).isNull()
+            assertThat(sut.status).isEqualTo(RenewalStatus.EXECUTING)
+            assertThat(sut.requestedAt).isEqualTo(requestedAt)
+            assertThat(sut.executedAt).isEqualTo(executedAt)
+            assertThat(sut.completedAt).isEqualTo(completedAt)
         }
 
         @Test
-        fun `NOT_FOUND 상태에서 호출하면 REQUESTED로 변경된다`() {
+        fun `null 시각을 전달하면 null 로 덮어쓴다`() {
             // given
             val sut = aRenewalEntity().build()
-            sut.toPending()
-            sut.toExecuting(fixedClock)
-            sut.toNotFound(fixedClock)
-            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
 
             // when
-            sut.reRequest(newRequestedAt)
+            sut.update(
+                status = RenewalStatus.REQUESTED,
+                requestedAt = Instant.parse("2025-01-18T10:00:00Z"),
+                executedAt = null,
+                completedAt = null,
+            )
 
             // then
-            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
-        }
-
-        @Test
-        fun `FAILED 상태에서 호출하면 REQUESTED로 변경된다`() {
-            // given
-            val sut = aRenewalEntity().build()
-            sut.toPending()
-            sut.toExecuting(fixedClock)
-            sut.toFailed(fixedClock)
-            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
-
-            // when
-            sut.reRequest(newRequestedAt)
-
-            // then
-            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
-        }
-
-        @Test
-        fun `REQUESTED 상태에서 호출하면 requestedAt이 갱신된다`() {
-            // given
-            val sut = aRenewalEntity().build()
-            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
-
-            // when
-            sut.reRequest(newRequestedAt)
-
-            // then
-            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
-            assertThat(sut.requestedAt).isEqualTo(newRequestedAt)
-        }
-
-        @Test
-        fun `PENDING 상태에서 호출하면 REQUESTED로 변경된다`() {
-            // given
-            val sut = aRenewalEntity().build()
-            sut.toPending()
-            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
-
-            // when
-            sut.reRequest(newRequestedAt)
-
-            // then
-            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
-            assertThat(sut.requestedAt).isEqualTo(newRequestedAt)
-        }
-
-        @Test
-        fun `EXECUTING 상태에서 호출하면 REQUESTED로 변경되고 executedAt이 null이 된다`() {
-            // given
-            val sut = aRenewalEntity().build()
-            sut.toPending()
-            sut.toExecuting(fixedClock)
-            val newRequestedAt = Instant.parse("2025-01-18T10:00:00Z")
-
-            // when
-            sut.reRequest(newRequestedAt)
-
-            // then
-            assertThat(sut.status).isEqualTo(RenewalStatus.REQUESTED)
-            assertThat(sut.requestedAt).isEqualTo(newRequestedAt)
             assertThat(sut.executedAt).isNull()
             assertThat(sut.completedAt).isNull()
         }
