@@ -46,6 +46,7 @@ class CacheConfig : CachingConfigurer {
                 .allowIfSubType("com.imstargg.")
                 .allowIfSubType("java.util.")
                 .allowIfSubType("java.time.")
+                .allowIfSubType("kotlin.collections.")
                 .build()
         val serializer =
             GenericJacksonJsonRedisSerializer

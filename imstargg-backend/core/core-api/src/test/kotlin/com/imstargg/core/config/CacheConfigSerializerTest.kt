@@ -3,6 +3,7 @@ package com.imstargg.core.config
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
+import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.domain.statistics.ResultCount
 import org.assertj.core.api.Assertions.assertThat
@@ -18,6 +19,7 @@ class CacheConfigSerializerTest {
             .allowIfSubType("com.imstargg.")
             .allowIfSubType("java.util.")
             .allowIfSubType("java.time.")
+            .allowIfSubType("kotlin.collections.")
             .build()
 
     private val sut =
@@ -64,6 +66,19 @@ class CacheConfigSerializerTest {
                     starPlayerCount = 3L,
                 ),
             )
+
+        // when
+        val bytes = sut.serialize(original)
+        val deserialized = sut.deserialize(bytes)
+
+        // then
+        assertThat(deserialized).isEqualTo(original)
+    }
+
+    @Test
+    fun `빈 items 리스트를 가진 통계 객체 직렬화 라운드트립`() {
+        // given
+        val original = BrawlerResultStatistics(totalBattleCount = 0L, items = emptyList())
 
         // when
         val bytes = sut.serialize(original)
