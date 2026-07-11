@@ -1,12 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BRAWLER_TROPHY_RANGES,
   TROPHY_RANGE_LABELS,
   TROPHY_RANGE_ICON,
-  DEFAULT_TROPHY_RANGE,
   type BrawlerTrophyRange,
 } from "@/domain/statistics/enums";
 import {
@@ -19,25 +17,13 @@ import {
 
 type Props = {
   trophy: BrawlerTrophyRange;
-  paramName?: string; // default "trophy"
+  onSelect: (next: BrawlerTrophyRange) => void;
 };
 
-export function TrophyRangeSelector({ trophy, paramName = "trophy" }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-
-  function navigate(next: BrawlerTrophyRange) {
-    const sp = new URLSearchParams(params);
-    if (next === DEFAULT_TROPHY_RANGE) sp.delete(paramName);
-    else sp.set(paramName, next);
-    const qs = sp.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }
-
+export function TrophyRangeSelector({ trophy, onSelect }: Props) {
   return (
-    <Select value={trophy} onValueChange={(v) => navigate(v as BrawlerTrophyRange)}>
-      <SelectTrigger className="w-28 text-sm">
+    <Select value={trophy} onValueChange={(v) => onSelect(v as BrawlerTrophyRange)}>
+      <SelectTrigger aria-label="트로피 구간 선택" className="w-28 text-sm">
         <SelectValue>
           <span className="inline-flex items-center gap-1.5">
             <Image

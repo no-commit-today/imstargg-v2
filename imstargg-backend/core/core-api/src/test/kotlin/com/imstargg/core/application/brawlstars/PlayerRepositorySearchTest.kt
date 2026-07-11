@@ -91,6 +91,29 @@ class PlayerRepositorySearchTest(
             assertThat(result.content).hasSize(2)
             assertThat(result.hasNext).isTrue
         }
+
+        @Test
+        fun `offset 이 limit 의 배수가 아니어도 정확한 위치부터 반환한다`() {
+            // given - 트로피 100~500 인 5명
+            (1..5).forEach { i ->
+                playerJpaRepository.save(
+                    aPlayerEntity()
+                        .withBrawlStarsTag("#A$i")
+                        .withName("플레이어$i")
+                        .withTrophies(i * 100)
+                        .build(),
+                )
+            }
+
+            // when - 트로피 desc 정렬에서 offset=3 → 4번째(200), 5번째(100)
+            val result = sut.searchByTag(BrawlStarsTag("#A"), OffsetLimit(offset = 3, limit = 2))
+
+            // then
+            assertThat(result.content).hasSize(2)
+            assertThat(result.content[0].trophies).isEqualTo(200)
+            assertThat(result.content[1].trophies).isEqualTo(100)
+            assertThat(result.hasNext).isFalse
+        }
     }
 
     @Nested

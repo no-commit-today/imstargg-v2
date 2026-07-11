@@ -6,18 +6,22 @@ import { usePlayer } from "@/hooks/queries/usePlayer";
 import { usePlayerBrawlers } from "@/hooks/queries/usePlayerBrawlers";
 import { queryKeys } from "@/hooks/queries/queryKeys";
 import type { Player, PlayerBrawler } from "@/domain/player/types";
-import type { RenewalResponse } from "@/api/types";
+import type { BattleResponse, RenewalResponse, SliceResponse } from "@/api/types";
 import { PlayerHero } from "./PlayerHero";
 import { PlayerBrawlers } from "./PlayerBrawlers";
 import { PlayerBattles } from "./PlayerBattles";
 import { PlayerStatistics } from "./statistics/PlayerStatistics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type Props = {
   tag: string;
   initialPlayer: Player;
   initialBrawlers: PlayerBrawler[];
   initialRenewal: RenewalResponse | null;
+  initialBattles?: SliceResponse<BattleResponse>;
+  battlesFetchedAt?: number;
 };
 
 export function PlayerContent({
@@ -25,6 +29,8 @@ export function PlayerContent({
   initialPlayer,
   initialBrawlers,
   initialRenewal,
+  initialBattles,
+  battlesFetchedAt,
 }: Props) {
   const qc = useQueryClient();
 
@@ -63,7 +69,11 @@ export function PlayerContent({
           </TabsTrigger>
         </TabsList>
         <TabsContent value="battles">
-          <PlayerBattles tag={tag} />
+          <PlayerBattles
+            tag={tag}
+            initialBattles={initialBattles}
+            battlesFetchedAt={battlesFetchedAt}
+          />
         </TabsContent>
         <TabsContent value="brawlers">
           <PlayerBrawlers brawlers={brawlers ?? []} />
@@ -72,6 +82,7 @@ export function PlayerContent({
           <PlayerStatistics tag={tag} />
         </TabsContent>
       </Tabs>
+      <AdUnit slot={AD_SLOTS.playerDetail} />
     </main>
   );
 }

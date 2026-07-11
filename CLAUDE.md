@@ -48,9 +48,9 @@ imstargg-v2/
 
 - **명명**: 접두사 풀워드(`feature/` `fix/` `refactor/` `docs/` `chore/` `hotfix/`) + kebab-case 설명. 브랜치 접두사 `feature/` 와 Conventional Commits 타입 `feat:` 혼동 금지.
 
-**흐름**: `develop`에서 기능 브랜치 분기 → 작업 → `develop`로 PR(`pr-test.yml` 이 변경 영역 backend/frontend 테스트) → 배포 준비되면 `develop` → `main` PR → 병합 후 `Deploy` 워크플로로 앱별 수동 배포.
+**흐름**: `develop`에서 기능 브랜치 분기 → 작업 → `develop`로 PR(`pr-test.yml` 이 변경 영역 backend/frontend 테스트 — admin-frontend 는 CI 테스트 없음, 로컬 검증 필수) → 배포 준비되면 `develop` → `main` PR → 병합 후 `Deploy` 워크플로로 백엔드 앱(core-api/worker/batch) 수동 배포.
 
-**커밋·버전**: 커밋은 Conventional Commits(`feat:` `fix:` `refactor:` `docs:` `chore:` `ci:`, scope 예 `ci(deploy):`). 버전은 앱별 독립 SemVer(`develop`=SNAPSHOT, `main`=finalized) — bump·main PR 준비·hotfix·릴리즈 노트는 `/release` 스킬로 자동화(`.claude/skills/release-management/`).
+**커밋·버전**: 커밋은 Conventional Commits(`feat:` `fix:` `refactor:` `docs:` `chore:` `ci:`, scope 예 `ci(deploy):`). 버전은 앱별 독립 SemVer(`develop`=SNAPSHOT, `main`=finalized) — bump·main PR 준비·hotfix·릴리즈 노트는 `/release` 스킬로 자동화(`.claude/skills/release-management/`). core-admin·admin-frontend 는 버전 관리 대상 외.
 
 ## 하위 CLAUDE.md 참조
 

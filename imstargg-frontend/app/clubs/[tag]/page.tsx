@@ -5,15 +5,17 @@ import { toClub } from "@/domain/club/mappers";
 import { emptyRenewal } from "@/domain/renewal/empty";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
-import { normalizeTag, toUrlPath } from "@/lib/tag";
+import { normalizeTag } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import { formatNumber } from "@/lib/format";
+import { CACHE_SECONDS } from "@/config/cache";
+import { NotFoundView } from "@/components/shared/NotFoundView";
 import { ClubContent } from "./_components/ClubContent";
-import { ClubNotFoundView } from "./_components/ClubNotFoundView";
 
 type Params = { params: Promise<{ tag: string }> };
 
 async function loadClub(tag: string) {
-  return clubApi.get(tag, { next: { revalidate: 60 } });
+  return clubApi.get(tag, { next: { revalidate: CACHE_SECONDS.SHORT } });
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -24,14 +26,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return buildMetadata({
       title: `${display} | ImStarGG`,
       description: `${display} — 트로피 ${formatNumber(dto.trophies)}, 멤버 ${dto.members.length}/30. 브롤스타즈 클럽 통계.`,
-      path: `/clubs/${toUrlPath(tag)}`,
+      path: routes.club(tag),
       dynamicOg: true,
     });
   } catch {
     return buildMetadata({
       title: "클럽을 찾을 수 없음 | ImStarGG",
       description: "요청하신 클럽을 찾을 수 없습니다.",
-      path: `/clubs/${toUrlPath(tag)}`,
+      path: routes.club(tag),
       noindex: true,
     });
   }
@@ -39,23 +41,29 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ClubPage({ params }: Params) {
   const { tag } = await params;
-  let dto;
-  try {
-    dto = await loadClub(tag);
-  } catch (e) {
-    if (e instanceof NotFoundError) {
-      return <ClubNotFoundView tag={normalizeTag(tag)} />;
+  const [clubResult, renewalResult] = await Promise.allSettled([
+    loadClub(tag),
+    renewalApi.getClub(tag, { next: { revalidate: 0 } }),
+  ]);
+
+  if (clubResult.status === "rejected") {
+    if (clubResult.reason instanceof NotFoundError) {
+      return <NotFoundView kind="club" tag={normalizeTag(tag)} />;
     }
-    throw e;
+    throw clubResult.reason;
   }
-  const renewal = await renewalApi
-    .getClub(tag, { next: { revalidate: 0 } })
-    .catch((e: unknown) => (e instanceof NotFoundError ? emptyRenewal(tag) : null));
+
+  const renewal =
+    renewalResult.status === "fulfilled"
+      ? renewalResult.value
+      : renewalResult.reason instanceof NotFoundError
+        ? emptyRenewal(tag)
+        : null;
 
   return (
     <ClubContent
       tag={normalizeTag(tag)}
-      initialClub={toClub(dto)}
+      initialClub={toClub(clubResult.value)}
       initialRenewal={renewal}
     />
   );

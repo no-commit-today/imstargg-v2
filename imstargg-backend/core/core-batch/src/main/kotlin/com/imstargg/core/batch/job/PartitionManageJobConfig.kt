@@ -30,7 +30,13 @@ class PartitionManageJobConfig(
         private const val CREATE_STEP_NAME = "partitionCreateStep"
         private const val DROP_STEP_NAME = "partitionDropStep"
         private const val DAYS_AHEAD = 7
-        private const val RETENTION_DAYS = 10
+
+        /**
+         * 원본 배틀(stats_*_battle) 파티션 보존 일수.
+         * 주간 통계 잡의 최대 룩백([com.imstargg.core.enums.StatsWeekRange.currentAndPrevious] 기준
+         * 최대 7일 + 실행일 보정 1일)을 커버해야 한다 — 가드: PartitionRetentionLookbackTest
+         */
+        const val RETENTION_DAYS = 10
     }
 
     @Bean(DATE_PARAMETER_NAME)

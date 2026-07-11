@@ -5,6 +5,7 @@ import com.imstargg.core.api.controller.SliceResponse
 import com.imstargg.core.api.controller.v1.response.BattleResponse
 import com.imstargg.core.application.brawlstars.BattleService
 import com.imstargg.core.domain.brawlstars.BrawlStarsTag
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -18,7 +19,7 @@ class BattleController(
     @GetMapping("/v1/players/{tag}/battles")
     fun getPlayerBattles(
         @PathVariable tag: String,
-        @ModelAttribute request: OffsetLimitRequest,
+        @Valid @ModelAttribute request: OffsetLimitRequest,
     ): ResponseEntity<SliceResponse<BattleResponse>> {
         val battles =
             battleService.getBattles(

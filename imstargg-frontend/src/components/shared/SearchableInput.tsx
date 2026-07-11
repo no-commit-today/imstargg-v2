@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -14,6 +15,10 @@ import {
 } from "@/lib/searchHistory";
 import { getFavorites, isFavorite as readIsFavorite, toggleFavorite } from "@/lib/favorites";
 import { SearchHistoryDropdown } from "@/components/shared/SearchHistoryDropdown";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { queryKeys } from "@/hooks/queries/queryKeys";
+import { routes } from "@/config/routes";
+import { QUERY_STALE_TIME } from "@/config/cache";
 
 const DEBOUNCE_MS = 250;
 const MIN_QUERY_LEN = 2;
@@ -30,6 +35,8 @@ interface Props {
   inputAriaLabel: string;
   buttonAriaLabel: string;
   defaultValue?: string;
+  /** 라이브 검색 쿼리 키를 네임스페이스하는 용도(예: "player"/"club") */
+  liveKind: string;
   fetchLiveResults: (q: string) => Promise<SearchableInputResult[]>;
   renderResult: (item: SearchableInputResult, active: boolean) => React.ReactNode;
   toDetailHref: (item: SearchableInputResult) => string;
@@ -41,6 +48,7 @@ export function SearchableInput({
   inputAriaLabel,
   buttonAriaLabel,
   defaultValue = "",
+  liveKind,
   fetchLiveResults,
   renderResult,
   toDetailHref,
@@ -51,10 +59,8 @@ export function SearchableInput({
   const [open, setOpen] = useState(false);
   const [recents, setRecents] = useState<SearchEntry[]>([]);
   const [favorites, setFavorites] = useState<SearchEntry[]>([]);
-  const [liveResults, setLiveResults] = useState<SearchableInputResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setRecents(getRecents());
@@ -71,27 +77,14 @@ export function SearchableInput({
   }, []);
 
   // 디바운스된 라이브 검색
-  useEffect(() => {
-    const trimmed = value.trim();
-    if (trimmed.length < MIN_QUERY_LEN) {
-      setLiveResults([]);
-      return;
-    }
-    const handle = setTimeout(async () => {
-      abortRef.current?.abort();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
-      try {
-        const results = await fetchLiveResults(trimmed);
-        if (!ctrl.signal.aborted) setLiveResults(results);
-      } catch (err) {
-        if (!(err instanceof DOMException && err.name === "AbortError")) {
-          // 라이브 검색 실패는 조용히 무시 — 사용자는 Enter 로 결과 페이지 진입 가능
-        }
-      }
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(handle);
-  }, [value, fetchLiveResults]);
+  const debounced = useDebouncedValue(value.trim(), DEBOUNCE_MS);
+  const liveQuery = useQuery({
+    queryKey: queryKeys.liveSearch(liveKind, debounced),
+    queryFn: () => fetchLiveResults(debounced),
+    enabled: debounced.length >= MIN_QUERY_LEN,
+    staleTime: QUERY_STALE_TIME.SHORT,
+  });
+  const liveResults = useMemo(() => liveQuery.data ?? [], [liveQuery.data]);
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -161,8 +154,8 @@ export function SearchableInput({
       const entry = flat[activeIndex];
       const href =
         entry.kind === "player"
-          ? `/players/${entry.tag.replace(/^#/, "")}`
-          : `/clubs/${entry.tag.replace(/^#/, "")}`;
+          ? routes.player(entry.tag)
+          : routes.club(entry.tag);
       setOpen(false);
       router.push(href);
     }

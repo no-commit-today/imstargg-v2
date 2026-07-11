@@ -20,6 +20,10 @@ spring:
 
 server:
   shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 1024
   tomcat:
     max-connections: 20000
     threads:

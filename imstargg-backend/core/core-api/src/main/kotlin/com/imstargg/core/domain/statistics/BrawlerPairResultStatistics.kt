@@ -12,13 +12,9 @@ data class BrawlerPairResultStatisticsItem(
 )
 
 /**
- * 결과형 Pair 통계.
- *
- * `totalBattleCount` 의 의미: 조회 범위의 **게임 수** (2026-05-19 정정).
- * 픽률 = pair 슬롯 수 / 게임 수.
- *
- * item 단위는 `battleCount`(pair 별 전투 수)로 구분한다 — 전역 게임 수가 item 에 복사되어
- * 모든 행의 전투수가 동일 표시되던 버그 정정 (2026-06-06).
+ * 결과형 Pair(아군 조합) 통계 — winRate 는 "함께일 때 승률".
+ * 분모·battleCount 의미와 정정 이력은 [StatsRate.pickRate] 가 정본.
+ * Enemy 통계와 구조가 닮았지만 의미가 다른 별개 모델 — 통합하지 말 것 (중복 유지 + 테스트 고정).
  */
 data class BrawlerPairResultStatistics(
     val totalBattleCount: Long,

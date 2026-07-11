@@ -5,5 +5,7 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 data class Brawlers(
     private val brawlers: List<Brawler>,
 ) {
-    fun find(id: BrawlStarsId): Brawler? = brawlers.find { it.id == id }
+    private val brawlersById: Map<BrawlStarsId, Brawler> = brawlers.associateBy { it.id }
+
+    fun find(id: BrawlStarsId): Brawler? = brawlersById[id]
 }

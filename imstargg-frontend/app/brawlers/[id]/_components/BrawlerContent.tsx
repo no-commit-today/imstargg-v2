@@ -1,7 +1,6 @@
 "use client";
 
 import type { BrawlerWithItems } from "@/domain/brawler/types";
-import type { BrawlerTrophyRange } from "@/domain/statistics/enums";
 import type { ItemOwnership } from "@/domain/statistics/types";
 import { useBrawler } from "@/hooks/queries/useBrawler";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,11 +10,10 @@ import { BrawlerRankingTab } from "./BrawlerRankingTab";
 
 type Props = {
   initialDetail: BrawlerWithItems;
-  ownership: ItemOwnership;
-  trophy: BrawlerTrophyRange;
+  initialOwnership: ItemOwnership;
 };
 
-export function BrawlerContent({ initialDetail, ownership, trophy }: Props) {
+export function BrawlerContent({ initialDetail, initialOwnership }: Props) {
   const { data: detail = initialDetail } = useBrawler(initialDetail.brawler.id, {
     initialData: initialDetail,
   });
@@ -41,7 +39,11 @@ export function BrawlerContent({ initialDetail, ownership, trophy }: Props) {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
-          <BrawlerItems items={detail.items} ownership={ownership} trophy={trophy} />
+          <BrawlerItems
+            items={detail.items}
+            brawlerId={detail.brawler.id}
+            initialOwnership={initialOwnership}
+          />
         </TabsContent>
         <TabsContent value="ranking">
           <BrawlerRankingTab brawlerId={detail.brawler.id} />

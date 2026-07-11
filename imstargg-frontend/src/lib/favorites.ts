@@ -2,7 +2,7 @@ import { normalizeTag } from "@/lib/tag";
 import type { SearchEntry, SearchEntryKind } from "@/lib/searchHistory";
 
 const FAVORITES_KEY = "imstargg.search.favorites.v2";
-export const FAVORITES_LIMIT = 50;
+const FAVORITES_LIMIT = 50;
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";

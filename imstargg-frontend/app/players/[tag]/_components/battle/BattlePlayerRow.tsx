@@ -4,7 +4,8 @@ import PowerLevel from "@/components/primitives/PowerLevel";
 import RankTierIcon from "@/components/primitives/RankTierIcon";
 import BrawlerTrophy from "@/components/primitives/BrawlerTrophy";
 import StarIcon from "@/components/primitives/StarIcon";
-import { isSameTag, toUrlPath } from "@/lib/tag";
+import { isSameTag } from "@/lib/tag";
+import { routes } from "@/config/routes";
 import type { BattlePlayer } from "@/domain/battle/types";
 
 interface Props {
@@ -38,7 +39,7 @@ export function BattlePlayerRow({ player, ownerTag, starPlayerTag }: Props) {
       />
       <div style={{ minWidth: 0 }}>
         <Link
-          href={`/players/${toUrlPath(player.tag)}`}
+          href={routes.player(player.tag)}
           onClick={(e) => e.stopPropagation()}
           style={{
             display: "block",

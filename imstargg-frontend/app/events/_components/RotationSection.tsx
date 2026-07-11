@@ -1,7 +1,13 @@
-import type { RotationEvent } from "@/domain/event/types";
+import type { EventStatsSummary, RotationEvent } from "@/domain/event/types";
 import { RotationCard } from "./RotationCard";
 
-export function RotationSection({ rotation }: { rotation: RotationEvent[] }) {
+export function RotationSection({
+  rotation,
+  summaries,
+}: {
+  rotation: RotationEvent[];
+  summaries?: Record<number, EventStatsSummary>;
+}) {
   if (rotation.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-[#5C6271]">
@@ -24,7 +30,11 @@ export function RotationSection({ rotation }: { rotation: RotationEvent[] }) {
       </header>
       <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
         {rotation.map((r) => (
-          <RotationCard key={r.event.id} rotation={r} />
+          <RotationCard
+            key={r.event.id}
+            rotation={r}
+            summary={summaries?.[r.event.id]}
+          />
         ))}
       </div>
     </section>

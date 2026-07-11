@@ -27,3 +27,4 @@ __pycache__/
 .superpowers/
 .playwright-mcp
 CLAUDE.local.md
+.gstack/

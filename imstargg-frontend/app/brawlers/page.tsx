@@ -13,15 +13,14 @@ import { sortByName } from "@/domain/brawler/filters";
 import { buildMetadata } from "@/lib/seo";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
 import { BrawlerStatTable } from "./_components/BrawlerStatTable";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 export const metadata: Metadata = buildMetadata({
   title: "브롤러 메타 | ImStarGG",
   description: "브롤스타즈 브롤러 메타 — 티어, 승률, 픽률을 한눈에.",
   path: "/brawlers",
 });
-
-// Primary brawler list can cache reference data, but statistics use a shorter fetch cache.
-export const revalidate = 60;
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -55,6 +54,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
         <StatRangeSelector tier={tierRange} date={dateRange} />
       </header>
       <BrawlerStatTable rows={rows} totalBattleCount={stats.totalBattleCount} />
+      <AdUnit slot={AD_SLOTS.brawlerMeta} className="mt-5" />
     </main>
   );
 }

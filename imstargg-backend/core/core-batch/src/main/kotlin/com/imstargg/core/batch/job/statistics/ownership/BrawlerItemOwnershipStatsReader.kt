@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
+import com.imstargg.core.batch.domain.statistics.ownership.PlayerBrawlerOwnershipSnapshot
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerBuffyEntity.Companion.playerBrawlerBuffyEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerEntity.Companion.playerBrawlerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.QPlayerBrawlerGadgetEntity.Companion.playerBrawlerGadgetEntity
@@ -12,6 +13,14 @@ import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.stereotype.Component
 
+/**
+ * stats_player 를 키셋으로 순회하며, 페이지의 플레이어 태그(최대 [PAGE_SIZE]개)를 기준으로
+ * player_brawler 와 아이템 5종을 조회해 소유 스냅샷을 만든다.
+ *
+ * 아이템 조회는 player_brawler id 목록(IN, 페이지당 최대 수만 개)이 아니라
+ * 플레이어 태그 join(IN 크기 = 페이지 크기 고정) 으로 필터한다.
+ * 아이템 5종의 조회 반복은 의도된 명시성이다 (2026-05-22 설계 참조).
+ */
 @Component
 class BrawlerItemOwnershipStatsReader(
     private val entityManagerFactory: EntityManagerFactory,
@@ -38,82 +47,98 @@ class BrawlerItemOwnershipStatsReader(
                 if (statsPlayers.isEmpty()) break
                 totalRead += statsPlayers.size
                 lastId = statsPlayers.last().id!!
+                val tags = statsPlayers.map { it.brawlStarsTag }
 
-                val playerBrawlers =
+                val playerBrawlerRows =
                     queryFactory
-                        .selectFrom(playerBrawlerEntity)
+                        .select(
+                            playerBrawlerEntity.id,
+                            playerBrawlerEntity.brawlerBrawlStarsId,
+                            playerBrawlerEntity.trophies,
+                        ).from(playerBrawlerEntity)
                         .join(playerBrawlerEntity.player, playerEntity)
-                        .where(playerEntity.brawlStarsTag.`in`(statsPlayers.map { it.brawlStarsTag }))
+                        .where(playerEntity.brawlStarsTag.`in`(tags))
                         .fetch()
 
-                if (playerBrawlers.isEmpty()) continue
+                if (playerBrawlerRows.isEmpty()) continue
 
-                val playerBrawlerIds = playerBrawlers.mapNotNull { it.id }
-                if (playerBrawlerIds.isEmpty()) continue
-
-                val gearByPlayerBrawlerId =
-                    groupByPlayerBrawlerId(
-                        queryFactory
-                            .selectFrom(playerBrawlerGearEntity)
-                            .where(playerBrawlerGearEntity.playerBrawler.id.`in`(playerBrawlerIds))
-                            .fetch(),
-                    ) { it.playerBrawler.id }
-                val gadgetByPlayerBrawlerId =
-                    groupByPlayerBrawlerId(
-                        queryFactory
-                            .selectFrom(playerBrawlerGadgetEntity)
-                            .where(playerBrawlerGadgetEntity.playerBrawler.id.`in`(playerBrawlerIds))
-                            .fetch(),
-                    ) { it.playerBrawler.id }
-                val starPowerByPlayerBrawlerId =
-                    groupByPlayerBrawlerId(
-                        queryFactory
-                            .selectFrom(playerBrawlerStarPowerEntity)
-                            .where(playerBrawlerStarPowerEntity.playerBrawler.id.`in`(playerBrawlerIds))
-                            .fetch(),
-                    ) { it.playerBrawler.id }
-                val hyperChargeByPlayerBrawlerId =
-                    groupByPlayerBrawlerId(
-                        queryFactory
-                            .selectFrom(playerBrawlerHyperChargeEntity)
-                            .where(playerBrawlerHyperChargeEntity.playerBrawler.id.`in`(playerBrawlerIds))
-                            .fetch(),
-                    ) { it.playerBrawler.id }
-                val buffyByPlayerBrawlerId =
-                    groupByPlayerBrawlerId(
-                        queryFactory
-                            .selectFrom(playerBrawlerBuffyEntity)
-                            .where(playerBrawlerBuffyEntity.playerBrawler.id.`in`(playerBrawlerIds))
-                            .fetch(),
-                    ) { it.playerBrawler.id }
+                val gearIdsByPlayerBrawlerId =
+                    queryFactory
+                        .select(playerBrawlerGearEntity.playerBrawler.id, playerBrawlerGearEntity.gearBrawlStarsId)
+                        .from(playerBrawlerGearEntity)
+                        .join(playerBrawlerGearEntity.playerBrawler, playerBrawlerEntity)
+                        .join(playerBrawlerEntity.player, playerEntity)
+                        .where(playerEntity.brawlStarsTag.`in`(tags))
+                        .fetch()
+                        .groupBy(
+                            keySelector = { it.get(playerBrawlerGearEntity.playerBrawler.id)!! },
+                            valueTransform = { it.get(playerBrawlerGearEntity.gearBrawlStarsId)!! },
+                        )
+                val gadgetIdsByPlayerBrawlerId =
+                    queryFactory
+                        .select(playerBrawlerGadgetEntity.playerBrawler.id, playerBrawlerGadgetEntity.gadgetBrawlStarsId)
+                        .from(playerBrawlerGadgetEntity)
+                        .join(playerBrawlerGadgetEntity.playerBrawler, playerBrawlerEntity)
+                        .join(playerBrawlerEntity.player, playerEntity)
+                        .where(playerEntity.brawlStarsTag.`in`(tags))
+                        .fetch()
+                        .groupBy(
+                            keySelector = { it.get(playerBrawlerGadgetEntity.playerBrawler.id)!! },
+                            valueTransform = { it.get(playerBrawlerGadgetEntity.gadgetBrawlStarsId)!! },
+                        )
+                val starPowerIdsByPlayerBrawlerId =
+                    queryFactory
+                        .select(
+                            playerBrawlerStarPowerEntity.playerBrawler.id,
+                            playerBrawlerStarPowerEntity.starPowerBrawlStarsId,
+                        ).from(playerBrawlerStarPowerEntity)
+                        .join(playerBrawlerStarPowerEntity.playerBrawler, playerBrawlerEntity)
+                        .join(playerBrawlerEntity.player, playerEntity)
+                        .where(playerEntity.brawlStarsTag.`in`(tags))
+                        .fetch()
+                        .groupBy(
+                            keySelector = { it.get(playerBrawlerStarPowerEntity.playerBrawler.id)!! },
+                            valueTransform = { it.get(playerBrawlerStarPowerEntity.starPowerBrawlStarsId)!! },
+                        )
+                val hyperChargeIdsByPlayerBrawlerId =
+                    queryFactory
+                        .select(
+                            playerBrawlerHyperChargeEntity.playerBrawler.id,
+                            playerBrawlerHyperChargeEntity.hyperChargeBrawlStarsId,
+                        ).from(playerBrawlerHyperChargeEntity)
+                        .join(playerBrawlerHyperChargeEntity.playerBrawler, playerBrawlerEntity)
+                        .join(playerBrawlerEntity.player, playerEntity)
+                        .where(playerEntity.brawlStarsTag.`in`(tags))
+                        .fetch()
+                        .groupBy(
+                            keySelector = { it.get(playerBrawlerHyperChargeEntity.playerBrawler.id)!! },
+                            valueTransform = { it.get(playerBrawlerHyperChargeEntity.hyperChargeBrawlStarsId)!! },
+                        )
+                val buffyTypesByPlayerBrawlerId =
+                    queryFactory
+                        .select(playerBrawlerBuffyEntity.playerBrawler.id, playerBrawlerBuffyEntity.buffyType)
+                        .from(playerBrawlerBuffyEntity)
+                        .join(playerBrawlerBuffyEntity.playerBrawler, playerBrawlerEntity)
+                        .join(playerBrawlerEntity.player, playerEntity)
+                        .where(playerEntity.brawlStarsTag.`in`(tags))
+                        .fetch()
+                        .groupBy(
+                            keySelector = { it.get(playerBrawlerBuffyEntity.playerBrawler.id)!! },
+                            valueTransform = { it.get(playerBrawlerBuffyEntity.buffyType)!! },
+                        )
 
                 val snapshots =
-                    playerBrawlers.mapNotNull { playerBrawler ->
-                        val playerBrawlerId = playerBrawler.id ?: return@mapNotNull null
+                    playerBrawlerRows.mapNotNull { row ->
+                        val playerBrawlerId = row.get(playerBrawlerEntity.id) ?: return@mapNotNull null
                         PlayerBrawlerOwnershipSnapshot(
                             playerBrawlerId = playerBrawlerId,
-                            brawlerBrawlStarsId = playerBrawler.brawlerBrawlStarsId,
-                            trophies = playerBrawler.trophies,
-                            gearBrawlStarsIds =
-                                gearByPlayerBrawlerId[playerBrawlerId]
-                                    .orEmpty()
-                                    .map { it.gearBrawlStarsId },
-                            gadgetBrawlStarsIds =
-                                gadgetByPlayerBrawlerId[playerBrawlerId]
-                                    .orEmpty()
-                                    .map { it.gadgetBrawlStarsId },
-                            starPowerBrawlStarsIds =
-                                starPowerByPlayerBrawlerId[playerBrawlerId]
-                                    .orEmpty()
-                                    .map { it.starPowerBrawlStarsId },
-                            hyperChargeBrawlStarsIds =
-                                hyperChargeByPlayerBrawlerId[playerBrawlerId]
-                                    .orEmpty()
-                                    .map { it.hyperChargeBrawlStarsId },
-                            buffyTypes =
-                                buffyByPlayerBrawlerId[playerBrawlerId]
-                                    .orEmpty()
-                                    .map { it.buffyType },
+                            brawlerBrawlStarsId = row.get(playerBrawlerEntity.brawlerBrawlStarsId)!!,
+                            trophies = row.get(playerBrawlerEntity.trophies)!!,
+                            gearBrawlStarsIds = gearIdsByPlayerBrawlerId[playerBrawlerId].orEmpty(),
+                            gadgetBrawlStarsIds = gadgetIdsByPlayerBrawlerId[playerBrawlerId].orEmpty(),
+                            starPowerBrawlStarsIds = starPowerIdsByPlayerBrawlerId[playerBrawlerId].orEmpty(),
+                            hyperChargeBrawlStarsIds = hyperChargeIdsByPlayerBrawlerId[playerBrawlerId].orEmpty(),
+                            buffyTypes = buffyTypesByPlayerBrawlerId[playerBrawlerId].orEmpty(),
                         )
                     }
 
@@ -125,20 +150,6 @@ class BrawlerItemOwnershipStatsReader(
             return totalRead
         }
     }
-
-    private fun <T> groupByPlayerBrawlerId(
-        items: List<T>,
-        playerBrawlerIdOf: (T) -> Long?,
-    ): Map<Long, List<T>> =
-        items
-            .mapNotNull { item ->
-                playerBrawlerIdOf(item)?.let { playerBrawlerId ->
-                    playerBrawlerId to item
-                }
-            }.groupBy(
-                keySelector = { it.first },
-                valueTransform = { it.second },
-            )
 
     companion object {
         private const val PAGE_SIZE = 1000L

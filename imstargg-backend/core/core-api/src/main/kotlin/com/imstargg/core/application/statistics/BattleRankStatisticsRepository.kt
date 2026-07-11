@@ -1,8 +1,8 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.BrawlerPairRankCount
 import com.imstargg.core.domain.statistics.BrawlerPairRankStatistics
-import com.imstargg.core.domain.statistics.BrawlerPairRankStatisticsItem
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
 import com.imstargg.core.enums.StatsTierRange
@@ -25,21 +25,20 @@ class BattleRankStatisticsRepository(
         startDate: LocalDate,
         endDate: LocalDate,
     ): BrawlerRankStatistics {
-        val items =
+        val counts =
             soloBattleRankJpaRepository
                 .findAllByEventBrawlStarsIdAndTierRangeAndBattleDateBetween(
                     eventId.value,
                     tierRange,
                     startDate,
                     endDate,
-                ).groupBy { it.brawlerBrawlStarsId }
-                .map { (brawlerBrawlStarsId, grouped) ->
+                ).map { entity ->
                     BrawlerRankCount(
-                        brawlerId = BrawlStarsId(brawlerBrawlStarsId),
-                        rankCount = grouped.map { it.rankCounts }.reduce { acc, r -> acc + r }.toRankCount(),
+                        brawlerId = BrawlStarsId(entity.brawlerBrawlStarsId),
+                        rankCount = entity.rankCounts.toRankCount(),
                     )
-                }.map { it.toStatisticsItem() }
-        return BrawlerRankStatistics(items = items)
+                }
+        return BrawlerRankStatistics.create(counts)
     }
 
     fun findBrawlerPairRankStatistics(
@@ -50,7 +49,7 @@ class BattleRankStatisticsRepository(
         startDate: LocalDate,
         endDate: LocalDate,
     ): BrawlerPairRankStatistics {
-        val items: List<BrawlerPairRankStatisticsItem> =
+        val counts =
             pairBattleRankJpaRepository
                 .findAllByConditions(
                     eventBrawlStarsId = eventId.value,
@@ -60,16 +59,11 @@ class BattleRankStatisticsRepository(
                     startDate = startDate,
                     endDate = endDate,
                 ).map { projection ->
-                    BrawlerPairRankStatisticsItem(
+                    BrawlerPairRankCount(
                         brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
                         pairBrawlerId = BrawlStarsId(projection.pairBrawlerBrawlStarsId),
-                        totalBattleCount = projection.totalCount,
-                        averageRank =
-                            if (projection.totalCount > 0) {
-                                projection.weightedRankSum.toDouble() / projection.totalCount
-                            } else {
-                                0.0
-                            },
+                        totalCount = projection.totalCount,
+                        weightedRankSum = projection.weightedRankSum,
                     )
                 }
         val totalBattleCount =
@@ -89,10 +83,10 @@ class BattleRankStatisticsRepository(
                 startDate = startDate,
                 endDate = endDate,
             )
-        return BrawlerPairRankStatistics(
+        return BrawlerPairRankStatistics.create(
             totalBattleCount = totalBattleCount,
             totalElementCount = totalElementCount,
-            items = items,
+            counts = counts,
         )
     }
 }

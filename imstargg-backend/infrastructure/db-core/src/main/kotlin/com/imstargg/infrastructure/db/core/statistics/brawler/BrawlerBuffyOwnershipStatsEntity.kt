@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 
@@ -38,7 +39,12 @@ class BrawlerBuffyOwnershipStatsEntity(
     val totalCount: Long,
 ) : BaseTimeEntity() {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerBuffyOwnershipStatsSeq")
+    @SequenceGenerator(
+        name = "brawlerBuffyOwnershipStatsSeq",
+        sequenceName = "brawler_buffy_ownership_stats_seq",
+        allocationSize = 100,
+    )
     @Column(name = "brawler_buffy_ownership_stats_id", nullable = false)
     val id: Long? = null
 }

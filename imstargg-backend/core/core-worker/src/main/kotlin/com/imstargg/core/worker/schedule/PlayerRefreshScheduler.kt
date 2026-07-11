@@ -1,6 +1,6 @@
 package com.imstargg.core.worker.schedule
 
-import com.imstargg.core.worker.application.PlayerRefreshService
+import com.imstargg.core.worker.application.player.PlayerRefreshService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component

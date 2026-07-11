@@ -77,7 +77,16 @@ class ApiExceptionHandler(
                         reason = error.defaultMessage,
                     )
                 }
-            }
+            } +
+                ex.beanResults.flatMap { result ->
+                    result.fieldErrors.map { fieldError ->
+                        FieldErrorResponse(
+                            field = fieldError.field,
+                            value = fieldError.rejectedValue,
+                            reason = fieldError.defaultMessage,
+                        )
+                    }
+                }
 
         val problemDetail = createProblemDetail(ErrorType.INVALID_REQUEST)
         problemDetail.setProperty(fieldsKey, invalidFields)

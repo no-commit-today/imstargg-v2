@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { env } from "@/config/env";
 import { brawlerApi } from "@/api/endpoints/brawler";
 import { eventApi } from "@/api/endpoints/event";
+import { CACHE_SECONDS } from "@/config/cache";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env.NEXT_PUBLIC_SITE_URL;
@@ -9,7 +10,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let brawlerEntries: MetadataRoute.Sitemap = [];
   try {
-    const list = await brawlerApi.list({ next: { revalidate: 86400 } });
+    const list = await brawlerApi.list({
+      next: { revalidate: CACHE_SECONDS.SEO_REFERENCE },
+    });
     brawlerEntries = list.content.map((b) => ({
       url: `${base}/brawlers/${b.id}`,
       lastModified: now,

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { clubApi } from "@/api/endpoints/club";
 import { ClubSearchInput } from "@app/clubs/_components/ClubSearchInput";
+import { ClubSearchResults } from "@/components/shared/SearchResults";
 import { RenewalCard } from "@/components/shared/RenewalCard";
 import { buildMetadata } from "@/lib/seo";
-import { ClubSearchResults } from "./_components/ClubSearchResults";
 
 type SearchParams = Promise<{ q?: string }>;
 

@@ -5,15 +5,25 @@ import { statisticsApi } from "@/api/endpoints/statistics";
 import { CACHE_SECONDS } from "@/config/cache";
 import { toBrawlerWithItems } from "@/domain/brawler/mappers";
 import { RARITY_LABEL_KO, ROLE_LABEL_KO } from "@/domain/brawler/labels";
-import { parseTrophyRange } from "@/domain/statistics/enums";
-import { toItemOwnership } from "@/domain/statistics/mappers";
+import {
+  DEFAULT_DATE_RANGE,
+  DEFAULT_TIER_RANGE,
+  DEFAULT_TROPHY_RANGE,
+} from "@/domain/statistics/enums";
+import {
+  toDailyResultStat,
+  toEnemyResultStat,
+  toItemOwnership,
+  toPairResultStat,
+} from "@/domain/statistics/mappers";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { BrawlerContent } from "./_components/BrawlerContent";
-import { BrawlerStatsSection } from "./_components/BrawlerStatsSection";
+import { BrawlerStatsPanel } from "./_components/BrawlerStatsPanel";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type Params = { params: Promise<{ id: string }> };
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export const revalidate = 60;
 
@@ -47,36 +57,50 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
 }
 
-export default async function BrawlerPage({
-  params,
-  searchParams,
-}: {
-  params: Params["params"];
-  searchParams: SearchParams;
-}) {
+export default async function BrawlerPage({ params }: Params) {
   const { id } = await params;
-  const sp = await searchParams;
-  const trophy = parseTrophyRange(sp.trophy);
   let detail;
   try {
-    const dto = await brawlerApi.get(id, { next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } });
+    const dto = await brawlerApi.get(id, {
+      next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE },
+    });
     detail = toBrawlerWithItems(dto);
   } catch (e) {
     if (e instanceof NotFoundError) notFound();
     throw e;
   }
 
-  const ownership = toItemOwnership(
-    await statisticsApi.itemOwnership(
-      { brawlerId: detail.brawler.id, trophyRange: trophy },
-      { next: { revalidate: CACHE_SECONDS.SHORT } },
+  const statsParams = {
+    brawlerId: detail.brawler.id,
+    tierRange: DEFAULT_TIER_RANGE,
+    dateRange: DEFAULT_DATE_RANGE,
+  };
+  const opts = { next: { revalidate: CACHE_SECONDS.SHORT } };
+  const [ownershipDto, dailyDto, pairDto, enemyDto] = await Promise.all([
+    statisticsApi.itemOwnership(
+      { brawlerId: detail.brawler.id, trophyRange: DEFAULT_TROPHY_RANGE },
+      opts,
     ),
-  );
+    statisticsApi.daily(statsParams, opts),
+    statisticsApi.pairResult(statsParams, opts),
+    statisticsApi.enemyResult(statsParams, opts),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-10">
-      <BrawlerContent initialDetail={detail} ownership={ownership} trophy={trophy} />
-      <BrawlerStatsSection brawler={detail.brawler} searchParams={sp} />
+      <BrawlerContent
+        initialDetail={detail}
+        initialOwnership={toItemOwnership(ownershipDto)}
+      />
+      <BrawlerStatsPanel
+        brawlerId={detail.brawler.id}
+        initial={{
+          daily: dailyDto.content.map(toDailyResultStat),
+          pair: pairDto.content.map(toPairResultStat),
+          enemy: enemyDto.content.map(toEnemyResultStat),
+        }}
+      />
+      <AdUnit slot={AD_SLOTS.brawlerDetail} className="mt-6" />
     </main>
   );
 }

@@ -7,8 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { env } from "@/config/env";
 import { buildMetadata } from "@/lib/seo";
-import { GoogleAdsenseScript } from "@/components/ads/GoogleAdsenseScript";
 import { GoogleAnalyticsScript } from "@/components/analytics/GoogleAnalyticsScript";
+import { bricolage, jetbrainsMono, koBrawl, lilitaOne, pretendard } from "./fonts";
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
@@ -25,9 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    <html
+      lang="ko"
+      className={`${koBrawl.variable} ${lilitaOne.variable} ${pretendard.variable} ${bricolage.variable} ${jetbrainsMono.variable}`}
+    >
       <body>
-        <GoogleAdsenseScript />
         <GoogleAnalyticsScript />
         <QueryProvider>
           <div className="app">

@@ -32,7 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Local Development
 
 ```bash
-# 로컬 인프라 실행 (PostgreSQL, Redis)
+# 로컬 인프라 실행 (PostgreSQL, Valkey(Redis 호환), floci(S3 에뮬레이터))
 docker-compose up -d
 
 # 로컬 DB 접속
@@ -42,7 +42,7 @@ docker-compose up -d
 
 ## Project Architecture
 
-멀티모듈 Spring Boot Kotlin 프로젝트 (team-dodn/spring-boot-kotlin-template 기반)
+멀티모듈 Spring Boot 4 + Kotlin 프로젝트, Java 21 (team-dodn/spring-boot-kotlin-template 기반)
 
 ```text
 imstargg-backend/
@@ -54,7 +54,9 @@ imstargg-backend/
 │   └── core-enum/            # 공유 Enum (외부 모듈에서 참조)
 ├── infrastructure/
 │   ├── db-core/              # JPA + QueryDSL (PostgreSQL)
-│   └── redis-core/           # Redis 캐시/세션
+│   ├── redis-core/           # Redis 캐시/세션
+│   ├── aws-s3/               # S3 클라이언트 (이미지 업로드)
+│   └── aws-sqs/              # SQS 클라이언트
 ├── client/
 │   └── brawlstars-client/    # BrawlStars API 클라이언트 (OpenFeign)
 └── support/
@@ -64,10 +66,11 @@ imstargg-backend/
 
 ### Module Dependencies
 
-- `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*`
+- `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*` (api·worker 는 `redis-core`, `aws-sqs` 추가 의존)
+- `core-admin` → `core-enum`, `db-core`, `aws-s3` (redis-core·support 미의존)
 - `db-core` → `core-enum`
 - `brawlstars-client`: 독립적 (OpenFeign 기반 HTTP 클라이언트)
-- **Docker 이미지**: 루트 단일 `Dockerfile`(`ARG GRADLE_MODULE`)이 core-api/worker/batch 를 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY .../build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
+- **Docker 이미지**: backend 루트 단일 `Dockerfile`(`ARG GRADLE_MODULE`)이 core-api/worker/batch 를 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY .../build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
 
 ### Code Organization
 
@@ -92,18 +95,26 @@ imstargg-backend/
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출. Repository(`application` 패키지) 를 직접 참조하지 않고 Service 만 의존 — 데이터 접근은 Service 가 책임 (Application Layer Repository 패턴과 일관)
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
 
+### Bounded Context & 도메인 모델
+
+- **core-api `domain`** — 조회(read) 컨텍스트의 도메인 모델. JPA 엔티티와 격리된 불변 모델이며 Spring 프레임워크에 의존하지 않는다 (Pageable/Slice 변환은 `core-api` 의 `infrastructure/jpa` 확장 함수 담당).
+- **core-worker `domain`** — 수집·동기화(write) 컨텍스트의 도메인 모델. BrawlStars API 응답과 DB 상태를 diff·갱신하기 위해 JPA 엔티티를 직접 보유하는 것이 **의도된 설계**다. core-api 모델과 이름이 같아도(예: `Player`) 책임이 다른 별개 bounded context 모델이므로 통합·공유 모듈 추출을 하지 않는다.
+- **통합·추상화 판정 기준**: 사본 간 불일치가 곧 버그가 되는 비즈니스 규칙(예: 픽률 분모 = 총 게임 수 계산)만 통합한다. 우연히 닮은 코드(예: Pair/Enemy 통계)는 중복을 유지하고 단위 테스트로 각 사본을 고정한다.
+- **통계 로직 위치 규칙**: 조회·매핑은 리포지토리, 계산·집계는 도메인(`create()` 등).
+
 ### Cache Key Conventions
 
 - **Redis 키 컨벤션 준수**: 로컬 캐시(Caffeine)에서도 향후 Redis 전환을 고려하여 Redis 키 컨벤션(`:` 구분자) 사용
 - **로컬 캐시는 버전 관리 불필요**: Caffeine 로컬 캐시(`brawler`, `battleEvent` 등) 는 프로세스 재시작 시 비워지므로 캐싱 객체 형태가 바뀌어도 자연 무효화된다 → 키에 버전 prefix 를 두지 않는다.
 - **Redis 캐시는 메서드별 버전 prefix**: Redis 영속 캐시(`statistics` 등) 는 캐싱 객체 형태 변경 시 역직렬화 오류 방지를 위해 키에 `v{N}:` prefix 를 둔다. `RedisCacheConfiguration.computePrefixWith` 같은 전역 버전이 아니라 **각 `@Cacheable(key=...)` 의 키 prefix 에 메서드 단위로** 둔다. 한 메서드의 반환 객체 구조만 바뀌어도 같은 cacheName 의 다른 메서드 캐시까지 함께 무효화되는 부담을 피하기 위함.
 - **키 형식**: `cacheName::v{N}:methodKey:param1:param2:...` (예: `statistics::v1:battleEventBrawlerResult:eventId:tierRange:startDate:endDate`)
+- **키-파라미터 동기화**: `@Cacheable` 메서드의 파라미터 변경 시 key 표현식도 함께 갱신 — 누락·형식 변경은 `StatisticsCacheKeyTest` 가 검증
 
 ### DB & Entity Conventions
 
 - **스키마 관리**: DB 변경사항 발생 시 다음 두 파일에 모두 반영
   - `infrastructure/db-core/src/main/resources/schema.sql`: 전체 현재 스키마 스냅샷 (신규 환경 프로비저닝용)
-  - `infrastructure/db-core/src/main/resources/db/migration/V{yyMMdd}__{title}.sql`: 증분 마이그레이션 파일 (운영 DB에 적용할 DDL/DML)
+  - `infrastructure/db-core/src/main/resources/db/migration/V{yyMMdd}__{title}.sql`: 증분 마이그레이션 파일 (운영 DB에 수동 적용할 DDL/DML — Flyway 등 자동 마이그레이션 미사용)
     - 예: `V260420__add_buffy_table.sql`
     - 같은 날 여러 변경이 있으면 title로 구분 (필요 시 `V260420a__...`, `V260420b__...` 형태로 순서를 드러내도 됨)
     - DDL은 `create ... if not exists`, DML은 `on conflict ... do nothing` 등 **멱등적**으로 작성

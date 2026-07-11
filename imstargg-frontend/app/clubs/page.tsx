@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { rankingApi } from "@/api/endpoints/ranking";
+import { CACHE_SECONDS } from "@/config/cache";
 import { ClubSearchInput } from "@app/clubs/_components/ClubSearchInput";
 import { COUNTRY_LABELS, parseCountry } from "@/domain/ranking/country";
 import { toClubRanking } from "@/domain/ranking/mappers";
 import { buildMetadata } from "@/lib/seo";
 import { CountrySelect } from "@/components/ranking/CountrySelect";
 import { ClubRankingList } from "@/components/ranking/ClubRankingList";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { AD_SLOTS } from "@/components/ads/slots";
 
 type SearchParams = Promise<{ country?: string }>;
 
@@ -29,7 +32,9 @@ export default async function Page({
   searchParams: SearchParams;
 }) {
   const country = parseCountry((await searchParams).country);
-  const dto = await rankingApi.clubs(country, { cache: "no-store" });
+  const dto = await rankingApi.clubs(country, {
+    next: { revalidate: CACHE_SECONDS.SHORT },
+  });
   const rankings = dto.content.map(toClubRanking);
 
   return (
@@ -53,6 +58,7 @@ export default async function Page({
         </div>
         <ClubRankingList rankings={rankings} />
       </section>
+      <AdUnit slot={AD_SLOTS.clubRanking} />
     </main>
   );
 }

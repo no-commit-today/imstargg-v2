@@ -20,6 +20,7 @@
 
 ## 인덱스
 
+- [2026.07.0](2026.07.0.md) — 2026-07-11. core-api gzip 압축·페이지네이션 검증·갱신 흐름 리치 도메인화(409 경합), core-batch 랭킹 사전 갱신 배치잡·키셋 페이징·API 스펙 정규화 추적, core-worker INSERT 경합 재시도·배틀 누락 보강, frontend 홈 데이터 섹션·상세 ISR 복구·폰트 셀프호스팅·AdSense 수동 광고 전환. **DB**: 통계 집계 SEQUENCE 전환·trio 테이블 제거.
 - [2026.06.3](2026.06.3.md) — 2026-06-19. frontend 신뢰 페이지 추가(`/about`·`/privacy`·`/terms` + 푸터 법적 링크·sitemap, 애드센스 정책 대응), 헤더 검색창 제거·검색 입력 variant 통합(리팩터).
 - [2026.06.2](2026.06.2.md) — 2026-06-07. core-batch tasklet 트랜잭션 제거로 `idle in transaction` 해소(버그 수정), 통계 잡 기능별 하위 패키지 재구성(리팩터).
 - [2026.06.1](2026.06.1.md) — 2026-06-06. 결과형 통계 item 전투수 버그 수정(`battleCount` rename + 캐시 v2), core-batch 잡 재설계(brawler sync 통합·rankingCollectJob 통합·API 스펙 추적 추가), OffsetDateTime→Instant 전환.

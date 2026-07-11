@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { BrawlerResultStat } from "@/domain/statistics/types";
 import type { SortOrder } from "@/domain/statistics/sort";
 import { toggleSortOrder } from "@/domain/statistics/sort";
@@ -17,6 +16,7 @@ import StarIcon from "@/components/primitives/StarIcon";
 type Props = {
   items: BrawlerResultStat[];
   selectedBrawlerId: number | null;
+  onToggleBrawler: (id: number) => void;
 };
 
 type SortKey =
@@ -50,11 +50,7 @@ function compareItems(a: BrawlerResultStat, b: BrawlerResultStat, sort: SortKey,
   }
 }
 
-export function EventResultStatsTable({ items, selectedBrawlerId }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-
+export function EventResultStatsTable({ items, selectedBrawlerId, onToggleBrawler }: Props) {
   const [sort, setSort] = useState<SortKey>("tier");
   const [order, setOrder] = useState<SortOrder>("DESC");
 
@@ -65,14 +61,6 @@ export function EventResultStatsTable({ items, selectedBrawlerId }: Props) {
       setSort(column);
       setOrder("DESC");
     }
-  }
-
-  function toggleBrawler(id: number) {
-    const sp = new URLSearchParams(params);
-    if (selectedBrawlerId === id) sp.delete("brawlerId");
-    else sp.set("brawlerId", String(id));
-    const qs = sp.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   const sorted = useMemo(
@@ -104,7 +92,7 @@ export function EventResultStatsTable({ items, selectedBrawlerId }: Props) {
               key={`${id}-${i}`}
               type="button"
               aria-pressed={isActive}
-              onClick={() => id > 0 && toggleBrawler(id)}
+              onClick={() => id > 0 && onToggleBrawler(id)}
               data-rail={rowRail(i + 1, it.tier)}
               data-selected={isActive ? "true" : undefined}
               className={`data-row grid w-full items-center gap-1 text-left text-[13px] sm:gap-2 sm:text-sm ${resultGrid}`}

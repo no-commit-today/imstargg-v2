@@ -7,7 +7,6 @@ import {
   usePlayerBrawlerRoleStatistics,
   type PlayerStatBattleType,
 } from "@/hooks/queries/usePlayerStatistics";
-import { toPlayerBrawlerRoleStat, toPlayerBrawlerStat } from "@/domain/statistics/player";
 import { PlayerStatisticsControls } from "./PlayerStatisticsControls";
 import { PlayerBrawlerRoleSummary } from "./PlayerBrawlerRoleSummary";
 import { PlayerBrawlerStatsList } from "./PlayerBrawlerStatsList";
@@ -47,17 +46,10 @@ export function PlayerStatistics({ tag }: { tag: string }) {
     tag, battleType, brawlPassSeasonNumber, soloRankSeasonKey,
   });
 
-  const brawlerItems = useMemo(
-    () =>
-      (brawlerQuery.data?.items ?? [])
-        .map(toPlayerBrawlerStat)
-        .sort((a, b) => b.winRate - a.winRate),
-    [brawlerQuery.data],
-  );
-  const roleItems = useMemo(
-    () => (roleQuery.data?.items ?? []).map(toPlayerBrawlerRoleStat),
-    [roleQuery.data],
-  );
+  const brawlerItems = brawlerQuery.data ?? [];
+  const roleItems = roleQuery.data ?? [];
+
+  const isError = brawlerQuery.isError || roleQuery.isError;
 
   return (
     <div className="space-y-4 py-4">
@@ -71,8 +63,16 @@ export function PlayerStatistics({ tag }: { tag: string }) {
         onBrawlPassChange={setBrawlPassSeasonNumber}
         onSoloRankChange={setSoloRankSeasonKey}
       />
-      <PlayerBrawlerRoleSummary items={roleItems} />
-      <PlayerBrawlerStatsList items={brawlerItems} />
+      {isError ? (
+        <div className="rounded-lg border border-[#D8DCE5] bg-white px-4 py-8 text-center text-sm text-[#5C6271]">
+          통계를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+        </div>
+      ) : (
+        <>
+          <PlayerBrawlerRoleSummary items={roleItems} />
+          <PlayerBrawlerStatsList items={brawlerItems} />
+        </>
+      )}
     </div>
   );
 }

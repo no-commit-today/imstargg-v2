@@ -11,8 +11,10 @@ test("/sitemap.xml 이 정적 라우트를 포함한다", async ({ request }) =>
   const res = await request.get("/sitemap.xml");
   expect(res.status()).toBe(200);
   const body = await res.text();
-  expect(body).toContain("/ranking");
+  expect(body).toContain("/players");
+  expect(body).toContain("/clubs");
   expect(body).toContain("/brawlers");
+  expect(body).toContain("/events");
 });
 
 test("플레이어 페이지의 canonical 링크가 자기 자신을 가리킨다", async ({ page }) => {

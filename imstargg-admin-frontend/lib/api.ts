@@ -81,10 +81,14 @@ export const updateBrawlerGears = (brawlStarsId: number, gearBrawlStarsIds: numb
     body: JSON.stringify({ gearBrawlStarsIds }),
   });
 
-export const createStarPower = (brawlerBrawlStarsId: number, brawlStarsId: number) =>
+export const createStarPower = (
+  brawlerBrawlStarsId: number,
+  brawlStarsId: number,
+  names: Record<string, string>,
+) =>
   request<void>(`/brawlers/${brawlerBrawlStarsId}/star-powers`, {
     method: "POST",
-    body: JSON.stringify({ brawlStarsId }),
+    body: JSON.stringify({ brawlStarsId, names }),
   });
 
 export const updateStarPowerMessages = (
@@ -110,10 +114,14 @@ export const uploadStarPowerImage = (
   );
 };
 
-export const createGadget = (brawlerBrawlStarsId: number, brawlStarsId: number) =>
+export const createGadget = (
+  brawlerBrawlStarsId: number,
+  brawlStarsId: number,
+  names: Record<string, string>,
+) =>
   request<void>(`/brawlers/${brawlerBrawlStarsId}/gadgets`, {
     method: "POST",
-    body: JSON.stringify({ brawlStarsId }),
+    body: JSON.stringify({ brawlStarsId, names }),
   });
 
 export const updateGadgetMessages = (
@@ -139,10 +147,14 @@ export const uploadGadgetImage = (
   );
 };
 
-export const createHyperCharge = (brawlerBrawlStarsId: number, brawlStarsId: number) =>
+export const createHyperCharge = (
+  brawlerBrawlStarsId: number,
+  brawlStarsId: number,
+  names: Record<string, string>,
+) =>
   request<void>(`/brawlers/${brawlerBrawlStarsId}/hyper-charges`, {
     method: "POST",
-    body: JSON.stringify({ brawlStarsId }),
+    body: JSON.stringify({ brawlStarsId, names }),
   });
 
 export const updateHyperChargeMessages = (
