@@ -6,7 +6,7 @@ deployment:
   replicaCount: 2
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-api
-    tag: "0.4.2-1174ccc"
+    tag: "0.4.3-53f062d"
     pullPolicy: Always
   ports:
     - name: http
