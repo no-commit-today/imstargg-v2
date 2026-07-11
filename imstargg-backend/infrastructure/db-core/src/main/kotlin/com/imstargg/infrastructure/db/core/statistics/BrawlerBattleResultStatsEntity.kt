@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
+import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
@@ -75,7 +76,12 @@ class BrawlerBattleResultStatsEntity(
     val starPlayerCount: Long,
 ) : BaseTimeEntity() {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerBattleResultStatsSeq")
+    @SequenceGenerator(
+        name = "brawlerBattleResultStatsSeq",
+        sequenceName = "brawler_battle_result_stats_seq",
+        allocationSize = 100,
+    )
     @Column(name = "brawler_battle_result_stats_id", nullable = false)
     val id: Long? = null
 }

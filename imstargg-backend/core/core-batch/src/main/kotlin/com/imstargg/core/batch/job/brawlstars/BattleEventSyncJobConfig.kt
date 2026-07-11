@@ -2,7 +2,7 @@ package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.core.batch.support.parameter.DateJobParameter
-import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
+import com.imstargg.core.batch.support.querydsl.KeysetItemReader
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventSoloRankEventJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity
@@ -77,25 +77,35 @@ class BattleEventSyncJobConfig(
 
     @Bean
     @StepScope
-    fun battleEventSyncRankBattleReader(): QuerydslPagingItemReader<StatsRankBattleEntity> {
+    fun battleEventSyncRankBattleReader(): KeysetItemReader<StatsRankBattleEntity> {
         val rankBattle = QStatsRankBattleEntity.statsRankBattleEntity
-        return QuerydslPagingItemReader(entityManagerFactory, CHUNK_SIZE) { queryFactory ->
+        return KeysetItemReader(
+            name = "battleEventSyncRankBattleReader",
+            entityManagerFactory = entityManagerFactory,
+            pageSize = CHUNK_SIZE.toLong(),
+            idPath = rankBattle.id,
+            idOf = { it.id!! },
+        ) { queryFactory ->
             queryFactory
                 .selectFrom(rankBattle)
                 .where(rankBattle.battleDate.eq(dateJobParameter().date))
-                .orderBy(rankBattle.id.asc())
         }
     }
 
     @Bean
     @StepScope
-    fun battleEventSyncResultBattleReader(): QuerydslPagingItemReader<StatsResultBattleEntity> {
+    fun battleEventSyncResultBattleReader(): KeysetItemReader<StatsResultBattleEntity> {
         val resultBattle = QStatsResultBattleEntity.statsResultBattleEntity
-        return QuerydslPagingItemReader(entityManagerFactory, CHUNK_SIZE) { queryFactory ->
+        return KeysetItemReader(
+            name = "battleEventSyncResultBattleReader",
+            entityManagerFactory = entityManagerFactory,
+            pageSize = CHUNK_SIZE.toLong(),
+            idPath = resultBattle.id,
+            idOf = { it.id!! },
+        ) { queryFactory ->
             queryFactory
                 .selectFrom(resultBattle)
                 .where(resultBattle.battleDate.eq(dateJobParameter().date))
-                .orderBy(resultBattle.id.asc())
         }
     }
 

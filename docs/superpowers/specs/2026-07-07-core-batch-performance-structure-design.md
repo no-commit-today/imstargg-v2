@@ -1,0 +1,186 @@
+# core-batch 성능·구조 개선 설계서
+
+- 작성일: 2026-07-07
+- 대상 모듈: `imstargg-backend/core/core-batch` (+ `infrastructure/db-core` 통계 집계 엔티티/스키마, `core/core-enum` 파일 분리 1건)
+- 우선순위: 성능(예방적) > 구조 정리. 운영성(메트릭·알림)은 비범위.
+- 선행 문서: [2026-05-22-core-batch-stats-flatten-design.md](./2026-05-22-core-batch-stats-flatten-design.md), [2026-05-19-batch-short-transactions-design.md](./2026-05-19-batch-short-transactions-design.md), [2026-04-30-core-batch-refactoring-design.md](./2026-04-30-core-batch-refactoring-design.md)
+
+## 0. 배경
+
+core-batch 전체(잡 16개, k8s CronJob 실행)를 예방적으로 검토했다. 현재 체감되는 성능 문제는 없으며, 데이터 증가에 대비한 성능 보강과 코드 품질 정리가 목적이다.
+
+통계 잡 6종(일별 battleresult/battlerank, 주간 pair×2/enemy, ownership)은 "키셋 읽기 → 인메모리 집계 → delete+insert 교체" 패턴으로 정착되어 있고, 이 구조는 2026-05-22 평탄화 설계의 의도적 결정이다. 당시 정책 **"과도한 추상화보다는 중복이 더 괜찮음"** 은 이번 설계에서도 유지한다 — 스펙 리뷰에서 공통화 후보(KeysetScanner·StatsReplaceWriter)를 이 정책 기준으로 재심사해 **전부 철회**했고, 통계 수직의 클론 구조는 그대로 둔다(§4.1 결정 기록). 유일한 리더 계층 변경은 support 유틸의 알고리즘 교정(offset→keyset, §3.3)이다.
+
+## 1. 범위
+
+포함한다.
+
+- 성능 3건: 통계 INSERT 배칭 복구(SEQUENCE 전환), ownership 리더 쿼리 안전화, offset→keyset 페이징 전환
+- 구조 3건: ownership 집계 도메인 위치 정렬, 데드코드 제거(trio 휴면 테이블·엔티티 포함), 파티션 보존↔주간 룩백 가드
+- 결정 기록 1건: 통계 수직 공통화 재심사 결과 — 하지 않기로 결정 (§4.1)
+
+포함하지 않는다 (§10 향후 제안 참조).
+
+- single-pass 집계 파이프라인 재설계, 통계 잡 프레임워크화 (정책상 부적합)
+- 배치 메트릭/알림 확장 (04-30 설계의 "Grafana 등 별도 도구" 방침 유지), `BATCH_*` 메타테이블 정리
+- worker 가 쓰는 원본 `stats_rank_battle`/`stats_result_battle` 의 ID 전략 (파티션 함수 `OVERRIDING SYSTEM VALUE` 가 IDENTITY 전제)
+- RankingCollect 3태스크 통합, 집계기(`domain/statistics`) 로직 변경
+
+## 2. 결정 로그
+
+| 질문 | 결정 |
+|---|---|
+| 우선 영역 | 성능 최적화 + 구조 리팩터링 (운영성 제외) |
+| 현재 페인포인트 | 없음 — 예방적 개선 |
+| DB 스키마 변경 | 허용 (수동 마이그레이션 포함) |
+| 접근법 | A. 타깃 개선 (프레임워크화 B, 파이프라인 재설계 C 기각) |
+| 공통화 수준 | 1차 "기계적 보일러플레이트만(KeysetScanner·StatsReplaceWriter)" → 스펙 리뷰 재심사에서 **철회**. 통계 Reader/Writer 클론 유지, `KeysetItemReader`(support 유틸 교정)만 진행 |
+| SEQUENCE 전환 대상 | 집계 테이블 10종 (trio 2종은 제거 대상이라 전환 불필요) |
+| trio 통계 테이블 | 사용처 전무 확인(엔티티 참조·리포지토리·프론트엔드 0) → 테이블·엔티티 제거 (스펙 리뷰에서 범위 편입) |
+
+## 3. 성능 개선
+
+### 3.1 통계 INSERT 배칭 복구 — IDENTITY → SEQUENCE
+
+**문제**: 통계 집계 엔티티가 전부 `GenerationType.IDENTITY` 다. Hibernate 는 IDENTITY 전략에서 JDBC insert 배칭을 비활성화하므로, `application.yml` 의 `hibernate.jdbc.batch_size: 100` / `order_inserts: true` 설정이 통계 쓰기(delete+insert 교체)에 전혀 작동하지 않는다. `BrawlerBattleResultStatsWriter` 등의 `em.persist` 루프가 건당 1 왕복으로 실행된다.
+
+**변경**:
+
+- 대상 10종: `brawler_battle_result_stats`, `brawler_battle_rank_stats`, `brawler_pair_battle_result_stats`, `brawler_pair_battle_rank_stats`, `brawler_enemy_battle_result_stats`, ownership 5종(`brawler_gear/gadget/star_power/hyper_charge/buffy_ownership_stats`)
+- 엔티티: `@GeneratedValue(strategy = SEQUENCE, generator = ...)` + `@SequenceGenerator(sequenceName = "{table}_seq", allocationSize = 100)` (pooled optimizer — 시퀀스 왕복도 100건당 1회)
+- DDL 마이그레이션 `V260707__stats_identity_to_sequence.sql` (멱등):
+  1. `create sequence if not exists {table}_seq increment by 100`
+  2. `alter table ... alter column ... drop identity if exists`
+  3. `set default nextval('{table}_seq')` (구버전 앱 호환용 안전망)
+  4. `setval` 로 현재 max(id) 이상으로 초기화
+- `schema.sql` 스냅샷 동기 갱신 (두 파일 모두 반영 — DB 컨벤션)
+
+**호환성/배포 순서**: `default nextval` 상태에서는 IDENTITY 를 기대하는 구버전 앱의 insert(getGeneratedKeys) 도 정상 동작한다. 운영 DDL 선적용 → 앱 배포 순서로 진행하며, 롤백 시에도 앱만 되돌리면 된다.
+
+**효과**: 교체 쓰기 구간 INSERT 왕복 약 1/100. 집계 테이블 ID 는 무의미한 대리키라 정합성 영향 없음.
+
+### 3.2 ownership 리더 쿼리 안전화
+
+**문제**: `BrawlerItemOwnershipStatsReader` 는 stats_player 1,000명 페이지당 player_brawler 를 로드한 뒤, 그 ID 목록(플레이어당 브롤러 ~수십 개 → 페이지당 수만~10만 개)을 아이템 5개 테이블 조회의 `IN` 절에 그대로 넣는다. 거대 IN 절은 파싱/플래닝 비용과 실행 계획 불안정을 유발한다.
+
+**변경**:
+
+- 아이템 5테이블 조회를 `playerBrawler.id IN (거대 목록)` → **`playerBrawler.player.brawlStarsTag IN (페이지 태그 1,000개)` join 조건**으로 전환. IN 크기가 페이지 크기로 고정된다.
+- 엔티티 전체 로드 대신 QueryDSL **프로젝션**으로 필요한 컬럼만 조회: player_brawler 는 `(id, brawlerBrawlStarsId, trophies)`, 아이템 테이블은 `(playerBrawlerId, itemBrawlStarsId)` 튜플.
+- 아이템 5종의 조회 5회 반복은 유지한다 (05-22 설계의 "의도된 명시성" 결정 준수). 스냅샷 조립·`BrawlerItemOwnershipStatsAccumulator` 집계 로직 불변.
+
+### 3.3 offset → keyset 페이징 전환
+
+**문제**: `battleEventSyncJob`/`statsPlayerSyncJob` 의 chunk 스텝이 `QuerydslPagingItemReader`(offset 기반)를 사용한다. offset 페이징은 뒤 페이지로 갈수록 스킵 비용이 누적돼 하루 데이터가 커지면 O(n²) 로 열화된다. 통계 잡 6종은 이미 키셋(`id > lastId`) 루프를 쓰고 있어 모듈 내 패턴도 불일치한다.
+
+**변경**:
+
+- `support/querydsl/KeysetItemReader<T>` 신설: Spring Batch `ItemStreamReader` 구현. 기존 `QuerydslEntityCursorItemReader` 의 키셋 접근을 계승하되(05-22 "추후 사용 예정 보존" 의도의 실현), 다음을 바로잡는다:
+  - offset 리더 상속 + `UnsupportedOperationException` 해킹 제거 (독립 구현)
+  - **키셋 계약을 리더가 소유**: 생성자에서 id path(`NumberPath<Long>`)를 받아 `id > lastId` 조건·`order by id asc`·`limit` 을 리더가 직접 주입 — 호출자는 base 쿼리(from/where)만 제공하므로 키셋 조건 누락 실수가 원천 차단된다
+  - `lastId` 를 ExecutionContext 에 저장해 **스텝 재시작 시 이어 읽기** 지원 (기존 offset 리더가 제공하던 재시작성 유지)
+
+이 항목은 수직 공통화가 아니라 support 계층 유틸의 결함 교정이다 — 대체 대상인 offset 리더 3종도 같은 계층의 기존 추상화였고, 교체 후 클래스 수는 순감한다(3→1).
+- `BattleEventSyncJobConfig`, `StatsPlayerSyncJobConfig` 의 리더 빈 4개를 교체. 스텝 이름·chunk 크기·잡 파라미터 불변.
+
+## 4. 구조 정리
+
+### 4.1 통계 수직 공통화 — 재심사 후 하지 않기로 결정 (기록)
+
+이번 설계 과정에서 공통화 후보 2건을 검토했으나, 05-22 평탄화 설계의 실패 기준 — (a) 람다 조립로 잡 의도 분산, (b) 제네릭 타입 압박, (c) 한 추상화에 책임 집중 — 에 재대조한 결과 **모두 채택하지 않는다**. 통계 Reader 6종·Writer 5종의 클론 구조를 그대로 유지한다.
+
+| 후보 | 탈락 사유 |
+|---|---|
+| `KeysetScanner` (키셋 루프 추출) | 키셋 핵심 조건(`id.gt(lastId)` + `orderBy`)이 호출자 람다 안에 있어야 하는 **새는 계약** — 누락 시 무한 루프라는, 현재는 존재하지 않는 버그 표면이 생긴다. 계약을 강제하려면 Q-path 제네릭 배관이 필요한데 이는 기준 (b) 위반. 절감량(리더당 ~10줄)이 이 비용을 정당화하지 못한다 |
+| `StatsReplaceWriter` (delete+flush 헬퍼) | 공유 가치가 있는 mechanics 는 이미 추출되어 있다 — 트랜잭션은 `JpaBatchTransactionRunner`, 청킹은 `BattleStatsAggregator.flushEntityChunks`. Writer 에 남은 것은 삭제 조건(=잡 의도) + `persist/flush/clear` 3줄뿐이라, 헬퍼-위-헬퍼 계층만 늘어난다 |
+
+결론: 현재 코드는 이미 정책상 최적 고도에 있다. 향후 유사 공통화 제안이 나오면 이 표의 기준으로 먼저 심사한다. (`KeysetItemReader` 는 수직 공통화가 아닌 support 유틸 결함 교정으로 별개 — §3.3 참조.)
+
+### 4.2 ownership 집계 도메인 위치 정렬
+
+집계 규칙은 `domain/`, IO·잡 배선은 `job/` 이라는 경계를 ownership 에도 적용한다. 로직 변경 없는 패키지 이동:
+
+- `job/statistics/ownership/` → `domain/statistics/ownership/`: `BrawlerItemOwnershipStatsAccumulator`, `BrawlerItemOwnershipStatsResult`, `PlayerBrawlerOwnershipSnapshot`, `BrawlerTrophyKey`, `BrawlerTrophyItemKey`, `BrawlerTrophyBuffyKey`
+- Reader/Writer/Task/JobConfig 는 `job/statistics/ownership/` 에 잔류
+
+### 4.3 데드코드 제거·파일 정리
+
+| 대상 | 처리 | 근거 |
+|---|---|---|
+| `PlayerCombinator` (+테스트) | 삭제 | 사용처 0. trio 통계(휴면) 잔재 — 부활 시 git 에서 복원 |
+| trio 통계 테이블·엔티티 2종 | 삭제 (`BrawlerTrioBattleResultStatsEntity`, `BrawlerTrioBattleRankStatsEntity` + schema.sql 블록 + `drop table if exists` 마이그레이션) | 사용처 전무 — API/배치 미제공 휴면 상태. 부활 시 git 에서 복원. 과거 생성 마이그레이션(`V260426a`)은 이력이므로 불변 |
+| `QuerydslEntityCursorItemReader` | 삭제 (`KeysetItemReader` 로 계승) | §3.3 — 05-22 의 "추후 사용" 의도를 정비된 형태로 실현 |
+| `QuerydslZeroPagingItemReader` | 삭제 | 사용처 0. read-and-delete 용도인데 해당 패턴의 잡이 없음 |
+| `QuerydslPagingItemReader` | 삭제 | §3.3 전환 후 사용처 0 (offset 페이징 근절) |
+| `StatsWeekRange.kt` (core-enum) | `WeekRange` data class 를 별도 파일로 분리 | 1파일 1클래스 컨벤션 |
+
+### 4.4 파티션 보존 ↔ 주간 룩백 가드
+
+`PartitionManageJobConfig.RETENTION_DAYS = 10` 과 주간 잡의 최대 룩백(`StatsWeekRange.currentAndPrevious` 기준 8일)은 암묵적 결합이다. 보존 기간을 줄이거나 룩백을 늘리면 주간 재집계가 드롭된 파티션을 읽어 **통계가 조용히 불완전해진다**.
+
+- core-batch 단위 테스트 추가: 임의 기준일들에 대해 `currentAndPrevious` 최대 룩백을 계산하고 `룩백 + 1일 여유 ≤ RETENTION_DAYS` 를 검증
+- `RETENTION_DAYS` 를 테스트에서 참조 가능하게 공개(companion `const val` 유지)하고, 양쪽에 상호 참조 KDoc 명시
+
+## 5. 파일 변경 맵
+
+**신규**
+- `core-batch/support/querydsl/KeysetItemReader.kt`
+- `core-enum/.../WeekRange.kt` (분리)
+- `db-core/.../db/migration/V260707__stats_identity_to_sequence.sql`
+- `db-core/.../db/migration/V260707__drop_trio_stats_tables.sql` (같은 날짜 파일은 제목으로 구분 — 실제 반영일 기준으로 날짜 조정)
+- 테스트: `KeysetItemReaderTest`(재시작 포함), 룩백 가드 테스트, ownership 리더 컨텍스트 테스트
+
+**수정**
+- `BrawlerItemOwnershipStatsReader` → tag join + 프로젝션 (§3.2, 자체 키셋 루프는 유지)
+- `BattleEventSyncJobConfig`, `StatsPlayerSyncJobConfig` → `KeysetItemReader` (§3.3)
+- 통계 엔티티 10종 → `@SequenceGenerator` (§3.1), `db-core/schema.sql` 갱신 (시퀀스 반영 + trio 테이블 블록 제거)
+- ownership 도메인 클래스 6종 패키지 이동 (§4.2) 및 참조 갱신
+- `PartitionManageJobConfig`, `StatsWeekRange` KDoc (§4.4)
+
+**삭제**
+- `PlayerCombinator.kt` + `PlayerCombinatorTest.kt`
+- `QuerydslPagingItemReader.kt`, `QuerydslEntityCursorItemReader.kt`, `QuerydslZeroPagingItemReader.kt`
+- `db-core/.../statistics/BrawlerTrioBattleResultStatsEntity.kt`, `BrawlerTrioBattleRankStatsEntity.kt`
+
+**불변 (호환성 보장)**
+- 잡 이름·스텝 이름·잡 파라미터(`date`, `window`)·검증기 — k8s CronJob `--job.name` 및 `BATCH_*` 메타데이터 호환
+- 통계 배틀 Reader 5종·Writer 5종·Task 6종 — 클론 구조 그대로 (§4.1 결정)
+- `domain/statistics` 집계기 6종과 그 테스트
+- 집계 결과 값 (동작 보존 리팩터링)
+
+## 6. 에러 처리·멱등성
+
+기존 모델을 유지한다. delete+insert 는 잡당 단일 `REQUIRES_NEW` 트랜잭션(주간 잡은 weekRange×event 단위)이라 실패 시 원자적으로 롤백되고, 재실행은 전체 교체로 멱등하다. SEQUENCE 전환·keyset 전환은 이 특성에 영향을 주지 않는다. `KeysetItemReader` 의 ExecutionContext 재시작은 chunk 스텝(battleEventSync/statsPlayerSync)에만 적용된다.
+
+## 7. 테스트 전략
+
+1. **동작 보존 증명**: 기존 Task 테스트 6종 + 컨텍스트 테스트가 무수정 통과
+2. **신규 컴포넌트**: §5 신규 테스트 목록. `KeysetItemReader` 는 ExecutionContext 저장/복원 케이스 포함
+3. **ownership 리더**: 실 DB 컨텍스트 테스트로 join·프로젝션 결과가 기존과 동일함을 검증
+4. **완료 기준**: `./gradlew ktlintCheck unitTest contextTest` 통과. SEQUENCE 배칭은 로컬에서 Hibernate 로그(`generate_statistics`)로 배치 실행 확인
+
+## 8. 단계 분리 (위험도 오름차순 PR 3개)
+
+| PR | 내용 | 위험 |
+|---|---|---|
+| PR1 | 데드코드 제거(PlayerCombinator, QueryDSL 리더는 PR2 로 연기) + trio 테이블·엔티티 제거(drop 마이그레이션 포함 — 미사용 테이블이라 DDL 적용 시점이 앱 배포와 무관) + WeekRange 분리 + 룩백 가드 + ownership 도메인 이동 | 없음 (동작 무관) |
+| PR2 | KeysetItemReader + 리더 빈 교체(battleEventSync/statsPlayerSync) + ownership 쿼리 개선 + offset 리더 3종 삭제 | 낮음 (코드만, 테스트로 보존 증명) |
+| PR3 | SEQUENCE 전환 (DDL + 엔티티 10종 + schema.sql) | 중간 (운영 DDL 선적용 절차 필요) |
+
+## 9. 리스크와 완화
+
+| 리스크 | 완화 |
+|---|---|
+| SEQUENCE 전환 후 ID 충돌 | `setval` 을 max(id) 이상으로 초기화, `default nextval` 안전망, DDL 선적용 순서 |
+| keyset 전환으로 읽기 결과 차이 | 두 방식 모두 `order by id` 전제 — 스냅샷 격리 하 동일 결과. 컨텍스트 테스트로 검증 |
+| 공통화가 잡 의도를 흐림 | §4.1 재심사에서 수직 공통화 자체를 철회 — 리스크 원천 제거. `KeysetItemReader` 는 키셋 계약을 리더가 소유해 오용 차단 |
+| 재시작 동작 회귀 | `KeysetItemReader` 재시작 테스트로 offset 리더의 재시작성 등가 보장 |
+| trio 테이블 drop 비가역 | 적용 전 row count 0 확인을 마이그레이션 주석에 명시. 스키마 복원은 git 이력(`V260426a`)으로 가능 |
+
+## 10. 향후 제안 (이번 비범위, 기록만)
+
+- **single-pass 일별 집계**: 일별 원본 스캔을 잡 4~5개 → 1회로 축소. 실측 병목이 생기면 검토 (중간 집계 테이블·실패 영향 확대 트레이드오프)
+- **배치 관측성**: 04-30 방침대로 Grafana 계열로 해결 — 필요 시 push-gateway 기반 잡 duration/read-write count 메트릭
+- **`BATCH_*` 메타테이블 정리 잡**: 실행 이력 무한 증가 대비
+- **RankingCollect 3태스크의 country 루프·스냅샷 보존 로직 공통화**: 이득이 작아 보류
+- **worker 원본 테이블 saveAll 배칭**: 동일 IDENTITY 제약 — 파티션 함수와 함께 별도 검토

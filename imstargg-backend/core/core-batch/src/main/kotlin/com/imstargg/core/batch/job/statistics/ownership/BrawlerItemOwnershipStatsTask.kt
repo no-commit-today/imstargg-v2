@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
+import com.imstargg.core.batch.domain.statistics.ownership.BrawlerItemOwnershipStatsAccumulator
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 

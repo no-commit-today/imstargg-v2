@@ -1,7 +1,7 @@
 package com.imstargg.core.batch.job.statistics.playersync
 
 import com.imstargg.core.batch.support.parameter.DateJobParameter
-import com.imstargg.core.batch.support.querydsl.QuerydslPagingItemReader
+import com.imstargg.core.batch.support.querydsl.KeysetItemReader
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.QStatsResultBattleEntity
@@ -104,25 +104,35 @@ class StatsPlayerSyncJobConfig(
 
     @Bean
     @StepScope
-    fun statsRankBattleReader(): QuerydslPagingItemReader<StatsRankBattleEntity> {
+    fun statsRankBattleReader(): KeysetItemReader<StatsRankBattleEntity> {
         val rankBattle = QStatsRankBattleEntity.statsRankBattleEntity
-        return QuerydslPagingItemReader(entityManagerFactory, CHUNK_SIZE) { queryFactory ->
+        return KeysetItemReader(
+            name = "statsPlayerSyncRankBattleReader",
+            entityManagerFactory = entityManagerFactory,
+            pageSize = CHUNK_SIZE.toLong(),
+            idPath = rankBattle.id,
+            idOf = { it.id!! },
+        ) { queryFactory ->
             queryFactory
                 .selectFrom(rankBattle)
                 .where(rankBattle.battleDate.eq(dateJobParameter().date))
-                .orderBy(rankBattle.id.asc())
         }
     }
 
     @Bean
     @StepScope
-    fun statsResultBattleReader(): QuerydslPagingItemReader<StatsResultBattleEntity> {
+    fun statsResultBattleReader(): KeysetItemReader<StatsResultBattleEntity> {
         val resultBattle = QStatsResultBattleEntity.statsResultBattleEntity
-        return QuerydslPagingItemReader(entityManagerFactory, CHUNK_SIZE) { queryFactory ->
+        return KeysetItemReader(
+            name = "statsPlayerSyncResultBattleReader",
+            entityManagerFactory = entityManagerFactory,
+            pageSize = CHUNK_SIZE.toLong(),
+            idPath = resultBattle.id,
+            idOf = { it.id!! },
+        ) { queryFactory ->
             queryFactory
                 .selectFrom(resultBattle)
                 .where(resultBattle.battleDate.eq(dateJobParameter().date))
-                .orderBy(resultBattle.id.asc())
         }
     }
 

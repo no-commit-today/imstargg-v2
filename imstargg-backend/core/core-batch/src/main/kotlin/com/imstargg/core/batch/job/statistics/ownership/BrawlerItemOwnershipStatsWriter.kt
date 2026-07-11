@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.statistics.ownership
 
+import com.imstargg.core.batch.domain.statistics.ownership.BrawlerItemOwnershipStatsResult
 import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerBuffyOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGadgetOwnershipStatsJpaRepository
