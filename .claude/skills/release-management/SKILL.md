@@ -39,7 +39,7 @@ core-admin / imstargg-admin-frontend 는 관리 대상 외.
 
 ## bump 모드 워크플로
 
-1. **변경 감지** — `python3 .claude/skills/release-management/scripts/detect_changed_apps.py --base main`
+1. **변경 감지** — `python3 .claude/skills/release-management/scripts/detect_changed_apps.py` (base 기본값 `origin/main`. 손대지 않은 앱이 잡히거나 `base_resolved: false` 면 [workflow.md](references/workflow.md) 의 1단계 주의사항 참고)
 2. **변경된 앱 없으면 조용히 종료** (한 줄 알림 후 끝). 노이즈 방지.
 3. **현재 버전 조회** — `python3 .claude/skills/release-management/scripts/current_versions.py`
 4. **각 앱별 bump 종류 판단** — git diff 의 코드 변경을 보고 patch/minor/major 결정. 가이드: [references/version-rules.md](references/version-rules.md)
