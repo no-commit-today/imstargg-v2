@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
 import { env } from "@/config/env";
-import { AdUnit } from "@/components/ads/AdUnit";
-import { AD_SLOTS } from "@/components/ads/slots";
 import HomeScreen from "./_components/HomeScreen";
 
 export const metadata: Metadata = buildMetadata({
@@ -37,9 +35,6 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <HomeScreen />
-      <div className="mx-auto w-full max-w-7xl px-4 pb-10">
-        <AdUnit slot={AD_SLOTS.home} />
-      </div>
     </>
   );
 }
