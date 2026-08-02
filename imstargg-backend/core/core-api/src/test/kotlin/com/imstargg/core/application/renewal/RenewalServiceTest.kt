@@ -131,6 +131,23 @@ class RenewalServiceTest(
         }
 
         @Test
+        fun `SQS 발행 시점에 renewal 은 이미 PENDING 상태다`() {
+            // given - worker 는 PENDING 이 아닌 메시지를 버리므로, 발행 전에 PENDING 커밋이 완료되어야 한다
+            val tag = BrawlStarsTag("#PRACE")
+            var statusAtPublish: RenewalStatus? = null
+            every { renewalProducer.producePlayerRenewal(tag) } answers {
+                statusAtPublish =
+                    renewalJpaRepository.findByBrawlStarsTagAndType(tag.value, RenewalType.PLAYER)!!.status
+            }
+
+            // when
+            sut.renewPlayer(tag)
+
+            // then
+            assertThat(statusAtPublish).isEqualTo(RenewalStatus.PENDING)
+        }
+
+        @Test
         fun `stale 상태의 기존 갱신은 재요청되어 PENDING 이 된다`() {
             // given - 임계(10초)를 넘긴 오래된 요청
             val tag = BrawlStarsTag("#PSTL")
