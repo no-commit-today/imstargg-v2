@@ -14,7 +14,7 @@ const LABEL: Record<RenewalKind, { title: string; noun: string }> = {
 
 export function NotFoundView({ kind, tag }: { kind: RenewalKind; tag: string }) {
   const router = useRouter();
-  const { progressing } = useRenewal(kind, tag);
+  const { progressing, canRenew } = useRenewal(kind, tag);
   const prev = useRef(progressing);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function NotFoundView({ kind, tag }: { kind: RenewalKind; tag: string }) 
           <Link href="/">홈으로</Link>
         </Button>
       </div>
-      {progressing && (
+      {progressing && !canRenew && (
         <p className="text-xs text-muted-foreground">
           갱신 중… 완료되면 자동으로 {noun} 페이지로 이동해요.
         </p>

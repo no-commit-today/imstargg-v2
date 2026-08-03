@@ -63,9 +63,13 @@ class RenewalService(
         val now = clock.instant()
         val renewal = renewalRepository.request(tag, type, now)
 
+        // worker 는 PENDING 이 아닌 renewal 의 메시지를 버리므로, PENDING 커밋이 발행보다 반드시 앞서야 한다.
+        // (발행이 먼저면 worker 가 REQUESTED 를 읽고 메시지를 버려 영구 PENDING 으로 남는 레이스 발생)
+        val pending = renewalRepository.toPending(renewal)
+
         publishAction()
 
         log.info("[갱신 요청] type={} tag={}", type, tag.value)
-        return renewalRepository.toPending(renewal)
+        return pending
     }
 }
