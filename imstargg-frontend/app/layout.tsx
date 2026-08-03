@@ -34,7 +34,7 @@ export default function RootLayout({
         <QueryProvider>
           <div className="app">
             <TopNav />
-            {children}
+            <div className="flex-1">{children}</div>
             <SiteFooter />
             <Toaster richColors position="top-center" />
             <FeedbackDialogMount />
