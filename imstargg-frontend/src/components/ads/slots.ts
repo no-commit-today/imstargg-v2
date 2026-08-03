@@ -5,7 +5,6 @@
  * AdSense 콘솔에서 슬롯 생성 후 값을 채워 배포한다 (운영자 액션).
  */
 export const AD_SLOTS = {
-  home: "",
   playerRanking: "",
   clubRanking: "",
   brawlerMeta: "",
