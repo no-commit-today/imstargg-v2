@@ -20,6 +20,7 @@
 
 ## 인덱스
 
+- [2026.08.0](2026.08.0.md) — 2026-08-03. core-api 0.4.4 — 갱신이 PENDING 에 영구히 갇히던 레이스 수정(SQS 발행 전에 PENDING 커밋). frontend 0.7.0 — 홈을 로고+검색 진입점으로 단순화(이벤트·랭킹·메타·소개 섹션 제거 → 정적 페이지), 멈춘 갱신을 사용자가 재시도로 복구할 수 있도록 버튼 조건 수정. 마이그레이션 없음.
 - [2026.07.1](2026.07.1.md) — 2026-07-11. **Hotfix**. core-api 0.4.3 — Redis `statistics` 캐시에서 빈 리스트(`kotlin.collections.EmptyList`) 역직렬화가 `PolymorphicTypeValidator` 에 거부되던 버그 수정(Jackson 3 마이그레이션 후행). 폴백으로 500 은 없었으나 캐시 무력화·DB 폴백 누적. 코드만 변경(마이그레이션 없음).
 - [2026.07.0](2026.07.0.md) — 2026-07-11. core-api gzip 압축·페이지네이션 검증·갱신 흐름 리치 도메인화(409 경합), core-batch 랭킹 사전 갱신 배치잡·키셋 페이징·API 스펙 정규화 추적, core-worker INSERT 경합 재시도·배틀 누락 보강, frontend 홈 데이터 섹션·상세 ISR 복구·폰트 셀프호스팅·AdSense 수동 광고 전환. **DB**: 통계 집계 SEQUENCE 전환·trio 테이블 제거.
 - [2026.06.3](2026.06.3.md) — 2026-06-19. frontend 신뢰 페이지 추가(`/about`·`/privacy`·`/terms` + 푸터 법적 링크·sitemap, 애드센스 정책 대응), 헤더 검색창 제거·검색 입력 variant 통합(리팩터).
