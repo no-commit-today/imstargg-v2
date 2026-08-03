@@ -36,6 +36,25 @@ describe("RenewalStatus (player)", () => {
     expect(await screen.findByText(/최근 업데이트 없음/)).toBeInTheDocument();
   });
 
+  it("progressing 이어도 canRenew 면 지연 안내를 표시", async () => {
+    server.use(
+      http.get(`*/v1/players/${ENC}/renewal`, () =>
+        HttpResponse.json({
+          tag: TAG,
+          status: "PENDING",
+          progressing: true,
+          canRenew: true,
+          requestedAt: "2026-04-20T00:00:00Z",
+          executedAt: null,
+          completedAt: null,
+          renewedAt: null,
+        }),
+      ),
+    );
+    renderWithProviders(<RenewalStatus kind="player" tag={TAG} />);
+    expect(await screen.findByText(/갱신이 지연되고 있어요/)).toBeInTheDocument();
+  });
+
   it("progressing 일 때 '진행 중…' 표시", async () => {
     server.use(
       http.get(`*/v1/players/${ENC}/renewal`, () =>

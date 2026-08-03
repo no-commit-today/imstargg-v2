@@ -16,9 +16,13 @@
 
 1. **변경 감지**
    ```bash
-   python3 scripts/detect_changed_apps.py --base main
+   python3 scripts/detect_changed_apps.py
    ```
    결과 JSON 의 `apps` 배열이 영향 받는 앱.
+
+   base 는 기본 `origin/main` — 로컬 `main` 은 워크트리나 오래된 체크아웃에서 뒤처지기 쉽고, diff 를 merge-base 에서 뜨기 때문에 낡은 base 는 develop 에 쌓인 변경 전체를 "내 변경"으로 잡는다. 결과의 `base_resolved` 가 `false` 면 그 ref 를 못 찾아 커밋된 변경이 통째로 빠진 것이므로, `git fetch origin main` 후 다시 돌린다.
+
+   손대지 않은 앱이 `apps` 에 섞여 있으면 `git diff --name-only origin/develop..HEAD` 로 실제 변경 범위를 교차 확인한다.
 
 2. **변경 없으면 즉시 종료** — `apps` 가 비어있으면 "변경된 앱 없음" 한 줄 알림 후 끝.
 
@@ -128,7 +132,7 @@
 
 2. **변경된 앱 식별**
    ```bash
-   python3 scripts/detect_changed_apps.py --base main
+   python3 scripts/detect_changed_apps.py
    ```
    ※ 현재 main 에 있다면 working tree 변경만 잡힘.
 
