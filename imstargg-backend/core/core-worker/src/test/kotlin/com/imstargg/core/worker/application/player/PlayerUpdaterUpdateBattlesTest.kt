@@ -7,7 +7,10 @@ import com.imstargg.client.brawlstars.response.PlayerIconResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.worker.domain.Battle
 import com.imstargg.core.worker.domain.BattleEvent
+import com.imstargg.core.worker.domain.BattleTeamPlayer
+import com.imstargg.core.worker.domain.BattleTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
@@ -23,6 +26,7 @@ class PlayerUpdaterUpdateBattlesTest(
     private val cleanUp: CleanUp,
     private val playerRepository: PlayerJpaRepository,
     private val battleRepository: BattleJpaRepository,
+    private val battleTeamPlayerRepository: BattleTeamPlayerJpaRepository,
 ) : CoreWorkerContextTest() {
     @AfterEach
     fun tearDown() {
@@ -131,6 +135,58 @@ class PlayerUpdaterUpdateBattlesTest(
         assertThat(battleRepository.count()).isEqualTo(3)
     }
 
+    @Test
+    fun `배틀의_팀_플레이어를_모두_저장한다`() {
+        // given
+        val tag = "#PLAYER5"
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+
+        val battles =
+            listOf(
+                createBattle(tag, Instant.parse("2024-01-01T10:00:00Z"), teams = createTeams()),
+                createBattle(tag, Instant.parse("2024-01-01T11:00:00Z"), teams = createTeams()),
+            )
+
+        // when
+        val result = sut.update(createPlayerResponse(tag), battles)
+
+        // then
+        assertThat(result).hasSize(2)
+        val teamPlayers = battleTeamPlayerRepository.findAll()
+        assertThat(teamPlayers).hasSize(12)
+        assertThat(teamPlayers.map { it.battle.id }).containsOnly(*battleRepository.findAll().map { it.id }.toTypedArray())
+        val first = teamPlayers.first { it.brawlStarsTag == "#TEAM00" }
+        assertThat(first.teamIdx).isZero()
+        assertThat(first.playerIdx).isZero()
+        assertThat(first.name).isEqualTo("Player00")
+        assertThat(first.brawler.brawlStarsId).isEqualTo(100L)
+        assertThat(first.brawler.name).isEqualTo("Brawler00")
+        assertThat(first.brawler.power).isEqualTo(11)
+        assertThat(first.brawler.trophies).isEqualTo(500)
+        assertThat(first.brawler.trophyChange).isNull()
+        assertThat(first.createdAt).isNotNull()
+        assertThat(teamPlayers.first { it.brawlStarsTag == "#TEAM11" }.brawler.trophyChange).isEqualTo(8)
+    }
+
+    private fun createTeams() =
+        (0..1).map { teamIdx ->
+            (0..2).map { playerIdx ->
+                BattleTeamPlayer(
+                    brawlStarsTag = "#TEAM$teamIdx$playerIdx",
+                    name = "Player$teamIdx$playerIdx",
+                    brawler =
+                        BattleTeamPlayerBrawler(
+                            brawlStarsId = 100L + teamIdx * 10 + playerIdx,
+                            name = "Brawler$teamIdx$playerIdx",
+                            power = 11,
+                            trophies = 500,
+                            // trophyChange 는 nullable — null 과 값 케이스를 모두 태운다
+                            trophyChange = if (teamIdx == 0) null else 8,
+                        ),
+                )
+            }
+        }
+
     private fun createPlayerResponse(tag: String) =
         PlayerResponse(
             tag = tag,
@@ -167,6 +223,7 @@ class PlayerUpdaterUpdateBattlesTest(
         playerBrawlStarsTag: String,
         battleTime: Instant,
         battleKey: String = "battle_key_${battleTime.epochSecond}",
+        teams: List<List<BattleTeamPlayer>> = emptyList(),
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleTime,
@@ -185,6 +242,6 @@ class PlayerUpdaterUpdateBattlesTest(
         playerBrawlStarsTag = playerBrawlStarsTag,
         battleRank = null,
         trophyChange = 8,
-        teams = emptyList(),
+        teams = teams,
     )
 }

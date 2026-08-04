@@ -28,9 +28,10 @@ create index if not exists ix_player__name on player (name varchar_pattern_ops);
 create index if not exists ix_player__brawlstars_tag on player (brawlstars_tag varchar_pattern_ops);
 
 -- player brawler table
+create sequence if not exists player_brawler_seq increment by 100;
 create table if not exists player_brawler
 (
-    player_brawler_id     bigint generated always as identity primary key,
+    player_brawler_id     bigint primary key default nextval('player_brawler_seq'),
     player_id             bigint      not null,
     brawler_brawlstars_id bigint      not null,
     power                 int         not null,
@@ -42,61 +43,72 @@ create table if not exists player_brawler
     updated_at            timestamptz not null default now()
 );
 create unique index if not exists uk_playerbrawler__playerid_brawlerbrawlstarsid on player_brawler (player_id, brawler_brawlstars_id);
+alter sequence player_brawler_seq owned by player_brawler.player_brawler_id;
 
 -- player brawler gear table
+create sequence if not exists player_brawler_gear_seq increment by 100;
 create table if not exists player_brawler_gear
 (
-    player_brawler_gear_id bigint generated always as identity primary key,
+    player_brawler_gear_id bigint primary key default nextval('player_brawler_gear_seq'),
     player_brawler_id      bigint      not null,
     gear_brawlstars_id     bigint      not null,
     created_at             timestamptz not null default now(),
     updated_at             timestamptz not null default now()
 );
 create unique index if not exists uk_playerbrawlergear__playerbrawlerid_gearbrawlstarsid on player_brawler_gear (player_brawler_id, gear_brawlstars_id);
+alter sequence player_brawler_gear_seq owned by player_brawler_gear.player_brawler_gear_id;
 
 -- player brawler star power table
+create sequence if not exists player_brawler_star_power_seq increment by 100;
 create table if not exists player_brawler_star_power
 (
-    player_brawler_star_power_id bigint generated always as identity primary key,
+    player_brawler_star_power_id bigint primary key default nextval('player_brawler_star_power_seq'),
     player_brawler_id            bigint      not null,
     star_power_brawlstars_id     bigint      not null,
     created_at                   timestamptz not null default now(),
     updated_at                   timestamptz not null default now()
 );
 create unique index if not exists uk_player_brawler_star_power__1 on player_brawler_star_power (player_brawler_id, star_power_brawlstars_id);
+alter sequence player_brawler_star_power_seq owned by player_brawler_star_power.player_brawler_star_power_id;
 
 -- player brawler hyper charge table
+create sequence if not exists player_brawler_hyper_charge_seq increment by 100;
 create table if not exists player_brawler_hyper_charge
 (
-    player_brawler_hyper_charge_id bigint generated always as identity primary key,
+    player_brawler_hyper_charge_id bigint primary key default nextval('player_brawler_hyper_charge_seq'),
     player_brawler_id              bigint      not null,
     hyper_charge_brawlstars_id     bigint      not null,
     created_at                     timestamptz not null default now(),
     updated_at                     timestamptz not null default now()
 );
 create unique index if not exists uk_player_brawler_hyper_charge__1 on player_brawler_hyper_charge (player_brawler_id, hyper_charge_brawlstars_id);
+alter sequence player_brawler_hyper_charge_seq owned by player_brawler_hyper_charge.player_brawler_hyper_charge_id;
 
 -- player brawler buffy table
+create sequence if not exists player_brawler_buffy_seq increment by 100;
 create table if not exists player_brawler_buffy
 (
-    player_brawler_buffy_id bigint generated always as identity primary key,
+    player_brawler_buffy_id bigint primary key default nextval('player_brawler_buffy_seq'),
     player_brawler_id       bigint      not null,
     buffy_type              varchar(25) not null,
     created_at              timestamptz not null default now(),
     updated_at              timestamptz not null default now()
 );
 create unique index if not exists uk_playerbrawlerbuffy__playerbrawlerid_buffytype on player_brawler_buffy (player_brawler_id, buffy_type);
+alter sequence player_brawler_buffy_seq owned by player_brawler_buffy.player_brawler_buffy_id;
 
 -- player brawler gadget table
+create sequence if not exists player_brawler_gadget_seq increment by 100;
 create table if not exists player_brawler_gadget
 (
-    player_brawler_gadget_id bigint generated always as identity primary key,
+    player_brawler_gadget_id bigint primary key default nextval('player_brawler_gadget_seq'),
     player_brawler_id        bigint      not null,
     gadget_brawlstars_id     bigint      not null,
     created_at               timestamptz not null default now(),
     updated_at               timestamptz not null default now()
 );
 create unique index if not exists uk_playerbrawlergadget__playerbrawlerid_gadgetbrawlstarsid on player_brawler_gadget (player_brawler_id, gadget_brawlstars_id);
+alter sequence player_brawler_gadget_seq owned by player_brawler_gadget.player_brawler_gadget_id;
 
 -- club table
 create table if not exists club
@@ -150,9 +162,10 @@ create table if not exists renewal
 create unique index if not exists uk_renewal__brawlstarstag_type on renewal (brawlstars_tag, type);
 
 -- battle table
+create sequence if not exists battle_seq increment by 100;
 create table if not exists battle
 (
-    battle_id                  bigint generated always as identity primary key,
+    battle_id                  bigint primary key default nextval('battle_seq'),
     battle_key                 varchar(255)  not null,
     battle_at                  timestamptz   not null,
     event_brawlstars_id        bigint        null,
@@ -171,11 +184,13 @@ create table if not exists battle
     updated_at                 timestamptz   not null default now()
 );
 create index if not exists ix_battle__playerid_battleat on battle (player_id, battle_at desc);
+alter sequence battle_seq owned by battle.battle_id;
 
 -- battle_team_player table
+create sequence if not exists battle_team_player_seq increment by 100;
 create table if not exists battle_team_player
 (
-    battle_team_player_id   bigint generated always as identity primary key,
+    battle_team_player_id   bigint primary key default nextval('battle_team_player_seq'),
     battle_id               bigint        not null,
     team_idx                int           not null,
     player_idx              int           not null,
@@ -190,6 +205,7 @@ create table if not exists battle_team_player
     updated_at              timestamptz   not null default now()
 );
 create index if not exists ix_battleteamplayer__battleid on battle_team_player (battle_id);
+alter sequence battle_team_player_seq owned by battle_team_player.battle_team_player_id;
 
 -- player_ranking table
 create table if not exists player_ranking

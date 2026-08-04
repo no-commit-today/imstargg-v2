@@ -13,6 +13,12 @@ spring:
         query.fail_on_pagination_over_collection_fetch: true
         format_sql: true
         use_sql_comments: true
+        # 운영(각 앱 application.yml)과 동일한 INSERT/UPDATE 배칭 — 테스트가 배칭 경로를 그대로 타게 한다
+        jdbc:
+          batch_size: 100
+          batch_versioned_data: false
+        order_inserts: true
+        order_updates: true
 
   sql:
     init:
