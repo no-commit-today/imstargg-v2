@@ -9,6 +9,7 @@ import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGearOwnersh
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGearOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerHyperChargeOwnershipStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerStarPowerOwnershipStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.brawler.OwnershipCountEmbedded
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -95,7 +96,6 @@ class BrawlerItemOwnershipStatsWriterTest {
             brawlerBrawlStarsId = 16000000,
             trophyRange = BrawlerTrophyRange.TROPHY_500_PLUS,
             gearBrawlStarsId = gearBrawlStarsId,
-            ownerCount = 1,
-            totalCount = 1,
+            ownershipCount = OwnershipCountEmbedded(ownerCount = 1, totalCount = 1),
         )
 }
