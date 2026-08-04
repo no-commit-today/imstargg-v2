@@ -2,12 +2,23 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../setup/msw";
 import { renderWithProviders } from "../../setup/renderWithProviders";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RenewalButton } from "@/components/shared/RenewalButton";
+import { RenewalStatus } from "@/components/shared/RenewalStatus";
 
 const TAG = "#88J8Q9RPV";
 const ENC = "%2388J8Q9RPV";
+
+/** PlayerHero 의 실제 배치 — 상태 캡션과 버튼이 각각 useRenewal 을 호출한다. */
+function PlayerHeroRenewal() {
+  return (
+    <>
+      <RenewalStatus kind="player" tag={TAG} />
+      <RenewalButton kind="player" tag={TAG} />
+    </>
+  );
+}
 
 describe("RenewalButton (player) — 폴링 + 완료", () => {
   beforeEach(() => {
@@ -53,6 +64,70 @@ describe("RenewalButton (player) — 폴링 + 완료", () => {
 
     await waitFor(() => expect(button).toBeDisabled());
     await waitFor(() => expect(button).not.toBeDisabled(), { timeout: 5000 });
+  });
+
+  it("갱신 중에는 진행 바가 보이고 완료되면 사라진다", async () => {
+    renderWithProviders(<PlayerHeroRenewal />);
+
+    const button = await screen.findByRole("button", { name: /갱신/ });
+    await waitFor(() => expect(button).not.toBeDisabled());
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+
+    await userEvent.click(button);
+
+    const bar = await screen.findByRole("progressbar", { name: "갱신 진행률" });
+    await waitForElementToBeRemoved(bar, { timeout: 5000 });
+  });
+});
+
+describe("RenewalStatus (player) — 실패 피드백", () => {
+  it("갱신 요청이 실패하면 버튼 옆 캡션에 실패가 표시된다", async () => {
+    server.use(
+      http.get(`*/v1/players/${ENC}/renewal`, () =>
+        HttpResponse.json({
+          tag: TAG,
+          status: "COMPLETED",
+          progressing: false,
+          canRenew: true,
+          requestedAt: "2026-04-27T00:00:00Z",
+          executedAt: null,
+          completedAt: "2026-04-27T00:00:01Z",
+          renewedAt: "2026-04-27T00:00:01Z",
+        }),
+      ),
+      http.post(`*/v1/players/${ENC}/renewal`, () => new HttpResponse(null, { status: 500 })),
+    );
+    renderWithProviders(<PlayerHeroRenewal />);
+
+    const button = await screen.findByRole("button", { name: /갱신/ });
+    await waitFor(() => expect(button).not.toBeDisabled());
+    await userEvent.click(button);
+
+    // 버튼과 캡션은 서로 다른 useRenewal 인스턴스 — mutation 상태가 공유되어야 캡션에 뜬다
+    expect(await screen.findByText(/갱신 실패/, undefined, { timeout: 5000 })).toBeInTheDocument();
+  });
+
+  it("갱신이 FAILED 로 끝났으면 실패가 표시되고 다시 시도할 수 있다", async () => {
+    server.use(
+      http.get(`*/v1/players/${ENC}/renewal`, () =>
+        HttpResponse.json({
+          tag: TAG,
+          status: "FAILED",
+          progressing: false,
+          canRenew: true,
+          requestedAt: "2026-04-27T00:00:00Z",
+          executedAt: "2026-04-27T00:00:01Z",
+          completedAt: null,
+          renewedAt: null,
+        }),
+      ),
+    );
+    renderWithProviders(<PlayerHeroRenewal />);
+
+    expect(await screen.findByText(/갱신 실패/)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /갱신/ })).not.toBeDisabled(),
+    );
   });
 });
 
