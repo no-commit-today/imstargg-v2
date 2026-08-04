@@ -213,7 +213,7 @@ class PlayerUpdaterConcurrencyTest(
             BattleEvent(
                 brawlStarsId = 1L,
                 modeBrawlStarsName = "knockout",
-                modeBrawlStarsId = 1,
+                modeBrawlStarsId = 1L,
                 map = "Test Map",
             ),
         mode = "knockout",
