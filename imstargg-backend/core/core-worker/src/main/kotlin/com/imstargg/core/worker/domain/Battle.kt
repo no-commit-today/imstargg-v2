@@ -20,7 +20,7 @@ class Battle(
 class BattleEvent(
     val brawlStarsId: Long?,
     val modeBrawlStarsName: String?,
-    val modeBrawlStarsId: Int?,
+    val modeBrawlStarsId: Long?,
     val map: String?,
 )
 

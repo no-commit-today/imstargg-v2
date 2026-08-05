@@ -3,6 +3,7 @@ package com.imstargg.infrastructure.db.core.statistics.brawler
 import com.imstargg.core.enums.BrawlerTrophyRange
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -31,10 +32,8 @@ class BrawlerGearOwnershipStatsEntity(
     val trophyRange: BrawlerTrophyRange,
     @Column(name = "gear_brawlstars_id", updatable = false, nullable = false)
     val gearBrawlStarsId: Long,
-    @Column(name = "owner_count", updatable = false, nullable = false)
-    val ownerCount: Long,
-    @Column(name = "total_count", updatable = false, nullable = false)
-    val totalCount: Long,
+    @Embedded
+    val ownershipCount: OwnershipCountEmbedded,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerGearOwnershipStatsSeq")

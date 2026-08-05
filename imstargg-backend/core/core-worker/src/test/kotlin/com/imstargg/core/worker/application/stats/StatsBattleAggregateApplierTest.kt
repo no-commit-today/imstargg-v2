@@ -83,7 +83,7 @@ class StatsBattleAggregateApplierTest(
             BattleEvent(
                 brawlStarsId = 10000001L,
                 modeBrawlStarsName = "soloShowdown",
-                modeBrawlStarsId = 2,
+                modeBrawlStarsId = 2L,
                 map = "Flying Fantasies",
             ),
         mode = "soloShowdown",
@@ -108,7 +108,7 @@ class StatsBattleAggregateApplierTest(
             BattleEvent(
                 brawlStarsId = 10000001L,
                 modeBrawlStarsName = "knockout",
-                modeBrawlStarsId = 1,
+                modeBrawlStarsId = 1L,
                 map = "Flaring Phoenix",
             ),
         mode = "knockout",
