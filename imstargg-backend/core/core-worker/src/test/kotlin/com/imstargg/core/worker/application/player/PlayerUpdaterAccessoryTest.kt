@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 /**
  * 액세서리 5종의 저장 동작을 고정한다 — 신규 플레이어는 전량 INSERT, 재갱신 시에는 기존 액세서리를
  * 중복 INSERT 하지 않고 추가분만 저장([Player.update] 의 기존 액세서리 필터). 액세서리는 SEQUENCE PK
- * 기반 배치 INSERT 경로(V260804)라 이 필터가 깨지면 유니크 충돌로 갱신이 실패한다.
+ * 기반 배치 INSERT 경로(V260804a)라 이 필터가 깨지면 유니크 충돌로 갱신이 실패한다.
  */
 class PlayerUpdaterAccessoryTest(
     private val sut: PlayerUpdater,
