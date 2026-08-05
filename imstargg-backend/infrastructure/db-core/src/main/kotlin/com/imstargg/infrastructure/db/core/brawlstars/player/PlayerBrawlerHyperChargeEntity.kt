@@ -12,6 +12,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 
 @Entity
@@ -33,7 +34,12 @@ class PlayerBrawlerHyperChargeEntity(
     val hyperChargeBrawlStarsId: Long,
 ) : BaseTimeEntity() {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "playerBrawlerHyperChargeSeq")
+    @SequenceGenerator(
+        name = "playerBrawlerHyperChargeSeq",
+        sequenceName = "player_brawler_hyper_charge_seq",
+        allocationSize = 100,
+    )
     @Column(name = "player_brawler_hyper_charge_id")
     val id: Long? = null
 }

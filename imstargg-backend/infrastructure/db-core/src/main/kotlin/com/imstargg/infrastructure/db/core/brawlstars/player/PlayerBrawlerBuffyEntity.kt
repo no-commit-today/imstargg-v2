@@ -15,6 +15,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 
 @Entity
@@ -37,7 +38,12 @@ class PlayerBrawlerBuffyEntity(
     val buffyType: BuffyType,
 ) : BaseTimeEntity() {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "playerBrawlerBuffySeq")
+    @SequenceGenerator(
+        name = "playerBrawlerBuffySeq",
+        sequenceName = "player_brawler_buffy_seq",
+        allocationSize = 100,
+    )
     @Column(name = "player_brawler_buffy_id")
     val id: Long? = null
 }

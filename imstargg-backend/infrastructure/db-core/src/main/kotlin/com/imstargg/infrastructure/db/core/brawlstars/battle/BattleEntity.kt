@@ -14,6 +14,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import java.time.Instant
 
@@ -50,7 +51,12 @@ class BattleEntity(
     val trophyChange: Int?,
 ) : BaseTimeEntity() {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "battleSeq")
+    @SequenceGenerator(
+        name = "battleSeq",
+        sequenceName = "battle_seq",
+        allocationSize = 100,
+    )
     @Column(name = "battle_id", nullable = false)
     val id: Long? = null
 }

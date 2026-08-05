@@ -15,7 +15,9 @@ class PlayerRenewalMessageConsumer(
     @SqsListener($$"${app.aws.sqs.renewal.player-queue-name}")
     fun handle(message: PlayerRenewalMessage) {
         log.info("[플레이어 갱신] 시작 tag={}", message.tag)
+        val startedAt = System.nanoTime()
         playerRenewalService.renew(message.tag)
-        log.info("[플레이어 갱신] 완료 tag={}", message.tag)
+        val elapsedMs = (System.nanoTime() - startedAt) / 1_000_000
+        log.info("[플레이어 갱신] 완료 tag={} elapsedMs={}", message.tag, elapsedMs)
     }
 }
