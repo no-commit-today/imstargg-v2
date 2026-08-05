@@ -26,7 +26,7 @@ class BattleEntityFixture {
             BattleEntityEvent(
                 brawlStarsId = 15000001L,
                 modeBrawlStarsName = "gemGrab",
-                modeBrawlStarsId = 1,
+                modeBrawlStarsId = 1L,
                 map = "Hard Rock Mine",
             )
     }

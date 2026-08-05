@@ -14,7 +14,7 @@ const LABEL: Record<RenewalKind, { title: string; noun: string }> = {
 
 export function NotFoundView({ kind, tag }: { kind: RenewalKind; tag: string }) {
   const router = useRouter();
-  const { progressing, canRenew } = useRenewal(kind, tag);
+  const { renewal, progressing, canRenew } = useRenewal(kind, tag);
   const prev = useRef(progressing);
 
   useEffect(() => {
@@ -39,6 +39,11 @@ export function NotFoundView({ kind, tag }: { kind: RenewalKind; tag: string }) 
       {progressing && !canRenew && (
         <p className="text-xs text-muted-foreground">
           갱신 중… 완료되면 자동으로 {noun} 페이지로 이동해요.
+        </p>
+      )}
+      {!progressing && renewal?.status === "FAILED" && (
+        <p className="text-xs text-[#FF3A3A]">
+          갱신에 실패했어요 — 잠시 후 다시 시도해 주세요.
         </p>
       )}
     </main>

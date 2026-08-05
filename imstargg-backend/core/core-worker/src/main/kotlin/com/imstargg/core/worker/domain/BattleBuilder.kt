@@ -49,7 +49,7 @@ class BattleBuilder(
                 BattleEvent(
                     brawlStarsId = event.id,
                     modeBrawlStarsName = event.mode,
-                    modeBrawlStarsId = event.modeId,
+                    modeBrawlStarsId = event.modeId.toLong(),
                     map = event.map,
                 ),
             mode = battle.mode,

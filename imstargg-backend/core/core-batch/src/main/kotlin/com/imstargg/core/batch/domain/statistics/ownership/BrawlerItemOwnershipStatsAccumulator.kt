@@ -6,6 +6,7 @@ import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGadgetOwner
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerGearOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerHyperChargeOwnershipStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.brawler.BrawlerStarPowerOwnershipStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.brawler.OwnershipCountEmbedded
 
 class BrawlerItemOwnershipStatsAccumulator {
     private val totalCounts = mutableMapOf<BrawlerTrophyKey, Long>()
@@ -85,8 +86,7 @@ class BrawlerItemOwnershipStatsAccumulator {
                     brawlerBrawlStarsId = key.brawlerBrawlStarsId,
                     trophyRange = key.trophyRange,
                     gearBrawlStarsId = key.itemBrawlStarsId,
-                    ownerCount = ownerCount,
-                    totalCount = totalCounts[key.toBrawlerTrophyKey()] ?: 0L,
+                    ownershipCount = ownershipCountOf(key.toBrawlerTrophyKey(), ownerCount),
                 )
             }
 
@@ -96,8 +96,7 @@ class BrawlerItemOwnershipStatsAccumulator {
                     brawlerBrawlStarsId = key.brawlerBrawlStarsId,
                     trophyRange = key.trophyRange,
                     gadgetBrawlStarsId = key.itemBrawlStarsId,
-                    ownerCount = ownerCount,
-                    totalCount = totalCounts[key.toBrawlerTrophyKey()] ?: 0L,
+                    ownershipCount = ownershipCountOf(key.toBrawlerTrophyKey(), ownerCount),
                 )
             }
 
@@ -107,8 +106,7 @@ class BrawlerItemOwnershipStatsAccumulator {
                     brawlerBrawlStarsId = key.brawlerBrawlStarsId,
                     trophyRange = key.trophyRange,
                     starPowerBrawlStarsId = key.itemBrawlStarsId,
-                    ownerCount = ownerCount,
-                    totalCount = totalCounts[key.toBrawlerTrophyKey()] ?: 0L,
+                    ownershipCount = ownershipCountOf(key.toBrawlerTrophyKey(), ownerCount),
                 )
             }
 
@@ -118,8 +116,7 @@ class BrawlerItemOwnershipStatsAccumulator {
                     brawlerBrawlStarsId = key.brawlerBrawlStarsId,
                     trophyRange = key.trophyRange,
                     hyperChargeBrawlStarsId = key.itemBrawlStarsId,
-                    ownerCount = ownerCount,
-                    totalCount = totalCounts[key.toBrawlerTrophyKey()] ?: 0L,
+                    ownershipCount = ownershipCountOf(key.toBrawlerTrophyKey(), ownerCount),
                 )
             }
 
@@ -129,8 +126,7 @@ class BrawlerItemOwnershipStatsAccumulator {
                     brawlerBrawlStarsId = key.brawlerBrawlStarsId,
                     trophyRange = key.trophyRange,
                     buffyType = key.buffyType,
-                    ownerCount = ownerCount,
-                    totalCount = totalCounts[key.toBrawlerTrophyKey()] ?: 0L,
+                    ownershipCount = ownershipCountOf(key.toBrawlerTrophyKey(), ownerCount),
                 )
             }
 
@@ -142,4 +138,17 @@ class BrawlerItemOwnershipStatsAccumulator {
             buffies = buffyEntities,
         )
     }
+
+    /**
+     * [add] 가 아이템 카운트를 올리기 전에 항상 같은 [BrawlerTrophyKey] 의 총계를 먼저 올리므로
+     * 총계 누락은 발생할 수 없다. 0 으로 대체하면 소유율이 조용히 0 이 되므로 실패시킨다.
+     */
+    private fun ownershipCountOf(
+        totalKey: BrawlerTrophyKey,
+        ownerCount: Long,
+    ): OwnershipCountEmbedded =
+        OwnershipCountEmbedded(
+            ownerCount = ownerCount,
+            totalCount = totalCounts[totalKey] ?: error("총계 카운트가 없습니다. key=$totalKey"),
+        )
 }
