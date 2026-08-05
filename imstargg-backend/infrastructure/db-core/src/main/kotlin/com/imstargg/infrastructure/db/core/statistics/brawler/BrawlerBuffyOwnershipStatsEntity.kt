@@ -4,6 +4,7 @@ import com.imstargg.core.enums.BrawlerTrophyRange
 import com.imstargg.core.enums.BuffyType
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -33,10 +34,8 @@ class BrawlerBuffyOwnershipStatsEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "buffy_type", columnDefinition = "varchar(25)", updatable = false, nullable = false)
     val buffyType: BuffyType,
-    @Column(name = "owner_count", updatable = false, nullable = false)
-    val ownerCount: Long,
-    @Column(name = "total_count", updatable = false, nullable = false)
-    val totalCount: Long,
+    @Embedded
+    val ownershipCount: OwnershipCountEmbedded,
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerBuffyOwnershipStatsSeq")

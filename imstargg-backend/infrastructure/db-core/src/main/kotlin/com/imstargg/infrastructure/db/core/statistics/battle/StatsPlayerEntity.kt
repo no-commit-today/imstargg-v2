@@ -17,7 +17,7 @@ import jakarta.persistence.Table
     ],
 )
 class StatsPlayerEntity(
-    @Column(name = "brawlstars_tag", updatable = false, nullable = false)
+    @Column(name = "brawlstars_tag", length = 45, updatable = false, nullable = false)
     val brawlStarsTag: String,
 ) : BaseTimeEntity() {
     @Id
