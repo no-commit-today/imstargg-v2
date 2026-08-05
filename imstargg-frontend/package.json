@@ -1,6 +1,6 @@
 {
   "name": "imstargg-frontend",
-  "version": "0.8.0-SNAPSHOT",
+  "version": "0.7.1-SNAPSHOT",
   "packageManager": "pnpm@11.2.2",
   "private": true,
   "scripts": {

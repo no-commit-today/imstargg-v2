@@ -1,6 +1,5 @@
 "use client";
 
-import { RenewalProgress, renewalEstimateMs } from "@/components/shared/RenewalProgress";
 import { useRenewal, type RenewalKind } from "@/hooks/useRenewal";
 import { formatRelativeTime } from "@/lib/relativeTime";
 
@@ -14,16 +13,5 @@ export function RenewalStatus({ kind, tag }: { kind: RenewalKind; tag: string })
     if (!renewedAt) return "최근 업데이트 없음";
     return `최근 업데이트: ${formatRelativeTime(renewedAt)}`;
   })();
-  return (
-    <span className="flex flex-col items-end gap-1 text-sm text-[#5C6271] sm:items-start">
-      <span>{text}</span>
-      {progressing && (
-        <RenewalProgress
-          active={progressing}
-          estimateMs={renewalEstimateMs(renewedAt)}
-          className="w-28"
-        />
-      )}
-    </span>
-  );
+  return <span className="text-sm text-[#5C6271]">{text}</span>;
 }

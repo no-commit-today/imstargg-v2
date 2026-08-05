@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../setup/msw";
 import { renderWithProviders } from "../../setup/renderWithProviders";
-import { screen, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RenewalButton } from "@/components/shared/RenewalButton";
 import { RenewalStatus } from "@/components/shared/RenewalStatus";
@@ -66,18 +66,6 @@ describe("RenewalButton (player) — 폴링 + 완료", () => {
     await waitFor(() => expect(button).not.toBeDisabled(), { timeout: 5000 });
   });
 
-  it("갱신 중에는 진행 바가 보이고 완료되면 사라진다", async () => {
-    renderWithProviders(<PlayerHeroRenewal />);
-
-    const button = await screen.findByRole("button", { name: /갱신/ });
-    await waitFor(() => expect(button).not.toBeDisabled());
-    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-
-    await userEvent.click(button);
-
-    const bar = await screen.findByRole("progressbar", { name: "갱신 진행률" });
-    await waitForElementToBeRemoved(bar, { timeout: 5000 });
-  });
 });
 
 describe("RenewalStatus (player) — 실패 피드백", () => {
