@@ -32,8 +32,8 @@ class BrawlerItemOwnershipStatisticsRepository(
             ).map {
                 BrawlerItemOwnershipRate(
                     itemId = BrawlStarsId(it.gearBrawlStarsId),
-                    ownerCount = it.ownerCount,
-                    totalCount = it.totalCount,
+                    ownerCount = it.ownershipCount.ownerCount,
+                    totalCount = it.ownershipCount.totalCount,
                 )
             }
 
@@ -48,8 +48,8 @@ class BrawlerItemOwnershipStatisticsRepository(
             ).map {
                 BrawlerItemOwnershipRate(
                     itemId = BrawlStarsId(it.gadgetBrawlStarsId),
-                    ownerCount = it.ownerCount,
-                    totalCount = it.totalCount,
+                    ownerCount = it.ownershipCount.ownerCount,
+                    totalCount = it.ownershipCount.totalCount,
                 )
             }
 
@@ -64,8 +64,8 @@ class BrawlerItemOwnershipStatisticsRepository(
             ).map {
                 BrawlerItemOwnershipRate(
                     itemId = BrawlStarsId(it.starPowerBrawlStarsId),
-                    ownerCount = it.ownerCount,
-                    totalCount = it.totalCount,
+                    ownerCount = it.ownershipCount.ownerCount,
+                    totalCount = it.ownershipCount.totalCount,
                 )
             }
 
@@ -80,8 +80,8 @@ class BrawlerItemOwnershipStatisticsRepository(
             ).map {
                 BrawlerItemOwnershipRate(
                     itemId = BrawlStarsId(it.hyperChargeBrawlStarsId),
-                    ownerCount = it.ownerCount,
-                    totalCount = it.totalCount,
+                    ownerCount = it.ownershipCount.ownerCount,
+                    totalCount = it.ownershipCount.totalCount,
                 )
             }
 
@@ -96,8 +96,8 @@ class BrawlerItemOwnershipStatisticsRepository(
             ).map {
                 BrawlerBuffyOwnershipRate(
                     buffyType = it.buffyType,
-                    ownerCount = it.ownerCount,
-                    totalCount = it.totalCount,
+                    ownerCount = it.ownershipCount.ownerCount,
+                    totalCount = it.ownershipCount.totalCount,
                 )
             }
 }
