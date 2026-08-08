@@ -20,14 +20,3 @@ export interface RotationEvent {
   startTime: string;
   endTime: string;
 }
-
-export interface EventBrawlerSummary {
-  brawlerId: number;
-  name: string;
-  winRate: number;
-}
-
-export interface EventStatsSummary {
-  totalBattleCount: number;
-  topBrawlers: EventBrawlerSummary[];
-}
