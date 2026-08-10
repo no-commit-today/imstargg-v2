@@ -1,10 +1,6 @@
 "use client";
 
-import type {
-  BattleEvent,
-  EventStatsSummary,
-  RotationEvent,
-} from "@/domain/event/types";
+import type { BattleEvent, RotationEvent } from "@/domain/event/types";
 import { useRotationEvents } from "@/hooks/queries/useRotationEvents";
 import { useSoloRankEvents } from "@/hooks/queries/useSoloRankEvents";
 import { EventSearch } from "./EventSearch";
@@ -14,13 +10,11 @@ import { SoloRankSection } from "./SoloRankSection";
 interface Props {
   initialRotation: RotationEvent[];
   initialSoloRank: BattleEvent[];
-  summaries?: Record<number, EventStatsSummary>;
 }
 
 export default function EventsListPage({
   initialRotation,
   initialSoloRank,
-  summaries,
 }: Props) {
   const { data: rotation = initialRotation } = useRotationEvents({
     initialData: initialRotation,
@@ -43,7 +37,7 @@ export default function EventsListPage({
 
       <EventSearch>
         <div className="space-y-8">
-          <RotationSection rotation={rotation} summaries={summaries} />
+          <RotationSection rotation={rotation} />
           <SoloRankSection events={soloRank} />
         </div>
       </EventSearch>

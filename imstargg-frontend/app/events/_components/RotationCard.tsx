@@ -2,19 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { formatNumber } from "@/lib/format";
-import { PercentCell } from "@app/_components/statistics/StatNumberCell";
-import type { EventStatsSummary, RotationEvent } from "@/domain/event/types";
+import type { RotationEvent } from "@/domain/event/types";
 import { EventCountdown } from "./EventCountdown";
 import { getModeStyle } from "./modeStyles";
 
-export function RotationCard({
-  rotation,
-  summary,
-}: {
-  rotation: RotationEvent;
-  summary?: EventStatsSummary;
-}) {
+export function RotationCard({ rotation }: { rotation: RotationEvent }) {
   const { event, endTime } = rotation;
   const modeName = event.mode?.name ?? "이벤트";
   const initial = modeName.slice(0, 1);
@@ -52,21 +44,6 @@ export function RotationCard({
         <span className="event-card-footer-label">남은 시간</span>
         <EventCountdown endTime={endTime} large />
       </div>
-      {summary && (
-        <div className="px-3 pb-3 text-xs text-[#5C6271]">
-          <span className="font-num font-bold tabular-nums">
-            {formatNumber(summary.totalBattleCount)}
-          </span>
-          판 집계
-          {summary.topBrawlers[0] && (
-            <>
-              {" · 승률 1위 "}
-              {summary.topBrawlers[0].name}{" "}
-              <PercentCell value={summary.topBrawlers[0].winRate} />
-            </>
-          )}
-        </div>
-      )}
     </Link>
   );
 }
