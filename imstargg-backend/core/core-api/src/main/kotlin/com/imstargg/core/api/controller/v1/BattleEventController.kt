@@ -32,8 +32,10 @@ class BattleEventController(
     }
 
     @GetMapping("/v1/events/solo-rank")
-    fun getSoloRankEvents(): ResponseEntity<ListResponse<BattleEventResponse>> {
-        val events = battleEventService.getSoloRankEvents()
+    fun getSoloRankEvents(
+        @RequestParam(required = false) seasonKey: String?,
+    ): ResponseEntity<ListResponse<BattleEventResponse>> {
+        val events = battleEventService.getSoloRankEvents(seasonKey)
         return ResponseEntity.ok(
             ListResponse(events.map { BattleEventResponse.of(it) }),
         )
