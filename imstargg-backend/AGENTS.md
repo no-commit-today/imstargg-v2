@@ -115,7 +115,9 @@ imstargg-backend/
     - 같은 날 여러 변경이 있으면 title로 구분 (필요 시 `V260420a__...`, `V260420b__...` 형태로 순서를 드러내도 됨)
     - DDL은 `create ... if not exists`, DML은 `on conflict ... do nothing` 등 **멱등적**으로 작성
 - **@Table 인덱스 명시**: schema.sql 의 인덱스(PK 제외)는 엔티티 `@Table` 어노테이션에도 모두 반영한다. 일반 인덱스(`ix_`)는 `indexes = [Index(...)]`, 유니크 인덱스(`uk_`)는 `@Index(unique = true)` 또는 `uniqueConstraints = [UniqueConstraint(...)]` (둘 다 동등 — 통계 모듈의 복합 컬럼 유니크는 `UniqueConstraint` 관행). 정렬은 `columnList = "col desc"` 로 표현. `varchar_pattern_ops` 등 JPA `@Index` 로 표현 불가한 연산자 클래스/표현식 인덱스는 `columnList` 에 컬럼명만 두고 주석으로 연산자 클래스를 명시한다 (`ddl-auto: none` 이라 어노테이션은 문서화 목적).
-- **BaseEntity 상속**: 모든 엔티티는 `BaseEntity` 상속 (createdAt, updatedAt, deleted 필드 포함)
+- **베이스 엔티티 상속**: 모든 엔티티는 `BaseTimeEntity` 상속 (createdAt, updatedAt). 게임에서 제거될 수 있는 브롤스타즈 자원(브롤러·기어·브롤러별 기어·가젯·스타파워·하이퍼차지·이벤트)은 `BaseSoftDeleteEntity` 상속 (deletedAt 추가)
+  - soft-delete 는 `@SQLRestriction` 전역 필터 없이 **명시적으로** 거른다 (`...DeletedAtIsNull` 쿼리 메서드). 동기화 배치(`brawlerSyncJob`)·관리자는 삭제된 행도 읽어야 하기 때문 — 삭제된 항목은 API 가 계속 응답해도 신규로 감지하지 않는다
+  - core-api 는 브롤러 하위 항목만 삭제분을 제외하고, 브롤러·이벤트 자체는 과거 전투 표시를 위해 거르지 않는다
 - **변경 가능한 컬럼 패턴**: 생성자 파라미터 → `var` + `protected set`
 
 ```kotlin
@@ -123,7 +125,7 @@ class SomeEntity(
     @Column(name = "immutable_field", updatable = false, nullable = false)
     val immutableField: String,  // 변경 불가 필드는 val
     mutableField: String,        // 변경 가능 필드는 생성자 파라미터로
-) : BaseEntity() {
+) : BaseTimeEntity() {
     @Column(name = "mutable_field", nullable = false)
     var mutableField: String = mutableField
         protected set            // 외부에서 직접 변경 방지

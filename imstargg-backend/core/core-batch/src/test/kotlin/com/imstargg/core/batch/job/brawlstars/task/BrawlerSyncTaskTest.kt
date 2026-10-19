@@ -26,6 +26,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.Clock
 
 class BrawlerSyncTaskTest
     @Autowired
@@ -129,6 +130,28 @@ class BrawlerSyncTaskTest
                         listOf(
                             shelly(starPowers = listOf(StarPowerResponse(id = 23000076, name = "Shell Shock"))),
                         ),
+                    paging = null,
+                )
+
+            // when
+            sut.sync()
+
+            // then
+            verify(exactly = 0) { alertManager.alert(any()) }
+        }
+
+        @Test
+        fun `soft-delete 된 기어가 API 에 남아 있으면 알림을 발송하지 않는다`() {
+            // given
+            brawlerJpaRepository.save(
+                BrawlerEntity(brawlStarsId = 16000000, rarity = BrawlerRarity.STARTING_BRAWLER, role = BrawlerRole.DAMAGE_DEALER),
+            )
+            brawlerGearJpaRepository.save(
+                BrawlerGearEntity(brawlerBrawlStarsId = 16000000, gearBrawlStarsId = 62000005).apply { delete(Clock.systemUTC()) },
+            )
+            every { brawlStarsClient.getBrawlers() } returns
+                ListResponse(
+                    items = listOf(shelly(gears = listOf(GearStatResponse(id = 62000005, name = "RELOAD SPEED", level = 1)))),
                     paging = null,
                 )
 

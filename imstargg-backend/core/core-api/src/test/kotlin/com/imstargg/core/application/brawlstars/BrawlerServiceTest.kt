@@ -5,21 +5,32 @@ import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.BrawlerRarity
 import com.imstargg.core.enums.BrawlerRole
+import com.imstargg.core.enums.GearRarity
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.GearEntity
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GearJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.cache.CacheManager
+import java.time.Clock
 
 class BrawlerServiceTest(
     private val sut: BrawlerService,
     private val cleanUp: CleanUp,
     private val brawlerJpaRepository: BrawlerJpaRepository,
+    private val gearJpaRepository: GearJpaRepository,
+    private val brawlerGearJpaRepository: BrawlerGearJpaRepository,
+    private val gadgetJpaRepository: GadgetJpaRepository,
     private val cacheManager: CacheManager,
 ) : CoreApiContextTest() {
     @BeforeEach
@@ -89,6 +100,29 @@ class BrawlerServiceTest(
         assertThat(result.items.starPowers).isEmpty()
         assertThat(result.items.hyperCharge).isNull()
         assertThat(result.items.buffies).isNull()
+    }
+
+    @Test
+    fun `getBrawlerWithItems 는 soft-delete 된 하위 항목을 제외한다`() {
+        // given
+        brawlerJpaRepository.save(brawler(id = 16_000_000L))
+        gearJpaRepository.save(GearEntity(brawlStarsId = 62_000_000L, rarity = GearRarity.SUPER_RARE))
+        gearJpaRepository.save(GearEntity(brawlStarsId = 62_000_005L, rarity = GearRarity.SUPER_RARE))
+        brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId = 16_000_000L, gearBrawlStarsId = 62_000_000L))
+        brawlerGearJpaRepository.save(
+            BrawlerGearEntity(brawlerBrawlStarsId = 16_000_000L, gearBrawlStarsId = 62_000_005L).apply { delete(Clock.systemUTC()) },
+        )
+        gadgetJpaRepository.save(GadgetEntity(brawlStarsId = 23_000_255L, brawlerBrawlStarsId = 16_000_000L))
+        gadgetJpaRepository.save(
+            GadgetEntity(brawlStarsId = 23_000_256L, brawlerBrawlStarsId = 16_000_000L).apply { delete(Clock.systemUTC()) },
+        )
+
+        // when
+        val result = sut.getBrawlerWithItems(BrawlStarsId(16_000_000L))
+
+        // then
+        assertThat(result.items.gears).extracting<Long> { it.id.value }.containsExactly(62_000_000L)
+        assertThat(result.items.gadgets).extracting<Long> { it.id.value }.containsExactly(23_000_255L)
     }
 
     private fun brawler(id: Long) =

@@ -4,5 +4,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.brawler.StarPowerEntity
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface StarPowerJpaRepository : JpaRepository<StarPowerEntity, Long> {
-    fun findAllByBrawlerBrawlStarsId(brawlerBrawlStarsId: Long): List<StarPowerEntity>
+    fun findAllByDeletedAtIsNull(): List<StarPowerEntity>
+
+    fun findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(brawlerBrawlStarsId: Long): List<StarPowerEntity>
 }

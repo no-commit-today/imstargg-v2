@@ -34,6 +34,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.repository.BrawlStarsImage
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 
 @Service
 @Transactional(readOnly = true)
@@ -49,6 +50,7 @@ class BrawlerService(
     private val imageJpaRepository: BrawlStarsImageJpaRepository,
     private val imageStorageService: ImageStorageService,
     private val cloudFrontProperties: CloudFrontProperties,
+    private val clock: Clock,
 ) {
     fun findAll(): List<BrawlerResponse> {
         val brawlers = brawlerJpaRepository.findAll().toList()
@@ -78,12 +80,12 @@ class BrawlerService(
     fun findDetail(brawlStarsId: Long): BrawlerDetailResponse? {
         val brawler = brawlerJpaRepository.findByBrawlStarsId(brawlStarsId) ?: return null
 
-        val starPowers = starPowerJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
-        val gadgets = gadgetJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
-        val hyperCharges = hyperChargeJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
-        val brawlerGears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
+        val starPowers = starPowerJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(brawlStarsId)
+        val gadgets = gadgetJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(brawlStarsId)
+        val hyperCharges = hyperChargeJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(brawlStarsId)
+        val brawlerGears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(brawlStarsId)
         val buffies = buffyJpaRepository.findAllByBrawlerBrawlStarsId(brawlStarsId)
-        val allGears = gearJpaRepository.findAll()
+        val allGears = gearJpaRepository.findAllByDeletedAtIsNull()
 
         val brawlerNameMessages =
             messageJpaRepository
@@ -312,15 +314,31 @@ class BrawlerService(
         doUpdateImage(BrawlStarsImageType.HYPERCHARGE, brawlStarsId, update)
     }
 
+    /**
+     * 연결 해제된 기어는 행을 지우지 않고 soft-delete 한다 — 브롤스타즈 API 가 게임에서 제거된 기어를
+     * 계속 응답하므로, 행을 지우면 `brawlerSyncJob` 이 매번 "기어 추가"로 감지한다.
+     * (브롤러, 기어) 유니크 인덱스 때문에 다시 연결할 때는 새 행 대신 기존 행을 복구한다.
+     */
     @Transactional
     fun updateBrawlerGears(
         brawlerBrawlStarsId: Long,
         gearBrawlStarsIds: Set<Long>,
     ) {
-        brawlerGearJpaRepository.deleteAllByBrawlerBrawlStarsId(brawlerBrawlStarsId)
-        brawlerGearJpaRepository.flush()
+        val existingByGearId =
+            brawlerGearJpaRepository
+                .findAllByBrawlerBrawlStarsId(brawlerBrawlStarsId)
+                .associateBy { it.gearBrawlStarsId }
+
+        existingByGearId.values
+            .filter { it.gearBrawlStarsId !in gearBrawlStarsIds && !it.isDeleted }
+            .forEach { it.delete(clock) }
         gearBrawlStarsIds.forEach { gearId ->
-            brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId, gearId))
+            val existing = existingByGearId[gearId]
+            if (existing == null) {
+                brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId, gearId))
+            } else if (existing.isDeleted) {
+                existing.restore()
+            }
         }
     }
 

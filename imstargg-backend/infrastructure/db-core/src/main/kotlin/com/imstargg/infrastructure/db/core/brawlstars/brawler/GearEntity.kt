@@ -1,7 +1,7 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
 import com.imstargg.core.enums.GearRarity
-import com.imstargg.infrastructure.db.core.BaseTimeEntity
+import com.imstargg.infrastructure.db.core.BaseSoftDeleteEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -25,7 +25,7 @@ class GearEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "rarity", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val rarity: GearRarity,
-) : BaseTimeEntity() {
+) : BaseSoftDeleteEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "gear_id")

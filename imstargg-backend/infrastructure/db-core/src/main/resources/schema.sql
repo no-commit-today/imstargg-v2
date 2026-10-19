@@ -376,7 +376,8 @@ create table if not exists battle_event
     battle_event_mode_id bigint       null,
     map_name             varchar(105) null,
     created_at           timestamptz  not null default now(),
-    updated_at           timestamptz  not null default now()
+    updated_at           timestamptz  not null default now(),
+    deleted_at           timestamptz  null
 );
 create unique index if not exists uk_battle_event__brawlstarsid on battle_event (brawlstars_id);
 
@@ -546,7 +547,8 @@ create table if not exists brawler
     rarity            varchar(45)  not null,
     role              varchar(45)  not null,
     created_at        timestamptz  not null default now(),
-    updated_at        timestamptz  not null default now()
+    updated_at        timestamptz  not null default now(),
+    deleted_at        timestamptz  null
 );
 create unique index if not exists uk_brawler__brawlstarsid on brawler (brawlstars_id);
 
@@ -557,7 +559,8 @@ create table if not exists brawler_gear
     brawler_brawlstars_id bigint       not null,
     gear_brawlstars_id    bigint       not null,
     created_at            timestamptz  not null default now(),
-    updated_at            timestamptz  not null default now()
+    updated_at            timestamptz  not null default now(),
+    deleted_at            timestamptz  null
 );
 create unique index if not exists uk_brawlergear__brawlerbrawlstarsid_gearbrawlstarsid on brawler_gear (brawler_brawlstars_id, gear_brawlstars_id);
 
@@ -568,7 +571,8 @@ create table if not exists gadget
     brawlstars_id         bigint       not null,
     brawler_brawlstars_id bigint       not null,
     created_at            timestamptz  not null default now(),
-    updated_at            timestamptz  not null default now()
+    updated_at            timestamptz  not null default now(),
+    deleted_at            timestamptz  null
 );
 create unique index if not exists uk_gadget__brawlstarsid on gadget (brawlstars_id);
 
@@ -579,7 +583,8 @@ create table if not exists gear
     brawlstars_id     bigint       not null,
     rarity            varchar(45)  not null,
     created_at        timestamptz  not null default now(),
-    updated_at        timestamptz  not null default now()
+    updated_at        timestamptz  not null default now(),
+    deleted_at        timestamptz  null
 );
 create unique index if not exists uk_gear__brawlstarsid on gear (brawlstars_id);
 
@@ -590,7 +595,8 @@ create table if not exists hyper_charge
     brawlstars_id         bigint       not null,
     brawler_brawlstars_id bigint       not null,
     created_at            timestamptz  not null default now(),
-    updated_at            timestamptz  not null default now()
+    updated_at            timestamptz  not null default now(),
+    deleted_at            timestamptz  null
 );
 create unique index if not exists uk_hypercharge__brawlstarsid on hyper_charge (brawlstars_id);
 
@@ -601,7 +607,8 @@ create table if not exists star_power
     brawlstars_id         bigint       not null,
     brawler_brawlstars_id bigint       not null,
     created_at            timestamptz  not null default now(),
-    updated_at            timestamptz  not null default now()
+    updated_at            timestamptz  not null default now(),
+    deleted_at            timestamptz  null
 );
 create unique index if not exists uk_starpower__brawlstarsid on star_power (brawlstars_id);
 

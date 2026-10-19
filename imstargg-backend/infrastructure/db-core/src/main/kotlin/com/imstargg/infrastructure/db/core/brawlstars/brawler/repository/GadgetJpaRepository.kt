@@ -4,5 +4,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.brawler.GadgetEntity
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface GadgetJpaRepository : JpaRepository<GadgetEntity, Long> {
-    fun findAllByBrawlerBrawlStarsId(brawlerBrawlStarsId: Long): List<GadgetEntity>
+    fun findAllByDeletedAtIsNull(): List<GadgetEntity>
+
+    fun findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(brawlerBrawlStarsId: Long): List<GadgetEntity>
 }

@@ -7,6 +7,7 @@ import com.imstargg.core.enums.BrawlerRarity
 import com.imstargg.core.enums.BrawlerRole
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
+import com.imstargg.infrastructure.db.core.brawlstars.brawler.BrawlerGearEntity
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerGearJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.BrawlerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
@@ -79,7 +80,7 @@ class BrawlerServiceTest
             sut.createStarPower(brawlerBrawlStarsId = 16000000L, request = request)
 
             // then
-            assertThat(starPowerJpaRepository.findAllByBrawlerBrawlStarsId(16000000L)).hasSize(1)
+            assertThat(starPowerJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(16000000L)).hasSize(1)
             val names =
                 messageJpaRepository
                     .findAllByTypeAndBrawlStarsIdIn(MessageType.STARPOWER_NAME, listOf(23000100L))
@@ -109,8 +110,8 @@ class BrawlerServiceTest
             sut.createHyperCharge(brawlerBrawlStarsId = 16000000L, request = hyperChargeRequest)
 
             // then
-            assertThat(gadgetJpaRepository.findAllByBrawlerBrawlStarsId(16000000L)).hasSize(1)
-            assertThat(hyperChargeJpaRepository.findAllByBrawlerBrawlStarsId(16000000L)).hasSize(1)
+            assertThat(gadgetJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(16000000L)).hasSize(1)
+            assertThat(hyperChargeJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(16000000L)).hasSize(1)
             val gadgetNames =
                 messageJpaRepository
                     .findAllByTypeAndBrawlStarsIdIn(MessageType.GADGET_NAME, listOf(23000200L))
@@ -132,9 +133,41 @@ class BrawlerServiceTest
             sut.createStarPower(brawlerBrawlStarsId = 16000000L, request = request)
 
             // then
-            assertThat(starPowerJpaRepository.findAllByBrawlerBrawlStarsId(16000000L)).hasSize(1)
+            assertThat(starPowerJpaRepository.findAllByBrawlerBrawlStarsIdAndDeletedAtIsNull(16000000L)).hasSize(1)
             assertThat(
                 messageJpaRepository.findAllByTypeAndBrawlStarsIdIn(MessageType.STARPOWER_NAME, listOf(23000400L)),
             ).isEmpty()
+        }
+
+        @Test
+        fun `기어 연결을 해제하면 행을 지우지 않고 soft-delete 한다`() {
+            // given
+            brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId = 16000000L, gearBrawlStarsId = 62000000L))
+            brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId = 16000000L, gearBrawlStarsId = 62000001L))
+
+            // when
+            sut.updateBrawlerGears(brawlerBrawlStarsId = 16000000L, gearBrawlStarsIds = setOf(62000000L, 62000002L))
+
+            // then
+            val gears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsId(16000000L).associateBy { it.gearBrawlStarsId }
+            assertThat(gears.keys).containsExactlyInAnyOrder(62000000L, 62000001L, 62000002L)
+            assertThat(gears.getValue(62000000L).isDeleted).isFalse()
+            assertThat(gears.getValue(62000001L).isDeleted).isTrue()
+            assertThat(gears.getValue(62000002L).isDeleted).isFalse()
+        }
+
+        @Test
+        fun `soft-delete 된 기어를 다시 연결하면 기존 행을 복구한다`() {
+            // given
+            brawlerGearJpaRepository.save(BrawlerGearEntity(brawlerBrawlStarsId = 16000000L, gearBrawlStarsId = 62000000L))
+            sut.updateBrawlerGears(brawlerBrawlStarsId = 16000000L, gearBrawlStarsIds = emptySet())
+
+            // when
+            sut.updateBrawlerGears(brawlerBrawlStarsId = 16000000L, gearBrawlStarsIds = setOf(62000000L))
+
+            // then
+            val gears = brawlerGearJpaRepository.findAllByBrawlerBrawlStarsId(16000000L)
+            assertThat(gears).hasSize(1)
+            assertThat(gears[0].isDeleted).isFalse()
         }
     }

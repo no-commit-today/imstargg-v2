@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.brawlstars.brawler
 
-import com.imstargg.infrastructure.db.core.BaseTimeEntity
+import com.imstargg.infrastructure.db.core.BaseSoftDeleteEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -25,7 +25,7 @@ class BrawlerGearEntity(
     val brawlerBrawlStarsId: Long,
     @Column(name = "gear_brawlstars_id", updatable = false, nullable = false)
     val gearBrawlStarsId: Long,
-) : BaseTimeEntity() {
+) : BaseSoftDeleteEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_gear_id")

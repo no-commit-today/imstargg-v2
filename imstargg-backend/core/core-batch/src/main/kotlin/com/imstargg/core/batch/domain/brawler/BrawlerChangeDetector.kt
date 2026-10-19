@@ -5,6 +5,9 @@ package com.imstargg.core.batch.domain.brawler
  *
  * 신규/삭제 브롤러는 하위 항목 변경을 따로 방출하지 않는다 —
  * 신규는 모든 항목이 새 항목이라 자명하고(알림에 브롤러 전체가 담김), 삭제는 브롤러 자체가 사라지므로 노이즈다.
+ *
+ * soft-delete 된 브롤러/항목은 API 응답 여부와 무관하게 아무 변경도 방출하지 않는다 —
+ * 게임에서 제거됐는데 API 가 계속 응답하는 항목(예: 브롤러별 기어)이 매번 "추가"로 감지되는 것을 막는다.
  */
 class BrawlerChangeDetector {
     fun detect(
@@ -15,7 +18,7 @@ class BrawlerChangeDetector {
 
         val addedBrawlers =
             apiBrawlers
-                .filter { it.id !in stored.brawlerIds }
+                .filter { it.id !in stored.brawlerIds && it.id !in stored.deletedBrawlerIds }
                 .map { BrawlerChange.BrawlerAdded(brawlerId = it.id, brawlerName = it.name) }
         val removedBrawlers =
             (stored.brawlerIds - apiIds)
@@ -23,7 +26,13 @@ class BrawlerChangeDetector {
         val itemChanges =
             apiBrawlers
                 .filter { it.id in stored.brawlerIds }
-                .flatMap { detectItemChanges(it, stored.itemIds[it.id].orEmpty()) }
+                .flatMap {
+                    detectItemChanges(
+                        brawler = it,
+                        storedItemIds = stored.itemIds[it.id].orEmpty(),
+                        deletedItemIds = stored.deletedItemIds[it.id].orEmpty(),
+                    )
+                }
 
         return addedBrawlers + removedBrawlers + itemChanges
     }
@@ -31,15 +40,17 @@ class BrawlerChangeDetector {
     private fun detectItemChanges(
         brawler: BrawlerSnapshot,
         storedItemIds: Map<BrawlerItemType, Set<Long>>,
+        deletedItemIds: Map<BrawlerItemType, Set<Long>>,
     ): List<BrawlerChange> =
         BrawlerItemType.entries.flatMap { itemType ->
             val apiItems = brawler.items[itemType].orEmpty()
             val apiItemIds = apiItems.map { it.id }.toSet()
             val dbItemIds = storedItemIds[itemType].orEmpty()
+            val dbDeletedItemIds = deletedItemIds[itemType].orEmpty()
 
             val addedItems =
                 apiItems
-                    .filter { it.id !in dbItemIds }
+                    .filter { it.id !in dbItemIds && it.id !in dbDeletedItemIds }
                     .map {
                         BrawlerChange.ItemAdded(
                             brawlerId = brawler.id,

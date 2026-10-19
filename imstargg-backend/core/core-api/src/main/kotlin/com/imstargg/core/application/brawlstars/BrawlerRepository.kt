@@ -70,13 +70,17 @@ class BrawlerRepository(
         }
     }
 
+    /**
+     * 하위 항목(가젯·스타파워·기어·하이퍼차지)은 게임에서 제거된(soft-delete) 항목을 제외한다.
+     * 브롤러 자체는 과거 전투 표시를 위해 삭제 여부와 무관하게 포함한다 ([findAll] 과 동일).
+     */
     fun findAllBrawlerItems(): Map<BrawlStarsId, BrawlerItems> {
         val brawlerEntities = brawlerJpaRepository.findAll().toList()
-        val gadgetEntities = gadgetJpaRepository.findAll().toList()
-        val starPowerEntities = starPowerJpaRepository.findAll().toList()
-        val gearEntities = gearJpaRepository.findAll().toList()
-        val hyperChargeEntities = hyperChargeJpaRepository.findAll().toList()
-        val brawlerGearEntities = brawlerGearJpaRepository.findAll().toList()
+        val gadgetEntities = gadgetJpaRepository.findAllByDeletedAtIsNull()
+        val starPowerEntities = starPowerJpaRepository.findAllByDeletedAtIsNull()
+        val gearEntities = gearJpaRepository.findAllByDeletedAtIsNull()
+        val hyperChargeEntities = hyperChargeJpaRepository.findAllByDeletedAtIsNull()
+        val brawlerGearEntities = brawlerGearJpaRepository.findAllByDeletedAtIsNull()
 
         val brawlerIds = brawlerEntities.map { it.brawlStarsId }
         val gadgetIds = gadgetEntities.map { it.brawlStarsId }
