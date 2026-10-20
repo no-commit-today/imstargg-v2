@@ -522,9 +522,9 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 5: B-3 — bounded context 구조 명문화
 
 **Files:**
-- Modify: `imstargg-backend/CLAUDE.md` (### Key Patterns 섹션 바로 아래에 신규 h3 삽입)
+- Modify: `imstargg-backend/AGENTS.md` (### Key Patterns 섹션 바로 아래에 신규 h3 삽입)
 
-- [ ] **Step 1: `imstargg-backend/CLAUDE.md` 의 `### Cache Key Conventions` 제목 바로 위에 다음 섹션 삽입**
+- [ ] **Step 1: `imstargg-backend/AGENTS.md` 의 `### Cache Key Conventions` 제목 바로 위에 다음 섹션 삽입**
 
 ```markdown
 ### Bounded Context & 도메인 모델
@@ -538,7 +538,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - [ ] **Step 2: 커밋**
 
 ```bash
-git add imstargg-backend/CLAUDE.md
+git add imstargg-backend/AGENTS.md
 git commit -m "docs: bounded context 구조와 통합 판정 기준 명문화
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -1313,7 +1313,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 **Files:**
 - Create: `imstargg-backend/core/core-api/src/test/kotlin/com/imstargg/core/application/statistics/StatisticsCacheKeyTest.kt`
 - Modify: `imstargg-backend/core/core-api/src/main/kotlin/com/imstargg/core/application/statistics/BattleResultStatisticsRepositoryWithCache.kt` / `BattleRankStatisticsRepositoryWithCache.kt` (클래스 KDoc)
-- Modify: `imstargg-backend/CLAUDE.md` (Cache Key Conventions 에 한 줄)
+- Modify: `imstargg-backend/AGENTS.md` (Cache Key Conventions 에 한 줄)
 
 - [ ] **Step 1: 캐시 키 회귀 테스트 작성** — `StatisticsCacheKeyTest.kt` 신규 (단위 테스트 — kotlin-reflect 사용):
 
@@ -1401,7 +1401,7 @@ Expected: PASS. (FAIL 이면 스냅샷의 문자열을 소스의 실제 key 리�
  */
 ```
 
-- [ ] **Step 4: CLAUDE.md 의 `### Cache Key Conventions` 목록 끝에 추가**
+- [ ] **Step 4: AGENTS.md 의 `### Cache Key Conventions` 목록 끝에 추가**
 
 ```markdown
 - **키-파라미터 동기화**: `@Cacheable` 메서드의 파라미터 변경 시 key 표현식도 함께 갱신 — 누락·형식 변경은 `StatisticsCacheKeyTest` 가 검증

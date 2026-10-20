@@ -56,7 +56,7 @@
 
 ### 4.1 API
 
-> **경로 컨벤션**: `imstargg-backend/CLAUDE.md` 에 따라 ID 가 뒤따르지 않는 경로는 단수형. 따라서 `/v1/player/search`, `/v1/club/search`.
+> **경로 컨벤션**: `imstargg-backend/AGENTS.md` 에 따라 ID 가 뒤따르지 않는 경로는 단수형. 따라서 `/v1/player/search`, `/v1/club/search`.
 
 #### `GET /v1/player/search`
 

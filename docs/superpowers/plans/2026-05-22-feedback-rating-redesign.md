@@ -551,7 +551,7 @@ git commit -m "feat(core-api): /v1/feedback 요청 본문을 {rating, content}�
 **Files:**
 - Modify: `imstargg-backend/core/core-api/src/test/kotlin/com/imstargg/core/application/operation/FeedbackServiceTest.kt`
 
-`@TestConfiguration` 으로 `Clock.fixed(...)` 빈을 등록하고 `@Import` 로 가져오는 패턴 (CLAUDE.md: "시간: `Clock.fixed(...)` 주입"). 이메일 관련 테스트는 모두 제거.
+`@TestConfiguration` 으로 `Clock.fixed(...)` 빈을 등록하고 `@Import` 로 가져오는 패턴 (AGENTS.md: "시간: `Clock.fixed(...)` 주입"). 이메일 관련 테스트는 모두 제거.
 
 - [ ] **Step 1: 파일 전체 교체**
 

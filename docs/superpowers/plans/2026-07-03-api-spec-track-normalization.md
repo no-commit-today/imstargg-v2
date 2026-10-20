@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 모든 명령은 별도 표기 없으면 레포 루트 기준. Gradle 명령은 `imstargg-backend/` 에서 실행.
-- 파일당 1개 클래스 원칙 (imstargg-backend/CLAUDE.md).
+- 파일당 1개 클래스 원칙 (imstargg-backend/AGENTS.md).
 - snakeyaml 의존성은 버전 없이 선언: `implementation("org.yaml:snakeyaml")` — 버전은 Spring Boot BOM 이 관리.
 - 테스트 컨벤션: 메서드명 한글 백틱, `// given` `// when` `// then` 주석, AssertJ `assertThat`, 예외는 `catchThrowableOfType(Class, ThrowingCallable)` (Class 가 첫 인자), 타입 추론 사용, 시간은 `Clock.fixed` 주입, 외부 시스템(HTTP client·알림)만 MockK.
 - 인자 3개 이상 호출은 named arguments 사용.

@@ -23,7 +23,7 @@
 - **Create** `imstargg-backend/Dockerfile` — 단일 멀티스테이지 Dockerfile. `ARG GRADLE_MODULE` 로 빌드 대상 결정.
 - **Modify** `.github/workflows/deploy.yaml` — `build-jar` 잡 제거, `build-and-push` 를 in-image 빌드로 전환, `cleanup` 단순화.
 - **Delete** `imstargg-backend/core/{core-api,core-worker,core-batch,core-admin}/Dockerfile` — 단일 Dockerfile 로 대체.
-- **Modify** `imstargg-backend/CLAUDE.md` — 모듈 추가 시 Dockerfile COPY 목록 갱신 필요 메모 1줄.
+- **Modify** `imstargg-backend/AGENTS.md` — 모듈 추가 시 Dockerfile COPY 목록 갱신 필요 메모 1줄.
 
 ---
 
@@ -342,14 +342,14 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-## Task 3: 백엔드 CLAUDE.md 에 유지보수 메모 추가
+## Task 3: 백엔드 AGENTS.md 에 유지보수 메모 추가
 
 **Files:**
-- Modify: `imstargg-backend/CLAUDE.md`
+- Modify: `imstargg-backend/AGENTS.md`
 
 - [ ] **Step 1: `### Module Dependencies` 섹션 끝에 메모 1줄 추가**
 
-`imstargg-backend/CLAUDE.md` 의 `### Module Dependencies` 블록(불릿 목록) 맨 아래에 다음 줄을 추가:
+`imstargg-backend/AGENTS.md` 의 `### Module Dependencies` 블록(불릿 목록) 맨 아래에 다음 줄을 추가:
 
 ```markdown
 - **Docker 빌드**: 루트 `Dockerfile`(단일, `ARG GRADLE_MODULE`)이 세 앱을 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
@@ -358,7 +358,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 2: 커밋**
 
 ```bash
-git add imstargg-backend/CLAUDE.md
+git add imstargg-backend/AGENTS.md
 git commit -m "docs(backend): Dockerfile 모듈 목록 유지보수 메모 추가
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"

@@ -350,7 +350,7 @@ data class BrawlerResultStatistics(
  */
 ```
 
-### 7. `imstargg-backend/CLAUDE.md` 컨벤션 추가
+### 7. `imstargg-backend/AGENTS.md` 컨벤션 추가
 
 기존 "Code Organization" 섹션에 한 줄 추가:
 
@@ -385,7 +385,7 @@ data class BrawlerResultStatistics(
 | core-api | `BrawlerResultStatisticsResponse.kt`, Pair/Enemy 응답 | 필드명 유지, 의미 변경에 따른 KDoc/주석 |
 | core-api | `StatisticsQueryComposer.kt` | 필요 시 호출부만 정리 |
 | core-admin | `BattleEventModeController.kt`, request/response | `playerCounts` patch 엔드포인트 |
-| imstargg-backend | `CLAUDE.md` | KDoc 컨벤션 한 줄 |
+| imstargg-backend | `AGENTS.md` | KDoc 컨벤션 한 줄 |
 | imstargg-frontend | 통계 페이지 라벨/표시 | 타입 무변경, 의미 변화에 따라 라벨 검토 |
 
 배치(`core-batch`) 무변경. Rank 통계 무변경 (KDoc 추가 외).

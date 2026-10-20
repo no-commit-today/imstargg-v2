@@ -48,7 +48,7 @@
 - `imstargg-backend/core/core-admin/src/main/kotlin/com/imstargg/core/admin/application/BattleEventService.kt` — `updateModePlayerCounts(...)`
 - `imstargg-backend/core/core-admin/src/main/kotlin/com/imstargg/core/admin/controller/BattleEventModeController.kt` — PATCH 엔드포인트
 - `imstargg-backend/core/core-admin/src/main/kotlin/com/imstargg/core/admin/response/BattleEventModeResponse.kt` — playerCounts 필드
-- `imstargg-backend/CLAUDE.md` — KDoc 컨벤션 한 줄
+- `imstargg-backend/AGENTS.md` — KDoc 컨벤션 한 줄
 
 ---
 
@@ -1543,16 +1543,16 @@ git commit -m "feat(core-admin): add PUT /event-modes/{id}/player-counts endpoin
 
 ---
 
-## Phase 9 — CLAUDE.md 컨벤션
+## Phase 9 — AGENTS.md 컨벤션
 
-### Task 14: `imstargg-backend/CLAUDE.md` 에 KDoc 컨벤션 추가
+### Task 14: `imstargg-backend/AGENTS.md` 에 KDoc 컨벤션 추가
 
 **Files:**
-- Modify: `imstargg-backend/CLAUDE.md`
+- Modify: `imstargg-backend/AGENTS.md`
 
 - [ ] **Step 1: "Code Organization" 섹션에 항목 추가**
 
-[CLAUDE.md](imstargg-backend/CLAUDE.md) 의 `### Code Organization` 항목 마지막에 다음 줄 추가:
+[AGENTS.md](imstargg-backend/AGENTS.md) 의 `### Code Organization` 항목 마지막에 다음 줄 추가:
 
 ```markdown
 - **도메인 히스토리는 KDoc 으로 보존**: 엔티티/도메인 클래스가 갖는 비자명한 집계 규칙·정합성 제약·"왜 이렇게 안 했는지" 같은 결정은 클래스/메서드 KDoc 으로 남긴다. 향후 유사 변경을 시도하는 사람이 코드만 읽고도 의도를 알 수 있어야 한다. (예: `BrawlerBattleRankStatsEntity` 가 자기 팀만 집계하는 이유)
@@ -1561,7 +1561,7 @@ git commit -m "feat(core-admin): add PUT /event-modes/{id}/player-counts endpoin
 - [ ] **Step 2: 커밋**
 
 ```bash
-git add imstargg-backend/CLAUDE.md
+git add imstargg-backend/AGENTS.md
 git commit -m "docs: require KDoc for non-obvious domain history/constraints"
 ```
 
@@ -1644,7 +1644,7 @@ git log --oneline main..HEAD
 | §4.6 Pair / Enemy 동일 적용 | Task 10 |
 | §5 Response 필드 의미 정정 (이름 유지) | Task 10 |
 | §6 KDoc 통계 엔티티 / 모드 / StatsRate | Task 2, 11, 12 |
-| §7 CLAUDE.md 컨벤션 | Task 14 |
+| §7 AGENTS.md 컨벤션 | Task 14 |
 | § 캐시 무효화 불필요 | Task 13 (별도 invalidate 없음 확인) |
 | § Rank 통계 무변경 | Task 12 (KDoc만 추가 — 행동 변경 없음) |
 

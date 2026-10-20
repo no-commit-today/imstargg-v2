@@ -23,7 +23,7 @@
   1. playwright로 해당 URL 접속
   2. `browser_resize` 1280×800(데스크탑) / 390×844(모바일)
   3. `browser_take_screenshot` 후 이미지 확인 — 잘림/2줄깨짐/레이아웃 깨짐 없는지 육안 확인
-- 테스트 원칙(프론트 CLAUDE.md): 단위 테스트는 **순수 함수만**(`lib/`, `domain/*/mappers`). 컴포넌트/CSS/레이아웃은 단위 테스트하지 않고 **시각 검증**으로 대체한다.
+- 테스트 원칙(프론트 AGENTS.md): 단위 테스트는 **순수 함수만**(`lib/`, `domain/*/mappers`). 컴포넌트/CSS/레이아웃은 단위 테스트하지 않고 **시각 검증**으로 대체한다.
 
 ## File Structure
 

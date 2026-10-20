@@ -119,7 +119,7 @@
 
 1. **빌드 검증**: `pnpm build` 후 라우트 테이블 + `.next/prerender-manifest.json` 으로 성공 기준 1·2 확인. 생성 HTML `<head>` 에서 기준 3(외부 폰트 0건, preload 존재) 확인.
 2. **동작 검증**: dev 서버에서 브롤러/이벤트 상세의 필터 변경 시 네트워크 패널로 기준 4 확인(RSC 페이로드 요청 없음). 딥링크 진입, 기본값 복귀, 뒤로가기 동작 확인.
-3. **테스트**: `pnpm typecheck` / `pnpm lint` / `pnpm test:run`. 신규 유닛 테스트 — 필터 파서·shallow URL 동기화 유틸(순수 함수), 신규 훅(MSW 네트워크 경계 모킹, CLAUDE.md 테스트 원칙 준수).
+3. **테스트**: `pnpm typecheck` / `pnpm lint` / `pnpm test:run`. 신규 유닛 테스트 — 필터 파서·shallow URL 동기화 유틸(순수 함수), 신규 훅(MSW 네트워크 경계 모킹, AGENTS.md 테스트 원칙 준수).
 4. **시각 검증**: playwright MCP 로 데스크탑 1280×800 / 모바일 390×844 스크린샷 — 브롤러 상세(차트 lazy 포함), 플레이어 상세(스켈레톤→콘텐츠), 폰트 적용 페이지 전반. issue #49 플랜의 시각 검증 절차 재사용.
 5. **E2E 스위트는 실행하지 않는다** — prod API 에 실제 갱신(POST)을 트리거하기 때문. 배포 후 기존 운영 절차로 확인.
 

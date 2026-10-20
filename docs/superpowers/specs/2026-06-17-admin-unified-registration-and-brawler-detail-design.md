@@ -183,7 +183,7 @@ data class BattleEventModeCreateRequest(
 - `lib/api/...` — `createBrawler/createGear/createEvent/createEventMode` 요청 타입 확장 + 등록 후 이미지 업로드 순차 호출
 - `lib/types.ts` — 요청 타입 확장
 
-> CLAUDE.md 규칙: 백엔드 API 스펙 변경이므로 `core-admin` ↔ `imstargg-admin-frontend` 동기화 필수(본 설계에 포함됨). DB 변경은 없음(엔티티/스키마 무변경 — 기존 테이블에 저장).
+> AGENTS.md 규칙: 백엔드 API 스펙 변경이므로 `core-admin` ↔ `imstargg-admin-frontend` 동기화 필수(본 설계에 포함됨). DB 변경은 없음(엔티티/스키마 무변경 — 기존 테이블에 저장).
 
 ## 가정 / 미해결
 

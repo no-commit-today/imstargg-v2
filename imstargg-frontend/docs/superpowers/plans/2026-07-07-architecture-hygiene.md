@@ -42,7 +42,7 @@
 | 1 | `"use client"` 파일에서 `@/api/endpoints` 직접 import 0건(`src/hooks/**` 제외) | grep |
 | 2 | `useQuery`/`useInfiniteQuery` 인라인 queryKey 배열 리터럴 0건 + ESLint 룰로 차단 | grep + lint |
 | 3 | knip 미사용 파일 0 + `knip.json` 예외(shadcn 배럴·DTO 타입·pretendard·eslint-config-next) 명시 | `pnpm dlx knip` |
-| 4 | `responsive.css` 죽은 셀렉터 제거 + DESIGN.md·CLAUDE.md 현행화 | 육안 + grep |
+| 4 | `responsive.css` 죽은 셀렉터 제거 + DESIGN.md·AGENTS.md 현행화 | 육안 + grep |
 | 5 | error.tsx 4벌·NotFoundView 2벌 → 공통 1벌, 루트 `error.tsx`/`global-error.tsx` 존재, 사용자 노출 문구에 내부 API 경로 0건 | grep |
 | 6 | typecheck / lint / test:run 통과 + 주요 페이지 시각 회귀 없음(1280/390) | 명령 + playwright |
 
@@ -63,7 +63,7 @@
 - `knip.json`
 - 테스트: `tests/unit/hooks/useDebouncedValue.test.ts`, `tests/components/SearchResults.test.tsx`, `tests/components/NotFoundView.test.tsx`
 
-**수정**: `SearchableInput.tsx`, `PlayerSearchInput.tsx`/`ClubSearchInput.tsx`, `BrawlerRankingTab.tsx`, `usePlayerStatistics.ts` + `PlayerStatistics.tsx`, `HomeScreen.tsx`, `useRenewal.ts`, `RenewalButton.tsx`/`RenewalStatus.tsx`, `BattleList.tsx`, `format.ts`, `sitemap.ts`, 각종 훅 staleTime, URL 사용처(~21곳), `eslint.config.mjs`, `app/styles/responsive.css`, `DESIGN.md`, `CLAUDE.md`, `package.json`
+**수정**: `SearchableInput.tsx`, `PlayerSearchInput.tsx`/`ClubSearchInput.tsx`, `BrawlerRankingTab.tsx`, `usePlayerStatistics.ts` + `PlayerStatistics.tsx`, `HomeScreen.tsx`, `useRenewal.ts`, `RenewalButton.tsx`/`RenewalStatus.tsx`, `BattleList.tsx`, `format.ts`, `sitemap.ts`, 각종 훅 staleTime, URL 사용처(~21곳), `eslint.config.mjs`, `app/styles/responsive.css`, `DESIGN.md`, `AGENTS.md`, `package.json`
 
 **삭제**: 6개 미사용 파일, `app/players/[tag]/not-found.tsx`, `app/clubs/[tag]/not-found.tsx`, `format.ts` 의 `formatRelativeTime`/`formatMinutesAgo`, `PlayerNotFoundView.tsx`/`ClubNotFoundView.tsx`(공통으로 대체), 개별 error.tsx 본문(re-export 로 축소)
 
@@ -149,7 +149,7 @@ git add -A imstargg-frontend && git commit -m "refactor(frontend): 중복 format
 
 ## Task 3: responsive.css 죽은 셀렉터 제거 + 문서 현행화
 
-**Files:** `app/styles/responsive.css`, `DESIGN.md`, `CLAUDE.md`(있다면 프론트)
+**Files:** `app/styles/responsive.css`, `DESIGN.md`, `AGENTS.md`(있다면 프론트)
 
 - [ ] **Step 1: 매칭 대상 부재 확인** — `responsive.css` 의 `[style*="grid-template-columns..."]` 계열 셀렉터 각각에 대해, 현재 TSX 에 대응 인라인 스타일이 없음을 grep 으로 확인한다:
 ```bash
@@ -234,7 +234,7 @@ git rm "imstargg-frontend/app/players/[tag]/_components/PlayerNotFoundView.tsx" 
        "imstargg-frontend/app/clubs/[tag]/not-found.tsx"
 ```
 
-- [ ] **Step 4: CLAUDE.md 한 줄 추가** — 인라인 NotFoundView 반환이 의도된 설계(미동기 플레이어 갱신 유도, HTTP 200 + noindex)라 `notFound()`/`not-found.tsx` 를 쓰지 않는다는 주석.
+- [ ] **Step 4: AGENTS.md 한 줄 추가** — 인라인 NotFoundView 반환이 의도된 설계(미동기 플레이어 갱신 유도, HTTP 200 + noindex)라 `notFound()`/`not-found.tsx` 를 쓰지 않는다는 주석.
 
 - [ ] **Step 5: 검증 + 커밋** (typecheck/test + `grep -rn "PlayerNotFoundView\|ClubNotFoundView" imstargg-frontend` → 0)
 ```bash
@@ -483,11 +483,11 @@ git add -A imstargg-frontend && git commit -m "refactor(frontend): 캐시 매직
 
 ---
 
-## Task 13: 규칙 강제 (CLAUDE.md + ESLint 인라인 queryKey 금지)
+## Task 13: 규칙 강제 (AGENTS.md + ESLint 인라인 queryKey 금지)
 
-**Files:** `imstargg-frontend/CLAUDE.md`, `eslint.config.mjs`
+**Files:** `imstargg-frontend/AGENTS.md`, `eslint.config.mjs`
 
-- [ ] **Step 1: CLAUDE.md 레이어 규칙 분리 명시** — "RSC(page.tsx 등 서버 컴포넌트)는 endpoint 객체 직접 호출 허용 / `"use client"` 컴포넌트는 반드시 `src/hooks/` 훅 경유" + "mapper 호출 위치는 훅 내부가 기본" 가이드 추가.
+- [ ] **Step 1: AGENTS.md 레이어 규칙 분리 명시** — "RSC(page.tsx 등 서버 컴포넌트)는 endpoint 객체 직접 호출 허용 / `"use client"` 컴포넌트는 반드시 `src/hooks/` 훅 경유" + "mapper 호출 위치는 훅 내부가 기본" 가이드 추가.
 
 - [ ] **Step 2: ESLint `no-restricted-syntax` 룰** — `eslint.config.mjs` 의 `defineConfig([...])` 에 규칙 객체 추가:
 ```js

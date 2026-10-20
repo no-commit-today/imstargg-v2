@@ -59,7 +59,7 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 
 1. core-api `domain` 패키지의 Spring Data 의존 제거 (§4 B-1)
 2. 리포지토리로 샌 도메인 로직 회수 (§4 A-3)
-3. bounded context 구조 명문화 — `imstargg-backend/CLAUDE.md`에 "core-api domain = read 컨텍스트,
+3. bounded context 구조 명문화 — `imstargg-backend/AGENTS.md`에 "core-api domain = read 컨텍스트,
    core-worker domain = 수집 write 컨텍스트(엔티티 기반이 의도된 설계)"를 기록해 향후 혼동 방지
 
 ## 4. 구현 백로그
@@ -92,7 +92,7 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 - 수정: 생성 시 `associateBy { it.id }`로 인덱스 보유. 동작 불변.
 
 **B-3. bounded context 구조 명문화**
-- §3 실행 항목 3의 구체화: `imstargg-backend/CLAUDE.md`에 core-api domain(read 컨텍스트)과
+- §3 실행 항목 3의 구체화: `imstargg-backend/AGENTS.md`에 core-api domain(read 컨텍스트)과
   core-worker domain(수집 write 컨텍스트, 엔티티 기반이 의도된 설계)의 관계를 기록.
 
 ### Phase 2 — statistics 유지보수성 (A-3, S-1~S-6)
@@ -143,7 +143,7 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 
 **S-3. 캐시 키 드리프트 가드 — 값 객체 도입 없이 (재검토로 축소)**
 - 판정: 전 계층 공용 `StatsQuery` 값 객체는 일부 조회에만 유효한 널러블 필드가 쌓이는 그랩백이
-  되기 쉬움(잘못된 조합이 표현 가능한 타입). 명시적 SpEL 키는 greppable하고 CLAUDE.md의
+  되기 쉬움(잘못된 조합이 표현 가능한 타입). 명시적 SpEL 키는 greppable하고 AGENTS.md의
   메서드별 키 컨벤션과도 일치 — 시그니처·키 구조는 현행 유지.
 - 수정: (1) WithCache 캐시 키 문자열 회귀 테스트(S-6에 포함)로 키-파라미터 대응을 고정,
   (2) 각 `@Cacheable` 키 옆에 "파라미터 추가 시 키 갱신 필수" 경고 주석.
@@ -264,6 +264,6 @@ statistics 도메인은 사용자 요청으로 유지보수성 관점의 추가 
 2. `domain` 패키지에 Spring 프레임워크 import가 남지 않음 (core-api 기준)
 3. 기존 전체 테스트 스위트(`unitTest`, `contextTest`)와 ktlint 통과
 4. API 응답 스키마 변화 없음 (프론트엔드 무수정)
-5. backend CLAUDE.md에 bounded context 구조가 명문화됨
+5. backend AGENTS.md에 bounded context 구조가 명문화됨
 6. statistics 도메인에서 "조회·매핑은 리포지토리, 계산·집계는 도메인" 규칙이 성립 —
    순위형 포함 모든 통계 계산이 도메인 `create()`에 있고 단위 테스트로 커버됨

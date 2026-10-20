@@ -39,7 +39,7 @@ ownership 잡은 이미 다음과 같이 분리되어 있다. 통계 5개 잡도
 | `brawlerPairBattleRankStatsJob` | Weekly-Event | `BrawlerPairBattleRankStatsAggregator(start, end)` | `StatsRankBattleEntity` | `BrawlerPairBattleRankStatsEntity` |
 | `brawlerEnemyBattleResultStatsJob` | Weekly-Event | `BrawlerEnemyBattleResultStatsAggregator(start, end)` | `StatsResultBattleEntity` | `BrawlerEnemyBattleResultStatsEntity` |
 
-### 코드 컨벤션 (imstargg-backend/CLAUDE.md)
+### 코드 컨벤션 (imstargg-backend/AGENTS.md)
 
 - **파일당 1개 클래스**
 - **테스트 베이스**: `DbCoreContextTest` (`@DataJpaTest`) Repository/Writer 테스트, 단위 테스트는 베이스 없음

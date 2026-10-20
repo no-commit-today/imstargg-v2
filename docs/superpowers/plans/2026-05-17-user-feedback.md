@@ -10,7 +10,7 @@
 
 **Spec reference:** `docs/superpowers/specs/2026-05-17-user-feedback-design.md`
 
-**Conventions reminder (from imstargg-backend/CLAUDE.md):**
+**Conventions reminder (from imstargg-backend/AGENTS.md):**
 - File-per-class
 - BaseEntity → use `BaseTimeEntity` (createdAt/updatedAt only; no `deleted` for this feature)
 - No `@OneToMany`; domain ID references only
@@ -1476,7 +1476,7 @@ object FeedbackDigestMessage {
 }
 ```
 
-(If the project prefers one-class-per-file: split `FeedbackDigest` into its own file `FeedbackDigest.kt` and keep `FeedbackDigestMessage.kt` for the object only. Do split — CLAUDE.md mandates one class per file.)
+(If the project prefers one-class-per-file: split `FeedbackDigest` into its own file `FeedbackDigest.kt` and keep `FeedbackDigestMessage.kt` for the object only. Do split — AGENTS.md mandates one class per file.)
 
 After splitting:
 
