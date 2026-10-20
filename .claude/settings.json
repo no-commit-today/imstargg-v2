@@ -1,3 +1,9 @@
 {
-  "enabledPlugins": {}
+  "enabledPlugins": {},
+  "permissions": {
+    "deny": [
+      "Read(//**/imstargg-tools/.secrets/**)",
+      "Edit(//**/imstargg-tools/.secrets/**)"
+    ]
+  }
 }

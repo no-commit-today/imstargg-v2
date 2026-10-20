@@ -27,7 +27,8 @@ imstargg-v2/
 │       ├── core-worker         # 백그라운드 워커 (배틀/플레이어 동기화 등)
 │       └── core-batch          # 배치 작업 (스케줄링/집계 등)
 ├── imstargg-frontend/          # Next.js + TypeScript — core-api 클라이언트
-└── imstargg-admin-frontend/    # Next.js + TypeScript — core-admin 클라이언트
+├── imstargg-admin-frontend/    # Next.js + TypeScript — core-admin 클라이언트
+└── imstargg-tools/            # 에이전트용 도구 모음
 ```
 
 **API 변경 시 동기화**: 백엔드 API 스펙(요청/응답 DTO, 경로, 상태코드 등)이 변경되면 대응되는 프론트엔드에 반드시 반영
@@ -57,3 +58,4 @@ imstargg-v2/
 - `imstargg-backend/AGENTS.md` - 백엔드 빌드, 테스트, 아키텍처
 - `imstargg-frontend/AGENTS.md` - 사용자 프론트엔드 개발 가이드
 - `imstargg-admin-frontend/AGENTS.md` - 관리자 프론트엔드 개발 가이드
+- `imstargg-tools/AGENTS.md` - 에이전트용 도구 사용 지침

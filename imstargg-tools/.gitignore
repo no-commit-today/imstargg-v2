@@ -1,0 +1,2 @@
+# User-managed credentials; agents must not read this directory.
+.secrets/

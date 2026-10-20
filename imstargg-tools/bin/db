@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    printf '%s\n' '사용법: imstargg-tools/bin/db <서비스 이름> [psql 옵션]' \
+        '예: imstargg-tools/bin/db live -c "SELECT 1;"'
+}
+
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    '') usage >&2; exit 2 ;;
+    *[!a-zA-Z0-9_-]*) printf '%s\n' '서비스 이름에는 영문, 숫자, _, -만 사용할 수 있습니다.' >&2; exit 2 ;;
+esac
+service=$1
+shift
+
+tools_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+export PGSERVICEFILE="$tools_dir/.secrets/pg_service.conf"
+export PGPASSFILE="$tools_dir/.secrets/pgpass"
+unset PGPASSWORD PGSERVICE
+
+if [ ! -r "$PGSERVICEFILE" ] || [ ! -r "$PGPASSFILE" ]; then
+    printf '%s\n' '로컬 DB 설정이 필요합니다. imstargg-tools/README.md의 사용자 설정 절차를 따르세요.' >&2
+    exit 1
+fi
+
+psql_bin=$(command -v psql || true)
+if [ -z "$psql_bin" ] && command -v brew >/dev/null 2>&1; then
+    libpq_prefix=$(brew --prefix libpq 2>/dev/null || true)
+    if [ -n "$libpq_prefix" ] && [ -x "$libpq_prefix/bin/psql" ]; then
+        psql_bin="$libpq_prefix/bin/psql"
+    fi
+fi
+if [ -z "$psql_bin" ]; then
+    printf '%s\n' 'psql이 필요합니다. macOS에서는 brew install libpq로 설치하세요.' >&2
+    exit 127
+fi
+
+# Let libpq read credentials; do not source, parse, or print the local files.
+exec "$psql_bin" -X -w -v ON_ERROR_STOP=1 --dbname "service=$service" "$@"

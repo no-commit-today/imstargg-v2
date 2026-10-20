@@ -34,10 +34,6 @@ This file provides guidance to coding agents working with code in this repositor
 ```bash
 # 로컬 인프라 실행 (PostgreSQL, Valkey(Redis 호환), floci(S3 에뮬레이터))
 docker-compose up -d
-
-# 로컬 DB 접속
-# URL: jdbc:postgresql://localhost:5432/imstargg
-# User: postgres / Password: secret
 ```
 
 ## Project Architecture

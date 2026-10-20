@@ -1,0 +1,3 @@
+# hostname:port:database:username:password
+# Add actual entries privately in .secrets/pgpass; do not paste them into chat.
+# Escape ':' and '\' in values with '\'. Use chmod 600 on this file.
