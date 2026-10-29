@@ -42,8 +42,9 @@ app:
   schedule:
     stats-battle:
       enabled: true
-      interval: 1s
-      player-count: 1
+      # 600ms 마다 5명 = 초당 약 8.3회 호출. 공용 레이트리미터(prod 초당 10회)를 갱신 요청과 나눠 쓴다
+      interval: 600ms
+      player-count: 5
     player-refresh:
       enabled: true
       interval: 60s

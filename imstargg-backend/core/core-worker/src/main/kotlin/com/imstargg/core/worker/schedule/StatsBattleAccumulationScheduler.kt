@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 class StatsBattleAccumulationScheduler(
     private val statsBattleAccumulationService: StatsBattleAccumulationService,
 ) {
-    @Scheduled(fixedDelayString = "\${app.schedule.stats-battle.interval}")
+    @Scheduled(fixedRateString = "\${app.schedule.stats-battle.interval}")
     fun accumulate() {
         statsBattleAccumulationService.accumulate()
     }
