@@ -186,7 +186,7 @@ ENTRYPOINT ["java", "-jar", "application.jar"]</code></pre>
 <h2>5. 리스크 &amp; 완화</h2>
 <table>
   <tr><th>리스크</th><th>완화</th></tr>
-  <tr><td>prefetch 모듈 목록 유지보수 (모듈 추가 시 Dockerfile COPY 누락 → deps 캐싱 깨짐/빌드 실패)</td><td>Dockerfile 주석 명시 + 백엔드 CLAUDE.md 에 한 줄 메모 제안</td></tr>
+  <tr><td>prefetch 모듈 목록 유지보수 (모듈 추가 시 Dockerfile COPY 누락 → deps 캐싱 깨짐/빌드 실패)</td><td>Dockerfile 주석 명시 + 백엔드 AGENTS.md 에 한 줄 메모 제안</td></tr>
   <tr><td>최초 빌드는 <code>actions/setup-java</code> gradle 캐시 부재로 느림</td><td>prefetch 레이어 + <code>type=gha</code> 로 2회차부터 회복. 빌드와 테스트(pr-test.yml)는 별개라 영향 한정</td></tr>
   <tr><td><code>find</code> 가 stale/복수 jar 매칭</td><td><code>.dockerignore</code> 로 호스트 <code>build/</code> 제외 + <code>-not -name '*-plain.jar'</code></td></tr>
   <tr><td><code>:module:dependencies</code> 가 전이 의존성을 충분히 워밍하지 못할 가능성</td><td>해당 모듈의 해석된 classpath 가 전이 external 의존성을 포함하므로 충분. 검증 단계에서 2회차 빌드 로그로 재다운로드 없음 확인</td></tr>

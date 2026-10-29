@@ -2881,10 +2881,10 @@ git status
 # clean이면 OK. 아니면 잔여 변경사항 정리 후 commit.
 ```
 
-### Task 13.2: `imstargg-frontend/CLAUDE.md` 업데이트
+### Task 13.2: `imstargg-frontend/AGENTS.md` 업데이트
 
 **Files:**
-- Modify: `imstargg-frontend/CLAUDE.md`
+- Modify: `imstargg-frontend/AGENTS.md`
 
 > 원칙: 꼭 필요한 내용만 간결하게. AGENTS.md(Next 16 경고)는 그대로 참조 유지.
 
@@ -2956,8 +2956,8 @@ app/  ──▶  src/hooks/  ──▶  src/api/   ──▶  외부 HTTP
 - [ ] **Step 2: 커밋**
 
 ```bash
-git add imstargg-frontend/CLAUDE.md
-git commit -m "docs(frontend): update CLAUDE.md with foundation conventions"
+git add imstargg-frontend/AGENTS.md
+git commit -m "docs(frontend): update AGENTS.md with foundation conventions"
 ```
 
 ---

@@ -73,29 +73,47 @@ class BrawlerSyncTask(
                 ),
         )
 
+    /**
+     * 삭제(soft-delete)된 행까지 모두 읽어 활성/삭제로 나눈다 — 삭제된 항목도 "이미 알고 있는 항목"이어야
+     * API 가 계속 응답하는 제거된 항목을 신규로 오인하지 않는다.
+     */
     private fun loadStoredBrawlers(): StoredBrawlers {
-        val brawlerIds = brawlerJpaRepository.findAll().map { it.brawlStarsId }.toSet()
-        val itemIdsByType =
-            mapOf(
-                BrawlerItemType.STAR_POWER to
-                    starPowerJpaRepository.findAll().groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
-                BrawlerItemType.GADGET to
-                    gadgetJpaRepository.findAll().groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
-                BrawlerItemType.HYPER_CHARGE to
-                    hyperChargeJpaRepository.findAll().groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
-                BrawlerItemType.GEAR to
-                    brawlerGearJpaRepository.findAll().groupBy({ it.brawlerBrawlStarsId }) { it.gearBrawlStarsId },
-            )
+        val (activeBrawlers, deletedBrawlers) = brawlerJpaRepository.findAll().partition { !it.isDeleted }
+        val (activeStarPowers, deletedStarPowers) = starPowerJpaRepository.findAll().partition { !it.isDeleted }
+        val (activeGadgets, deletedGadgets) = gadgetJpaRepository.findAll().partition { !it.isDeleted }
+        val (activeHyperCharges, deletedHyperCharges) = hyperChargeJpaRepository.findAll().partition { !it.isDeleted }
+        val (activeGears, deletedGears) = brawlerGearJpaRepository.findAll().partition { !it.isDeleted }
 
-        val itemIds =
-            itemIdsByType
-                .flatMap { (itemType, idsByBrawler) ->
-                    idsByBrawler.map { (brawlerId, ids) -> Triple(brawlerId, itemType, ids.toSet()) }
-                }.groupBy({ it.first }) { it.second to it.third }
-                .mapValues { (_, typeToIds) -> typeToIds.toMap() }
-
-        return StoredBrawlers(brawlerIds = brawlerIds, itemIds = itemIds)
+        return StoredBrawlers(
+            brawlerIds = activeBrawlers.map { it.brawlStarsId }.toSet(),
+            itemIds =
+                toItemIds(
+                    mapOf(
+                        BrawlerItemType.STAR_POWER to activeStarPowers.groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
+                        BrawlerItemType.GADGET to activeGadgets.groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
+                        BrawlerItemType.HYPER_CHARGE to activeHyperCharges.groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
+                        BrawlerItemType.GEAR to activeGears.groupBy({ it.brawlerBrawlStarsId }) { it.gearBrawlStarsId },
+                    ),
+                ),
+            deletedBrawlerIds = deletedBrawlers.map { it.brawlStarsId }.toSet(),
+            deletedItemIds =
+                toItemIds(
+                    mapOf(
+                        BrawlerItemType.STAR_POWER to deletedStarPowers.groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
+                        BrawlerItemType.GADGET to deletedGadgets.groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
+                        BrawlerItemType.HYPER_CHARGE to deletedHyperCharges.groupBy({ it.brawlerBrawlStarsId }) { it.brawlStarsId },
+                        BrawlerItemType.GEAR to deletedGears.groupBy({ it.brawlerBrawlStarsId }) { it.gearBrawlStarsId },
+                    ),
+                ),
+        )
     }
+
+    private fun toItemIds(itemIdsByType: Map<BrawlerItemType, Map<Long, List<Long>>>): Map<Long, Map<BrawlerItemType, Set<Long>>> =
+        itemIdsByType
+            .flatMap { (itemType, idsByBrawler) ->
+                idsByBrawler.map { (brawlerId, ids) -> Triple(brawlerId, itemType, ids.toSet()) }
+            }.groupBy({ it.first }) { it.second to it.third }
+            .mapValues { (_, typeToIds) -> typeToIds.toMap() }
 
     private fun alertAddedBrawlers(
         addedBrawlers: List<BrawlerChange.BrawlerAdded>,

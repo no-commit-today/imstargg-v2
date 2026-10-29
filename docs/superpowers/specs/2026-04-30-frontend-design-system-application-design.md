@@ -59,7 +59,7 @@
 
 #### `Trophy.tsx`
 - `import { fmtNum } from "@/lib/data"` → `import { formatNumber } from "@/lib/format"`. mock 의존 제거.
-- API 그대로(`{ value, size }`). 정적 `/assets/trophy.png` raw `<img>` 유지 (CLAUDE.md 정합).
+- API 그대로(`{ value, size }`). 정적 `/assets/trophy.png` raw `<img>` 유지 (AGENTS.md 정합).
 
 #### `ClassIcon.tsx`
 - `cls: ClassKey` (mock) → `role: BrawlerRole` (도메인) 로 시그니처 변경.
@@ -98,7 +98,7 @@
 | 랭킹 | `/assets/trophy.png` | |
 | 클럽 | `/assets/club_league.png` | |
 
-- 정적 `/assets/*` 자산은 raw `<img width={20} height={20} alt="">` (CLAUDE.md 정합).
+- 정적 `/assets/*` 자산은 raw `<img width={20} height={20} alt="">` (AGENTS.md 정합).
 - 액티브 시 옐로우 텍스트는 그대로. 액티브 아이콘은 그대로(투명도 변화 없음).
 - Calendar 아이콘은 `Calendar` (`lucide-react`) `size={20}`, `strokeWidth={2.25}`.
 

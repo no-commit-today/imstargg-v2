@@ -126,7 +126,7 @@ group by tp.brawler.brawlStarsId, b.result</code></pre>
 <p>이 모듈의 첫 Kotlin 코드. <code>StringRedisTemplate</code> + Jackson <code>ObjectMapper</code>(Kotlin module) 기반. 값은 primitive DTO 를 JSON 문자열로 직렬화해 hash field 값으로 저장(다형성 타이핑 회피 → 역직렬화 견고).</p>
 <table>
   <tr><th>요소</th><th>정의</th></tr>
-  <tr><td>Hash 키</td><td><code>playerBrawlerStats:v1:{playerTag}</code> — CLAUDE.md 의 Redis 메서드별 <code>v{N}:</code> 버전 prefix 규약 준수</td></tr>
+  <tr><td>Hash 키</td><td><code>playerBrawlerStats:v1:{playerTag}</code> — AGENTS.md 의 Redis 메서드별 <code>v{N}:</code> 버전 prefix 규약 준수</td></tr>
   <tr><td>Field</td><td><code>{battleType.name}:{startBattleDate}</code> (예: <code>RANKED:2026-05-01</code>)</td></tr>
   <tr><td>값 DTO</td><td><code>{ endBattleDate: LocalDate, items: [{ brawlerId: Long, victoryCount, defeatCount, drawCount: Int }] }</code></td></tr>
   <tr><td>find</td><td><code>HGET</code> → 역직렬화 (miss/오류 → null)</td></tr>

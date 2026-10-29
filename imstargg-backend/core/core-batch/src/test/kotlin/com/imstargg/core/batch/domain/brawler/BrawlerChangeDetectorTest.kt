@@ -269,4 +269,72 @@ class BrawlerChangeDetectorTest {
         // then
         assertThat(result).isEmpty()
     }
+
+    @Test
+    fun `soft-delete 된 항목은 API 에 남아 있어도 추가로 감지하지 않는다`() {
+        // given
+        val apiBrawlers =
+            listOf(
+                BrawlerSnapshot(
+                    id = 16000003,
+                    name = "BROCK",
+                    items = mapOf(BrawlerItemType.GEAR to setOf(BrawlerItemRef(id = 62000005, name = "RELOAD SPEED"))),
+                ),
+            )
+        val stored =
+            StoredBrawlers(
+                brawlerIds = setOf(16000003),
+                itemIds = emptyMap(),
+                deletedItemIds = mapOf(16000003L to mapOf(BrawlerItemType.GEAR to setOf(62000005L))),
+            )
+
+        // when
+        val result = sut.detect(apiBrawlers = apiBrawlers, stored = stored)
+
+        // then
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `soft-delete 된 항목은 API 에서 사라져도 제거로 감지하지 않는다`() {
+        // given
+        val apiBrawlers = listOf(BrawlerSnapshot(id = 16000003, name = "BROCK", items = emptyMap()))
+        val stored =
+            StoredBrawlers(
+                brawlerIds = setOf(16000003),
+                itemIds = emptyMap(),
+                deletedItemIds = mapOf(16000003L to mapOf(BrawlerItemType.GEAR to setOf(62000005L))),
+            )
+
+        // when
+        val result = sut.detect(apiBrawlers = apiBrawlers, stored = stored)
+
+        // then
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `soft-delete 된 브롤러는 API 응답 여부와 무관하게 감지하지 않는다`() {
+        // given
+        val apiBrawlers =
+            listOf(
+                BrawlerSnapshot(
+                    id = 16000000,
+                    name = "Shelly",
+                    items = mapOf(BrawlerItemType.GEAR to setOf(BrawlerItemRef(id = 62000001, name = "Speed"))),
+                ),
+            )
+        val stored =
+            StoredBrawlers(
+                brawlerIds = emptySet(),
+                itemIds = emptyMap(),
+                deletedBrawlerIds = setOf(16000000, 16000001),
+            )
+
+        // when
+        val result = sut.detect(apiBrawlers = apiBrawlers, stored = stored)
+
+        // then
+        assertThat(result).isEmpty()
+    }
 }

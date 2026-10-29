@@ -13,7 +13,7 @@
 - **Working dir**: All `pnpm` commands run from `imstargg-frontend/`.
 - **Commit messages**: Korean. Trailer: `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`. Use HEREDOC.
 - **Staging**: Never `git add -A`. Stage explicit files only.
-- **File-per-class**: One exported component/type group per file (CLAUDE.md). Domain enum bundles (e.g., 3 closely related enums + their labels + parsers) live in one `enums.ts` file as a cohesive unit.
+- **File-per-class**: One exported component/type group per file (AGENTS.md). Domain enum bundles (e.g., 3 closely related enums + their labels + parsers) live in one `enums.ts` file as a cohesive unit.
 - **Test placement**: Vitest config matches `tests/**/*.test.{ts,tsx}` only. Place all unit/component tests under `tests/unit/...`. Do NOT use `src/__tests__/` (Vitest will not discover them).
 - **Import alias**: `@` → `./src`, `@app` → `./app`. Use `@/...` for `src/`, `@app/...` for `app/`.
 - **`Brawler` reuse**: Statistics responses include nested `BrawlerResponse`. Reuse `@/domain/brawler/mappers#toBrawler` — do NOT introduce a `BrawlerLite` type.

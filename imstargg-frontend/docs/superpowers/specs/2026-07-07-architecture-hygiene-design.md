@@ -19,7 +19,7 @@
 | Q8 | 상세 페이지 href 빌드 3중화 — `routes.ts` 헬퍼(3파일) vs `toUrlPath` 직접 조립(14곳, `%23` 형태) vs `tag.replace(/^#/,"")`(7곳) — 같은 페이지가 두 URL 로 링크되어 캐시 이원화 | `src/config/routes.ts`, 각 사용처 |
 | Q9 | 캐시 상수 우회 매직 넘버 — `cache.ts` 에 상수가 있는데 `sitemap.ts`(86400/3600), 훅들(`staleTime: 60_000`)이 하드코딩 | `app/sitemap.ts:12,26-27`, `src/hooks/queries/usePlayer.ts:14` 등 |
 | Q10 | `usePlayerStatistics` 만 DTO 를 그대로 반환해 mapper 호출이 컴포넌트로 누출 — 다른 훅들은 훅 내부에서 매핑 | `src/hooks/queries/usePlayerStatistics.ts:27-35` |
-| 문서 | CLAUDE.md 규칙 문면("훅 또는 endpoint 객체 경유")이 클라이언트 컴포넌트의 endpoint 직접 호출을 막지 못함. queryKeys 규칙에 강제 수단 없음 | `CLAUDE.md` 아키텍처 절 |
+| 문서 | AGENTS.md 규칙 문면("훅 또는 endpoint 객체 경유")이 클라이언트 컴포넌트의 endpoint 직접 호출을 막지 못함. queryKeys 규칙에 강제 수단 없음 | `AGENTS.md` 아키텍처 절 |
 
 ## 목표 — 성공 기준 (전부 기계 검증 가능)
 
@@ -28,7 +28,7 @@
 | 1 | `"use client"` 파일에서 `@/api/endpoints` 직접 import 0건 (`src/hooks/**` 제외, grep 검증) |
 | 2 | 인라인 queryKey 배열 0건 + ESLint 룰(`no-restricted-syntax`)로 재발 차단 |
 | 3 | knip 기준 미사용 파일·export 0 (knip 설정에 명시한 예외만 허용) |
-| 4 | `responsive.css` 죽은 셀렉터 제거(약 200줄 감소) + DESIGN.md·CLAUDE.md 서술 현행화 |
+| 4 | `responsive.css` 죽은 셀렉터 제거(약 200줄 감소) + DESIGN.md·AGENTS.md 서술 현행화 |
 | 5 | error.tsx 4벌·NotFoundView 2벌 → 공통 1벌씩, 루트 `app/error.tsx`·`app/global-error.tsx` 존재, 사용자 노출 문구에 내부 API 경로 0건 |
 | 6 | `pnpm typecheck` / `pnpm lint` / `pnpm test:run` 통과 + 주요 페이지 시각 회귀 없음 (1280×800 / 390×844) |
 
@@ -57,7 +57,7 @@
 
 - 공통 `RouteError` 클라이언트 컴포넌트 신설(문구·재시도 버튼·스타일 단일화) → 기존 4벌 `error.tsx` 는 한 줄 re-export 로 축소. 루트 `app/error.tsx` + `app/global-error.tsx` 신설 — 현재 `/brawlers` 목록 등 catch 없는 페이지의 5xx 가 Next 기본 화면으로 떨어지는 문제 해소.
 - `PlayerNotFoundView`/`ClubNotFoundView` → kind config 기반 공통 `NotFoundView` 1벌 (문구·링크 href·갱신 훅 kind 만 주입).
-- 도달 불가한 `players/[tag]/not-found.tsx`·`clubs/[tag]/not-found.tsx` 삭제. 인라인 NotFoundView 반환이 의도된 설계(미동기 플레이어에게 갱신 유도, HTTP 200 + noindex)임을 CLAUDE.md 에 한 줄 명시.
+- 도달 불가한 `players/[tag]/not-found.tsx`·`clubs/[tag]/not-found.tsx` 삭제. 인라인 NotFoundView 반환이 의도된 설계(미동기 플레이어에게 갱신 유도, HTTP 200 + noindex)임을 AGENTS.md 에 한 줄 명시.
 - `useRenewal` mutation 에 `onError` 추가 → 실패 상태를 **RenewalStatus 캡션**으로 표시 (DESIGN.md "갱신 플로우는 토스트를 쓰지 않는다" 정책 준수). 표시 문구는 "갱신 실패 — 잠시 후 다시 시도" 계열의 고정 문구.
 - `BattleList` 의 `(error as Error)?.message` 렌더 → 고정 문구로 교체 (TanStack v5 의 `error` 는 이미 `Error | null` 이므로 캐스팅도 제거). 내부 API 경로 노출 해소.
 - `PlayerStatistics` 에 `isError` 분기 추가 — 장애와 "이 시즌 통계 없음"을 구분해 표시.
@@ -76,7 +76,7 @@
 
 - URL 빌드 통일: `routes.player(tag)`/`routes.club(tag)` 헬퍼로 전 사용처(약 21곳 — `toUrlPath` 직접 조립 14곳 + 정규식 스트립 7곳) 수렴. URL 형태는 canonical(`src/lib/seo.ts`)과 동일한 `%23` 인코딩으로 통일 — 같은 페이지가 두 URL 로 갈라지는 RSC/브라우저 캐시 이원화 해소. `lib/tag.ts` 의 `stripHash` 등 기존 유틸 활용.
 - 잔여 캐시 매직 넘버 → 상수화: `sitemap.ts` 의 `86400`/`3600` → `CACHE_SECONDS.*`, 훅들의 `staleTime: 60_000` → `QUERY_STALE_TIME.SHORT`. (Spec A 가 만진 파일은 A 에서 이미 처리.)
-- CLAUDE.md 레이어 규칙 문면 분리: "RSC(`page.tsx` 등 서버 컴포넌트)는 endpoint 객체 직접 호출 허용 / `"use client"` 컴포넌트는 반드시 `src/hooks/` 훅 경유" + "mapper 호출 위치는 훅 내부가 기본(RSC 는 페이지에서 호출 가능)" 가이드 명시.
+- AGENTS.md 레이어 규칙 문면 분리: "RSC(`page.tsx` 등 서버 컴포넌트)는 endpoint 객체 직접 호출 허용 / `"use client"` 컴포넌트는 반드시 `src/hooks/` 훅 경유" + "mapper 호출 위치는 훅 내부가 기본(RSC 는 페이지에서 호출 가능)" 가이드 명시.
 - ESLint 자동 강제 (현실적 범위): `no-restricted-syntax` 로 `useQuery`/`useInfiniteQuery` 호출 인자의 인라인 queryKey 배열 리터럴을 금지하는 룰을 `eslint.config.mjs` 에 추가. endpoint import 제한은 위 문서 규칙으로 두고, 커스텀 룰("use client" 디렉티브 감지 필요)은 후속 과제로 남긴다.
 
 ## 검증 계획

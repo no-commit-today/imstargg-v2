@@ -25,7 +25,7 @@ class GearService(
     private val cloudFrontProperties: CloudFrontProperties,
 ) {
     fun findAll(): List<GearResponse> {
-        val gears = gearJpaRepository.findAll()
+        val gears = gearJpaRepository.findAllByDeletedAtIsNull()
         val gearIds = gears.map { it.brawlStarsId }
 
         val messagesByBrawlStarsId =

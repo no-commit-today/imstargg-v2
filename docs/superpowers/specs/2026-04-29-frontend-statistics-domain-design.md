@@ -118,7 +118,7 @@ tests/unit/components/statistics/
 tests/e2e/statistics.spec.ts                  # 6개 시나리오
 ```
 
-**파일당 1개 컴포넌트/클래스 원칙** (CLAUDE.md). 도메인 enum 라벨은 `enums.ts` 한 파일에서 모음 — 강하게 연결된 그룹.
+**파일당 1개 컴포넌트/클래스 원칙** (AGENTS.md). 도메인 enum 라벨은 `enums.ts` 한 파일에서 모음 — 강하게 연결된 그룹.
 
 ## Domain Model
 
