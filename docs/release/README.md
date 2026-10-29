@@ -20,6 +20,7 @@
 
 ## 인덱스
 
+- [2026.10.1](2026.10.1.md) — 2026-10-30. core-worker 0.3.0 — 통계 전투 수집 초당 약 0.83 → 8.3회(10배): 플레이어별 독립 무작위 추출(연속 ID 묶음의 battle_key 중복 해소), 틱 내 병렬 호출, fixed-rate 600ms·5명, 동시 503 시 점검 등록 1회. core-api 0.5.2 / core-batch 0.4.4 — 공통 모듈(`db-core`) 리포지토리 변경 동기화(동작 무변경). frontend 변경 없음. 마이그레이션 없음. 배포 후 429·적재량·커넥션 확인 필요.
 - [2026.10.0](2026.10.0.md) — 2026-10-29. 브롤스타즈 자원 soft-delete 도입(`BaseSoftDeleteEntity`, 명시적 `...DeletedAtIsNull` 필터). core-batch 0.4.3 — `brawlerSyncJob` 이 게임에서 제거된 기어를 매번 "추가"로 알리던 문제 해결. core-api 0.5.1 — 브롤러 하위 항목 카탈로그에서 삭제분 제외(브롤러·이벤트는 유지, 응답 스펙 무변경). core-worker 0.2.5 — 공통 모듈 변경 동기화(동작 무변경). frontend 변경 없음. **DB**: `V261020` 수동 선적용 필요(7개 테이블 nullable `deleted_at` 추가 + 제거된 기어 8건 삭제 상태 복원, 재작성 없음).
 - [2026.08.2](2026.08.2.md) — 2026-08-10. core-api 0.5.0 — 경쟁전 이벤트 조회에 옵션 `seasonKey` 추가(생략 시 현재 시즌, 응답 스펙 무변경). 시즌 해석을 `ofKey` → 범위가 닫힌 `all(clock)` 매칭으로 바꿔 과대 시즌 번호의 무한 루프를 400 즉시 거부로 전환. core-batch 0.4.2 — `BattleEventSyncItemWriter` 테스트 10케이스 추가(프로덕션 코드 무변경). frontend 0.7.2 — 이벤트 카드 통계 요약 줄 제거, RSC 의 통계 API N+1 제거(`2+N` → 2건). core-worker 0.2.4 변경 없음. 마이그레이션 없음.
 - [2026.08.1](2026.08.1.md) — 2026-08-05. core-worker 0.2.4 — 갱신 쓰기 경로 8개 테이블 IDENTITY→SEQUENCE 전환으로 신규 플레이어 갱신 6~9.5초 → 1초 안팎(로컬 709ms→68ms), 모드 ID `Long` 통일. core-batch 0.4.1 / core-api 0.4.5 — 소유율 카운트 `OwnershipCountEmbedded` 추출(DDL 무변경, 응답 스펙 무변경). frontend 0.7.1 — 짧은 페이지 푸터 하단 고정, 갱신 실패 피드백 수정. **DB**: 마이그레이션 2건 수동 선적용 필요 — `V260804b`(battle int→bigint)는 전체 테이블 재작성 + ACCESS EXCLUSIVE 락이라 점검 시간대 필수.

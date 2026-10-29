@@ -65,7 +65,7 @@ imstargg-backend/
 - `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*` (api·worker 는 `redis-core`, `aws-sqs` 추가 의존)
 - `core-admin` → `core-enum`, `db-core`, `aws-s3` (redis-core·support 미의존)
 - `db-core` → `core-enum`
-- `brawlstars-client`: 독립적 (OpenFeign 기반 HTTP 클라이언트)
+- `brawlstars-client`: 독립적 (OpenFeign 기반 HTTP 클라이언트). 호출 한도는 [client/brawlstars-client/README.md](client/brawlstars-client/README.md)
 - **Docker 이미지**: backend 루트 단일 `Dockerfile`(`ARG GRADLE_MODULE`)이 core-api/worker/batch 를 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY .../build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
 
 ### Code Organization

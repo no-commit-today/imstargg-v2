@@ -22,5 +22,6 @@ dependencies {
     implementation("org.springframework.retry:spring-retry")
 
     // Test
+    testImplementation("io.github.openfeign:feign-core")
     testImplementation(testFixtures(project(":infrastructure:db-core")))
 }
