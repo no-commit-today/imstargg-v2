@@ -28,3 +28,4 @@ __pycache__/
 .playwright-mcp
 CLAUDE.local.md
 .gstack/
+.mcp.json
