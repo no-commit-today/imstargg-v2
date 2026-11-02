@@ -20,6 +20,7 @@ COPY infrastructure/redis-core/build.gradle.kts ./infrastructure/redis-core/
 COPY infrastructure/aws-sqs/build.gradle.kts    ./infrastructure/aws-sqs/
 COPY infrastructure/aws-s3/build.gradle.kts     ./infrastructure/aws-s3/
 COPY client/brawlstars-client/build.gradle.kts  ./client/brawlstars-client/
+COPY support/http-client/build.gradle.kts       ./support/http-client/
 COPY support/logging/build.gradle.kts           ./support/logging/
 COPY support/monitoring/build.gradle.kts        ./support/monitoring/
 RUN chmod +x gradlew && ./gradlew ${GRADLE_MODULE}:dependencies --no-daemon

@@ -11,6 +11,7 @@ include(
     "infrastructure:aws-sqs",
     "infrastructure:aws-s3",
     "client:brawlstars-client",
+    "support:http-client",
     "support:logging",
     "support:monitoring"
 )
