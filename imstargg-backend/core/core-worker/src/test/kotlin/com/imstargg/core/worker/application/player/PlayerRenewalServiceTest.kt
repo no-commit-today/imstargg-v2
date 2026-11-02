@@ -14,9 +14,11 @@ import com.imstargg.core.worker.application.stats.StatsBattleAggregator
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
 import com.imstargg.infrastructure.db.core.test.fixture.RenewalEntityFixture.Companion.aRenewalEntity
+import com.imstargg.infrastructure.db.core.test.fixture.StatsPlayerEntityFixture.Companion.aStatsPlayerEntity
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
@@ -32,6 +34,7 @@ class PlayerRenewalServiceTest(
     private val brawlStarsClient: BrawlStarsClient,
     private val renewalRepository: RenewalJpaRepository,
     private val playerRepository: PlayerJpaRepository,
+    private val statsPlayerRepository: StatsPlayerJpaRepository,
     private val brawlStarsApiMaintenanceRepository: BrawlStarsApiMaintenanceJpaRepository,
     private val cleanUp: CleanUp,
 ) : CoreWorkerContextTest() {
@@ -69,6 +72,7 @@ class PlayerRenewalServiceTest(
         // given
         val tag = "#RENEW404"
         playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+        statsPlayerRepository.save(aStatsPlayerEntity().withBrawlStarsTag(tag).build())
         val renewal = aRenewalEntity().withBrawlStarsTag(tag).build()
         renewal.toPending()
         renewalRepository.save(renewal)
@@ -82,6 +86,7 @@ class PlayerRenewalServiceTest(
         val saved = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
         assertThat(saved.status).isEqualTo(RenewalStatus.NOT_FOUND)
         assertThat(playerRepository.findByBrawlStarsTag(tag)!!.status).isEqualTo(PlayerStatus.DELETED)
+        assertThat(statsPlayerRepository.findAllByBrawlStarsTagIn(listOf(tag))).hasSize(1)
     }
 
     @Test

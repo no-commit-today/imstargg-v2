@@ -4,10 +4,14 @@ import com.imstargg.CoreWorkerContextTest
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.ListResponse
+import com.imstargg.core.enums.PlayerStatus
+import com.imstargg.core.enums.StatsPlayerStatus
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
+import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
+import com.imstargg.infrastructure.db.core.test.fixture.PlayerEntityFixture.Companion.aPlayerEntity
 import com.imstargg.infrastructure.db.core.test.fixture.StatsPlayerEntityFixture.Companion.aStatsPlayerEntity
 import com.ninjasquad.springmockk.MockkBean
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -22,6 +26,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.ResourceAccessException
 import java.net.SocketTimeoutException
@@ -31,6 +36,7 @@ class StatsBattleAccumulationServiceTest(
     private val properties: StatsBattleScheduleProperties,
     private val brawlStarsClient: BrawlStarsClient,
     private val statsPlayerRepository: StatsPlayerJpaRepository,
+    private val playerRepository: PlayerJpaRepository,
     private val brawlStarsApiMaintenanceRepository: BrawlStarsApiMaintenanceJpaRepository,
     private val cleanUp: CleanUp,
     private val jdbcTemplate: JdbcTemplate,
@@ -134,6 +140,84 @@ class StatsBattleAccumulationServiceTest(
         verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
     }
 
+    @Test
+    fun `battlelog 404 면 stats_player 를 BATTLE_LOG_UNAVAILABLE 로 표시하고 행과 player 는 유지한다`() {
+        // given
+        playerRepository.saveAll((1..200).map { aPlayerEntity().withBrawlStarsTag("#P$it").build() })
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers {
+            firstArg<Collection<String>>().associateWith { Result.failure<ListResponse<BattleResponse>>(notFound()) }
+        }
+
+        // when
+        sut.accumulate()
+
+        // then
+        assertThat(tags.captured).isNotEmpty()
+        tags.captured.forEach { tag ->
+            assertThat(statsPlayerRepository.findById(idByTag.getValue(tag)).get().status)
+                .isEqualTo(StatsPlayerStatus.BATTLE_LOG_UNAVAILABLE)
+            assertThat(playerRepository.findByBrawlStarsTag(tag)!!.status).isEqualTo(PlayerStatus.ACTIVE)
+        }
+        assertThat(statsPlayerRepository.count()).isEqualTo(200)
+    }
+
+    @Test
+    fun `ACTIVE 인 stats_player 만 뽑는다`() {
+        // given
+        // 10의 배수 태그만 ACTIVE 로 남긴다 — 최대 ID 행(#P200)이 ACTIVE 라 어떤 무작위 ID 로도 ACTIVE 행이 잡힌다
+        val activeTags = (10..200 step 10).map { "#P$it" }.toSet()
+        statsPlayerRepository.saveAll(
+            statsPlayerRepository
+                .findAll()
+                .filter { it.brawlStarsTag !in activeTags }
+                .onEach { it.markBattleLogUnavailable() },
+        )
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers {
+            firstArg<Collection<String>>().associateWith { Result.success(ListResponse<BattleResponse>(emptyList(), null)) }
+        }
+
+        // when
+        sut.accumulate()
+
+        // then
+        assertThat(tags.captured)
+            .isNotEmpty()
+            .allMatch { it in activeTags }
+    }
+
+    @Test
+    fun `점검 응답 뒤 순서의 404 도 표시한다`() {
+        // given
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers { resultsWithMaintenanceThenNotFound(firstArg()) }
+
+        // when
+        sut.accumulate()
+
+        // then
+        assertThat(tags.captured).hasSizeGreaterThanOrEqualTo(2)
+        val maintenanceTag = tags.captured.first()
+        val notFoundTag = tags.captured.elementAt(1)
+        assertThat(statsPlayerRepository.findById(idByTag.getValue(notFoundTag)).get().status)
+            .isEqualTo(StatsPlayerStatus.BATTLE_LOG_UNAVAILABLE)
+        assertThat(statsPlayerRepository.findById(idByTag.getValue(maintenanceTag)).get().status)
+            .isEqualTo(StatsPlayerStatus.ACTIVE)
+    }
+
+    @Test
+    fun `뽑을 ACTIVE 플레이어가 없으면 API 를 부르지 않는다`() {
+        // given
+        statsPlayerRepository.saveAll(statsPlayerRepository.findAll().onEach { it.markBattleLogUnavailable() })
+
+        // when
+        sut.accumulate()
+
+        // then
+        verify(exactly = 0) { brawlStarsClient.getPlayersRecentBattles(any()) }
+    }
+
     // 요청 순서의 첫 태그만 실패하고 나머지는 전투 없이 성공한다
     private fun resultsFailingFirstTag(
         tags: Collection<String>,
@@ -142,6 +226,19 @@ class StatsBattleAccumulationServiceTest(
         tags.associateWith { tag ->
             if (tag == tags.first()) Result.failure(failure) else Result.success(ListResponse(emptyList(), null))
         }
+
+    // 요청 순서의 첫 태그는 점검(503), 둘째 태그는 battlelog 404, 나머지는 전투 없이 성공한다
+    private fun resultsWithMaintenanceThenNotFound(tags: Collection<String>): Map<String, Result<ListResponse<BattleResponse>>> =
+        tags.associateWith { tag ->
+            when (tag) {
+                tags.first() -> Result.failure(serviceUnavailable())
+                tags.elementAt(1) -> Result.failure(notFound())
+                else -> Result.success(ListResponse(emptyList(), null))
+            }
+        }
+
+    private fun notFound(): HttpClientErrorException =
+        HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders(), ByteArray(0), null)
 
     private fun serviceUnavailable(): HttpServerErrorException =
         HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)

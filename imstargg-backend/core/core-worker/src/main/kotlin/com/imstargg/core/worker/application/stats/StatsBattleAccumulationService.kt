@@ -1,9 +1,9 @@
 package com.imstargg.core.worker.application.stats
 
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.core.enums.StatsPlayerStatus
 import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceAutoRegistrar
 import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceChecker
-import com.imstargg.core.worker.application.player.PlayerDeactivator
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
 import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
@@ -24,7 +24,7 @@ class StatsBattleAccumulationService(
     private val statsPlayerRepository: StatsPlayerJpaRepository,
     private val brawlStarsClient: BrawlStarsClient,
     private val statsBattleAggregator: StatsBattleAggregator,
-    private val playerDeactivator: PlayerDeactivator,
+    private val statsPlayerStatusUpdater: StatsPlayerStatusUpdater,
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
     private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
 ) {
@@ -35,6 +35,10 @@ class StatsBattleAccumulationService(
         }
 
         val statsPlayers = findRandomPlayers()
+        if (statsPlayers.isEmpty()) {
+            log.debug { "[배틀 통계 축적] 뽑을 플레이어가 없어 건너뜀" }
+            return
+        }
         log.debug { "[배틀 통계 축적] ${statsPlayers.size}명 플레이어 처리 시작: ${statsPlayers.map { it.brawlStarsTag }}" }
 
         // 요청은 클라이언트가 한 번에 함께 보내고, 결과는 이 스레드에서 플레이어 순서대로 처리해 집계 DB 쓰기를 순차로 한다
@@ -51,9 +55,10 @@ class StatsBattleAccumulationService(
                         val battles = result.getOrThrow().items.map { BattleBuilder(tag, it).build() }
                         statsBattleAggregator.aggregate(battles)
                     }
+                    // battlelog 404 는 /players 가 살아 있는 계정에서도 온다 — 계정을 지우지 않고 수집 대상에서만 뺀다
                     is HttpClientErrorException.NotFound -> {
-                        log.warn { "[배틀 통계 축적] 플레이어 삭제됨 tag=$tag" }
-                        playerDeactivator.deactivate(tag)
+                        statsPlayerStatusUpdater.markBattleLogUnavailable(statsPlayer.id!!)
+                        log.info { "[배틀 통계 축적] battlelog 없음(404) — 수집 제외 tag=$tag" }
                     }
                     is HttpServerErrorException.ServiceUnavailable -> {
                         if (!maintenanceRegistered) {
@@ -78,11 +83,15 @@ class StatsBattleAccumulationService(
      * 플레이어마다 무작위 ID 를 따로 뽑는다. stats_player 는 같은 전투의 팀원·상대가 연속 ID 로 적재되므로
      * (core-batch `StatsPlayerSyncJobItemWriter`), 한 ID 에서 연속 N명을 읽으면 전투 로그가 겹치는 플레이어가
      * 묶여 battle_key 중복으로 걸러지고 수집량이 거의 늘지 않는다.
+     * battlelog 404 로 표시된(`BATTLE_LOG_UNAVAILABLE`) 행은 뽑지 않는다 — 뽑은 ID 이상에 ACTIVE 행이 없으면 그 추출은 빈다.
      */
     private fun findRandomPlayers(): List<StatsPlayerEntity> {
         val maxId = statsPlayerRepository.findTopByOrderByIdDesc()?.id ?: return emptyList()
         return List(properties.playerCount) {
-            statsPlayerRepository.findFirstByIdGreaterThanEqualOrderByIdAsc(Random.nextLong(1, maxId + 1))
+            statsPlayerRepository.findFirstByIdGreaterThanEqualAndStatusOrderByIdAsc(
+                Random.nextLong(1, maxId + 1),
+                StatsPlayerStatus.ACTIVE,
+            )
         }.filterNotNull()
             .distinctBy { it.id }
     }

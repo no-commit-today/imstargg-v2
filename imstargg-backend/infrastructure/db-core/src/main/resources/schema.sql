@@ -349,6 +349,7 @@ create table if not exists stats_player
 (
     stats_player_id bigint generated always as identity primary key,
     brawlstars_tag  varchar(45)  not null,
+    status          varchar(25)  not null default 'ACTIVE',
     created_at      timestamptz  not null default now(),
     updated_at      timestamptz  not null default now()
 );
