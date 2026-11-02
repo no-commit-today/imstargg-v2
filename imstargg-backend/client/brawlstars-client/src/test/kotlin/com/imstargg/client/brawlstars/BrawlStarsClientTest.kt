@@ -32,6 +32,7 @@ class BrawlStarsClientTest {
                 .builderFor(RestClientAdapter.create(builder.build()))
                 .build()
                 .createClient(BrawlStarsApi::class.java),
+            batchConcurrency = 5,
         )
 
     @AfterEach
@@ -40,7 +41,7 @@ class BrawlStarsClientTest {
     }
 
     @Test
-    fun `태그의 # 을 %23 으로 인코딩해 battlelog 를 GET 한다`() {
+    fun `태그의 # 을 퍼센트 인코딩해 battlelog 를 GET 한다`() {
         // given
         server
             .expect(requestTo("http://localhost/v1/players/%2388J8Q9RPV/battlelog"))

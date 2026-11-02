@@ -10,6 +10,8 @@ app:
     brawlstars:
       url: https://api.brawlstars.com
       api-keys: ${BRAWLSTARS_API_KEYS:}
+      # getPlayersRecentBattles 가 클라이언트 전체에서 동시에 띄우는 요청 수 상한(통계 축적 player-count 와 같다)
+      batch-concurrency: 5
 
 ---
 spring:

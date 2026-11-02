@@ -2,24 +2,29 @@ package com.imstargg.core.worker.application.stats
 
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.client.brawlstars.BrawlStarsClient
+import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.ListResponse
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
 import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.StatsPlayerEntityFixture.Companion.aStatsPlayerEntity
+import com.ninjasquad.springmockk.MockkBean
+import io.github.resilience4j.ratelimiter.RateLimiter
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.mockk.every
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.web.client.HttpServerErrorException
-import java.util.Collections
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import org.springframework.web.client.ResourceAccessException
+import java.net.SocketTimeoutException
 
 class StatsBattleAccumulationServiceTest(
     private val sut: StatsBattleAccumulationService,
@@ -28,11 +33,17 @@ class StatsBattleAccumulationServiceTest(
     private val statsPlayerRepository: StatsPlayerJpaRepository,
     private val brawlStarsApiMaintenanceRepository: BrawlStarsApiMaintenanceJpaRepository,
     private val cleanUp: CleanUp,
+    private val jdbcTemplate: JdbcTemplate,
 ) : CoreWorkerContextTest() {
+    @MockkBean(relaxUnitFun = true)
+    private lateinit var statsBattleAggregator: StatsBattleAggregator
+
     private lateinit var idByTag: Map<String, Long>
 
     @BeforeEach
     fun setUp() {
+        // 서비스는 ID 를 [1, 최대 ID] 에서 뽑으므로 운영처럼 1부터 채운다 — CleanUp 은 ID 를 되돌리지 않아 앞 테스트만큼 밀린다
+        jdbcTemplate.execute("TRUNCATE TABLE stats_player RESTART IDENTITY")
         idByTag =
             statsPlayerRepository
                 .saveAll((1..200).map { aStatsPlayerEntity().withBrawlStarsTag("#P$it").build() })
@@ -47,52 +58,30 @@ class StatsBattleAccumulationServiceTest(
     @Test
     fun `플레이어마다 무작위 ID 를 따로 뽑아 연속 ID 묶음으로 수집하지 않는다`() {
         // given
-        val fetchedTags = Collections.synchronizedList(mutableListOf<String>())
-        every { brawlStarsClient.getPlayerRecentBattles(capture(fetchedTags)) } returns
-            ListResponse(items = emptyList(), paging = null)
-
-        // when
-        sut.accumulate()
-
-        // then
-        assertThat(fetchedTags)
-            .isNotEmpty()
-            .hasSizeLessThanOrEqualTo(properties.playerCount)
-            .doesNotHaveDuplicates()
-            .allMatch { it in idByTag }
-        val fetchedIds = fetchedTags.map { idByTag.getValue(it) }
-        // 연속 ID 묶음이면 범위가 playerCount - 1 이하 — 독립 추출(200명 중 playerCount회)이 우연히 그 범위에 몰릴 확률은 무시 가능
-        assertThat(fetchedIds.max() - fetchedIds.min()).isGreaterThanOrEqualTo(properties.playerCount.toLong())
-    }
-
-    @Test
-    fun `한 틱의 플레이어를 동시에 수집한다`() {
-        // given
-        val inFlight = AtomicInteger()
-        val maxInFlight = AtomicInteger()
-        every { brawlStarsClient.getPlayerRecentBattles(any()) } answers {
-            maxInFlight.accumulateAndGet(inFlight.incrementAndGet(), ::maxOf)
-            Thread.sleep(200)
-            inFlight.decrementAndGet()
-            ListResponse(items = emptyList(), paging = null)
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers {
+            firstArg<Collection<String>>().associateWith { Result.success(ListResponse<BattleResponse>(emptyList(), null)) }
         }
 
         // when
         sut.accumulate()
 
         // then
-        assertThat(maxInFlight.get()).isGreaterThan(1)
+        assertThat(tags.captured)
+            .isNotEmpty()
+            .hasSizeLessThanOrEqualTo(properties.playerCount)
+            .doesNotHaveDuplicates()
+            .allMatch { it in idByTag }
+        val fetchedIds = tags.captured.map { idByTag.getValue(it) }
+        // 연속 ID 묶음이면 범위가 playerCount - 1 이하 — 독립 추출(200명 중 playerCount회)이 우연히 그 범위에 몰릴 확률은 무시 가능
+        assertThat(fetchedIds.max() - fetchedIds.min()).isGreaterThanOrEqualTo(properties.playerCount.toLong())
     }
 
     @Test
     fun `동시에 점검 응답을 받아도 점검은 한 번만 등록한다`() {
         // given
-        val inFlight = CountDownLatch(2)
-        every { brawlStarsClient.getPlayerRecentBattles(any()) } answers {
-            // 최소 두 요청이 동시에 점검 응답을 받도록 맞춘다
-            inFlight.countDown()
-            inFlight.await(5, TimeUnit.SECONDS)
-            throw serviceUnavailable()
+        every { brawlStarsClient.getPlayersRecentBattles(any()) } answers {
+            firstArg<Collection<String>>().associateWith { Result.failure<ListResponse<BattleResponse>>(serviceUnavailable()) }
         }
 
         // when
@@ -102,6 +91,61 @@ class StatsBattleAccumulationServiceTest(
         assertThat(brawlStarsApiMaintenanceRepository.count()).isEqualTo(1)
     }
 
+    @Test
+    fun `타임아웃이 난 플레이어는 경고만 남기고 나머지 플레이어를 계속 집계한다`() {
+        // given
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers { resultsFailingFirstTag(firstArg(), readTimeout()) }
+
+        // when
+        sut.accumulate()
+
+        // then
+        verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
+    }
+
+    @Test
+    fun `레이트리밋 허가를 못 받은 플레이어가 있어도 나머지 플레이어는 집계한다`() {
+        // given
+        val tags = slot<Collection<String>>()
+        val notPermitted = RequestNotPermitted.createRequestNotPermitted(RateLimiter.ofDefaults("brawlstars"))
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers { resultsFailingFirstTag(firstArg(), notPermitted) }
+
+        // when
+        sut.accumulate()
+
+        // then
+        verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
+    }
+
+    @Test
+    fun `한 틱에 점검 응답이 섞여도 나머지 플레이어는 집계한다`() {
+        // given
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers {
+            resultsFailingFirstTag(firstArg(), serviceUnavailable())
+        }
+
+        // when
+        sut.accumulate()
+
+        // then
+        assertThat(brawlStarsApiMaintenanceRepository.count()).isEqualTo(1)
+        verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
+    }
+
+    // 요청 순서의 첫 태그만 실패하고 나머지는 전투 없이 성공한다
+    private fun resultsFailingFirstTag(
+        tags: Collection<String>,
+        failure: Throwable,
+    ): Map<String, Result<ListResponse<BattleResponse>>> =
+        tags.associateWith { tag ->
+            if (tag == tags.first()) Result.failure(failure) else Result.success(ListResponse(emptyList(), null))
+        }
+
     private fun serviceUnavailable(): HttpServerErrorException =
         HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)
+
+    private fun readTimeout(): ResourceAccessException =
+        ResourceAccessException("I/O error on GET request: Read timed out", SocketTimeoutException("Read timed out"))
 }

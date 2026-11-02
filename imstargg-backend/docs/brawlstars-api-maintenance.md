@@ -24,12 +24,13 @@
 |------|----------|----------------|
 | `PlayerRenewalService.renew()` | O | O |
 | `ClubRenewalService.renew()` | O | O |
-| `StatsBattleAccumulationScheduler.accumulate()` | O | O |
+| `StatsBattleAccumulationService.accumulate()` | O | O |
+| `PlayerRefreshService.refresh()` | O | O |
 
 - **사전 확인**: `BrawlStarsApiMaintenanceChecker.isUnderMaintenance()` 로 DB 조회. 점검 중이면 API 호출 없이 종료
 - **503 자동 등록**: DB에 점검 상태가 아직 없을 때 API 호출 중 503 발생 시, `BrawlStarsApiMaintenanceAutoRegistrar.register()` 로 점검 상태 저장 (기본 1시간)
 - 갱신 서비스는 점검 시 FAILED 처리 후 return (throw 시 SQS 재시도 발생하므로)
-- 스케줄러는 503 감지 시 나머지 플레이어 처리 중단 (break)
+- 통계 축적은 한 틱의 요청을 배치로 함께 보내므로 503 을 받으면 틱당 한 번 점검을 등록하고 다음 틱부터 호출을 막는다. 처리 중단(break)은 플레이어 새로고침에만 해당한다
 
 ### core-batch — DB 확인 없음, API 직접 호출
 

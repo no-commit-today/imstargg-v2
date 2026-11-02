@@ -63,7 +63,7 @@ class BrawlStarsClientHttpWiringContextTest(
     }
 
     @Test
-    fun `요청에 Bearer 키를 붙이고 태그를 %23 으로 보낸다`() {
+    fun `요청에 Bearer 키를 붙이고 태그를 퍼센트 인코딩해 보낸다`() {
         // given
         lastAuthorization.set(null)
         lastRawPath.set(null)
@@ -84,10 +84,10 @@ class BrawlStarsClientHttpWiringContextTest(
 
         // when
         brawlStarsClient.getPlayerRecentBattles("#A")
-        brawlStarsClient.getPlayerRecentBattles("#B")
+        brawlStarsClient.getPlayersRecentBattles(listOf("#A", "#B"))
 
         // then
-        assertThat(before - rateLimiter.metrics.availablePermissions).isEqualTo(2)
+        assertThat(before - rateLimiter.metrics.availablePermissions).isEqualTo(3)
     }
 
     @Test
