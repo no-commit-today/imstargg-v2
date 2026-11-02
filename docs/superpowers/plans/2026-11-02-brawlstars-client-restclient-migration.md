@@ -37,7 +37,7 @@
 ### Task 0: 작업 브랜치 준비
 
 - [ ] **Step 1:** `superpowers:using-git-worktrees` 로 `origin/develop` 에서 `refactor/brawlstars-client-restclient` 브랜치의 워크트리를 만든다(`git fetch origin` 먼저).
-- [ ] **Step 2:** 설계 문서 커밋을 가져온다: `git cherry-pick df3d124f d0ee8de2 <이 계획을 추가한 커밋>` (계획 커밋은 `claude/vm-log-client-issue-fa1309` 브랜치의 최신 docs 커밋). 로컬 develop 에만 있는 `af60043f`(mcp 추가)는 싣지 않는다.
+- [ ] **Step 2:** 설계·계획 문서 커밋을 가져온다: `git cherry-pick af60043f..claude/vm-log-client-issue-fa1309` (`df3d124f` 부터 이 계획의 마지막 docs 커밋까지). 로컬 develop 에만 있는 `af60043f`(mcp 추가) 자체는 싣지 않는다.
 - [ ] **Step 3:** 기준선 확인: `./gradlew build` → `BUILD SUCCESSFUL`.
 - [ ] **Step 4:** 기준선 기록: `./gradlew :client:brawlstars-client:developTest` 를 돌려 수집된 테스트 수(`build/test-results/developTest/*.xml` 의 `tests`, 없으면 0)를 적어 둔다 — Task 1 의 수정 효과를 비교한다.
 
