@@ -117,11 +117,14 @@ git commit -m "chore(backend): Java 25·Spring Boot 4.1.1·Kotlin 2.3.21·Gradle
 **Interfaces:**
 - Produces: `support:logging` 이 `api("io.github.oshai:kotlin-logging-jvm:${property("kotlinLoggingVersion")}")` 를 노출한다. `com.imstargg.core.error.ErrorLogger.of(log: io.github.oshai.kotlinlogging.KLogger): ErrorLogger`.
 
-- [ ] **Step 1: ErrorLoggerTest 를 KLogger 기준으로 바꾸고 테스트를 더한다** — 패키지를 `com.imstargg.core.error` 로 바꾸고, 기존 3개는 `ErrorLogger.of(log.toKLogger())`(import `io.github.oshai.kotlinlogging.slf4j.toKLogger`)로 바꾼다. 추가:
+- [ ] **Step 1: ErrorLoggerTest 를 KLogger 기준으로 바꾸고 테스트를 더한다** — 패키지를 `com.imstargg.core.error` 로 바꾸고, 기존 3개는 지역 헬퍼 방식(`val (log, appender) = loggerWithAppender()`)을 그대로 두고 `ErrorLogger.of(log.toKLogger())`(import `io.github.oshai.kotlinlogging.slf4j.toKLogger`)로 바꾼다. 같은 방식으로 추가:
 
 ```kotlin
 @Test
 fun `DEBUG 레벨 ErrorType 은 INFO 로 기록한다`() {
+    // given
+    val (log, appender) = loggerWithAppender()
+    val sut = ErrorLogger.of(log.toKLogger())
     // when
     sut.log(CoreException(ErrorType.NOT_FOUND))
     sut.log(IllegalArgumentException("bad"), ErrorType.INVALID_REQUEST)
@@ -132,14 +135,19 @@ fun `DEBUG 레벨 ErrorType 은 INFO 로 기록한다`() {
 
 @Test
 fun `ErrorType 과 함께 남긴 예외는 타입·메시지·원인을 남긴다`() {
+    // given
+    val (log, appender) = loggerWithAppender()
+    val sut = ErrorLogger.of(log.toKLogger())
+    // when
     sut.log(IllegalStateException("maintenance"), ErrorType.BRAWLSTARS_API_UNDER_MAINTENANCE)
+    // then
     assertThat(appender.list.single().formattedMessage)
         .isEqualTo("[IllegalStateException] [BRAWLSTARS_API_UNDER_MAINTENANCE]: ${ErrorType.BRAWLSTARS_API_UNDER_MAINTENANCE.message} >>> maintenance")
 }
 ```
 
 - [ ] **Step 2: 실패 확인** — `./gradlew :core:core-api:test --tests 'com.imstargg.core.error.ErrorLoggerTest'` → 컴파일 실패(`ErrorLogger.of` 가 slf4j `Logger` 를 받음).
-- [ ] **Step 3: 의존을 넣는다** — `kotlinLoggingVersion=8.0.4` 추가. `support/logging/build.gradle.kts` 첫 줄에 `api("io.github.oshai:kotlin-logging-jvm:${property("kotlinLoggingVersion")}")`(주석: 로그를 남기는 모듈은 이 모듈에 의존해 KotlinLogging 을 쓴다). Files 의 6개 모듈에 `implementation(project(":support:logging"))`.
+- [ ] **Step 3: 의존을 넣는다** — `kotlinLoggingVersion=8.0.4` 추가(`gradle.properties` 는 파일 끝에 개행이 없다 — shell `>>` 로 덧붙이지 말고 Edit 로 `springCloudAwsVersion=4.0.0` 다음 새 줄에 넣는다). `support/logging/build.gradle.kts` 첫 줄에 `api("io.github.oshai:kotlin-logging-jvm:${property("kotlinLoggingVersion")}")`(주석: 로그를 남기는 모듈은 이 모듈에 의존해 KotlinLogging 을 쓴다). Files 의 6개 모듈에 `implementation(project(":support:logging"))`.
 - [ ] **Step 4: ErrorLogger 를 KLogger 로 바꾼다** — 패키지 `com.imstargg.core.error`, `class ErrorLogger private constructor(private val log: KLogger)`, `fun of(log: KLogger)`. `{}` 템플릿 상수 2개를 지우고 메시지를 람다로 만든다. 레벨 분기는 지금과 같다: `ERROR → log.error(ex) {…}`, `WARN → log.warn(ex) {…}`, 그 밖 → `log.info {…}`(예외 없음). 메시지 문자열은 기존 slf4j 출력과 같게(`"[${ex.javaClass.simpleName}]: ${ex.message}"`, `"[${ex.javaClass.simpleName}] [$errorType]: ${errorType.message} >>> ${ex.message}"`). 호출부 `ApiExceptionHandler`·`AsyncExceptionHandler` 는 import 경로를 고치고 파일 최상위 `log` 를 `ErrorLogger.of(log)` 로 넘긴다.
 - [ ] **Step 5: 통과 확인** — Step 2 명령 → PASS.
 - [ ] **Step 6: 47개 파일을 바꾼다** — 규칙:
@@ -194,7 +202,7 @@ Expected: 출력 없음.
 
 **Files:**
 - Modify: `gradle.properties`(`springCloudVersion` 줄 삭제, `resilience4jVersion=2.4.0` 추가), `build.gradle.kts`(`spring-cloud-dependencies` BOM 줄 삭제)
-- Modify: `client/brawlstars-client/build.gradle.kts`(전체 교체), `.../BrawlStarsApi.kt`, `.../BrawlStarsClient.kt`, `.../BrawlStarsClientConfig.kt`, `.../BrawlStarsApiKeyInterceptor.kt`, `client/brawlstars-client/src/main/resources/brawlstars-client.yml`, `client/brawlstars-client/src/test/resources/application.yml`, `client/brawlstars-client/src/test/kotlin/com/imstargg/BrawlStarsClientRealTest.kt:17-18`, `client/brawlstars-client/README.md`
+- Modify: `client/brawlstars-client/build.gradle.kts`(전체 교체), `.../BrawlStarsApi.kt`, `.../BrawlStarsClient.kt`, `.../BrawlStarsClientConfig.kt`, `.../BrawlStarsApiKeyInterceptor.kt`, `client/brawlstars-client/src/main/resources/brawlstars-client.yml`, `client/brawlstars-client/src/test/resources/application.yml`, `client/brawlstars-client/src/test/kotlin/com/imstargg/BrawlStarsClientRealTest.kt:8-18`, `client/brawlstars-client/README.md`
 - Create: `client/brawlstars-client/src/main/kotlin/com/imstargg/client/brawlstars/BrawlStarsRateLimitInterceptor.kt`
 - Delete: `.../BrawlStarsApiConfig.kt`, `.../BrawlStarsApiException.kt`, `.../request/PagingParam.kt`
 - Test: `client/brawlstars-client/src/test/kotlin/com/imstargg/client/brawlstars/{BrawlStarsClientTest,BrawlStarsApiKeyInterceptorTest,BrawlStarsRateLimitInterceptorTest}.kt`, `client/brawlstars-client/src/test/resources/brawlstars/{battlelog.json,player.json}`
@@ -223,7 +231,7 @@ Expected: 출력 없음.
   `BrawlStarsApiKeyInterceptorTest`(`MockClientHttpRequest`·`MockClientHttpResponse`): `키를 순서대로 돌려 Authorization Bearer 헤더로 붙인다`(키 `[k1, k2]` 로 3번 → `Bearer k1`, `Bearer k2`, `Bearer k1`), `키가 없으면 생성에 실패한다`(`IllegalArgumentException`).
   `BrawlStarsRateLimitInterceptorTest`(`RateLimiter.of("t", RateLimiterConfig.custom().limitForPeriod(2).limitRefreshPeriod(Duration.ofHours(1)).timeoutDuration(Duration.ZERO).build())`): `요청마다 허가를 하나씩 쓴다`(`metrics.availablePermissions` 2 → 1), `허가가 없으면 RequestNotPermitted 를 던지고 요청을 보내지 않는다`(세 번째 호출, execution 호출 횟수 2).
 - [ ] **Step 2: 실패 확인** — `./gradlew :client:brawlstars-client:test` → 컴파일 실패.
-- [ ] **Step 3: 빌드 설정** — `gradle.properties` 에서 `springCloudVersion` 삭제·`resilience4jVersion=2.4.0` 추가, 루트 BOM 줄 삭제. `client/brawlstars-client/build.gradle.kts` 를 `api("org.springframework:spring-web")`, `implementation(project(":support:http-client"))`, `implementation(project(":support:logging"))`, `implementation("org.springframework.boot:spring-boot-restclient")`, `implementation("io.github.resilience4j:resilience4j-spring-boot4:${property("resilience4jVersion")}")`, `implementation("io.github.resilience4j:resilience4j-ratelimiter:${property("resilience4jVersion")}")` 로 교체. worker·batch 의 feign-core 테스트 의존을 Files 대로 바꾼다.
+- [ ] **Step 3: 빌드 설정** — `gradle.properties` 에서 `springCloudVersion` 삭제·`resilience4jVersion=2.4.0` 추가(Edit 로 새 줄에 — 파일 끝 개행 없음), 루트 BOM 줄 삭제. `client/brawlstars-client/build.gradle.kts` 를 `api("org.springframework:spring-web")`, `implementation(project(":support:http-client"))`, `implementation(project(":support:logging"))`, `implementation("org.springframework.boot:spring-boot-restclient")`, `implementation("io.github.resilience4j:resilience4j-spring-boot4:${property("resilience4jVersion")}")`, `implementation("io.github.resilience4j:resilience4j-ratelimiter:${property("resilience4jVersion")}")` 로 교체. worker·batch 의 feign-core 테스트 의존을 Files 대로 바꾼다.
 - [ ] **Step 4: 클라이언트 구현**
   - `BrawlStarsApi`: Feign·`@RateLimiter`·PagingParam import 를 지우고 Interfaces 대로 바꾼다.
   - `BrawlStarsClient`: `execute` 와 FeignException import 를 지우고 각 메서드는 위임만 한다.
@@ -235,7 +243,7 @@ Expected: 출력 없음.
   - `brawlstars-client.yml`: `spring.cloud.openfeign.*` 블록 삭제. prod 문서에 `logging.level.com.imstargg.client.brawlstars.BrawlStarsApi: WARN`.
   - 클라이언트 테스트 `application.yml`: Feign 블록 삭제. 첫 문서는 `spring.config.import: [http-client.yml, brawlstars-client.yml]`, 제한기 테스트 값(`resilience4j.ratelimiter.instances.brawlstars`: `limit-for-period: 10`, `limit-refresh-period: 1s`, `timeout-duration: 60s`)은 import 보다 우선하도록 `---` 뒤 두 번째 문서에 둔다(이름 `brawlstars-api` → `brawlstars`).
   - worker·batch main `application.yml` import 에 `http-client.yml`, 테스트 `application.yml` 에는 `http-client.yml` 만 import(주석: `brawlstars-client.yml` 을 가져오면 테스트 `app.client.brawlstars.*` 값이 덮인다).
-  - `BrawlStarsClientRealTest:17-18` 상수를 `"#88J8Q9RPV"`, `"#2U8CVLQQ9"` 로.
+  - `BrawlStarsClientRealTest:17-18` 상수를 `"#88J8Q9RPV"`, `"#2U8CVLQQ9"` 로. 같은 파일 8-12행의 `@TestPropertySource(properties = ["app.client.brawlstars.api-keys="])` 를 지운다 — 인라인 테스트 프로퍼티가 yml 보다 우선해 키를 빈 값으로 덮는다. 키는 import 한 `brawlstars-client.yml` 의 `${BRAWLSTARS_API_KEYS:}` 로 받는다(없으면 `[""]` 로 기동하고 호출이 403 으로 실패 — 수집 확인에는 충분).
 - [ ] **Step 6: 클라이언트 테스트 통과** — `./gradlew :client:brawlstars-client:test` → PASS.
 - [ ] **Step 7: 호출부 테스트를 먼저 바꾸고 더한다** — 예외 헬퍼(테스트 파일마다 private 함수로 둔다): `HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders(), ByteArray(0), null)`, `HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)`, `ResourceAccessException("I/O error on GET request: Read timed out", SocketTimeoutException("Read timed out"))`.
   - `StatsBattleAccumulationServiceTest`: feign import 와 `serviceUnavailable()` 을 위 헬퍼로 교체(테스트 이름·검증 유지).
@@ -243,7 +251,7 @@ Expected: 출력 없음.
   - Create `PlayerRefreshServiceTest : CoreWorkerContextTest()`: `플레이어 조회가 404 면 플레이어를 DELETED 로 바꾼다`(ACTIVE player 1명 저장 → 항상 그 player 가 뽑힌다), `503 이면 점검을 등록한다`.
   - Create `ClubRenewalServiceTest : CoreWorkerContextTest()`: `클럽 조회가 404 면 renewal 을 NOT_FOUND 로 끝내고 클럽을 DELETED 로 바꾼다`(`aClubEntity()`, `aRenewalEntity().withType(RenewalType.CLUB)` + `toPending()`), `503 이면 점검을 등록하고 renewal 을 FAILED 로 끝낸다`.
   - `BrawlStarsApiTaskletTest`: 헬퍼 교체, 추가 `503 이 아닌 HTTP 오류는 전파한다`(500 → 예외가 밖으로 나온다).
-- [ ] **Step 8: 실패 확인** — `./gradlew :core:core-worker:test :core:core-batch:test` → 컴파일 실패(호출부가 삭제된 예외 타입을 참조).
+- [ ] **Step 8: 실패 확인** — `./gradlew --continue :core:core-worker:test :core:core-batch:test` → 두 모듈 모두 컴파일 실패(호출부가 삭제된 예외 타입을 참조).
 - [ ] **Step 9: 호출부 catch 를 바꾼다**
 
 | 파일 | 지금 | 바꾼 뒤 |
@@ -257,7 +265,7 @@ Expected: 출력 없음.
 `when`·`catch` 순서는 하위 타입(NotFound·ServiceUnavailable)을 `RestClientResponseException` 보다 먼저 둔다.
 
 - [ ] **Step 10: 호출부 테스트 통과** — Step 8 명령 → PASS.
-- [ ] **Step 11: HTTP 배선 컨텍스트 테스트를 쓴다** — `BrawlStarsClientHttpWiringContextTest`: `CoreWorkerContextTest` 를 상속하지 않고 그 클래스 애노테이션(`@Tag("context") @SpringBootTest @Import(TestJpaConfig::class) @TestConstructor(autowireMode = ALL)`)과 consumer 2개의 `@MockkBean(relaxed = true)` 를 복제한다(`BrawlStarsClient` mock 만 뺀다). 생성자 `(brawlStarsClient: BrawlStarsClient, rateLimiterRegistry: RateLimiterRegistry)`. companion 에 `com.sun.net.httpserver.HttpServer` 하나(`setExecutor(Executors.newCachedThreadPool())`, `@AfterAll` 정지)를 두고 `exchange.requestURI.rawPath` 로 분기한다: `/v1/players/%23SLOW/battlelog` 는 3초 잠든다, `/v1/players/%23UNAVAILABLE/battlelog` 는 503(호출 수를 센다), 그 밖의 battlelog 는 `{"items":[],"paging":null}` 를 주고 `Authorization` 헤더와 rawPath 를 기록한다. `@DynamicPropertySource`: `app.client.brawlstars.url=http://127.0.0.1:<port>`, `app.client.brawlstars.api-keys=wiring-key`, `spring.http.clients.read-timeout=500ms`, `resilience4j.ratelimiter.instances.brawlstars.limit-for-period=1000`, `.limit-refresh-period=1h`, `.timeout-duration=0s`.
+- [ ] **Step 11: HTTP 배선 컨텍스트 테스트를 쓴다** — `BrawlStarsClientHttpWiringContextTest`: `CoreWorkerContextTest` 를 상속하지 않고 그 클래스 애노테이션(`@Tag("context") @SpringBootTest @Import(TestJpaConfig::class) @TestConstructor(autowireMode = ALL)`)과 consumer 2개의 `@MockkBean(relaxed = true)` 를 복제한다(`BrawlStarsClient` mock 만 뺀다). 생성자 `(brawlStarsClient: BrawlStarsClient, rateLimiterRegistry: RateLimiterRegistry)`. companion 에 `com.sun.net.httpserver.HttpServer` 하나(`setExecutor(Executors.newCachedThreadPool())`, `@AfterAll` 정지)를 두고 `exchange.requestURI.rawPath` 로 분기한다: `/v1/players/%23SLOW/battlelog` 는 3초 잠든다, `/v1/players/%23UNAVAILABLE/battlelog` 는 503(호출 수를 센다), 그 밖의 battlelog 는 `Content-Type: application/json` 헤더와 함께 `{"items":[],"paging":null}` 를 주고 `Authorization` 헤더와 rawPath 를 기록한다(`HttpServer` 는 Content-Type 을 붙이지 않아, 빠지면 RestClient 가 본문을 읽지 못한다). `@DynamicPropertySource`: `app.client.brawlstars.url=http://127.0.0.1:<port>`, `app.client.brawlstars.api-keys=wiring-key`, `spring.http.clients.read-timeout=500ms`, `resilience4j.ratelimiter.instances.brawlstars.limit-for-period=1000`, `.limit-refresh-period=1h`, `.timeout-duration=0s`.
   - `응답 대기 초과는 HC5 read-timeout 으로 ResourceAccessException 이 된다` — `assertTimeoutPreemptively(Duration.ofSeconds(5))` 안에서 `getPlayerRecentBattles("#SLOW")` → `ResourceAccessException`, `hasRootCauseInstanceOf(SocketTimeoutException::class.java)`.
   - `요청에 Bearer 키를 붙이고 태그를 %23 으로 보낸다` — 기록된 헤더 `Bearer wiring-key`, rawPath `/v1/players/%23A/battlelog`(로깅 processor 가 빠졌다면 이 호출이 `IllegalStateException` 으로 실패한다).
   - `HTTP 요청마다 brawlstars 제한기 허가를 하나씩 쓴다` — 호출 전후 `rateLimiterRegistry.rateLimiter("brawlstars").metrics.availablePermissions` 차이 == 호출 수(2).
@@ -266,10 +274,10 @@ Expected: 출력 없음.
 - [ ] **Step 13: 의존 확인·기록** — `./gradlew :core:core-worker:dependencyInsight --dependency spring-retry --configuration runtimeClasspath`(db-core 도) → `2.0.12`. `./gradlew :core:core-batch:dependencyInsight --dependency aspectjweaver --configuration runtimeClasspath` 결과를 PR 설명에 적는다 — aspectjweaver 가 없으면 core-batch 는 지금까지 `@RateLimiter` 가 동작하지 않았고, 전환 뒤 처음으로 초당 10회 제한을 받는다(배포 후 ranking-collect 소요 시간 확인 항목).
 - [ ] **Step 14: Feign·Spring Cloud 잔재 확인**
 
-Run: `grep -rnE "feign|openfeign|org\.springframework\.cloud|spring-cloud-starter|BrawlStarsApi(Client|Server)?Exception|PagingParam" --include='*.kt' --include='*.kts' --include='*.yml' .`
-Expected: `infrastructure/db-core` 의 `io.github.openfeign.querydsl` 만 나온다.
+Run: `grep -rnE "feign|openfeign|org\.springframework\.cloud|spring-cloud-starter|BrawlStarsApi(Client|Server)?Exception|PagingParam" --include='*.kt' --include='*.kts' --include='*.yml' .` 와 Step 15 뒤의 `grep -n -i feign AGENTS.md`
+Expected: 앞 명령은 `infrastructure/db-core` 의 `io.github.openfeign.querydsl` 만, 뒤 명령은 출력 없음.
 
-- [ ] **Step 15: 문서** — `AGENTS.md`: brawlstars-client 설명을 "HTTP Service Client(RestClient) 기반, `support:http-client`·`support:logging` 의존" 으로, support 트리에 `http-client/ # HTTP 클라이언트 공통 설정 — HC5·타임아웃·재시도 끔·커넥션 풀·호출 로깅`, 코드 규칙에 "외부 API 클라이언트는 RestClient 예외를 그대로 올리고(공용 예외 계층 없음) 재시도하지 않는다. HTTP 설정은 `support:http-client`, 그룹별 값은 `spring.http.serviceclient.<group>.*`". `client/brawlstars-client/README.md` 에 HTTP 설정 위치와 레이트리밋 인터셉터(제한기 `brawlstars`) 한 줄씩.
+- [ ] **Step 15: 문서** — `AGENTS.md:57` 트리 주석 `(OpenFeign)` → `(HTTP Service Client·RestClient)`, `:68` 의존 관계 → `` `brawlstars-client` → `support:http-client`, `support:logging` (HTTP Service Client·RestClient 기반) ``, support 트리에 `http-client/ # HTTP 클라이언트 공통 설정 — HC5·타임아웃·재시도 끔·커넥션 풀·호출 로깅`, 코드 규칙에 "외부 API 클라이언트는 RestClient 예외를 그대로 올리고(공용 예외 계층 없음) 재시도하지 않는다. HTTP 설정은 `support:http-client`, 그룹별 값은 `spring.http.serviceclient.<group>.*`". `client/brawlstars-client/README.md` 에 HTTP 설정 위치와 레이트리밋 인터셉터(제한기 `brawlstars`) 한 줄씩.
 - [ ] **Step 16: 전체 빌드** — `./gradlew build` → `BUILD SUCCESSFUL`.
 - [ ] **Step 17: 커밋** — `git add -A && git commit -m "refactor(brawlstars-client): Feign·Spring Cloud 를 걷어내고 HTTP Service Client(RestClient)로 바꾼다"`
 
@@ -280,8 +288,8 @@ Expected: `infrastructure/db-core` 의 `io.github.openfeign.querydsl` 만 나온
 **Files:**
 - Modify: `client/brawlstars-client/src/main/kotlin/com/imstargg/client/brawlstars/{BrawlStarsClient,BrawlStarsClientConfig,BrawlStarsClientProperties}.kt`, `.../resources/brawlstars-client.yml`(`app.client.brawlstars.batch-concurrency: 5`), `client/brawlstars-client/README.md`
 - Modify: `core/core-worker/src/main/kotlin/com/imstargg/core/worker/application/stats/StatsBattleAccumulationService.kt`
-- Modify: `docs/brawlstars-api-maintenance.md:26,32`
-- Test: Create `client/brawlstars-client/src/test/kotlin/com/imstargg/client/brawlstars/BrawlStarsClientBatchTest.kt`; Modify `core/core-worker/.../stats/StatsBattleAccumulationServiceTest.kt`, `core/core-worker/src/test/kotlin/com/imstargg/BrawlStarsClientHttpWiringContextTest.kt`
+- Modify: `docs/brawlstars-api-maintenance.md:27,32`
+- Test: Create `client/brawlstars-client/src/test/kotlin/com/imstargg/client/brawlstars/BrawlStarsClientBatchTest.kt`; Modify `client/brawlstars-client/src/test/kotlin/com/imstargg/client/brawlstars/BrawlStarsClientTest.kt`(하네스 생성자에 `batchConcurrency = 5`), `core/core-worker/.../stats/StatsBattleAccumulationServiceTest.kt`, `core/core-worker/src/test/kotlin/com/imstargg/BrawlStarsClientHttpWiringContextTest.kt`
 
 **Interfaces:**
 - Consumes: Task 4 의 `BrawlStarsApi`, `BrawlStarsClientConfig`.
@@ -326,11 +334,12 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
   - `@MockkBean(relaxUnitFun = true) private lateinit var statsBattleAggregator: StatsBattleAggregator` 를 두고 추가:
     - `타임아웃이 난 플레이어는 경고만 남기고 나머지 플레이어를 계속 집계한다` — 첫 태그만 `Result.failure(ResourceAccessException(...))` → `verify(exactly = <뽑힌 수 - 1>) { statsBattleAggregator.aggregate(any()) }`.
     - `레이트리밋 허가를 못 받은 플레이어가 있어도 나머지 플레이어는 집계한다` — 첫 태그만 `Result.failure(RequestNotPermitted.createRequestNotPermitted(RateLimiter.ofDefaults("brawlstars")))` → 같은 검증(Review Focus 2).
+    - `한 틱에 점검 응답이 섞여도 나머지 플레이어는 집계한다` — 첫 태그만 `Result.failure(serviceUnavailable())`, 나머지는 성공 → `brawlStarsApiMaintenanceRepository.count() == 1`, `verify(exactly = <뽑힌 수 - 1>) { statsBattleAggregator.aggregate(any()) }`.
 - [ ] **Step 6: 실패 확인** — `./gradlew :core:core-worker:test --tests '*StatsBattleAccumulationServiceTest'` → FAIL(서비스가 아직 단건 메서드를 부른다).
-- [ ] **Step 7: 서비스를 배치 호출로 바꾼다** — `executor` 필드·KDoc·`@PreDestroy shutdown()`·companion(`SHUTDOWN_TIMEOUT_SECONDS`)·`CompletableFuture`/`Executors`/`TimeUnit`/`AtomicBoolean` import 를 지운다. `accumulate()` 는 `brawlStarsClient.getPlayersRecentBattles(statsPlayers.map { it.brawlStarsTag })` 결과를 스케줄러 스레드에서 플레이어 순서대로 처리한다: 성공 → `BattleBuilder` + `statsBattleAggregator.aggregate`(플레이어별 `try/catch(Exception)` → `log.error(ex) { "[배틀 통계 축적] 처리 실패 tag=$tag" }`), 실패 → Task 4 의 분기와 같다(점검 등록은 로컬 플래그로 틱당 한 번).
+- [ ] **Step 7: 서비스를 배치 호출로 바꾼다** — `executor` 필드·KDoc·`@PreDestroy shutdown()`·companion(`SHUTDOWN_TIMEOUT_SECONDS`)·`CompletableFuture`/`Executors`/`TimeUnit`/`AtomicBoolean` import 를 지운다. `accumulate()` 는 `brawlStarsClient.getPlayersRecentBattles(statsPlayers.map { it.brawlStarsTag })` 결과를 스케줄러 스레드에서 플레이어 순서대로 처리한다: 성공 → `BattleBuilder` + `statsBattleAggregator.aggregate`(플레이어별 `try/catch(Exception)` → `log.error(ex) { "[배틀 통계 축적] 처리 실패 tag=$tag" }`), 실패 → Task 4 의 분기와 같다. 로컬 플래그는 점검 중복 등록만 막는다 — 503 다음 순서의 플레이어도 성공이면 집계하고 다른 실패는 각 분기대로 처리한다(지금의 `if (maintenanceDetected.get()) return` 조기 종료는 옮기지 않는다).
 - [ ] **Step 8: 통과 확인** — Step 6 명령 → PASS.
 - [ ] **Step 9: 배선 테스트에 배치 경로를 더한다** — `HTTP 요청마다 brawlstars 제한기 허가를 하나씩 쓴다` 를 단건 1회 + `getPlayersRecentBattles(listOf("#A", "#B"))` 로 바꾸고 허가 차이 == 3.
-- [ ] **Step 10: 문서** — `docs/brawlstars-api-maintenance.md:32` "스케줄러는 503 감지 시 나머지 플레이어 처리 중단 (break)" → "통계 축적은 한 틱의 요청을 배치로 함께 보내므로 503 을 받으면 틱당 한 번 점검을 등록하고 다음 틱부터 호출을 막는다. 처리 중단(break)은 플레이어 새로고침에만 해당한다". 26행 표의 위치가 실제(서비스)와 다르면 함께 고친다. `README.md` 에 배치 메서드 한 줄(`getPlayersRecentBattles`, 동시 실행 상한 `batch-concurrency`).
+- [ ] **Step 10: 문서** — `docs/brawlstars-api-maintenance.md:32` "스케줄러는 503 감지 시 나머지 플레이어 처리 중단 (break)" → "통계 축적은 한 틱의 요청을 배치로 함께 보내므로 503 을 받으면 틱당 한 번 점검을 등록하고 다음 틱부터 호출을 막는다. 처리 중단(break)은 플레이어 새로고침에만 해당한다". 27행 `StatsBattleAccumulationScheduler.accumulate()` → `StatsBattleAccumulationService.accumulate()`, 표에 `| PlayerRefreshService.refresh() | O | O |` 행을 추가한다. `README.md` 에 배치 메서드 한 줄(`getPlayersRecentBattles`, 동시 실행 상한 `batch-concurrency`).
 - [ ] **Step 11: 전체 빌드** — `./gradlew build` → `BUILD SUCCESSFUL`.
 - [ ] **Step 12: 커밋** — `git add -A && git commit -m "refactor(brawlstars-client): 여러 플레이어 battlelog 동시 조회를 클라이언트 배치 메서드로 옮긴다"`
 
@@ -369,7 +378,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
   - `BattleBuilderTest`: `브롤러_이름이_null이어도_Battle을_생성한다` — `BattleResultBrawlerResponse(id = 16000088L, name = null, power = 11, trophies = 500, trophyChange = null)` 로 만든 응답 → `actual.teams[0][0].brawler.name` null.
   - `StatsBattleAggregateApplierTest`: `브롤러 이름이 null 이면 통계 JSON 에 빈 문자열로 저장한다` — `createTeam3v3()`(트로피 1500, 고유 ID) 에서 `#A1` 의 브롤러 이름만 null 로 한 전투 → `statsResultBattleRepository.findAll().single().teams.flatten().first { it.brawlStarsTag == "#A1" }.brawler.name == ""`.
   - `PlayerUpdaterUpdateBattlesTest`: `브롤러_이름이_null이면_battle_team_player에_null로_저장한다` — 저장된 해당 선수의 `brawler.name` null.
-- [ ] **Step 3: 실패 확인** — `./gradlew :client:brawlstars-client:test :core:core-worker:test --tests '*BattleBuilderTest' --tests '*StatsBattleAggregateApplierTest' --tests '*PlayerUpdaterUpdateBattlesTest'` → FAIL(역직렬화 실패·컴파일 실패).
+- [ ] **Step 3: 실패 확인** — `./gradlew --continue :client:brawlstars-client:test :core:core-worker:test --tests '*BattleBuilderTest' --tests '*StatsBattleAggregateApplierTest' --tests '*PlayerUpdaterUpdateBattlesTest'` → FAIL(역직렬화 실패·컴파일 실패).
 - [ ] **Step 4: 구현** — Files 의 타입 변경. `StatsBattleAggregateApplier.convertTeams` 는 `name = player.brawler.name ?: ""` 와 주석: "통계 JSON 은 jackson-module-kotlin 생성자 주입으로 읽혀 non-null 파라미터에 null 이 오면 구버전 core-batch Reader 가 실패한다 — 빈 문자열이면 배포 순서·롤백 제약이 없다".
 - [ ] **Step 5: DDL·스키마** — `schema.sql:200` 을 `null` 로. 마이그레이션은 `V261020__add_deleted_at_to_brawlstars_resources.sql` 머리 주석 형식(무엇을/대상/배경/배포 순서 'DDL 선적용 → 앱 배포'·구버전 호환·메타데이터 변경/멱등)에 "적용 시 `lock_timeout` 3s, 실패하면 02:00~09:00 KST 를 피해 재시도"를 더하고 본문은 `set lock_timeout = '3s';` + `alter table battle_team_player alter column brawler_name drop not null;`(반복 실행해도 오류가 없는 멱등임을 주석에 적는다).
 - [ ] **Step 6: 통과 확인** — Step 3 명령 → PASS.
@@ -391,12 +400,13 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 
 - [ ] **Step 1: 테스트를 쓴다**
   - `StatsBattleAccumulationServiceTest`:
-    - `battlelog 404 면 stats_player 를 BATTLE_LOG_UNAVAILABLE 로 표시하고 행과 player 는 유지한다` — 뽑힐 태그 중 하나와 같은 태그의 `aPlayerEntity()` 저장, 모든 결과를 `Result.failure(notFound())` → 뽑힌 태그의 `statsPlayerRepository.findById(id).get().status == BATTLE_LOG_UNAVAILABLE`, `statsPlayerRepository.count() == 200`, player `status == PlayerStatus.ACTIVE`.
-    - `ACTIVE 인 stats_player 만 뽑는다` — 200행 중 대부분을 `BATTLE_LOG_UNAVAILABLE` 로 둔 뒤 실행 → 캡처한 태그가 모두 ACTIVE 태그 집합에 속한다.
+    - `battlelog 404 면 stats_player 를 BATTLE_LOG_UNAVAILABLE 로 표시하고 행과 player 는 유지한다` — 200개 태그 모두에 `aPlayerEntity().withBrawlStarsTag("#P$it")` 를 저장하고, 모든 결과를 `Result.failure(notFound())` → `tags.captured` 의 모든 태그에 대해 `statsPlayerRepository.findById(idByTag.getValue(tag)).get().status == BATTLE_LOG_UNAVAILABLE` 이고 `playerRepository.findByBrawlStarsTag(tag)!!.status == PlayerStatus.ACTIVE`, `statsPlayerRepository.count() == 200`.
+    - `ACTIVE 인 stats_player 만 뽑는다` — 10의 배수 태그(`#P10`, `#P20` … `#P200`, 최대 ID 행 포함)만 ACTIVE 로 남기고 나머지는 `markBattleLogUnavailable()` 후 `saveAll` → 어떤 무작위 ID 로도 ACTIVE 행이 잡히므로, 캡처한 태그가 모두 그 ACTIVE 집합에 속한다.
+    - `점검 응답 뒤 순서의 404 도 표시한다` — 캡처한 첫 태그는 `Result.failure(serviceUnavailable())`, 둘째 태그는 `Result.failure(notFound())`, 나머지 성공 → 둘째 태그의 status 가 `BATTLE_LOG_UNAVAILABLE`.
     - `뽑을 ACTIVE 플레이어가 없으면 API 를 부르지 않는다` — 200행 모두 `BATTLE_LOG_UNAVAILABLE` → `verify(exactly = 0) { brawlStarsClient.getPlayersRecentBattles(any()) }`(Review Focus 3).
   - `PlayerRenewalServiceTest` 의 `플레이어 조회가 404 면 …` 에 `aStatsPlayerEntity().withBrawlStarsTag(tag)` 를 미리 저장하고 `statsPlayerRepository.findAllByBrawlStarsTagIn(listOf(tag))` 크기 1 을 더 단언한다.
   - Create `StatsPlayerSyncJobItemWriterTest : CoreBatchContextTest()` — `StatsPlayerSyncJobItemWriter(statsPlayerJpaRepository)` 를 직접 만들고 `write(Chunk(listOf(listOf(teamPlayer("#A"), teamPlayer("#B")))))`(`teamPlayer(tag) = StatsBattleEntityTeamPlayer(brawlStarsTag = tag, name = "p", brawler = StatsBattleEntityTeamPlayerBrawler(16000000, "SHELLY", 11, 1000))`, `#A` 는 미리 `withStatus(BATTLE_LOG_UNAVAILABLE)` 로 저장): `표시된 태그를 다시 만나도 새로 넣지 않고 상태를 유지한다` — `count() == 2`, `#A` 는 `BATTLE_LOG_UNAVAILABLE`, `#B` 는 `ACTIVE`(Review Focus 4). `@AfterEach cleanUp.all()`.
-- [ ] **Step 2: 실패 확인** — `./gradlew :core:core-worker:test --tests '*StatsBattleAccumulationServiceTest' --tests '*PlayerRenewalServiceTest' :core:core-batch:test --tests '*StatsPlayerSyncJobItemWriterTest'` → 컴파일 실패.
+- [ ] **Step 2: 실패 확인** — `./gradlew --continue :core:core-worker:test --tests '*StatsBattleAccumulationServiceTest' --tests '*PlayerRenewalServiceTest' :core:core-batch:test --tests '*StatsPlayerSyncJobItemWriterTest'` → 컴파일 실패.
 - [ ] **Step 3: 구현**
   - enum 은 `PlayerStatus.kt` 와 같은 형태. 엔티티는 `PlayerEntity.status`/`toDeleted()` 와 같은 패턴. 픽스처는 `PlayerEntityFixture` 처럼 `private var status = ACTIVE`, `withStatus`, `build()` 에서 `BATTLE_LOG_UNAVAILABLE` 이면 `markBattleLogUnavailable()`.
   - `StatsPlayerStatusUpdater.markBattleLogUnavailable(statsPlayerId)` 는 `findById(statsPlayerId).orElse(null)?.markBattleLogUnavailable()`(변경 감지로 `updated_at` 갱신).
@@ -445,5 +455,5 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 1. 앱 배포 전 운영 DB 에 `V261102a`·`V261102b` 를 수동 적용한다(`lock_timeout` 3s, 실패 시 02:00~09:00 KST 를 피해 재시도).
 2. core-worker·core-batch·core-api(·core-admin) 를 Java 25 이미지로 배포한다. 순서 제약 없음.
 3. 오삭제 복구(1회): VictoriaLogs 에서 `"[배틀 통계 축적] 플레이어 삭제됨"` 태그를 보관 기간 전체로 뽑고(더 오래된 것은 복구 대상 밖임을 기록), 그중 `player.status = 'DELETED'` 수를 센 뒤 `update player set status = 'ACTIVE', updated_at = now() where brawlstars_tag in (...) and status = 'DELETED';`.
-4. 24시간 확인: `"Read timed out"` ≈ 0, `"[배틀 통계 축적] 플레이어 삭제됨"` 0, `"battlelog 없음(404)"` 감소, `"Error while extracting response"`·`"[배틀 통계 축적] 처리 실패"` 0, `RequestNotPermitted` 0, 통계 적재량(id 차분) 하루 약 74.8만 건 유지, ranking-collect 소요 시간(Task 4 Step 13 의 aspectj 결과와 비교), 이벤트 통계 화면의 숨김 브롤러 `-` 행.
+4. 24시간 확인: `"Read timed out"` ≈ 0, `"[배틀 통계 축적] 플레이어 삭제됨"` 0, `"[배틀 통계 축적] battlelog 없음(404)"` 감소(갱신 경로 로그는 사용자 재요청으로 계속 나므로 제외), `"Error while extracting response"`·`"[배틀 통계 축적] 처리 실패"` 0, `RequestNotPermitted` 0, 통계 적재량(id 차분) 하루 약 74.8만 건 유지, ranking-collect 소요 시간(Task 4 Step 13 의 aspectj 결과와 비교), 이벤트 통계 화면의 숨김 브롤러 `-` 행.
 5. 롤백: 앱 이미지만 되돌린다. core-worker 를 되돌리면 표시된 행이 다시 삭제되는 루프가 돌아온다(데이터 손실 아님).
