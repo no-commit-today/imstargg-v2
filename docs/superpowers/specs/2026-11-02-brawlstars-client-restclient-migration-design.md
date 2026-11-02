@@ -205,8 +205,8 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 - 뽑기: `findFirstByIdGreaterThanEqualOrderByIdAsc` → `findFirstByIdGreaterThanEqualAndStatusOrderByIdAsc(id, ACTIVE)`. PK 인덱스 스캔에 status 필터가 붙는다(status 인덱스 불필요). 최대 ID 조회는 그대로.
 - 통계 축적 중 `NotFound` → `StatsPlayerStatusUpdater.markBattleLogUnavailable(id)` + info 로그 `[배틀 통계 축적] battlelog 없음(404) — 수집 제외 tag=...`. `PlayerDeactivator` 는 부르지 않는다.
 - 행이 남아 있으므로 `StatsPlayerSyncJobItemWriter`·`StatsPlayerSyncFromRankingTask`(기존 태그 제외 후 insert)가 다시 넣지 않는다 — 재등록·재삭제 루프가 끊긴다.
-- `stats_player` 의 다른 소비처 `BrawlerItemOwnershipStatsReader` 는 status 로 거르지 않는다. 소유 통계는 `/players` 데이터 기반이고, 이 계정군(트로피 0)은 `BrawlerTrophyRange`(500 이상) 구간에 들지 않아 결과가 달라지지 않는다.
-  - 다만 진짜 삭제된 계정(`/players` 404)도 이제 `stats_player` 행이 남는다(예전에는 `PlayerDeactivator` 가 지웠다). 이 Reader 는 player 를 status 조건 없이 조인하므로(`playerEntity.brawlStarsTag.in(tags)` 만), 그 계정의 마지막 브롤러·기어·가젯·스타파워 스냅샷이 이후 소유 통계에 계속 들어간다. 새로고침·갱신 경로의 `/players` 404 뿐이라 비중은 아주 작다(2026-11-03 리뷰의 VictoriaLogs 조회: 30일 `[플레이어 갱신] 플레이어 삭제됨` 2건) — 받아들이고, 후속으로 Reader 의 player 조인에 `playerEntity.status.eq(ACTIVE)` 를 더한다(§7).
+- `stats_player` 의 다른 소비처 `BrawlerItemOwnershipStatsReader` 는 `stats_player.status` 로 거르지 않는다. 소유 통계는 `/players` 데이터 기반이고, 이 계정군(트로피 0)은 `BrawlerTrophyRange`(500 이상) 구간에 들지 않아 결과가 달라지지 않는다.
+  - 다만 진짜 삭제된 계정(`/players` 404)도 이제 `stats_player` 행이 남는다(예전에는 `PlayerDeactivator` 가 지웠다). 그대로 두면 그 계정의 마지막 브롤러·기어·가젯·스타파워 스냅샷이 이후 소유 통계에 계속 들어가므로, Reader 의 player 조인 6곳(브롤러 + 아이템 5종)에 `playerEntity.status.eq(PlayerStatus.ACTIVE)` 를 더한다. 기준은 `stats_player.status` 가 아니라 player 상태다 — battlelog 만 숨긴 `BATTLE_LOG_UNAVAILABLE` 계정의 프로필은 정상이라 소유 통계에 남아야 한다. 대상은 새로고침·갱신 경로의 `/players` 404 뿐이라 비중은 아주 작다(2026-11-03 리뷰의 VictoriaLogs 조회: 30일 `[플레이어 갱신] 플레이어 삭제됨` 2건). 다시 조회돼 `ACTIVE` 로 돌아온 계정은 별도 처리 없이 다시 집계된다.
 - 표시된 행은 재확인하지 않는다.
 - `PlayerDeactivator` 에서 `statsPlayerRepository.deleteByBrawlStarsTag` 를 없애 player soft-delete 만 남긴다. 미사용이 되는 `StatsPlayerJpaRepository.deleteByBrawlStarsTag` 는 삭제한다. 갱신·새로고침 중 `/players` 404(진짜 삭제된 계정)의 player soft-delete 는 그대로 둔다 — core-api 가 이 상태로 410 을 돌려주는 사용자 기능이다.
 - `PlayerRefreshService` 의 무작위 추출(`PlayerJpaRepository.findAllByStatusAndIdGreaterThanEqual(status, id, pageable)`, 정렬 없음)에도 §1.3 과 같은 Seq Scan 쏠림 패턴이 있다 → `findAllByStatusAndIdGreaterThanEqualOrderByIdAsc` 로 바꾼다.
@@ -310,7 +310,6 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 - `spring-retry` 버전이 awspring BOM 의 중첩 import(spring-cloud-commons-dependencies, 2.0.12)로 관리되는 숨은 결합 — 버전 고정 또는 Spring Framework 7 `@Retryable` 이전.
 - `ApiLoggingInterceptor` 가 non-2xx 응답을 WARN 으로 올릴지(404 가 하루 수천 건 WARN 이 된다).
 - `BATTLE_LOG_UNAVAILABLE` 행 재확인.
-- `BrawlerItemOwnershipStatsReader` 의 player 조인에 `playerEntity.status.eq(PlayerStatus.ACTIVE)` 추가 — 진짜 삭제 계정의 남은 `stats_player` 행이 소유 통계에 들어가지 않게 한다(§4.7).
 
 PR 준비 시 처리(설계 밖): 작업 브랜치는 `origin/develop` 기준의 규칙명(예: `refactor/brawlstars-client-restclient`)으로 만들고, 아직 push 하지 않은 develop 커밋 `af60043f`(mcp 추가)를 이 PR 에 실을지 먼저 develop 에 따로 push 할지 정한다.
 
