@@ -1,5 +1,5 @@
 dependencies {
-    // 로깅·인증키 인터셉터 — ClientHttpRequestInterceptor·HttpRequestValues 는 spring-web, 로그는 kotlin-logging
+    // 호출 로깅 인터셉터(ApiLoggingInterceptor) — ClientHttpRequestInterceptor·HttpRequestValues 는 spring-web, 로그는 kotlin-logging
     implementation("org.springframework:spring-web")
     implementation(project(":support:logging"))
     // HttpServiceClientAutoConfiguration 이 spring.http.clients.* 를 @ImportHttpServices 그룹의 requestFactory 에 적용한다 — 없으면 조용히 무시된다

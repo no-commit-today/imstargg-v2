@@ -6,7 +6,7 @@
 
 **Architecture:** `support:http-client`(HC5 고정·재시도 끔·풀·타임아웃·호출 로깅) 위에 `@ImportHttpServices(group = "brawlstars")` 그룹을 두고, `BrawlStarsClient` 가 `BrawlStarsApi`(`@HttpExchange`) 프록시를 감싼다. 인터셉터는 바깥부터 레이트리밋 → 로깅 → 키 순환. 예외는 RestClient 예외를 그대로 올리고 호출부가 잡는다. 통계 축적의 battlelog 404 는 `stats_player.status` 로 표시해 뽑기에서 뺀다.
 
-**Tech Stack:** Kotlin 2.3.21, Java 25, Spring Boot 4.1.1(Spring Framework 7), Apache HttpClient 5.6, resilience4j 2.4.0, kotlin-logging 8.0.4, JUnit 5·AssertJ·MockK/springmockk, Testcontainers Postgres.
+**Tech Stack:** Kotlin 2.3.21, Java 25, Spring Boot 4.1.1(Spring Framework 7), Apache HttpClient 5.6, resilience4j 2.4.0, kotlin-logging 8.0.4, JUnit 5·AssertJ·MockK/springmockk, 테스트 DB H2(PostgreSQL 모드).
 
 **Spec:** `docs/superpowers/specs/2026-11-02-brawlstars-client-restclient-migration-design.md`
 
@@ -19,7 +19,7 @@
 - 배치 동시 실행 상한 `app.client.brawlstars.batch-concurrency: 5`.
 - 클라이언트 예외 계층을 만들지 않는다 — `HttpClientErrorException`·`HttpServerErrorException`(상태별 하위 타입)·`RestClientResponseException`·`ResourceAccessException`·`RestClientException`·`RequestNotPermitted` 를 그대로 쓴다.
 - 로깅: 운영 코드는 파일 최상위 `private val log = KotlinLogging.logger {}`, 메시지는 람다 문자열 템플릿, 예외는 `log.warn(ex) { "…" }`. `org.slf4j` 는 운영 코드에서 import 하지 않는다. 한글이 바로 붙는 자리는 `${n}건` 처럼 중괄호를 쓴다.
-- 테스트: `org.junit.jupiter.api.Test`, AssertJ, 백틱 한글 메서드 이름, `// given` `// when` `// then` 주석. `CoreWorkerContextTest`·`CoreBatchContextTest` 를 상속하는 클래스에는 `@Tag("context")` 를 다시 달지 않는다. 테스트는 Redis 에 직접 기대지 않는다(CI 는 Testcontainers Postgres 만 있다). 로컬 실행에 Docker 가 필요하다.
+- 테스트: `org.junit.jupiter.api.Test`, AssertJ, 백틱 한글 메서드 이름, `// given` `// when` `// then` 주석. `CoreWorkerContextTest`·`CoreBatchContextTest` 를 상속하는 클래스에는 `@Tag("context")` 를 다시 달지 않는다. 테스트는 Redis 에 직접 기대지 않는다(CI 에 Redis 가 없다). 테스트 DB 는 Testcontainers Postgres 가 아니라 H2 인메모리(`MODE=PostgreSQL`, `ddl-auto: create`, db-core testFixtures 의 `application-test-db.yml`)라 Docker 가 필요 없다 — `schema.sql`·마이그레이션 DDL 은 테스트에서 실행되지 않는다(이 계획의 `V261102a`·`V261102b` 는 postgres:17-alpine 에 수동으로 두 번 적용해 확인했다).
 - 공용 헬퍼로 묶기보다 테스트별 로컬 헬퍼 중복을 둔다(예: `createPlayerResponse`).
 - 모든 Task 의 마지막 검증은 `./gradlew build`(ktlint 포함, 한 줄 140자) 통과다. 커밋 메시지는 Conventional Commits, 본문 끝에 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - 스펙 §3 의 5개 커밋 단계는 이 계획에서 8개 커밋으로 나뉜다: 커밋 1=Task 1, 2=Task 2, 3=Task 3·4·5, 4=Task 6, 5=Task 7·8. 각 커밋은 단독으로 빌드가 통과한다.
@@ -445,7 +445,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 ### Task 9: 마무리
 
 - [ ] **Step 1: 버전 bump** — `release` 스킬의 bump 단계로 core-api·core-batch·core-worker SNAPSHOT 버전을 올리고 그 커밋을 만든다(core-admin 은 대상 외).
-- [ ] **Step 2: 최종 검증** — `./gradlew build` → `BUILD SUCCESSFUL`. 현재 IP 가 등록된 테스트 키가 있으면 `BRAWLSTARS_API_KEYS=<키> ./gradlew :client:brawlstars-client:developTest` 로 실제 응답 디코딩을 확인한다(키는 명령 인자·로그·커밋에 남기지 않는다). 키가 없으면 건너뛰었다고 PR 설명에 적는다.
+- [ ] **Step 2: 최종 검증** — `./gradlew build` → `BUILD SUCCESSFUL`. 현재 IP 가 등록된 테스트 키가 있으면 `BRAWLSTARS_API_KEYS=<키> ./gradlew :client:brawlstars-client:developTest` 로 실제 응답 디코딩을 확인한다(키는 명령 인자·로그·커밋에 남기지 않는다). 키가 없으면 9건이 건너뜀으로 끝난다 — 건너뛰었다고 PR 설명에 적고, 배포 후 운영 절차 2단계의 운영 전 관문을 채운다.
 - [ ] **Step 3: 범위 확인** — `git log --oneline origin/develop..HEAD` 가 docs 3개 + Task 1~8 커밋 8개 + bump 1개인지 확인한다. push·PR 은 사용자가 요청할 때 한다.
 
 ---
@@ -453,7 +453,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 ## 배포 후 운영 절차 (스펙 §6, 코드 작업 아님)
 
 1. 앱 배포 전 운영 DB 에 `V261102a`·`V261102b` 를 수동 적용한다(`lock_timeout` 3s, 실패 시 02:00~09:00 KST 를 피해 재시도).
-2. core-worker·core-batch·core-api(·core-admin) 를 Java 25 이미지로 배포한다. 순서 제약 없음.
-3. 오삭제 복구(1회): VictoriaLogs 에서 `"[배틀 통계 축적] 플레이어 삭제됨"` 태그를 보관 기간 전체로 뽑고(더 오래된 것은 복구 대상 밖임을 기록), 그중 `player.status = 'DELETED'` 수를 센 뒤 `update player set status = 'ACTIVE', updated_at = now() where brawlstars_tag in (...) and status = 'DELETED';`.
-4. 24시간 확인: `"Read timed out"` ≈ 0, `"[배틀 통계 축적] 플레이어 삭제됨"` 0, `"[배틀 통계 축적] battlelog 없음(404)"` 감소(갱신 경로 로그는 사용자 재요청으로 계속 나므로 제외), `"Error while extracting response"`·`"[배틀 통계 축적] 처리 실패"` 0, `RequestNotPermitted` 0, 통계 적재량(id 차분) 하루 약 74.8만 건 유지, ranking-collect 소요 시간(Task 4 Step 13 의 aspectj 결과와 비교), 이벤트 통계 화면의 숨김 브롤러 `-` 행.
-5. 롤백: 앱 이미지만 되돌린다. core-worker 를 되돌리면 표시된 행이 다시 삭제되는 루프가 돌아온다(데이터 손실 아님).
+2. core-worker·core-batch·core-api(·core-admin) 를 Java 25 이미지로 배포한다. 앱 호환성 때문의 순서 제약은 없지만, 운영 전 실 API 관문(스펙 §6.2)을 먼저 채운다 — 픽스처·배선 테스트가 덮지 못하는 실 호스트 TLS(JDK 25), HC5 가 협상하는 `Accept-Encoding: gzip`, 실 서버의 `%23` 처리, 새 스택의 키·IP 화이트리스트를 확인한다. (a) main PR 전에 키가 등록된 IP 에서 `BRAWLSTARS_API_KEYS=<키> ./gradlew :client:brawlstars-client:developTest`(9건 통과)를 실행해 결과를 PR 에 남기거나, (b) core-batch 를 먼저 배포하고 매시 정각 `battle-event-rotation-sync`(`battleEventRotationSyncJob`) 1회가 성공했는지(Job 실패 없음, `"[BrawlStarsApi#"` WARN·`"[battleEventRotationSyncJob] 브롤스타즈 API 점검 중"` 없음, `battle_event_rotation` 새 행) 본 뒤 core-worker·core-api 를 올린다. (b) 는 태그 경로를 지나지 않으므로 core-worker 첫 몇 틱의 `"[배틀 통계 축적] battlelog 없음(404)"` 비율이 배포 전 수준인지 이어서 본다(거의 전부 404 면 `app.schedule.stats-battle.enabled: false` 로 멈춘다).
+3. 오삭제 복구(1회, 스펙 §6.3): 복구 태그는 두 출처의 합집합이다. (로그) VictoriaLogs 의 `"[배틀 통계 축적] 플레이어 삭제됨"` 태그를 보관 기간 전체로 뽑는다 — 보관 기간보다 오래된 통계 축적 경로 오삭제는 복구 대상 밖임을 기록한다. (DB) 구 갱신 경로는 battlelog 만 404 여도 player 를 지우고 `"[플레이어 비활성화]"` 만 남겼으므로, 로그 보관 기간과 무관하게 `renewal` 로 찾는다 — 먼저 `select count(*) from renewal r join player p on p.brawlstars_tag = r.brawlstars_tag where r.type = 'PLAYER' and r.status = 'NOT_FOUND' and p.status = 'DELETED';` 로 규모를 보고 같은 조건의 `r.brawlstars_tag` 를 뽑는다(보관 기간 안에서는 이 경로의 삭제가 0건이었다 — 2026-11-03 리뷰 조회에서 `PlayerDeactivator` 로그가 모두 `stats-battle-*`·`scheduling-1` 스레드, SQS 리스너 스레드 0건). 로그 태그 중 `player.status = 'DELETED'` 수도 센 뒤 두 목록을 합쳐 `update player set status = 'ACTIVE', updated_at = now() where brawlstars_tag in (...) and status = 'DELETED';`. DB 출처에 섞이는 진짜 삭제 계정은 다음 `/players` 404 로 다시 `DELETED` 가 된다. 복구 뒤에는 `Renewal.canRenew` 가 `NOT_FOUND` 를 완료로 보아 갱신이 다시 동작한다.
+4. 확인(스펙 §6.4). 첫 1시간: core-api `"cache get error"`·`"cache put error"`·`"cache evict error"` 와 core-api·core-worker `"[PlayerBrawlerStatsCache]"` WARN 0(Lettuce 7·Spring Data Redis 4.1 경로는 CI 에 Redis 가 없어 테스트되지 않았다), core-worker 배포 뒤 `COMPLETED` 로 끝난 갱신 1건 이상(`select count(*) from renewal where status = 'COMPLETED' and completed_at >= '<core-worker 배포 시각>';` — SQS 리스너 경로도 테스트되지 않았다. 사용자 갱신이 없으면 사이트에서 하나를 직접 갱신한다). 24시간: `"Read timed out"` ≈ 0, core-worker `"[플레이어 비활성화]"` 가 새로고침 경로 `"[플레이어 갱신] 플레이어 삭제됨"` 과 비슷한 `/players` 404 기준선으로 떨어짐(`"[배틀 통계 축적] 플레이어 삭제됨"` 은 새 코드에 없어 늘 0 이라 확인 항목이 아니다), `"[배틀 통계 축적] battlelog 없음(404)"` 감소(갱신 경로 로그는 사용자 재요청으로 계속 나므로 제외), `"Error while extracting response"`·`"[배틀 통계 축적] 처리 실패"` 0, `RequestNotPermitted` 0, 통계 적재량(id 차분) 하루 약 74.8만 건 유지, ranking-collect 소요 시간은 바뀌지 않아야 한다(core-batch 에는 aspectjweaver 가 이미 있어 `@RateLimiter` 가 동작하고 있었다 — Task 4 Step 13 의 전제와 달리 새로 초당 10회 제한을 받는 것이 아니다. 확인만 한다), 이벤트 통계 화면의 숨김 브롤러 `-` 행.
+5. 롤백: 앱 이미지만 되돌린다. core-worker 를 되돌리면 구버전이 battlelog 404 계정을 다시 지운다 — `stats_player` 행 hard delete(표시가 사라지고 재등록·재삭제 루프가 돌아온다)와 player soft-delete. 3단계로 복구한 살아 있는 계정도 다시 `DELETED` 가 되어 갱신에 410 을 받고 스스로 회복하지 못하므로 데이터 손실이 없다고 할 수 없다. 다시 롤포워드한 뒤 롤백 구간에 대해 3단계를 다시 실행한다(그 구간의 로그 태그 + renewal `NOT_FOUND` 출처).

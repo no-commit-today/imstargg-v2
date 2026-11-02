@@ -63,7 +63,8 @@ imstargg-backend/
 
 ### Module Dependencies
 
-- `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*` (api·worker 는 `redis-core`, `aws-sqs` 추가 의존)
+- `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support:logging` (api·worker 는 `redis-core`, `aws-sqs`, `support:monitoring` 추가 의존)
+- `core-worker`, `core-batch` → `brawlstars-client` → `support:http-client` — 앱은 `support:http-client` 를 직접 의존하지 않고 `brawlstars-client` 를 거쳐 받는다(core-api 는 둘 다 의존하지 않는다)
 - `core-admin` → `core-enum`, `db-core`, `aws-s3`, `support:logging` (redis-core·monitoring 미의존)
 - `db-core`·`redis-core`·`aws-sqs`·`aws-s3`·`brawlstars-client` → `support:logging`
 - `db-core` → `core-enum`
@@ -93,7 +94,7 @@ imstargg-backend/
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출. Repository(`application` 패키지) 를 직접 참조하지 않고 Service 만 의존 — 데이터 접근은 Service 가 책임 (Application Layer Repository 패턴과 일관)
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
 - **로깅은 kotlin-logging**: 운영 코드는 파일 최상위의 `private val log = KotlinLogging.logger {}`(로거 이름은 그 파일의 클래스)로 로거를 두고, 메시지는 람다의 문자열 템플릿으로 쓴다 — `log.info { "date=$date 대상 ${targets.size}건" }`, 예외는 `log.warn(ex) { "…" }`. 한글이 바로 붙는 자리는 `${n}건` 처럼 중괄호를 쓰고, 이름을 직접 지정한 로거(`ImageStorageCleanup`)는 이름을 유지한다. slf4j 의 `LoggerFactory`·`Logger` 는 운영 코드에서 import 하지 않는다(테스트는 logback `ListAppender` 를 붙이려고 쓸 수 있다). 로거를 넘겨받는 곳은 `KLogger` 타입이다(`ErrorLogger.of`). `support:logging` 이 kotlin-logging 을 `api` 로 노출하므로 로그를 남기는 모듈은 그 모듈에 의존하고 버전을 따로 적지 않는다(버전은 `gradle.properties` 의 `kotlinLoggingVersion`).
-- **외부 API 클라이언트**: RestClient 예외(`HttpClientErrorException`·`HttpServerErrorException` 의 상태별 하위 타입, `RestClientResponseException`, `ResourceAccessException`, `RestClientException`)를 그대로 올리고(공용 예외 계층 없음) 재시도하지 않는다. 호출부는 하위 타입(`NotFound`·`ServiceUnavailable`)을 `RestClientResponseException` 보다 먼저 잡는다. HTTP 설정(요청 팩토리·타임아웃·커넥션 풀·호출 로깅)은 `support:http-client`, 그룹별 값은 `spring.http.serviceclient.<group>.*` 로 덮는다.
+- **외부 API 클라이언트**: RestClient 예외(`HttpClientErrorException`·`HttpServerErrorException` 의 상태별 하위 타입, `RestClientResponseException`, `ResourceAccessException`, `RestClientException`)를 그대로 올리고(공용 예외 계층 없음) 재시도하지 않는다. 호출부는 하위 타입(`NotFound`·`ServiceUnavailable`)을 `RestClientResponseException` 보다 먼저 잡는다. HTTP 설정(요청 팩토리·타임아웃·커넥션 풀·재시도 끔·호출 로깅)은 `support:http-client` 가 맡는다. 그룹별로 덮을 수 있는 것은 `spring.http.serviceclient.<group>.*` 의 타임아웃(`connect-timeout`·`read-timeout`) 등이고, 요청 팩토리 종류(`spring.http.clients.imperative.factory`)·커넥션 풀·재시도 끔은 `HttpClientConfig` 와 `http-client.yml` 이 앱 전역으로 정한다. 브롤스타즈 그룹의 base-url 은 `app.client.brawlstars.url` 에서 온다.
 
 ### Bounded Context & 도메인 모델
 

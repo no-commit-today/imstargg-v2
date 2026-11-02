@@ -11,13 +11,14 @@ import java.lang.reflect.Method
 
 /**
  * 외부 API 호출 로깅. 메서드·경로·쿼리·상태·소요 시간만 남기고 헤더와 본문은 남기지 않는다.
- * 가리는 일은 하지 않는다 — API 키를 붙이는 인터셉터(`BrawlStarsApiKeyInterceptor`)를 이 인터셉터보다 **뒤에** 등록해,
- * 키가 붙기 전 URI 만 이 인터셉터에 보이게 한다. 호출부가 헤더로 넘기는 값은 헤더를 남기지 않으므로 보이지 않는다.
+ * 가리는 일은 하지 않는다 — 헤더를 남기지 않으므로 헤더로 붙는 인증 값(브롤스타즈 API 키는 `BrawlStarsApiKeyInterceptor` 가
+ * 붙이는 `Authorization` 헤더)은 로그에 나오지 않는다. 경로·쿼리는 그대로 남으므로 비밀 값을 URI 에 싣는 API 에는 쓰지 않는다.
  *
  * Feign 처럼 호출한 `@HttpExchange` 인터페이스(`XxxApi`)의 로거로 `[XxxApi#메서드]` 를 붙여 남긴다 — `logging.level.<XxxApi FQCN>` 으로
  * Api 마다 끄고 켤 수 있다. 인터셉터는 그룹의 RestClient 하나에 걸려 어느 Api 가 불렀는지 모르므로, [HttpRequestValues.Processor] 로서
  * 프록시가 요청을 만들 때 호출 메서드를 요청 속성에 실어 둔다. 그래서 그룹 설정에서 같은 인스턴스를 `requestInterceptor` 와
- * `httpRequestValuesProcessor` 양쪽에 등록한다 — 한쪽만 등록하면 첫 호출에서 [IllegalStateException] 으로 드러난다.
+ * `httpRequestValuesProcessor` 양쪽에 등록한다 — processor 없이 인터셉터만 등록하면 첫 호출에서 [IllegalStateException] 으로 드러난다
+ * (인터셉터 없이 processor 만 등록하면 예외 없이 로그만 남지 않는다).
  *
  * 응답이 오면 상태와 관계없이 INFO 로 남긴다 — 4xx·5xx 도 호출부가 예외로 받아 처리하는 정상 흐름이다. 응답을 받지 못한 전송 예외는 WARN 으로 남기고 그대로 올린다.
  */

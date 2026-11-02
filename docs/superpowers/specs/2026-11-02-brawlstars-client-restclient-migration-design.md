@@ -183,7 +183,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
   - `ServiceUnavailable` → 틱당 한 번만 점검 자동 등록. 한 틱의 요청은 배치로 함께 나가므로, 503 을 받은 뒤 남은 플레이어 호출을 건너뛰던 지금의 중단 동작은 없어진다(다음 틱부터 `isUnderMaintenance()` 가 호출을 막는다).
   - `RestClientResponseException` → warn `API 오류 status=...`, `ResourceAccessException` → warn `API 통신 실패`, 그 밖(디코드 실패 포함) → error `처리 실패`.
 - `PlayerRenewalService` — §4.8.
-- `PlayerRefreshService`·`ClubRenewalService` — catch 타입만 바꾼다. 동작은 같다(`PlayerDeactivator` 가 `stats_player` 를 지우지 않게 되는 §4.7 변경만 따라간다).
+- `PlayerRefreshService`·`ClubRenewalService` — catch 타입만 바꾼다. 동작은 같다(`PlayerDeactivator` 가 `stats_player` 를 지우지 않게 되는 §4.7 변경만 따라간다). 단, 새로고침 경로에서 응답 해석 실패(`RestClientResponseException` 이 아닌 `RestClientException`)는 예전 WARN `API 클라이언트 오류` 대신 ERROR `[플레이어 갱신] 처리 실패` 로 남는다 — 통계 축적과 같은 규칙(해석 실패 → error)이다.
 - core-batch `BrawlStarsApiTasklet` — `HttpServerErrorException.ServiceUnavailable` 을 잡아 점검으로 보고 정상 종료(동작 같음).
 
 ### 4.6 DTO null 처리 (커밋 4)
@@ -206,6 +206,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 - 통계 축적 중 `NotFound` → `StatsPlayerStatusUpdater.markBattleLogUnavailable(id)` + info 로그 `[배틀 통계 축적] battlelog 없음(404) — 수집 제외 tag=...`. `PlayerDeactivator` 는 부르지 않는다.
 - 행이 남아 있으므로 `StatsPlayerSyncJobItemWriter`·`StatsPlayerSyncFromRankingTask`(기존 태그 제외 후 insert)가 다시 넣지 않는다 — 재등록·재삭제 루프가 끊긴다.
 - `stats_player` 의 다른 소비처 `BrawlerItemOwnershipStatsReader` 는 status 로 거르지 않는다. 소유 통계는 `/players` 데이터 기반이고, 이 계정군(트로피 0)은 `BrawlerTrophyRange`(500 이상) 구간에 들지 않아 결과가 달라지지 않는다.
+  - 다만 진짜 삭제된 계정(`/players` 404)도 이제 `stats_player` 행이 남는다(예전에는 `PlayerDeactivator` 가 지웠다). 이 Reader 는 player 를 status 조건 없이 조인하므로(`playerEntity.brawlStarsTag.in(tags)` 만), 그 계정의 마지막 브롤러·기어·가젯·스타파워 스냅샷이 이후 소유 통계에 계속 들어간다. 새로고침·갱신 경로의 `/players` 404 뿐이라 비중은 아주 작다(2026-11-03 리뷰의 VictoriaLogs 조회: 30일 `[플레이어 갱신] 플레이어 삭제됨` 2건) — 받아들이고, 후속으로 Reader 의 player 조인에 `playerEntity.status.eq(ACTIVE)` 를 더한다(§7).
 - 표시된 행은 재확인하지 않는다.
 - `PlayerDeactivator` 에서 `statsPlayerRepository.deleteByBrawlStarsTag` 를 없애 player soft-delete 만 남긴다. 미사용이 되는 `StatsPlayerJpaRepository.deleteByBrawlStarsTag` 는 삭제한다. 갱신·새로고침 중 `/players` 404(진짜 삭제된 계정)의 player soft-delete 는 그대로 둔다 — core-api 가 이 상태로 410 을 돌려주는 사용자 기능이다.
 - `PlayerRefreshService` 의 무작위 추출(`PlayerJpaRepository.findAllByStatusAndIdGreaterThanEqual(status, id, pageable)`, 정렬 없음)에도 §1.3 과 같은 Seq Scan 쏠림 패턴이 있다 → `findAllByStatusAndIdGreaterThanEqualOrderByIdAsc` 로 바꾼다.
@@ -241,8 +242,8 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 | `PlayerRefreshService`·`ClubRenewalService` | 3 | 새 테스트(지금 테스트 파일 없음) | 예외 타입 변경 후 `/players`·`/clubs` 404 → 비활성화, 503 → 점검 등록 |
 | `BrawlStarsApiTasklet` | 3 | 기존 테스트 수정 | `HttpServerErrorException.ServiceUnavailable` → 정상 종료 |
 
-- 검증 명령: 커밋마다 `./gradlew build`(ktlint·단위·컨텍스트 테스트). CI(`pr-test.yml`)는 Testcontainers Postgres 만 있다 — 테스트가 Redis 에 직접 기대지 않게 한다.
-- `BrawlStarsClientRealTest`(`develop` 태그)는 실제 키로 수동 실행해 전환 후 응답 디코딩을 확인한다(§4.4 의 태그 상수·Properties 등록 수정 후).
+- 검증 명령: 커밋마다 `./gradlew build`(ktlint·단위·컨텍스트 테스트). CI(`pr-test.yml`)에는 Redis 가 없다 — 테스트가 Redis 에 직접 기대지 않게 한다. 테스트 DB 는 Testcontainers Postgres 가 아니라 H2 인메모리(`MODE=PostgreSQL`, `ddl-auto: create`, db-core testFixtures 의 `application-test-db.yml`)라 Docker 가 필요 없고, `schema.sql`·마이그레이션 DDL 은 테스트에서 실행되지 않는다 — 이 브랜치의 DDL(§6.1)은 postgres:17-alpine 에 수동으로 두 번 적용해 멱등을 확인했다.
+- `BrawlStarsClientRealTest`(`develop` 태그)는 실제 키로 수동 실행해 전환 후 응답 디코딩을 확인한다(§4.4 의 태그 상수·Properties 등록 수정 후). `BRAWLSTARS_API_KEYS` 가 없으면 9건 모두 건너뜀으로 끝난다(`@EnabledIfEnvironmentVariable`) — 통과로 기록하지 않는다. 이 실행은 §6.2 운영 전 관문의 한 방법이다.
 
 ## 6. 배포와 검증
 
@@ -257,21 +258,37 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 
 - core-worker·core-batch·core-api 를 Java 25 이미지로 배포한다(버전·로깅 변경이 세 앱 모두에 걸린다). 통계 JSON 이 호환되므로(§4.6) 앱 사이 배포 순서 제약은 없다. core-admin 도 같은 Dockerfile 로 빌드되므로 따로 배포한다면 함께 올린다.
 - PR 단계에서 `/release` 로 세 앱의 SNAPSHOT 버전을 올린다.
+- **운영 전 실 API 관문.** dev 환경이 없어 새 HTTP 스택(HC5 + RestClient 그룹 + 인터셉터 3개)이 실제 브롤스타즈 API 를 처음 만나는 곳이 운영이다. 픽스처·배선 테스트(MockRestServiceServer·로컬 스텁)가 덮지 못하는 것은 실 호스트 TLS(JDK 25), HC5 가 이제 기본으로 협상하는 `Accept-Encoding: gzip`(구 Feign 설정은 `compression.response.enabled: false`), 실 서버가 태그의 `%23` 을 처리하는 방식, 새 스택에서의 키·IP 화이트리스트다. 운영 배포 전에 둘 중 하나를 한다.
+  1. main PR 전에 키가 등록된 IP 에서 `BRAWLSTARS_API_KEYS=<키> ./gradlew :client:brawlstars-client:developTest` 를 실행하고 결과(9건 통과)를 PR 에 남긴다. 키는 명령 기록·로그·PR 에 남기지 않는다.
+  2. core-batch 를 먼저 배포하고, 매시 정각 CronJob `battle-event-rotation-sync`(`--job.name=battleEventRotationSyncJob`, `/v1/events/rotation` 호출, 운영 egress IP·키) 1회가 성공으로 끝났는지 확인한 뒤 core-worker·core-api 를 올린다 — Job 이 실패하지 않았고, `"[BrawlStarsApi#"` WARN(전송 실패)과 `"[battleEventRotationSyncJob] 브롤스타즈 API 점검 중"` 이 없고, `battle_event_rotation` 에 배포 뒤 `collected_at` 행이 생겼는지 본다. 이 호출은 태그 경로를 지나지 않으므로 `%23` 은 core-worker 배포 직후 첫 몇 틱의 `"[배틀 통계 축적] battlelog 없음(404)"` 비율이 배포 전 수준인지로 이어서 본다(틱마다 거의 전부 404 면 표시가 쌓이기 전에 `app.schedule.stats-battle.enabled: false` 로 멈추고 원인을 본다 — 표시는 되돌아가지 않는다).
 
 ### 6.3 기존 오삭제 player 복구 (배포 후 1회)
 
 배포 후에 한다 — 새 코드는 battlelog 404 로 player 를 지우지 않으므로 복구한 행이 다시 지워지지 않는다.
 
-1. VictoriaLogs 에서 `"[배틀 통계 축적] 플레이어 삭제됨"` 로그의 태그를 보관 기간 전체에 걸쳐 뽑는다(보관 기간보다 오래된 오삭제는 로그가 없어 복구 대상에서 빠진다 — 그 사실을 기록한다).
-2. 그 태그 중 현재 `player.status = 'DELETED'` 인 행 수를 먼저 센다(규모 확인).
-3. `update player set status = 'ACTIVE', updated_at = now() where brawlstars_tag in (...) and status = 'DELETED';` 를 수동 적용한다.
-4. 진짜 삭제된 계정이 섞여도 괜찮다 — 그 계정은 다음 갱신 때 `/players` 404 로 다시 `DELETED` 가 된다.
+복구 대상 태그는 두 출처의 합집합이다.
+
+- **로그(통계 축적 경로)**: VictoriaLogs 의 `"[배틀 통계 축적] 플레이어 삭제됨"` 로그 태그. 보관 기간보다 오래된 이 경로의 오삭제는 로그가 없어 복구 대상에서 빠진다 — 그 사실을 기록한다.
+- **DB(갱신 경로)**: 구 `PlayerRenewalService` 는 `/players` 와 battlelog 를 한 try 에서 불러, `/players` 는 200 이고 battlelog 만 404 여도 renewal 을 `NOT_FOUND` 로 끝내고 player 를 지웠다. 이 경로는 `"[플레이어 비활성화] tag=..."` 만 남겨 위 로그로 잡히지 않는다. 지워진 player 는 core-api 가 갱신 요청 전에 410(`PLAYER_DELETED`)으로 막아 다시 요청되지 않으므로, `renewal` 행(`uk_renewal__brawlstarstag_type` — 태그·타입당 1행)이 `NOT_FOUND` 로 그대로 남는다. 로그 보관 기간과 무관하게 찾을 수 있다. 보관 기간 안에서는 이 경로의 삭제가 0건이었다(2026-11-03 리뷰의 VictoriaLogs 조회: core-worker `PlayerDeactivator` 로그가 모두 `stats-battle-*`·`scheduling-1` 스레드였고 SQS 리스너 스레드에는 없었다) — 이 출처가 더 잡는 것은 보관 기간 이전의 갱신 경로 피해 계정이다.
+
+1. 로그 태그를 보관 기간 전체에 걸쳐 뽑는다.
+2. 규모를 먼저 센다: 로그 태그 중 현재 `player.status = 'DELETED'` 인 행 수, 그리고 DB 출처 `select count(*) from renewal r join player p on p.brawlstars_tag = r.brawlstars_tag where r.type = 'PLAYER' and r.status = 'NOT_FOUND' and p.status = 'DELETED';`.
+3. DB 출처 태그(`select r.brawlstars_tag from renewal r join player p on p.brawlstars_tag = r.brawlstars_tag where r.type = 'PLAYER' and r.status = 'NOT_FOUND' and p.status = 'DELETED';`)를 로그 태그와 합쳐(중복 제거) `update player set status = 'ACTIVE', updated_at = now() where brawlstars_tag in (...) and status = 'DELETED';` 를 수동 적용한다.
+4. 진짜 삭제된 계정이 섞여도 괜찮다 — DB 출처에는 진짜 삭제 계정(`/players` 404)도 들어 있다. 그 계정은 다음 갱신·새로고침의 `/players` 404 로 다시 `DELETED` 가 된다.
+5. 복구 뒤에는 갱신이 다시 동작한다 — core-api 의 410 검사(`playerRepository.isDeleted`)를 지나고, `Renewal.canRenew` 가 `NOT_FOUND` 를 완료 상태(`RenewalStatus.isCompleted`)로 보아 바로 재요청을 받는다. 새 core-worker 는 battlelog 만 404 면 전투 0건으로 `COMPLETED` 처리한다(§4.8).
 
 ### 6.4 배포 후 확인 (VictoriaLogs, 배포 후 24시간)
 
+첫 1시간 — 어떤 자동화 테스트도 닿지 않는 업그레이드 경로:
+
+- core-api 의 `"cache get error"`·`"cache put error"`·`"cache evict error"`(`RedisFallbackCacheErrorHandler`, core-api 에만 있다)와 core-api·core-worker 의 `"[PlayerBrawlerStatsCache]"` WARN(`PlayerBrawlerStatsCacheStore` 의 find·put·evict 실패)이 0. Lettuce 6.8 → 7.5·Spring Data Redis 4.1 경로는 CI 에 Redis 가 없어 테스트되지 않았고, 두 곳 모두 오류를 WARN 으로 삼켜 DB 부하만 조용히 오른다.
+- core-worker 배포 뒤 갱신이 `COMPLETED` 로 끝난 건이 1건 이상: `select count(*) from renewal where status = 'COMPLETED' and completed_at >= '<core-worker 배포 시각>';`. `@SqsListener` 컨테이너를 띄우는 테스트가 없다(컨텍스트 테스트는 메시지 소비자를 mock 한다). 사용자 갱신 요청은 드물어(보관 기간 core-api `[갱신 요청] type=PLAYER` 약 18건) 1시간 안에 없을 수 있으므로, 없으면 사이트에서 플레이어 하나를 직접 갱신해 본다.
+
+24시간:
+
 - `"Read timed out"` 이 거의 0 (배포 전 core-worker 하루 약 1,700건)
-- `"[배틀 통계 축적] 플레이어 삭제됨"` 0 (배포 전 하루 약 4,300건). `"[플레이어 갱신] 플레이어 삭제됨"` 은 진짜 삭제 계정(`/players` 404)이라 남는다.
-- `"battlelog 없음(404)"` 이 날마다 줄어듦(한 번 표시되면 다시 뽑히지 않음)
+- core-worker `"[플레이어 비활성화]"` 가 `/players` 404 기준선으로 떨어짐 — 새로고침 경로의 `"[플레이어 갱신] 플레이어 삭제됨"` 과 비슷한 수준(차이는 갱신 경로의 `/players` 404 뿐). 배포 전에는 통계 축적 경로의 battlelog 404 삭제(하루 약 4,300건, §1.3)가 여기에 섞였다. `"[배틀 통계 축적] 플레이어 삭제됨"` 은 새 코드에 없는 문자열이라 늘 0 이다 — 배포 전 기준값으로만 쓴다.
+- `"[배틀 통계 축적] battlelog 없음(404)"` 이 날마다 줄어듦(한 번 표시되면 다시 뽑히지 않음). 접두어 없이 `"battlelog 없음(404)"` 로 찾으면 갱신 경로의 `"[플레이어 갱신] battlelog 없음(404) — 전투 0건으로 완료"` 도 잡혀, 사용자가 다시 요청할 때마다 나와 줄지 않는 것처럼 보인다.
 - 디코드 실패: `"Error while extracting response"` 와 `"[배틀 통계 축적] 처리 실패"` 가 0. (Feign 의 `DecodeException` 은 배포 전 기준값으로만 쓴다 — 전환 뒤에는 클래스가 없어 늘 0 이다)
 - `RequestNotPermitted` 0
 - 통계 적재량(id 차분)이 배포 전 하루 약 74.8만 건 수준 유지
@@ -280,7 +297,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 ### 6.5 롤백
 
 - DDL 이 기존 앱과 호환되므로 앱만 이전 이미지로 되돌리면 된다. 통계 JSON 은 빈 문자열이라 구버전 core-batch 가 읽을 수 있고, `battle_team_player.brawler_name` 은 구버전 앱이 읽지 않는다.
-- core-worker 를 되돌리면 구버전이 `BATTLE_LOG_UNAVAILABLE` 행을 다시 뽑아 404 를 받고 지우므로 표시가 사라지고 재등록·재삭제 루프가 되살아난다(데이터 손실은 아니다). 구버전은 battlelog 404 계정을 다시 soft-delete 한다.
+- core-worker 를 되돌리면 구버전이 `stats_player` 를 status 와 관계없이 뽑아 battlelog 404 계정을 `PlayerDeactivator` 로 지운다 — `stats_player` 행 hard delete(표시가 사라짐)와 player soft-delete. 재등록·재삭제 루프가 되살아나고, §6.3 으로 복구한 살아 있는 계정도 다시 `DELETED` 가 되어 갱신 요청이 410 을 받는다. 구버전 갱신 경로도 battlelog 만 404 인 계정을 지운다. 그대로 두면 이 계정들은 스스로 회복하지 못하므로 데이터 손실이 없다고 할 수 없다 — 다시 롤포워드한 뒤 롤백 구간(구 core-worker 가 돈 시간)에 대해 §6.3 을 다시 실행한다(그 구간의 `"[배틀 통계 축적] 플레이어 삭제됨"` 태그 + renewal `NOT_FOUND` 출처). 지워진 `stats_player` 행은 동기화 배치가 새 전투에서 다시 넣는다.
 
 ## 7. 범위 제외 (향후 과제)
 
@@ -293,6 +310,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 - `spring-retry` 버전이 awspring BOM 의 중첩 import(spring-cloud-commons-dependencies, 2.0.12)로 관리되는 숨은 결합 — 버전 고정 또는 Spring Framework 7 `@Retryable` 이전.
 - `ApiLoggingInterceptor` 가 non-2xx 응답을 WARN 으로 올릴지(404 가 하루 수천 건 WARN 이 된다).
 - `BATTLE_LOG_UNAVAILABLE` 행 재확인.
+- `BrawlerItemOwnershipStatsReader` 의 player 조인에 `playerEntity.status.eq(PlayerStatus.ACTIVE)` 추가 — 진짜 삭제 계정의 남은 `stats_player` 행이 소유 통계에 들어가지 않게 한다(§4.7).
 
 PR 준비 시 처리(설계 밖): 작업 브랜치는 `origin/develop` 기준의 규칙명(예: `refactor/brawlstars-client-restclient`)으로 만들고, 아직 push 하지 않은 develop 커밋 `af60043f`(mcp 추가)를 이 PR 에 실을지 먼저 develop 에 따로 push 할지 정한다.
 
