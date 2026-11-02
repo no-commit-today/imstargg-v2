@@ -49,7 +49,7 @@ VictoriaLogs·VictoriaMetrics·운영 DB 조회와 테스트 키 재현으로 �
 
 ## 3. 범위와 커밋 순서
 
-PR 하나 안에서 아래 순서로 커밋한다. 커밋마다 `./gradlew build` 가 통과해야 한다 — 운영에서 문제가 나면 어느 단계 탓인지 커밋 단위로 되짚기 위해서다. 각 커밋은 자기 변경을 검증하는 테스트를 함께 넣는다(§5 의 커밋 열).
+PR 하나 안에서 아래 순서로 커밋한다. 커밋마다 `./gradlew build` 가 통과해야 한다 — 운영에서 문제가 나면 어느 단계 탓인지 커밋 단위로 되짚기 위해서다. 각 커밋은 자기 변경을 검증하는 테스트를 함께 넣는다(§5 의 커밋 열). 구현 계획은 3·5 단계를 더 잘게(각각 빌드가 통과하는 커밋으로) 나눌 수 있다.
 
 | # | 커밋 | 내용 | 절 |
 |---|------|------|----|
@@ -73,7 +73,7 @@ core-api 의 응답 스펙은 바뀌지 않는다(버전·로깅만 바뀜) — 
 | Gradle wrapper | 9.3.0 | 9.7.1 (`./gradlew wrapper --gradle-version 9.7.1`) |
 | Spring Cloud BOM (`springCloudVersion`) | 2025.1.0 | 커밋 1 에서 2025.1.3, 커밋 3 에서 BOM 째 제거 (§4.4) |
 
-- Spring Cloud 를 커밋 1 에서 올리는 이유: 2025.1.0 의 spring-cloud-commons 5.0.0 은 호환성 검사(`CompatibilityVerifierProperties` 기본값 `4.0.x`, 기본으로 켜짐)가 Boot 4.1.1 을 거부해 core-worker·core-batch 컨텍스트가 뜨지 않는다. 2025.1.3(commons 5.0.3)은 `4.0.x`·`4.1.x` 를 허용한다. Feign 제거를 먼저 하는 순서는 배치 메서드가 Java 24+(JEP 491)에 기대므로 택하지 않는다.
+- Spring Cloud 를 커밋 1 에서 올리는 이유: 2025.1.0 의 spring-cloud-commons 5.0.0 은 호환성 검사(`CompatibilityVerifierProperties` 기본값 `4.0.x`, 기본으로 켜짐)가 Boot 4.1.1 을 거부해 core-worker·core-batch 컨텍스트가 뜨지 않는다. 2025.1.3(commons 5.0.3)은 `4.0.x`·`4.1.x` 를 허용한다. Feign 제거를 먼저 하는 순서는 배치 메서드가 Java 24+(JEP 491)에 기대므로 택하지 않는다. 버전만 올리면 부족하다 — 마지막에 import 되는 awspring BOM(`spring-cloud-aws-dependencies` 4.0.0)이 commons 5.0.0 을 중첩 import 해 뒤의 BOM 이 이기므로, `spring-cloud-dependencies` import 를 awspring 뒤로 옮기고 `dependencyInsight` 로 commons 5.0.3 을 확인한다(이 동안 spring-retry 는 2.0.13, 커밋 3 에서 BOM 을 지우면 2.0.12 로 돌아간다).
 - `resilience4jVersion=2.4.0`·`kotlinLoggingVersion=8.0.4` 는 이 버전들을 처음 쓰는 커밋(2·3)에서 `gradle.properties` 에 더한다.
 - `Dockerfile`: 빌더 `eclipse-temurin:21-jdk-jammy` → `25-jdk-jammy`, 런타임 `21-jre-jammy` → `25-jre-jammy`(noguesstoday 와 같은 이미지).
 - `.github/workflows/pr-test.yml`: `java-version: '25'`.
@@ -108,7 +108,7 @@ noguesstoday-backend 의 `support/http-client` 를 가져온다. 패키지 `com.
 - **커넥션 풀**: Feign 설정(전체 2000·라우트당 500)을 지우면 HC5 기본값(전체 25·라우트당 5, 임대 대기 기본 3분)이 된다. 배치 호출 5건만으로 라우트가 차고, SQS 갱신 요청이 레이트리밋 허가를 쥔 채 커넥션을 기다리며, 그 대기가 호출 로그 소요 시간에 섞인다. 그래서 `withConnectionManagerCustomizer { it.setMaxConnTotal(100).setMaxConnPerRoute(50) }` 로 늘린다 — 라우트당 50 은 core-worker 의 동시 호출 상한(배치 5 + SQS 리스너 2개 × 기본 동시 처리 10 + 새로고침 1 = 26)을 넉넉히 넘는다. 임대 대기 상한은 `withDefaultRequestConfigCustomizer` 로 `connectionRequestTimeout` 10s 를 둔다. Feign 이 켜던 TTL 900s·만료 커넥션 정리는 옮기지 않는다 — HC5 의 2초 무활동 후 stale 검사가 남고, Boot 가 정한 기본 ConnectionConfig(타임아웃)를 덮어쓰지 않기 위해서다. 이 커스터마이저는 앱 전체(worker·batch)의 자동 구성 빌더에 걸린다(core-batch `CoreApiRestClientConfig` 는 `ClientHttpRequestFactoryBuilder.detect()` 로 따로 만들어 영향이 없다).
 - 의존: `spring-web`, `support:logging`, `spring-boot-restclient`(없으면 `spring.http.clients.*` 가 그룹에 조용히 적용되지 않는다), `spring-boot-http-client`, `org.apache.httpcomponents.client5:httpclient5`.
 - 등록: `settings.gradle.kts` include, `Dockerfile` 의존성 캐싱 `COPY` 목록(`COPY support/http-client/build.gradle.kts ./support/http-client/`).
-- core-worker·core-batch 의 `application.yml` `spring.config.import` 에 `http-client.yml` 을 `brawlstars-client.yml` 앞에 추가한다. 두 앱의 테스트 `application.yml` 은 main 을 가리므로 같은 import 를 테스트 쪽에도 넣는다(§5 배선 테스트가 운영과 같은 팩토리·타임아웃을 보도록).
+- core-worker·core-batch 의 `application.yml` `spring.config.import` 에 `http-client.yml` 을 `brawlstars-client.yml` 앞에 추가한다. 두 앱의 테스트 `application.yml` 은 main 을 가리므로 `http-client.yml` 만 import 한다(§5 배선 테스트가 운영과 같은 팩토리·타임아웃을 보도록). `brawlstars-client.yml` 까지 가져오면 import 한 파일의 값이 테스트 문서의 `app.client.brawlstars.*` 값을 덮는다.
 - read-timeout 5s → 10s: 재현 최대치가 6.47s 라 지금의 0.2~0.3% 타임아웃은 거의 사라진다. 대신 느린 호출 한 건이 통계 축적 틱을 최대 10초 붙잡는다(배치 메서드는 모든 태그를 기다린다).
 
 ### 4.4 `brawlstars-client` 재구성 (커밋 3)
@@ -248,8 +248,8 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 
 이 프로젝트는 Flyway 를 쓰지 않는다. 앱 배포 전에 적용하고, `schema.sql` 도 같이 고친다. 파일은 `V261020__add_deleted_at_to_brawlstars_resources.sql` 형식을 따른다 — 머리 주석에 배경·배포 순서('DDL 선적용 → 앱 배포')·멱등 방식. 두 DDL 모두 기존 앱과 호환된다(상태 기본값 `ACTIVE`, nullable 완화). 메타데이터 변경이지만 잠깐 ACCESS EXCLUSIVE 락을 잡으므로 `set lock_timeout = '3s'` 로 적용하고, 실패하면 통계 배치 시간대(02:00~09:00 KST)를 피해 다시 시도한다.
 
-- `infrastructure/db-core/src/main/resources/db/migration/V261102a__add_status_to_stats_player.sql`: `alter table stats_player add column if not exists status varchar(25) not null default 'ACTIVE';`
-- `infrastructure/db-core/src/main/resources/db/migration/V261102b__battle_team_player_brawler_name_nullable.sql`: `alter table battle_team_player alter column brawler_name drop not null;`
+- `infrastructure/db-core/src/main/resources/db/migration/V261102a__battle_team_player_brawler_name_nullable.sql` (커밋 4): `alter table battle_team_player alter column brawler_name drop not null;`
+- `infrastructure/db-core/src/main/resources/db/migration/V261102b__add_status_to_stats_player.sql` (커밋 5): `alter table stats_player add column if not exists status varchar(25) not null default 'ACTIVE';`
 
 ### 6.2 앱 배포
 
@@ -299,7 +299,7 @@ PR 준비 시 처리(설계 밖): 작업 브랜치는 `origin/develop` 기준의
 | 위험 | 대응 |
 |------|------|
 | Boot 4.1·Java 25·Kotlin 2.3 동시 업그레이드로 빌드·런타임 문제 | 커밋 1 에서 Spring Cloud 를 2025.1.3 으로 올려 호환성 검사를 통과시키고, 커밋 1 단독으로 전체 빌드·테스트 통과 확인. 운영 문제는 커밋 단위로 되짚는다 |
-| Spring Cloud BOM 제거 뒤 의존 해석 변화 | 커밋 3 에서 `./gradlew :core:core-worker:dependencyInsight --dependency spring-retry`(db-core 도)로 2.0.12 가 유지되는지, spring-cloud-aws 해석이 그대로인지 확인하고 SQS 컨텍스트 테스트로 검증 |
+| Spring Cloud BOM 제거 뒤 의존 해석 변화 | 커밋 3 에서 `./gradlew :core:core-worker:dependencyInsight --dependency spring-retry`(db-core 도)로 커밋 3 이후 2.0.12 인지, spring-cloud-aws 해석이 그대로인지 확인하고 SQS 컨텍스트 테스트로 검증 |
 | `spring.http.clients.*`·풀 설정이 그룹에 조용히 적용되지 않음 | `support:http-client` 가 `spring-boot-restclient` 를 의존하고, §5 HTTP 배선 테스트로 고정 |
 | 커넥션 풀 고갈로 갱신 지연 | 라우트당 50·전체 100 + 임대 대기 10s 상한(§4.3) |
 | Jackson 3 컨버터의 모르는 필드 처리 | 모르는 필드가 섞인 픽스처 디코딩 테스트 |
