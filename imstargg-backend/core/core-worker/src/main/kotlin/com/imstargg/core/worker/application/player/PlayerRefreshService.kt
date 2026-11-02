@@ -63,7 +63,7 @@ class PlayerRefreshService(
     private fun findRandomPlayers(): List<PlayerEntity> {
         val maxId = playerRepository.findTopByStatusOrderByIdDesc(PlayerStatus.ACTIVE)?.id ?: return emptyList()
         val randomId = Random.nextLong(1, maxId + 1)
-        return playerRepository.findAllByStatusAndIdGreaterThanEqual(
+        return playerRepository.findAllByStatusAndIdGreaterThanEqualOrderByIdAsc(
             status = PlayerStatus.ACTIVE,
             id = randomId,
             pageable = PageRequest.of(0, properties.playerCount),

@@ -11,6 +11,7 @@ import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.core.worker.application.stats.StatsBattleAggregator
+import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiMaintenanceJpaRepository
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
@@ -21,6 +22,7 @@ import com.imstargg.infrastructure.db.core.test.fixture.RenewalEntityFixture.Com
 import com.imstargg.infrastructure.db.core.test.fixture.StatsPlayerEntityFixture.Companion.aStatsPlayerEntity
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import io.mockk.justRun
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -34,6 +36,7 @@ class PlayerRenewalServiceTest(
     private val brawlStarsClient: BrawlStarsClient,
     private val renewalRepository: RenewalJpaRepository,
     private val playerRepository: PlayerJpaRepository,
+    private val battleRepository: BattleJpaRepository,
     private val statsPlayerRepository: StatsPlayerJpaRepository,
     private val brawlStarsApiMaintenanceRepository: BrawlStarsApiMaintenanceJpaRepository,
     private val cleanUp: CleanUp,
@@ -65,6 +68,53 @@ class PlayerRenewalServiceTest(
         // then
         val saved = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
         assertThat(saved.status).isEqualTo(RenewalStatus.COMPLETED)
+    }
+
+    @Test
+    fun `battlelog 만 404 면 전투 0건으로 갱신을 완료한다`() {
+        // given
+        val tag = "#RENEWBL404"
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+        val renewal = aRenewalEntity().withBrawlStarsTag(tag).build()
+        renewal.toPending()
+        renewalRepository.save(renewal)
+
+        every { brawlStarsClient.getPlayerInformation(tag) } returns createPlayerResponse(tag)
+        every { brawlStarsClient.getPlayerRecentBattles(tag) } throws notFound()
+        justRun { statsBattleAggregator.asyncAggregate(any()) }
+
+        // when
+        sut.renew(tag)
+
+        // then
+        val saved = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
+        assertThat(saved.status).isEqualTo(RenewalStatus.COMPLETED)
+        assertThat(playerRepository.findByBrawlStarsTag(tag)!!.status).isEqualTo(PlayerStatus.ACTIVE)
+        assertThat(battleRepository.count()).isEqualTo(0)
+    }
+
+    @Test
+    fun `DB 에 없는 플레이어도 battlelog 만 404 면 플레이어를 만들고 갱신을 완료한다`() {
+        // given
+        val tag = "#RENEWNEWBL404"
+        val renewal = aRenewalEntity().withBrawlStarsTag(tag).build()
+        renewal.toPending()
+        renewalRepository.save(renewal)
+
+        every { brawlStarsClient.getPlayerInformation(tag) } returns createPlayerResponse(tag)
+        every { brawlStarsClient.getPlayerRecentBattles(tag) } throws notFound()
+        justRun { statsBattleAggregator.asyncAggregate(any()) }
+
+        // when
+        sut.renew(tag)
+
+        // then
+        val saved = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
+        assertThat(saved.status).isEqualTo(RenewalStatus.COMPLETED)
+        val player = playerRepository.findByBrawlStarsTag(tag)
+        assertThat(player).isNotNull
+        assertThat(player!!.status).isEqualTo(PlayerStatus.ACTIVE)
+        assertThat(battleRepository.count()).isEqualTo(0)
     }
 
     @Test

@@ -22,7 +22,8 @@
 | `REQUESTED` → `PENDING`       | core-api        | SQS 메시지 발행 후      |
 | `PENDING` → `EXECUTING`       | core-worker     | 워커가 처리 시작        |
 | `EXECUTING` → `COMPLETED`     | core-worker     | API 호출 및 DB 갱신 성공 |
-| `EXECUTING` → `NOT_FOUND`     | core-worker     | API 404 응답            |
+| `EXECUTING` → `COMPLETED`     | core-worker     | battlelog 404 — 전투 0건으로 완료 |
+| `EXECUTING` → `NOT_FOUND`     | core-worker     | `/players` 404(클럽은 `/clubs` 404) |
 | `EXECUTING` → `FAILED`        | core-worker     | 예외 발생               |
 | `*` → `REQUESTED`             | core-api        | `reRequest()` 재요청    |
 
