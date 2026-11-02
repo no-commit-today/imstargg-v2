@@ -9,16 +9,17 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankE
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventSoloRankEventJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.infrastructure.item.Chunk
 import org.springframework.batch.infrastructure.item.ItemWriter
+
+private val log = KotlinLogging.logger {}
 
 open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
     private val alertManager: AlertManager,
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
 ) : ItemWriter<T> {
-    private val log = LoggerFactory.getLogger(BattleEventSyncItemWriter::class.java)
     private val checkedEventIds: MutableSet<Long> = mutableSetOf()
     private val soloRankSeasonCache = SoloRankSeasonCache()
     private val existingSoloRankEventIds: MutableMap<String, MutableSet<Long>> = mutableMapOf()
@@ -67,13 +68,10 @@ open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
     }
 
     private fun alertUnregisteredEvent(battle: BaseStatsBattleEntity) {
-        log.warn(
-            "[{}] 미등록 배틀 이벤트 eventBrawlStarsId={}, modeBrawlStarsId={}, map={}",
-            BattleEventSyncJobConfig.JOB_NAME,
-            battle.eventBrawlStarsId,
-            battle.eventModeBrawlStarsId,
-            battle.eventMap,
-        )
+        log.warn {
+            "[${BattleEventSyncJobConfig.JOB_NAME}] 미등록 배틀 이벤트 eventBrawlStarsId=${battle.eventBrawlStarsId}, " +
+                "modeBrawlStarsId=${battle.eventModeBrawlStarsId}, map=${battle.eventMap}"
+        }
         alertManager.alert(
             AlertCommand
                 .builder()
@@ -93,7 +91,7 @@ open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
         battle: BaseStatsBattleEntity,
         event: BattleEventEntity,
     ) {
-        log.warn("[{}] 배틀 이벤트 불일치 eventBrawlStarsId={}", BattleEventSyncJobConfig.JOB_NAME, event.brawlStarsId)
+        log.warn { "[${BattleEventSyncJobConfig.JOB_NAME}] 배틀 이벤트 불일치 eventBrawlStarsId=${event.brawlStarsId}" }
         alertManager.alert(
             AlertCommand
                 .builder()

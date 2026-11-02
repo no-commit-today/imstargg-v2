@@ -56,16 +56,17 @@ imstargg-backend/
 ├── client/
 │   └── brawlstars-client/    # BrawlStars API 클라이언트 (OpenFeign)
 └── support/
-    ├── logging/              # 로깅 (Sentry, Micrometer Tracing)
+    ├── logging/              # 로깅 — kotlin-logging(api 로 노출)·Micrometer Tracing·Logback
     └── monitoring/           # 모니터링 (Actuator, Prometheus)
 ```
 
 ### Module Dependencies
 
 - `core-api`, `core-worker`, `core-batch` → `core-enum`, `db-core`, `support/*` (api·worker 는 `redis-core`, `aws-sqs` 추가 의존)
-- `core-admin` → `core-enum`, `db-core`, `aws-s3` (redis-core·support 미의존)
+- `core-admin` → `core-enum`, `db-core`, `aws-s3`, `support:logging` (redis-core·monitoring 미의존)
+- `db-core`·`redis-core`·`aws-sqs`·`aws-s3`·`brawlstars-client` → `support:logging`
 - `db-core` → `core-enum`
-- `brawlstars-client`: 독립적 (OpenFeign 기반 HTTP 클라이언트). 호출 한도는 [client/brawlstars-client/README.md](client/brawlstars-client/README.md)
+- `brawlstars-client`: `support:logging` 외에는 독립적 (OpenFeign 기반 HTTP 클라이언트). 호출 한도는 [client/brawlstars-client/README.md](client/brawlstars-client/README.md)
 - **Docker 이미지**: backend 루트 단일 `Dockerfile`(`ARG GRADLE_MODULE`)이 core-api/worker/batch 를 빌드. 모듈을 추가/삭제하면 Dockerfile 의 의존성 prefetch `COPY .../build.gradle.kts` 목록도 함께 갱신해야 캐싱이 유지됨.
 
 ### Code Organization
@@ -90,6 +91,7 @@ imstargg-backend/
 - **Domain ID Reference**: 도메인 클래스에서 다른 도메인의 객체는 직접 참조하지 않고 ID로 참조
 - **QueryComposer**: `api/query/` 패키지의 `@Component`. 조회 API에서 서로 다른 도메인의 데이터를 조합하여 완성된 Response를 생성하는 읽기 전용 레이어. Controller에서 직접 호출. Repository(`application` 패키지) 를 직접 참조하지 않고 Service 만 의존 — 데이터 접근은 Service 가 책임 (Application Layer Repository 패턴과 일관)
 - **Named arguments**: 인자가 세개 이상인 메서드(혹은 생성자)를 호출할 경우 사용
+- **로깅은 kotlin-logging**: 운영 코드는 파일 최상위의 `private val log = KotlinLogging.logger {}`(로거 이름은 그 파일의 클래스)로 로거를 두고, 메시지는 람다의 문자열 템플릿으로 쓴다 — `log.info { "date=$date 대상 ${targets.size}건" }`, 예외는 `log.warn(ex) { "…" }`. 한글이 바로 붙는 자리는 `${n}건` 처럼 중괄호를 쓰고, 이름을 직접 지정한 로거(`ImageStorageCleanup`)는 이름을 유지한다. slf4j 의 `LoggerFactory`·`Logger` 는 운영 코드에서 import 하지 않는다(테스트는 logback `ListAppender` 를 붙이려고 쓸 수 있다). 로거를 넘겨받는 곳은 `KLogger` 타입이다(`ErrorLogger.of`). `support:logging` 이 kotlin-logging 을 `api` 로 노출하므로 로그를 남기는 모듈은 그 모듈에 의존하고 버전을 따로 적지 않는다(버전은 `gradle.properties` 의 `kotlinLoggingVersion`).
 
 ### Bounded Context & 도메인 모델
 

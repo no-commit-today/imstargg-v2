@@ -1,6 +1,6 @@
 package com.imstargg.infrastructure.db.core.lock
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -8,11 +8,11 @@ import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource
 
+private val log = KotlinLogging.logger {}
+
 class PostgresAdvisoryLockTemplate(
     private val datasource: DataSource,
 ) : LockTemplate {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     companion object {
         private const val LOCK = "SELECT pg_advisory_lock(?)"
         private const val UNLOCK = "SELECT pg_advisory_unlock(?)"
@@ -29,38 +29,17 @@ class PostgresAdvisoryLockTemplate(
         connection.use {
             var acquired = false
             try {
-                log.debug(
-                    "start getLock=[{}], lockKey=[{}], timeoutSeconds=[{}], connection=[{}]",
-                    lockName,
-                    lockKey,
-                    timeoutSeconds,
-                    connection,
-                )
+                log.debug { "start getLock=[$lockName], lockKey=[$lockKey], timeoutSeconds=[$timeoutSeconds], connection=[$connection]" }
                 acquireLock(connection, lockName, lockKey, timeoutSeconds)
                 acquired = true
-                log.debug(
-                    "success getLock=[{}], lockKey=[{}], connection=[{}]",
-                    lockName,
-                    lockKey,
-                    connection,
-                )
+                log.debug { "success getLock=[$lockName], lockKey=[$lockKey], connection=[$connection]" }
                 return supplier()
             } finally {
                 if (acquired) {
-                    log.debug(
-                        "start releaseLock=[{}], lockKey=[{}], connection=[{}]",
-                        lockName,
-                        lockKey,
-                        connection,
-                    )
+                    log.debug { "start releaseLock=[$lockName], lockKey=[$lockKey], connection=[$connection]" }
                     runCatching { releaseLock(connection, lockKey) }
-                        .onFailure { log.error("pg_advisory_unlock 실패. lockKey=[{}]", lockKey, it) }
-                    log.debug(
-                        "success releaseLock=[{}], lockKey=[{}], connection=[{}]",
-                        lockName,
-                        lockKey,
-                        connection,
-                    )
+                        .onFailure { log.error(it) { "pg_advisory_unlock 실패. lockKey=[$lockKey]" } }
+                    log.debug { "success releaseLock=[$lockName], lockKey=[$lockKey], connection=[$connection]" }
                 }
             }
         }
@@ -79,12 +58,7 @@ class PostgresAdvisoryLockTemplate(
                 stmt.execute()
             }
         } catch (e: SQLException) {
-            log.error(
-                "pg_advisory_lock 타임아웃. lockName=[{}], lockKey=[{}], timeoutSeconds=[{}]",
-                lockName,
-                lockKey,
-                timeoutSeconds,
-            )
+            log.error { "pg_advisory_lock 타임아웃. lockName=[$lockName], lockKey=[$lockKey], timeoutSeconds=[$timeoutSeconds]" }
             throw IllegalStateException(EXCEPTION_MESSAGE, e)
         } finally {
             connection.createStatement().use { it.execute("RESET lock_timeout") }
@@ -99,7 +73,7 @@ class PostgresAdvisoryLockTemplate(
             stmt.setLong(1, lockKey)
             stmt.executeQuery().use { rs ->
                 if (!rs.next() || !rs.getBoolean(1)) {
-                    log.warn("pg_advisory_unlock 실패. lockKey=[{}]", lockKey)
+                    log.warn { "pg_advisory_unlock 실패. lockKey=[$lockKey]" }
                 }
             }
         }

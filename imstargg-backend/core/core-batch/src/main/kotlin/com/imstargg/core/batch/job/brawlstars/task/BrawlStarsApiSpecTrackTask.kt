@@ -5,9 +5,11 @@ import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.infrastructure.db.core.brawlstars.system.BrawlStarsApiSpecEntity
 import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlStarsApiSpecJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.time.Clock
+
+private val log = KotlinLogging.logger {}
 
 /**
  * 브롤스타즈 API 스펙(`GET /v1`)을 수집해 정규화본 기준으로 직전 스냅샷과 비교한다.
@@ -28,7 +30,7 @@ class BrawlStarsApiSpecTrackTask(
     private val alertManager: AlertManager,
 ) {
     fun track() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info { "[$JOB_NAME] 시작" }
         val content = brawlStarsClient.getApiSpec()
         check(content.isNotBlank()) { "브롤스타즈 API 스펙 응답이 비어있습니다." }
         val canonical = YamlCanonicalizer.canonicalize(content)
@@ -36,22 +38,22 @@ class BrawlStarsApiSpecTrackTask(
 
         if (previous == null) {
             saveSnapshot(canonical)
-            log.info("[{}] 완료 - 최초 스냅샷 저장", JOB_NAME)
+            log.info { "[$JOB_NAME] 완료 - 최초 스냅샷 저장" }
             return
         }
 
         if (YamlCanonicalizer.canonicalize(previous.content) == canonical) {
             if (previous.content != canonical) {
                 saveSnapshot(canonical)
-                log.info("[{}] 완료 - 스펙 변경 없음, 레거시 원문 스냅샷을 정규화본으로 이관", JOB_NAME)
+                log.info { "[$JOB_NAME] 완료 - 스펙 변경 없음, 레거시 원문 스냅샷을 정규화본으로 이관" }
                 return
             }
-            log.info("[{}] 완료 - 스펙 변경 없음", JOB_NAME)
+            log.info { "[$JOB_NAME] 완료 - 스펙 변경 없음" }
             return
         }
 
         saveSnapshot(canonical)
-        log.info("[{}] 완료 - 스펙 변경 감지, 새 스냅샷 저장 및 알림 발송", JOB_NAME)
+        log.info { "[$JOB_NAME] 완료 - 스펙 변경 감지, 새 스냅샷 저장 및 알림 발송" }
         alertManager.alert(
             AlertCommand
                 .builder()
@@ -70,6 +72,5 @@ class BrawlStarsApiSpecTrackTask(
 
     companion object {
         private const val JOB_NAME = "brawlStarsApiSpecTrackJob"
-        private val log = LoggerFactory.getLogger(BrawlStarsApiSpecTrackTask::class.java)
     }
 }

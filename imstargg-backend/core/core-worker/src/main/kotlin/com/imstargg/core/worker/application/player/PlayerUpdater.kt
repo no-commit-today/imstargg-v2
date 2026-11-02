@@ -11,13 +11,15 @@ import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleJp
 import com.imstargg.infrastructure.db.core.brawlstars.battle.repository.BattleTeamPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerEntity
 import com.imstargg.infrastructure.redis.core.statistics.player.PlayerBrawlerStatsCacheStore
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class PlayerUpdater(
@@ -26,10 +28,6 @@ class PlayerUpdater(
     private val battleTeamPlayerJpaRepository: BattleTeamPlayerJpaRepository,
     private val playerBrawlerStatsCacheStore: PlayerBrawlerStatsCacheStore,
 ) {
-    companion object {
-        private val log = LoggerFactory.getLogger(PlayerUpdater::class.java)
-    }
-
     /**
      * 신규 플레이어 동시 INSERT race(유니크 충돌) 는 1회 재시도로 흡수한다. Spring Retry
      * 인터셉터가 트랜잭션 인터셉터 바깥에 적용되어 재시도마다 새 트랜잭션이 열리고,
@@ -45,7 +43,7 @@ class PlayerUpdater(
         player.update(playerResponse)
         playerRepository.save(player)
         val newBattles = filterNewBattles(player.entity, battles)
-        log.debug("[플레이어 갱신] 신규 배틀 {}건 tag={}", newBattles.size, playerResponse.tag)
+        log.debug { "[플레이어 갱신] 신규 배틀 ${newBattles.size}건 tag=${playerResponse.tag}" }
         updateBattles(player.entity, newBattles)
         if (newBattles.isNotEmpty()) {
             evictBrawlerStatsCacheAfterCommit(player.entity.brawlStarsTag)

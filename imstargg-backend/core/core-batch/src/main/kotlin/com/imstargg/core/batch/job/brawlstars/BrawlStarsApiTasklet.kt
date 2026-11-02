@@ -1,11 +1,13 @@
 package com.imstargg.core.batch.job.brawlstars
 
 import com.imstargg.client.brawlstars.BrawlStarsApiServerException
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.StepContribution
 import org.springframework.batch.core.step.tasklet.Tasklet
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
+
+private val log = KotlinLogging.logger {}
 
 /**
  * Wraps BrawlStars API batch actions with the service-maintenance policy.
@@ -18,8 +20,6 @@ class BrawlStarsApiTasklet(
     private val name: String,
     private val action: () -> Unit,
 ) : Tasklet {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     override fun execute(
         contribution: StepContribution,
         chunkContext: ChunkContext,
@@ -27,7 +27,7 @@ class BrawlStarsApiTasklet(
         try {
             action()
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
-            log.warn("[$name] 브롤스타즈 API 점검 중", ex)
+            log.warn(ex) { "[$name] 브롤스타즈 API 점검 중" }
         }
         return RepeatStatus.FINISHED
     }

@@ -1,4 +1,5 @@
 dependencies {
+    implementation(project(":support:logging"))
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     // openfeign 5.0.x 가 Boot http-converter 자동 구성 타입(ClientHttpMessageConvertersCustomizer)을 참조하는데
     // Boot 4.1 에서 이 모듈이 전이 의존으로 들어오지 않아 feignHttpMessageConverters 빈 생성이 실패한다.

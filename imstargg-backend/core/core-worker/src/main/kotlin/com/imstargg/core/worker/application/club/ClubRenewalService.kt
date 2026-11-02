@@ -10,9 +10,11 @@ import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenance
 import com.imstargg.core.worker.application.renewal.RenewalFinder
 import com.imstargg.core.worker.application.renewal.RenewalProcessor
 import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class ClubRenewalService(
@@ -24,26 +26,24 @@ class ClubRenewalService(
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
     private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     fun renew(brawlStarsTag: String) {
         var renewal = renewalFinder.findByTag(brawlStarsTag, RenewalType.CLUB)
 
         if (renewal.status != RenewalStatus.PENDING) {
-            log.info("[클럽 갱신] 이미 처리됨 tag={}, status={}", brawlStarsTag, renewal.status)
+            log.info { "[클럽 갱신] 이미 처리됨 tag=$brawlStarsTag, status=${renewal.status}" }
             return
         }
 
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
             updateRenewalStatus(renewal) { renewalProcessor.fail(it) }
-            log.info("[클럽 갱신] API 점검 중 tag={}", brawlStarsTag)
+            log.info { "[클럽 갱신] API 점검 중 tag=$brawlStarsTag" }
             return
         }
 
         try {
             renewal = renewalProcessor.executing(renewal)
         } catch (ex: ObjectOptimisticLockingFailureException) {
-            log.warn("[클럽 갱신] 중복 처리 감지 tag={}", brawlStarsTag, ex)
+            log.warn(ex) { "[클럽 갱신] 중복 처리 감지 tag=$brawlStarsTag" }
             return
         }
 
@@ -56,11 +56,11 @@ class ClubRenewalService(
                 renewalProcessor.notFound(it) { clubDeactivator.deactivate(brawlStarsTag) }
             }
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
-            log.warn("[클럽 갱신] ServiceUnavailable tag={}", brawlStarsTag, ex)
+            log.warn(ex) { "[클럽 갱신] ServiceUnavailable tag=$brawlStarsTag" }
             brawlStarsApiMaintenanceAutoRegistrar.register()
             updateRenewalStatus(renewal) { renewalProcessor.fail(it) }
         } catch (ex: Exception) {
-            log.error("[클럽 갱신] 실패 tag={}", brawlStarsTag, ex)
+            log.error(ex) { "[클럽 갱신] 실패 tag=$brawlStarsTag" }
             updateRenewalStatus(renewal) { renewalProcessor.fail(it) }
         }
     }
@@ -73,7 +73,7 @@ class ClubRenewalService(
             action(renewal)
             true
         } catch (ex: ObjectOptimisticLockingFailureException) {
-            log.warn("[클럽 갱신] 갱신 상태 업데이트 중 버전 충돌 tag={}", renewal.brawlStarsTag, ex)
+            log.warn(ex) { "[클럽 갱신] 갱신 상태 업데이트 중 버전 충돌 tag=${renewal.brawlStarsTag}" }
             false
         }
 }

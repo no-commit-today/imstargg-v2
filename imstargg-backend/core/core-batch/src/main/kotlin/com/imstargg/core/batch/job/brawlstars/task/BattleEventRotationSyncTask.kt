@@ -6,9 +6,11 @@ import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationE
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventRotationItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventRotationJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.time.Clock
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class BattleEventRotationSyncTask(
@@ -24,7 +26,7 @@ class BattleEventRotationSyncTask(
      * 트랜잭션으로 묶어 부분 커밋(고아 부모)을 방지한다.
      */
     fun sync() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info { "[$JOB_NAME] 시작" }
         val now = clock.instant()
         val rotations = brawlStarsClient.getEventRotation()
 
@@ -51,11 +53,10 @@ class BattleEventRotationSyncTask(
                 battleEventRotationItemJpaRepository.saveAll(items)
                 items.size
             }
-        log.info("[{}] 완료 - 로테이션 슬롯 {}건 저장", JOB_NAME, savedCount)
+        log.info { "[$JOB_NAME] 완료 - 로테이션 슬롯 ${savedCount}건 저장" }
     }
 
     companion object {
         private const val JOB_NAME = "battleEventRotationSyncJob"
-        private val log = LoggerFactory.getLogger(BattleEventRotationSyncTask::class.java)
     }
 }

@@ -5,8 +5,10 @@ import com.imstargg.client.brawlstars.response.EventTypeResponse
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class BattleEventModeSyncTask(
@@ -15,7 +17,7 @@ class BattleEventModeSyncTask(
     private val alertManager: AlertManager,
 ) {
     fun sync() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info { "[$JOB_NAME] 시작" }
         val gameModes = brawlStarsClient.getGameModes().items
         val existingIds =
             battleEventModeJpaRepository
@@ -25,7 +27,7 @@ class BattleEventModeSyncTask(
 
         val newModes = gameModes.filter { it.id !in existingIds }
         alertNewModes(newModes)
-        log.info("[{}] 완료 - 신규 모드: {}건", JOB_NAME, newModes.size)
+        log.info { "[$JOB_NAME] 완료 - 신규 모드: ${newModes.size}건" }
     }
 
     private fun alertNewModes(newModes: List<EventTypeResponse>) {
@@ -42,6 +44,5 @@ class BattleEventModeSyncTask(
 
     companion object {
         private const val JOB_NAME = "battleEventModeSyncJob"
-        private val log = LoggerFactory.getLogger(BattleEventModeSyncTask::class.java)
     }
 }

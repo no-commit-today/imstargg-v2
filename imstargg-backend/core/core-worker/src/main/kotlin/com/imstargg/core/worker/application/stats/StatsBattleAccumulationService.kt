@@ -10,14 +10,16 @@ import com.imstargg.core.worker.config.StatsBattleScheduleProperties
 import com.imstargg.core.worker.domain.BattleBuilder
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PreDestroy
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class StatsBattleAccumulationService(
@@ -29,8 +31,6 @@ class StatsBattleAccumulationService(
     private val brawlStarsApiMaintenanceChecker: BrawlStarsApiMaintenanceChecker,
     private val brawlStarsApiMaintenanceAutoRegistrar: BrawlStarsApiMaintenanceAutoRegistrar,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     /**
      * 한 틱의 플레이어를 동시에 수집하는 전용 풀. 순차 호출은 응답 지연(약 0.2초)에 묶여 초당 5건 남짓이 한계다.
      * 가상 스레드는 Java 21 에서 synchronized 구간에 캐리어가 고정돼 커넥션 풀과 교착될 수 있어 플랫폼 스레드를 쓰고,
@@ -42,19 +42,19 @@ class StatsBattleAccumulationService(
 
     fun accumulate() {
         if (brawlStarsApiMaintenanceChecker.isUnderMaintenance()) {
-            log.info("[배틀 통계 축적] API 점검 중으로 건너뜀")
+            log.info { "[배틀 통계 축적] API 점검 중으로 건너뜀" }
             return
         }
 
         val statsPlayers = findRandomPlayers()
-        log.debug("[배틀 통계 축적] {}명 플레이어 처리 시작: {}", statsPlayers.size, statsPlayers.map { it.brawlStarsTag })
+        log.debug { "[배틀 통계 축적] ${statsPlayers.size}명 플레이어 처리 시작: ${statsPlayers.map { it.brawlStarsTag }}" }
 
         val maintenanceDetected = AtomicBoolean(false)
         statsPlayers
             .map { statsPlayer -> CompletableFuture.runAsync({ accumulate(statsPlayer, maintenanceDetected) }, executor) }
             .forEach { it.join() }
 
-        log.debug("[배틀 통계 축적] 처리 완료")
+        log.debug { "[배틀 통계 축적] 처리 완료" }
     }
 
     private fun accumulate(
@@ -67,20 +67,20 @@ class StatsBattleAccumulationService(
             val battles = battleResponses.map { BattleBuilder(statsPlayer.brawlStarsTag, it).build() }
             statsBattleAggregator.aggregate(battles)
         } catch (ex: BrawlStarsApiClientException.NotFound) {
-            log.warn("[배틀 통계 축적] 플레이어 삭제됨 tag={}", statsPlayer.brawlStarsTag)
+            log.warn { "[배틀 통계 축적] 플레이어 삭제됨 tag=${statsPlayer.brawlStarsTag}" }
             playerDeactivator.deactivate(statsPlayer.brawlStarsTag)
         } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
             // 동시에 받은 점검 응답마다 등록하면 등록기의 조회 후 저장 사이 경합으로 점검이 중복 등록된다
             if (maintenanceDetected.compareAndSet(false, true)) {
-                log.warn("[배틀 통계 축적] API 점검 중 감지 tag={}", statsPlayer.brawlStarsTag, ex)
+                log.warn(ex) { "[배틀 통계 축적] API 점검 중 감지 tag=${statsPlayer.brawlStarsTag}" }
                 brawlStarsApiMaintenanceAutoRegistrar.register()
             }
         } catch (ex: BrawlStarsApiClientException) {
-            log.warn("[배틀 통계 축적] API 클라이언트 오류 tag={}", statsPlayer.brawlStarsTag, ex)
+            log.warn(ex) { "[배틀 통계 축적] API 클라이언트 오류 tag=${statsPlayer.brawlStarsTag}" }
         } catch (ex: BrawlStarsApiServerException) {
-            log.warn("[배틀 통계 축적] API 서버 오류 tag={}", statsPlayer.brawlStarsTag, ex)
+            log.warn(ex) { "[배틀 통계 축적] API 서버 오류 tag=${statsPlayer.brawlStarsTag}" }
         } catch (ex: Exception) {
-            log.error("[배틀 통계 축적] 처리 실패 tag={}", statsPlayer.brawlStarsTag, ex)
+            log.error(ex) { "[배틀 통계 축적] 처리 실패 tag=${statsPlayer.brawlStarsTag}" }
         }
     }
 
