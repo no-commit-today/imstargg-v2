@@ -1,7 +1,5 @@
 package com.imstargg.core.worker.application.player
 
-import com.imstargg.client.brawlstars.BrawlStarsApiClientException
-import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
@@ -16,6 +14,8 @@ import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpServerErrorException
 
 private val log = KotlinLogging.logger {}
 
@@ -61,11 +61,11 @@ class PlayerRenewalService(
             if (updateRenewalStatus(renewal) { renewalProcessor.complete(it) }) {
                 aggregateStats(brawlStarsTag, savedBattles)
             }
-        } catch (ex: BrawlStarsApiClientException.NotFound) {
+        } catch (ex: HttpClientErrorException.NotFound) {
             updateRenewalStatus(renewal) {
                 renewalProcessor.notFound(it) { playerDeactivator.deactivate(brawlStarsTag) }
             }
-        } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
+        } catch (ex: HttpServerErrorException.ServiceUnavailable) {
             log.warn(ex) { "[플레이어 갱신] ServiceUnavailable tag=$brawlStarsTag" }
             brawlStarsApiMaintenanceAutoRegistrar.register()
             updateRenewalStatus(renewal) { renewalProcessor.fail(it) }

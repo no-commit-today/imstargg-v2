@@ -50,7 +50,6 @@ subprojects {
         imports {
             mavenBom("io.sentry:sentry-bom:${property("sentryVersion")}")
             mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:${property("springCloudAwsVersion")}")
-            mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
         }
     }
 

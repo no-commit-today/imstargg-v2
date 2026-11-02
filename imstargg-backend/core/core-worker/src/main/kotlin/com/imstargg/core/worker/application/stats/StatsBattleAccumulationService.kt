@@ -1,7 +1,5 @@
 package com.imstargg.core.worker.application.stats
 
-import com.imstargg.client.brawlstars.BrawlStarsApiClientException
-import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceAutoRegistrar
 import com.imstargg.core.worker.application.maintenance.BrawlStarsApiMaintenanceChecker
@@ -13,6 +11,10 @@ import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPla
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PreDestroy
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpServerErrorException
+import org.springframework.web.client.ResourceAccessException
+import org.springframework.web.client.RestClientResponseException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -66,19 +68,19 @@ class StatsBattleAccumulationService(
             val battleResponses = brawlStarsClient.getPlayerRecentBattles(statsPlayer.brawlStarsTag).items
             val battles = battleResponses.map { BattleBuilder(statsPlayer.brawlStarsTag, it).build() }
             statsBattleAggregator.aggregate(battles)
-        } catch (ex: BrawlStarsApiClientException.NotFound) {
+        } catch (ex: HttpClientErrorException.NotFound) {
             log.warn { "[배틀 통계 축적] 플레이어 삭제됨 tag=${statsPlayer.brawlStarsTag}" }
             playerDeactivator.deactivate(statsPlayer.brawlStarsTag)
-        } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
+        } catch (ex: HttpServerErrorException.ServiceUnavailable) {
             // 동시에 받은 점검 응답마다 등록하면 등록기의 조회 후 저장 사이 경합으로 점검이 중복 등록된다
             if (maintenanceDetected.compareAndSet(false, true)) {
                 log.warn(ex) { "[배틀 통계 축적] API 점검 중 감지 tag=${statsPlayer.brawlStarsTag}" }
                 brawlStarsApiMaintenanceAutoRegistrar.register()
             }
-        } catch (ex: BrawlStarsApiClientException) {
-            log.warn(ex) { "[배틀 통계 축적] API 클라이언트 오류 tag=${statsPlayer.brawlStarsTag}" }
-        } catch (ex: BrawlStarsApiServerException) {
-            log.warn(ex) { "[배틀 통계 축적] API 서버 오류 tag=${statsPlayer.brawlStarsTag}" }
+        } catch (ex: RestClientResponseException) {
+            log.warn(ex) { "[배틀 통계 축적] API 오류 status=${ex.statusCode.value()} tag=${statsPlayer.brawlStarsTag}" }
+        } catch (ex: ResourceAccessException) {
+            log.warn(ex) { "[배틀 통계 축적] API 통신 실패 tag=${statsPlayer.brawlStarsTag}" }
         } catch (ex: Exception) {
             log.error(ex) { "[배틀 통계 축적] 처리 실패 tag=${statsPlayer.brawlStarsTag}" }
         }

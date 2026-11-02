@@ -1,7 +1,5 @@
 package com.imstargg.core.worker.application.club
 
-import com.imstargg.client.brawlstars.BrawlStarsApiClientException
-import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.core.enums.RenewalStatus
 import com.imstargg.core.enums.RenewalType
@@ -13,6 +11,8 @@ import com.imstargg.infrastructure.db.core.renewal.RenewalEntity
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpServerErrorException
 
 private val log = KotlinLogging.logger {}
 
@@ -51,11 +51,11 @@ class ClubRenewalService(
             val clubResponse = brawlStarsClient.getClub(brawlStarsTag)
             clubUpdater.update(clubResponse)
             updateRenewalStatus(renewal) { renewalProcessor.complete(it) }
-        } catch (ex: BrawlStarsApiClientException.NotFound) {
+        } catch (ex: HttpClientErrorException.NotFound) {
             updateRenewalStatus(renewal) {
                 renewalProcessor.notFound(it) { clubDeactivator.deactivate(brawlStarsTag) }
             }
-        } catch (ex: BrawlStarsApiServerException.ServiceUnavailable) {
+        } catch (ex: HttpServerErrorException.ServiceUnavailable) {
             log.warn(ex) { "[클럽 갱신] ServiceUnavailable tag=$brawlStarsTag" }
             brawlStarsApiMaintenanceAutoRegistrar.register()
             updateRenewalStatus(renewal) { renewalProcessor.fail(it) }

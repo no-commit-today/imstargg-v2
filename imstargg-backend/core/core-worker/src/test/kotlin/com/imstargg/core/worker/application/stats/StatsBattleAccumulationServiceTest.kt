@@ -1,7 +1,6 @@
 package com.imstargg.core.worker.application.stats
 
 import com.imstargg.CoreWorkerContextTest
-import com.imstargg.client.brawlstars.BrawlStarsApiServerException
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.client.brawlstars.response.ListResponse
 import com.imstargg.core.worker.config.StatsBattleScheduleProperties
@@ -9,13 +8,14 @@ import com.imstargg.infrastructure.db.core.brawlstars.system.repository.BrawlSta
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.StatsPlayerEntityFixture.Companion.aStatsPlayerEntity
-import feign.FeignException
-import feign.Request
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpServerErrorException
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -102,14 +102,6 @@ class StatsBattleAccumulationServiceTest(
         assertThat(brawlStarsApiMaintenanceRepository.count()).isEqualTo(1)
     }
 
-    private fun serviceUnavailable(): BrawlStarsApiServerException.ServiceUnavailable =
-        BrawlStarsApiServerException.ServiceUnavailable(
-            "maintenance",
-            FeignException.ServiceUnavailable(
-                "maintenance",
-                Request.create(Request.HttpMethod.GET, "https://api.brawlstars.com", emptyMap(), null, null, null),
-                byteArrayOf(),
-                emptyMap(),
-            ),
-        )
+    private fun serviceUnavailable(): HttpServerErrorException =
+        HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)
 }
