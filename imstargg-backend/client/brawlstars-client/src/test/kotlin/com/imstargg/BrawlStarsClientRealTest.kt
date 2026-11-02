@@ -3,7 +3,9 @@ package com.imstargg
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
+@EnabledIfEnvironmentVariable(named = "BRAWLSTARS_API_KEYS", matches = ".+")
 class BrawlStarsClientRealTest(
     private val brawlStarsClient: BrawlStarsClient,
 ) : BrawlStarsClientDevelopTest() {

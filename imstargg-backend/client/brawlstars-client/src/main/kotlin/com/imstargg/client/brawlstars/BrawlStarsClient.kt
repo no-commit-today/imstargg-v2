@@ -31,6 +31,11 @@ class BrawlStarsClient internal constructor(
     private val brawlStarsApi: BrawlStarsApi,
     batchConcurrency: Int,
 ) {
+    init {
+        // 0 이하면 Semaphore 가 허가를 주지 않아 배치 호출이 예외·로그 없이 영원히 멈춘다 — 기동에서 실패시킨다
+        require(batchConcurrency > 0) { "batchConcurrency 는 1 이상이어야 한다: $batchConcurrency" }
+    }
+
     // 배치 호출끼리 겹쳐도 상한을 넘지 않도록 호출마다가 아니라 클라이언트 전체가 나눠 쓴다
     private val batchPermits = Semaphore(batchConcurrency)
 

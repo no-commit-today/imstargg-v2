@@ -116,6 +116,15 @@ class BrawlStarsClientBatchTest {
     }
 
     @Test
+    fun `batchConcurrency 가 1 보다 작으면 생성에 실패한다`() {
+        // when
+        val thrown = catchThrowableOfType(IllegalArgumentException::class.java) { BrawlStarsClient(api, batchConcurrency = 0) }
+
+        // then
+        assertThat(thrown).hasMessageContaining("batchConcurrency")
+    }
+
+    @Test
     fun `빈 목록이면 호출 없이 빈 맵을 돌려준다`() {
         // when
         val result = sut.getPlayersRecentBattles(emptyList())
