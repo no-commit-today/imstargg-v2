@@ -87,6 +87,84 @@ class BrawlStarsClientTest {
     }
 
     @Test
+    fun `브롤러 이름이 null 인 battlelog 를 디코딩한다`() {
+        // given
+        server
+            .expect(requestTo("http://localhost/v1/players/%23P1/battlelog"))
+            .andRespond(withSuccess(ClassPathResource("brawlstars/battlelog-hidden-brawler.json"), MediaType.APPLICATION_JSON))
+
+        // when
+        val result = sut.getPlayerRecentBattles("#P1")
+
+        // then
+        val battle = result.items.single().battle
+        val teams = battle.teams!!
+        assertThat(teams[0][0].brawler!!.name).isNull()
+        assertThat(battle.starPlayer!!.brawler!!.name).isNull()
+        assertThat(teams[0][1].brawler!!.name).isEqualTo("SHADE")
+    }
+
+    @Test
+    fun `nameColor 가 null 인 플레이어 응답을 디코딩한다`() {
+        // given
+        server
+            .expect(requestTo("http://localhost/v1/players/%2388J8Q9RPV"))
+            .andRespond(withSuccess(ClassPathResource("brawlstars/player-name-color-null.json"), MediaType.APPLICATION_JSON))
+
+        // when
+        val result = sut.getPlayerInformation("#88J8Q9RPV")
+
+        // then
+        assertThat(result.nameColor).isNull()
+        assertThat(result.name).isEqualTo("Player")
+    }
+
+    @Test
+    fun `빈 club 객체가 있는 플레이어 응답을 디코딩한다`() {
+        // given
+        server
+            .expect(requestTo("http://localhost/v1/players/%2388J8Q9RPV"))
+            .andRespond(withSuccess(ClassPathResource("brawlstars/player-empty-club.json"), MediaType.APPLICATION_JSON))
+
+        // when
+        val result = sut.getPlayerInformation("#88J8Q9RPV")
+
+        // then
+        assertThat(result.club!!.tag).isNull()
+        assertThat(result.club!!.name).isNull()
+    }
+
+    @Test
+    fun `nameColor 가 null 인 클럽 멤버를 디코딩한다`() {
+        // given
+        server
+            .expect(requestTo("http://localhost/v1/clubs/%232U8CVLQQ9"))
+            .andRespond(withSuccess(ClassPathResource("brawlstars/club-name-color-null.json"), MediaType.APPLICATION_JSON))
+
+        // when
+        val result = sut.getClub("#2U8CVLQQ9")
+
+        // then
+        assertThat(result.members.single().nameColor).isNull()
+        assertThat(result.members.single().name).isEqualTo("Player")
+    }
+
+    @Test
+    fun `nameColor 가 null 인 랭킹 항목을 디코딩한다`() {
+        // given
+        server
+            .expect(requestTo("http://localhost/v1/rankings/kr/players"))
+            .andRespond(withSuccess(ClassPathResource("brawlstars/ranking-name-color-null.json"), MediaType.APPLICATION_JSON))
+
+        // when
+        val result = sut.getPlayerRanking("kr")
+
+        // then
+        assertThat(result.items.single().nameColor).isNull()
+        assertThat(result.items.single().name).isEqualTo("Player")
+    }
+
+    @Test
     fun `API 명세는 application octet-stream 본문을 문자열로 받는다`() {
         // given
         server

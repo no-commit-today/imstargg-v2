@@ -20,6 +20,7 @@ VictoriaLogs·VictoriaMetrics·운영 DB 조회와 테스트 키 재현으로 �
 
 - 브롤러 `16000088`(`/v1/brawlers` 에 없는 숨김 브롤러)의 `name` 이 `null` 로 와서 `BattleResultBrawlerResponse.name: String` 역직렬화가 실패하고, 그 플레이어의 배틀로그 25건 전체가 버려진다(`#LQGGG` 로 재현).
 - `PlayerResponse.nameColor` 가 `null` 로 와서 플레이어 갱신이 실패한 적이 있다(2026-10-25, `#800JQY2VR8`). 같은 필드가 `ClubMemberResponse`·`PlayerRankingResponse` 에도 non-null 로 있다.
+- 클럽이 없는 플레이어는 `"club": {}` 로 와서 `PlayerClubResponse.tag`(non-null) 역직렬화가 실패하고 플레이어 갱신이 실패한다(`PlayerResponse["club"]->PlayerClubResponse["tag"]`). 2026-09-01 이후 core-worker 에서 1,345건(대부분 10월 초, 마지막 2026-10-30, 사용자 갱신 경로 `PlayerRenewalService.renew`)으로, 위 두 건보다 훨씬 많다. `PlayerResponse.club: PlayerClubResponse?` 는 club 이 없거나 null 일 때만 받고 빈 객체는 받지 못한다.
 
 ### 1.3 '플레이어 삭제됨' 은 대부분 살아 있는 계정
 
@@ -188,6 +189,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 ### 4.6 DTO null 처리 (커밋 4)
 
 - `BattleResultBrawlerResponse.name`, `PlayerResponse.nameColor`, `ClubMemberResponse.nameColor`, `PlayerRankingResponse.nameColor` 를 `String?` 로 바꾼다. `nameColor` 는 저장 쪽(`player.name_color`, `club_member.name_color`, `RankingEntityPlayer.nameColor`·`player_name_color`)이 이미 nullable 이라 DTO 만 바꾸면 된다. 랭킹 응답은 한 항목만 null 이어도 한 페이지(최대 200건)가 통째로 실패하므로 함께 고친다.
+- 빈 club 객체: `PlayerClubResponse.tag`·`name` 을 `String?` 로 바꾸고, 빈 club 객체(tag 또는 name 이 null)는 클럽 없음으로 다룬다. `Player.create`·`Player.update` 가 같은 규칙(`PlayerClubResponse?.toEntityClub()`)으로 `PlayerEntityClub` 을 만든다. `PlayerEntityClub` 컬럼(`club_brawlstars_tag`, `club_name`)은 이미 nullable 이라 DDL 변경이 없다.
 - 브롤러 이름:
   - core-worker 도메인 `BattleTeamPlayerBrawler.name: String?`
   - `BattleTeamPlayerEntityBrawler.name: String?` (`@Column(nullable = true)`) + DDL `battle_team_player.brawler_name drop not null`(§6.1). 이 컬럼을 읽는 곳은 없다(core-api 는 `brawler` 테이블 이름을 쓴다).

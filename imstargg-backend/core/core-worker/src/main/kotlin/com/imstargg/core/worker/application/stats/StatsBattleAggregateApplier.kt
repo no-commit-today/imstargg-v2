@@ -123,7 +123,9 @@ class StatsBattleAggregateApplier(
                     brawler =
                         StatsBattleEntityTeamPlayerBrawler(
                             brawlStarsId = player.brawler.brawlStarsId,
-                            name = player.brawler.name,
+                            // 통계 JSON 은 jackson-module-kotlin 생성자 주입으로 읽혀 non-null 파라미터에 null 이 오면
+                            // 구버전 core-batch Reader 가 실패한다 — 빈 문자열이면 배포 순서·롤백 제약이 없다
+                            name = player.brawler.name ?: "",
                             power = player.brawler.power,
                             trophies = player.brawler.trophies,
                         ),
