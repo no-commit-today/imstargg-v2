@@ -24,6 +24,10 @@ class ErrorLoggerTest {
         assertThat(appender.list).hasSize(1)
         assertThat(appender.list.first().level).isEqualTo(Level.INFO)
         assertThat(appender.list.first().throwableProxy).isNull()
+        assertThat(appender.list.first().formattedMessage)
+            .isEqualTo(
+                "[CoreException]: [BRAWLSTARS_API_UNDER_MAINTENANCE]:${ErrorType.BRAWLSTARS_API_UNDER_MAINTENANCE.message} >>> tag=#ABC",
+            )
     }
 
     @Test
@@ -56,6 +60,22 @@ class ErrorLoggerTest {
         assertThat(appender.list).hasSize(1)
         assertThat(appender.list.first().level).isEqualTo(Level.ERROR)
         assertThat(appender.list.first().throwableProxy).isNotNull()
+    }
+
+    @Test
+    fun `처리하지 못한 예외는 ERROR 와 예외를 함께 남긴다`() {
+        // given
+        val (log, appender) = loggerWithAppender()
+        val sut = ErrorLogger.of(log.toKLogger())
+
+        // when
+        sut.log(RuntimeException("boom"))
+
+        // then
+        assertThat(appender.list).hasSize(1)
+        assertThat(appender.list.first().level).isEqualTo(Level.ERROR)
+        assertThat(appender.list.first().throwableProxy).isNotNull()
+        assertThat(appender.list.first().formattedMessage).isEqualTo("[RuntimeException]: boom")
     }
 
     @Test

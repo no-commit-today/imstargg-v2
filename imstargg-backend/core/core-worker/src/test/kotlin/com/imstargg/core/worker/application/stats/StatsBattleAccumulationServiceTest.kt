@@ -1,5 +1,10 @@
 package com.imstargg.core.worker.application.stats
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.classic.spi.ThrowableProxy
+import ch.qos.logback.core.read.ListAppender
 import com.imstargg.CoreWorkerContextTest
 import com.imstargg.client.brawlstars.BrawlStarsClient
 import com.imstargg.client.brawlstars.response.BattleResponse
@@ -23,6 +28,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.JdbcTemplate
@@ -46,8 +52,14 @@ class StatsBattleAccumulationServiceTest(
 
     private lateinit var idByTag: Map<String, Long>
 
+    // 서비스 로거는 테스트 JVM 전체가 함께 쓰므로 테스트마다 붙이고 떼어 낸다
+    private val serviceLogger = LoggerFactory.getLogger(StatsBattleAccumulationService::class.java) as Logger
+    private val logAppender = ListAppender<ILoggingEvent>()
+
     @BeforeEach
     fun setUp() {
+        logAppender.start()
+        serviceLogger.addAppender(logAppender)
         // 서비스는 ID 를 [1, 최대 ID] 에서 뽑으므로 운영처럼 1부터 채운다 — CleanUp 은 ID 를 되돌리지 않아 앞 테스트만큼 밀린다
         jdbcTemplate.execute("TRUNCATE TABLE stats_player RESTART IDENTITY")
         idByTag =
@@ -58,6 +70,7 @@ class StatsBattleAccumulationServiceTest(
 
     @AfterEach
     fun tearDown() {
+        serviceLogger.detachAppender(logAppender)
         cleanUp.all()
     }
 
@@ -108,6 +121,9 @@ class StatsBattleAccumulationServiceTest(
 
         // then
         verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
+        val warn = logAppender.list.single { it.level == Level.WARN }
+        assertThat(warn.formattedMessage).isEqualTo("[배틀 통계 축적] API 통신 실패 tag=${tags.captured.first()}")
+        assertThat((warn.throwableProxy as ThrowableProxy).throwable).isInstanceOf(ResourceAccessException::class.java)
     }
 
     @Test
@@ -121,7 +137,31 @@ class StatsBattleAccumulationServiceTest(
         sut.accumulate()
 
         // then
+        val failedTag = tags.captured.first()
         verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
+        assertThat(statsPlayerRepository.findById(idByTag.getValue(failedTag)).get().status).isEqualTo(StatsPlayerStatus.ACTIVE)
+        assertThat(brawlStarsApiMaintenanceRepository.count()).isEqualTo(0)
+        val errors = logAppender.list.filter { it.level == Level.ERROR }
+        assertThat(errors).hasSize(1)
+        assertThat(errors.single().formattedMessage).isEqualTo("[배틀 통계 축적] 처리 실패 tag=$failedTag")
+        assertThat((errors.single().throwableProxy as ThrowableProxy).throwable).isInstanceOf(RequestNotPermitted::class.java)
+    }
+
+    @Test
+    fun `403 은 표시하지 않고 경고만 남긴다`() {
+        // given
+        val tags = slot<Collection<String>>()
+        every { brawlStarsClient.getPlayersRecentBattles(capture(tags)) } answers { resultsFailingFirstTag(firstArg(), forbidden()) }
+
+        // when
+        sut.accumulate()
+
+        // then
+        val failedTag = tags.captured.first()
+        assertThat(statsPlayerRepository.findById(idByTag.getValue(failedTag)).get().status).isEqualTo(StatsPlayerStatus.ACTIVE)
+        verify(exactly = tags.captured.size - 1) { statsBattleAggregator.aggregate(any()) }
+        val warn = logAppender.list.single { it.level == Level.WARN }
+        assertThat(warn.formattedMessage).isEqualTo("[배틀 통계 축적] API 오류 status=403 tag=$failedTag")
     }
 
     @Test
@@ -239,6 +279,9 @@ class StatsBattleAccumulationServiceTest(
 
     private fun notFound(): HttpClientErrorException =
         HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders(), ByteArray(0), null)
+
+    private fun forbidden(): HttpClientErrorException =
+        HttpClientErrorException.create(HttpStatus.FORBIDDEN, "Forbidden", HttpHeaders(), ByteArray(0), null)
 
     private fun serviceUnavailable(): HttpServerErrorException =
         HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)

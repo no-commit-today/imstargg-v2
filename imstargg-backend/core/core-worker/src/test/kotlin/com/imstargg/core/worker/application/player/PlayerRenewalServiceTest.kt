@@ -89,8 +89,37 @@ class PlayerRenewalServiceTest(
         // then
         val saved = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
         assertThat(saved.status).isEqualTo(RenewalStatus.COMPLETED)
-        assertThat(playerRepository.findByBrawlStarsTag(tag)!!.status).isEqualTo(PlayerStatus.ACTIVE)
+        val player = playerRepository.findByBrawlStarsTag(tag)!!
+        assertThat(player.status).isEqualTo(PlayerStatus.ACTIVE)
+        // 픽스처 값(expPoints 50000·클럽 #CLUB12345)이 /players 응답 값으로 바뀌었다 — 프로필 갱신이 실행됐다
+        assertThat(player.expPoints).isEqualTo(5000)
+        assertThat(player.club?.brawlStarsTag).isEqualTo("#CLUBTEST")
         assertThat(battleRepository.count()).isEqualTo(0)
+    }
+
+    @Test
+    fun `battlelog 가 429 면 renewal 을 FAILED 로 끝내고 프로필을 갱신하지 않는다`() {
+        // given
+        val tag = "#RENEWBL429"
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+        val renewal = aRenewalEntity().withBrawlStarsTag(tag).build()
+        renewal.toPending()
+        renewalRepository.save(renewal)
+
+        every { brawlStarsClient.getPlayerInformation(tag) } returns createPlayerResponse(tag)
+        every { brawlStarsClient.getPlayerRecentBattles(tag) } throws tooManyRequests()
+
+        // when
+        sut.renew(tag)
+
+        // then
+        val saved = renewalRepository.findByBrawlStarsTagAndType(tag, RenewalType.PLAYER)!!
+        assertThat(saved.status).isEqualTo(RenewalStatus.FAILED)
+        val player = playerRepository.findByBrawlStarsTag(tag)!!
+        assertThat(player.status).isEqualTo(PlayerStatus.ACTIVE)
+        // /players 응답 값(expPoints 5000·클럽 #CLUBTEST)이 아니라 픽스처 값 그대로다
+        assertThat(player.expPoints).isEqualTo(50000)
+        assertThat(player.club?.brawlStarsTag).isEqualTo("#CLUB12345")
     }
 
     @Test
@@ -160,6 +189,9 @@ class PlayerRenewalServiceTest(
 
     private fun notFound(): HttpClientErrorException =
         HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders(), ByteArray(0), null)
+
+    private fun tooManyRequests(): HttpClientErrorException =
+        HttpClientErrorException.create(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests", HttpHeaders(), ByteArray(0), null)
 
     private fun serviceUnavailable(): HttpServerErrorException =
         HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)
