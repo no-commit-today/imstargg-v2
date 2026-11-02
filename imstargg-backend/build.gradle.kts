@@ -94,6 +94,14 @@ subprojects {
             }
         }
 
+    // 테스트 출력 잡음 끄기 — developTest 까지 모든 Test 태스크에 건다.
+    // kotlin-logging 이 첫 로거를 만들 때 stdout 에 찍는 "kotlin-logging: initializing..." 줄,
+    // mockk(byte-buddy)가 에이전트를 동적으로 붙일 때 JDK 21+ 가 stderr 에 찍는 WARNING 4줄
+    tasks.withType<Test>().configureEach {
+        systemProperty("kotlin-logging.logStartupMessage", "false")
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
+    }
+
     tasks.register<Test>("unitTest") {
         description = "Runs the unit tests."
         group = "verification"

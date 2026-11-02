@@ -37,6 +37,8 @@ RUN ./gradlew ${GRADLE_MODULE}:bootJar -x test --no-daemon --build-cache --paral
 # ⚠️ 이 스테이지에 RUN 을 추가하면 크로스/멀티 아치 빌드 시 QEMU 가 필요해짐
 #    → 그때는 워크플로에 docker/setup-qemu-action 단계를 추가할 것
 FROM eclipse-temurin:25-jre-jammy
+# kotlin-logging 이 기동 때 stdout 에 찍는 형식 없는 "kotlin-logging: initializing..." 줄을 끈다(KotlinLoggingConfiguration)
+ENV KOTLIN_LOGGING_STARTUP_MESSAGE=false
 WORKDIR /app
 COPY --from=builder --chown=1000:1000 /workspace/extracted/dependencies/ ./
 COPY --from=builder --chown=1000:1000 /workspace/extracted/spring-boot-loader/ ./
