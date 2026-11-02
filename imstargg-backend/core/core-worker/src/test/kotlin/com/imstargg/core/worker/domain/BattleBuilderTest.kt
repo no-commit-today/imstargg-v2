@@ -740,9 +740,9 @@ class BattleBuilderTest {
         assertThat(actual.battleAt).isEqualTo(expected.battleTime.toInstant())
         assertThat(actual.event).isNotNull
         assertThat(actual.event!!.brawlStarsId).isEqualTo(expected.event.id)
-        assertThat(actual.event!!.modeBrawlStarsName).isEqualTo(expected.event.mode)
-        assertThat(actual.event!!.modeBrawlStarsId).isEqualTo(expected.event.modeId.toLong())
-        assertThat(actual.event!!.map).isEqualTo(expected.event.map)
+        assertThat(actual.event.modeBrawlStarsName).isEqualTo(expected.event.mode)
+        assertThat(actual.event.modeBrawlStarsId).isEqualTo(expected.event.modeId.toLong())
+        assertThat(actual.event.map).isEqualTo(expected.event.map)
         assertThat(actual.mode).isEqualTo(expected.battle.mode)
         assertThat(actual.type).isEqualTo(expected.battle.type)
         assertThat(actual.result).isEqualTo(expected.battle.result)

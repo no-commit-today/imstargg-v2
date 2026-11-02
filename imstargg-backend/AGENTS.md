@@ -38,7 +38,7 @@ docker-compose up -d
 
 ## Project Architecture
 
-멀티모듈 Spring Boot 4 + Kotlin 프로젝트, Java 21 (team-dodn/spring-boot-kotlin-template 기반)
+멀티모듈 Spring Boot 4 + Kotlin 프로젝트, Java 25 (team-dodn/spring-boot-kotlin-template 기반)
 
 ```text
 imstargg-backend/

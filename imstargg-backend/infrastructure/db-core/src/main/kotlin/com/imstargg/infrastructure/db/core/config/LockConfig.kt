@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile
 class LockConfig {
     @Bean
     @ConfigurationProperties(prefix = "storage.datasource.lock")
-    fun lockDataSource(): HikariDataSource = DataSourceBuilder.create().type(HikariDataSource::class.java).build()!!
+    fun lockDataSource(): HikariDataSource = DataSourceBuilder.create().type(HikariDataSource::class.java).build()
 
     @Bean
     fun lockTemplate() = PostgresAdvisoryLockTemplate(lockDataSource())
