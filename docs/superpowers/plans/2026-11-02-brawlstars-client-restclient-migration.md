@@ -16,7 +16,7 @@
 - 버전: Kotlin `2.3.21`, Java `25`, Spring Boot `4.1.1`, Gradle wrapper `9.7.1`, `resilience4jVersion=2.4.0`, `kotlinLoggingVersion=8.0.4`. Spring Cloud 는 Task 1 에서 `2025.1.3` 으로 올렸다가 Task 4 에서 BOM 째 제거한다. `springMockkVersion=5.0.1` 은 내리지 않는다.
 - HTTP: `spring.http.clients.imperative.factory: http-components`, `connect-timeout: 3s`, `read-timeout: 10s`, 풀 전체 `100`·라우트당 `50`, 커넥션 임대 대기 `10s`, HC5 자체 재시도 끔. 클라이언트는 재시도하지 않는다.
 - 레이트리밋: resilience4j 제한기 이름 `brawlstars`, 설정값(기본 1/s·대기 600s, prod 10/s)은 바꾸지 않는다. `@RateLimiter` 애노테이션은 쓰지 않는다.
-- 배치 동시 실행 상한 `app.client.brawlstars.batch-concurrency: 5`.
+- 배치 동시 실행 상한 `app.client.brawlstars.batch-concurrency: 5`. (2026-11-03 변경: 배치 조회를 core-worker 로 옮겨 `app.schedule.stats-battle.concurrency: 3` 이 되었다 — 스펙 결정 2)
 - 클라이언트 예외 계층을 만들지 않는다 — `HttpClientErrorException`·`HttpServerErrorException`(상태별 하위 타입)·`RestClientResponseException`·`ResourceAccessException`·`RestClientException`·`RequestNotPermitted` 를 그대로 쓴다.
 - 로깅: 운영 코드는 파일 최상위 `private val log = KotlinLogging.logger {}`, 메시지는 람다 문자열 템플릿, 예외는 `log.warn(ex) { "…" }`. `org.slf4j` 는 운영 코드에서 import 하지 않는다. 한글이 바로 붙는 자리는 `${n}건` 처럼 중괄호를 쓴다.
 - 테스트: `org.junit.jupiter.api.Test`, AssertJ, 백틱 한글 메서드 이름, `// given` `// when` `// then` 주석. `CoreWorkerContextTest`·`CoreBatchContextTest` 를 상속하는 클래스에는 `@Tag("context")` 를 다시 달지 않는다. 테스트는 Redis 에 직접 기대지 않는다(CI 에 Redis 가 없다). 테스트 DB 는 Testcontainers Postgres 가 아니라 H2 인메모리(`MODE=PostgreSQL`, `ddl-auto: create`, db-core testFixtures 의 `application-test-db.yml`)라 Docker 가 필요 없다 — `schema.sql`·마이그레이션 DDL 은 테스트에서 실행되지 않는다(이 계획의 `V261102a`·`V261102b` 는 postgres:17-alpine 에 수동으로 두 번 적용해 확인했다).
@@ -284,6 +284,8 @@ Expected: 앞 명령은 `infrastructure/db-core` 의 `io.github.openfeign.queryd
 ---
 
 ### Task 5: 배치 메서드로 동시 호출 옮기기 (스펙 커밋 3-3, §4.4·§4.5)
+
+> 2026-11-03 변경: 이 Task 의 배치 메서드는 이후 커밋에서 `StatsBattleAccumulationService` 로 옮겼다(스펙 결정 2·§4.5). 아래는 실행 당시의 기록이다.
 
 **Files:**
 - Modify: `client/brawlstars-client/src/main/kotlin/com/imstargg/client/brawlstars/{BrawlStarsClient,BrawlStarsClientConfig,BrawlStarsClientProperties}.kt`, `.../resources/brawlstars-client.yml`(`app.client.brawlstars.batch-concurrency: 5`), `client/brawlstars-client/README.md`

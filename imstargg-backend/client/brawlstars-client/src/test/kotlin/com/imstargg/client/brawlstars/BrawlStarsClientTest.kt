@@ -32,7 +32,6 @@ class BrawlStarsClientTest {
                 .builderFor(RestClientAdapter.create(builder.build()))
                 .build()
                 .createClient(BrawlStarsApi::class.java),
-            batchConcurrency = 5,
         )
 
     @AfterEach

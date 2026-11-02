@@ -84,7 +84,8 @@ class BrawlStarsClientHttpWiringContextTest(
 
         // when
         brawlStarsClient.getPlayerRecentBattles("#A")
-        brawlStarsClient.getPlayersRecentBattles(listOf("#A", "#B"))
+        brawlStarsClient.getPlayerRecentBattles("#B")
+        brawlStarsClient.getPlayerRecentBattles("#C")
 
         // then
         assertThat(before - rateLimiter.metrics.availablePermissions).isEqualTo(3)

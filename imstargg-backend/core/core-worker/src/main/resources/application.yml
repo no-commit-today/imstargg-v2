@@ -46,6 +46,8 @@ app:
       # 600ms 마다 5명 = 초당 약 8.3회 호출. 공용 레이트리미터(prod 초당 10회)를 갱신 요청과 나눠 쓴다
       interval: 600ms
       player-count: 5
+      # 동시에 보내는 battlelog 요청 수 — 5명을 3개씩 나눠 보내도 응답 약 0.2초면 한 틱(600ms) 안에 끝난다
+      concurrency: 3
     player-refresh:
       enabled: true
       interval: 60s

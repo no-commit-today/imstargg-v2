@@ -44,17 +44,6 @@ class BrawlStarsClientYmlTest {
     }
 
     @Test
-    fun `배치 동시 실행 상한은 5 다`() {
-        runner.run { context ->
-            // when
-            val properties = context.getBean(BrawlStarsClientProperties::class.java)
-
-            // then
-            assertThat(properties.batchConcurrency).isEqualTo(5)
-        }
-    }
-
-    @Test
     fun `prod 프로필 제한기는 1초에 10회 허가하고 대기 상한 600초는 그대로다`() {
         runner.withPropertyValues("spring.profiles.active=prod").run { context ->
             // when

@@ -6,11 +6,18 @@ import java.time.Duration
 /**
  * @property interval 틱 주기(fixed-rate). 직전 틱 종료 후의 대기 시간이 아니라 틱 시작 간격이다.
  * 틱이 주기보다 오래 걸리면 다음 틱이 곧바로 이어 실행되며, 그 몰림은 brawlstars 공용 레이트리미터가 막는다.
- * @property playerCount 한 틱에 뽑는 플레이어 수 (동시 실행 상한은 `app.client.brawlstars.batch-concurrency`). 초당 API 호출 수는 playerCount / interval 이다.
+ * @property playerCount 한 틱에 뽑는 플레이어 수. 초당 API 호출 수는 playerCount / interval 이다.
+ * @property concurrency 동시에 떠 있는 battlelog 요청 수 상한. 틱이 겹쳐도 서비스 전체가 이 수를 나눠 쓴다.
  */
 @ConfigurationProperties(prefix = "app.schedule.stats-battle")
 data class StatsBattleScheduleProperties(
     val enabled: Boolean = false,
     val interval: Duration = Duration.ofSeconds(60),
     val playerCount: Int = 10,
-)
+    val concurrency: Int = 3,
+) {
+    init {
+        // 0 이하면 Semaphore 가 허가를 주지 않아 수집이 예외·로그 없이 영원히 멈춘다 — 기동에서 실패시킨다
+        require(concurrency > 0) { "concurrency 는 1 이상이어야 한다: $concurrency" }
+    }
+}

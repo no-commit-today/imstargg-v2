@@ -44,10 +44,7 @@ internal class BrawlStarsClientConfig {
         }
 
     @Bean
-    fun brawlStarsClient(
-        brawlStarsApi: BrawlStarsApi,
-        properties: BrawlStarsClientProperties,
-    ): BrawlStarsClient = BrawlStarsClient(brawlStarsApi, properties.batchConcurrency)
+    fun brawlStarsClient(brawlStarsApi: BrawlStarsApi): BrawlStarsClient = BrawlStarsClient(brawlStarsApi)
 
     companion object {
         const val GROUP = "brawlstars"

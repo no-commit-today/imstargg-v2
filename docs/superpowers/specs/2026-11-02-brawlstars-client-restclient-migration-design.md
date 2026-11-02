@@ -3,6 +3,7 @@
 - 작성일: 2026-11-02 (같은 날 누락 검토 반영)
 - 대상: `imstargg-backend` 전체(버전·로깅), `client/brawlstars-client`, `support/http-client`(신규), `core/core-worker`, `core/core-batch`, `core/core-api`(`ErrorLogger`), `core/core-enum`, `infrastructure/db-core`, `support/monitoring`, `Dockerfile`, `.github/workflows/pr-test.yml`, `imstargg-backend/AGENTS.md`·`imstargg-backend/docs`
 - 상태: 설계 확정 (구현 전)
+- 변경: 2026-11-03 — 여러 battlelog 의 동시 조회를 `BrawlStarsClient` 배치 메서드에서 core-worker 통계 축적으로 옮겼다. 한 틱 인원과 동시성은 둘 다 `app.schedule.stats-battle.*` 에서 정한다(결정 2, §4.5)
 - 참고 패턴: noguesstoday-backend — `support/http-client`, HTTP Service Client(`@ImportHttpServices`), 클라이언트 예외 ADR(`docs/superdomain/adr/2026-10-12-no-client-exception-hierarchy.md`), 재시도 ADR(`2026-10-12-no-client-retry.md`), kotlin-logging 규칙(`noguesstoday-backend/AGENTS.md`), 같은 버전 업그레이드 커밋 `79ac52e1`
 
 ## 1. 배경 — 운영 로그 조사 결과 (2026-11-02)
@@ -38,7 +39,7 @@ VictoriaLogs·VictoriaMetrics·운영 DB 조회와 테스트 키 재현으로 �
 ## 2. 결정 사항 (사용자 합의)
 
 1. Feign 과 Spring Cloud 를 걷어내고 RestClient 기반 HTTP Service Client 로 전환한다. WebClient 는 쓰지 않는다 — 동시 요청이 많아야 수십 개이고 호출부가 전부 블로킹이라 논블로킹의 이득이 없다.
-2. 동시 여러 호출은 `BrawlStarsClient` 내부가 책임진다(배치 메서드). 호출부의 스레드 풀은 없앤다.
+2. 동시 여러 호출은 호출부가 맡는다. `BrawlStarsClient` 는 요청 하나를 보내는 메서드만 둔다. 처음에는 WebClient 같은 동시성 기술을 밖으로 드러내지 않으려고 Client 안의 배치 메서드로 설계했지만, RestClient 를 쓰므로 그 이유가 없어 통계 축적 서비스가 가상 스레드와 `Semaphore` 로 직접 보낸다(2026-11-03 변경, §4.5).
 3. HTTP 구성은 noguesstoday 패턴을 따른다(§4.3·§4.4).
 4. 클라이언트 예외는 noguesstoday ADR 을 따른다 — 공용 예외 계층 없이 RestClient 예외를 그대로 올린다(§4.5).
 5. 통계 축적 중 battlelog 404 는 `stats_player` 를 지우지 않고 상태 enum 으로 표시해 뽑기에서 제외한다. player soft-delete 는 하지 않는다. `stats_player` hard delete 는 어느 경로에서도 하지 않는다(§4.7).
@@ -56,7 +57,7 @@ PR 하나 안에서 아래 순서로 커밋한다. 커밋마다 `./gradlew build
 |---|------|------|----|
 | 1 | `chore(backend)` | 버전 업그레이드(Spring Cloud 는 2025.1.3 으로 임시 상향), `developTest` 태그 수정, Gradle·Kotlin·Boot deprecated 정리, AGENTS.md Java 25 | §4.1 |
 | 2 | `refactor(backend)` | kotlin-logging 전환(`ErrorLogger` 포함), AGENTS.md 로깅 규칙 | §4.2 |
-| 3 | `refactor(brawlstars-client)` | Feign·Spring Cloud 제거 → HTTP Service Client, `support:http-client` 신설(커넥션 풀 포함), 배치 메서드, 호출부 예외 변경, AGENTS.md·maintenance 문서 | §4.3~4.5, §4.9 |
+| 3 | `refactor(brawlstars-client)` | Feign·Spring Cloud 제거 → HTTP Service Client, `support:http-client` 신설(커넥션 풀 포함), 배치 메서드(이후 커밋에서 core-worker 로 옮김 — 결정 2), 호출부 예외 변경, AGENTS.md·maintenance 문서 | §4.3~4.5, §4.9 |
 | 4 | `fix(backend)` | DTO null 처리(클라이언트 DTO·worker 도메인·db-core 엔티티·통계 JSON 빈 문자열) | §4.6 |
 | 5 | `fix(core-worker)` | battlelog 404 상태 관리, 갱신 경로, `PlayerRefreshService` 정렬, renewal-flow 문서 | §4.7·§4.8, §4.9 |
 
@@ -74,7 +75,7 @@ core-api 의 응답 스펙은 바뀌지 않는다(버전·로깅만 바뀜) — 
 | Gradle wrapper | 9.3.0 | 9.7.1 (`./gradlew wrapper --gradle-version 9.7.1`) |
 | Spring Cloud BOM (`springCloudVersion`) | 2025.1.0 | 커밋 1 에서 2025.1.3, 커밋 3 에서 BOM 째 제거 (§4.4) |
 
-- Spring Cloud 를 커밋 1 에서 올리는 이유: 2025.1.0 의 spring-cloud-commons 5.0.0 은 호환성 검사(`CompatibilityVerifierProperties` 기본값 `4.0.x`, 기본으로 켜짐)가 Boot 4.1.1 을 거부해 core-worker·core-batch 컨텍스트가 뜨지 않는다. 2025.1.3(commons 5.0.3)은 `4.0.x`·`4.1.x` 를 허용한다. Feign 제거를 먼저 하는 순서는 배치 메서드가 Java 24+(JEP 491)에 기대므로 택하지 않는다. 버전만 올리면 부족하다 — 마지막에 import 되는 awspring BOM(`spring-cloud-aws-dependencies` 4.0.0)이 commons 5.0.0 을 중첩 import 해 뒤의 BOM 이 이기므로, `spring-cloud-dependencies` import 를 awspring 뒤로 옮기고 `dependencyInsight` 로 commons 5.0.3 을 확인한다(이 동안 spring-retry 는 2.0.13, 커밋 3 에서 BOM 을 지우면 2.0.12 로 돌아간다).
+- Spring Cloud 를 커밋 1 에서 올리는 이유: 2025.1.0 의 spring-cloud-commons 5.0.0 은 호환성 검사(`CompatibilityVerifierProperties` 기본값 `4.0.x`, 기본으로 켜짐)가 Boot 4.1.1 을 거부해 core-worker·core-batch 컨텍스트가 뜨지 않는다. 2025.1.3(commons 5.0.3)은 `4.0.x`·`4.1.x` 를 허용한다. Feign 제거를 먼저 하는 순서는 가상 스레드 동시 조회가 Java 24+(JEP 491)에 기대므로 택하지 않는다. 버전만 올리면 부족하다 — 마지막에 import 되는 awspring BOM(`spring-cloud-aws-dependencies` 4.0.0)이 commons 5.0.0 을 중첩 import 해 뒤의 BOM 이 이기므로, `spring-cloud-dependencies` import 를 awspring 뒤로 옮기고 `dependencyInsight` 로 commons 5.0.3 을 확인한다(이 동안 spring-retry 는 2.0.13, 커밋 3 에서 BOM 을 지우면 2.0.12 로 돌아간다).
 - `resilience4jVersion=2.4.0`·`kotlinLoggingVersion=8.0.4` 는 이 버전들을 처음 쓰는 커밋(2·3)에서 `gradle.properties` 에 더한다.
 - `Dockerfile`: 빌더 `eclipse-temurin:21-jdk-jammy` → `25-jdk-jammy`, 런타임 `21-jre-jammy` → `25-jre-jammy`(noguesstoday 와 같은 이미지).
 - `.github/workflows/pr-test.yml`: `java-version: '25'`.
@@ -83,7 +84,7 @@ core-api 의 응답 스펙은 바뀌지 않는다(버전·로깅만 바뀜) — 
   - `settings.gradle.kts` 의 `val xxx: String by settings` 5개 → `providers.gradleProperty("xxx").get()` (Gradle 9.6 에서 deprecated, Gradle 10 제거).
   - Kotlin 2.3 이 경고하는 불필요한 `!!` 제거(`CoreDataSourceConfig.kt:15`, `LockConfig.kt:16` 등 빌드 경고로 확인).
   - `support/monitoring/src/main/resources/monitoring.yml` 의 `management.otlp.tracing.export.enabled` 는 Boot 4.0 부터 동작하지 않는다 → `management.tracing.export.otlp.enabled` 로 바꾼다(4.1 회귀가 아니라 4.0 부터 무시되던 설정의 정리).
-- Java 24+ 는 `synchronized` 구간에서 가상 스레드가 캐리어에 고정되지 않는다(JEP 491). §4.4 의 배치 메서드가 이에 기댄다.
+- Java 24+ 는 `synchronized` 구간에서 가상 스레드가 캐리어에 고정되지 않는다(JEP 491). §4.5 통계 축적의 가상 스레드 조회가 이에 기댄다.
 
 ### 4.2 kotlin-logging 전환 (커밋 2)
 
@@ -106,11 +107,11 @@ noguesstoday-backend 의 `support/http-client` 를 가져온다. 패키지 `com.
 | `http-client.yml` | `spring.http.clients.imperative.factory: http-components`, `connect-timeout: 3s`, `read-timeout: 10s`. HC5 의 read-timeout 은 소켓 무활동 시간이다 |
 | `ApiLoggingInterceptor.kt` | `ClientHttpRequestInterceptor` + `HttpRequestValues.Processor`. `[BrawlStarsApi#메서드] GET /v1/... -> 404 (123ms)` 를 Api 인터페이스 FQCN 로거로 남긴다. **응답이 오면 상태와 관계없이 INFO**(RestClient 는 인터셉터 체인이 끝난 뒤 상태 예외를 만든다), **전송 예외(타임아웃·연결 실패)만 WARN**. 헤더·본문은 남기지 않는다. 그룹 설정에서 같은 인스턴스를 `requestInterceptor` 와 `httpRequestValuesProcessor` 양쪽에 등록한다(빠지면 첫 호출에서 `IllegalStateException`) |
 
-- **커넥션 풀**: Feign 설정(전체 2000·라우트당 500)을 지우면 HC5 기본값(전체 25·라우트당 5, 임대 대기 기본 3분)이 된다. 배치 호출 5건만으로 라우트가 차고, SQS 갱신 요청이 레이트리밋 허가를 쥔 채 커넥션을 기다리며, 그 대기가 호출 로그 소요 시간에 섞인다. 그래서 `withConnectionManagerCustomizer { it.setMaxConnTotal(100).setMaxConnPerRoute(50) }` 로 늘린다 — 라우트당 50 은 core-worker 의 동시 호출 상한(배치 5 + SQS 리스너 2개 × 기본 동시 처리 10 + 새로고침 1 = 26)을 넉넉히 넘는다. 임대 대기 상한은 `withDefaultRequestConfigCustomizer` 로 `connectionRequestTimeout` 10s 를 둔다. Feign 이 켜던 TTL 900s·만료 커넥션 정리는 옮기지 않는다 — HC5 의 2초 무활동 후 stale 검사가 남고, Boot 가 정한 기본 ConnectionConfig(타임아웃)를 덮어쓰지 않기 위해서다. 이 커스터마이저는 앱 전체(worker·batch)의 자동 구성 빌더에 걸린다(core-batch `CoreApiRestClientConfig` 는 `ClientHttpRequestFactoryBuilder.detect()` 로 따로 만들어 영향이 없다).
+- **커넥션 풀**: Feign 설정(전체 2000·라우트당 500)을 지우면 HC5 기본값(전체 25·라우트당 5, 임대 대기 기본 3분)이 된다. 통계 축적의 동시 요청 몇 건만으로 라우트가 차고, SQS 갱신 요청이 레이트리밋 허가를 쥔 채 커넥션을 기다리며, 그 대기가 호출 로그 소요 시간에 섞인다. 그래서 `withConnectionManagerCustomizer { it.setMaxConnTotal(100).setMaxConnPerRoute(50) }` 로 늘린다 — 라우트당 50 은 core-worker 의 동시 호출 상한(통계 축적 3 + SQS 리스너 2개 × 기본 동시 처리 10 + 새로고침 1 = 24)을 넉넉히 넘는다. 임대 대기 상한은 `withDefaultRequestConfigCustomizer` 로 `connectionRequestTimeout` 10s 를 둔다. Feign 이 켜던 TTL 900s·만료 커넥션 정리는 옮기지 않는다 — HC5 의 2초 무활동 후 stale 검사가 남고, Boot 가 정한 기본 ConnectionConfig(타임아웃)를 덮어쓰지 않기 위해서다. 이 커스터마이저는 앱 전체(worker·batch)의 자동 구성 빌더에 걸린다(core-batch `CoreApiRestClientConfig` 는 `ClientHttpRequestFactoryBuilder.detect()` 로 따로 만들어 영향이 없다).
 - 의존: `spring-web`, `support:logging`, `spring-boot-restclient`(없으면 `spring.http.clients.*` 가 그룹에 조용히 적용되지 않는다), `spring-boot-http-client`, `org.apache.httpcomponents.client5:httpclient5`.
 - 등록: `settings.gradle.kts` include, `Dockerfile` 의존성 캐싱 `COPY` 목록(`COPY support/http-client/build.gradle.kts ./support/http-client/`).
 - core-worker·core-batch 의 `application.yml` `spring.config.import` 에 `http-client.yml` 을 `brawlstars-client.yml` 앞에 추가한다. 두 앱의 테스트 `application.yml` 은 main 을 가리므로 `http-client.yml` 만 import 한다(§5 배선 테스트가 운영과 같은 팩토리·타임아웃을 보도록). `brawlstars-client.yml` 까지 가져오면 import 한 파일의 값이 테스트 문서의 `app.client.brawlstars.*` 값을 덮는다.
-- read-timeout 5s → 10s: 재현 최대치가 6.47s 라 지금의 0.2~0.3% 타임아웃은 거의 사라진다. 대신 느린 호출 한 건이 통계 축적 틱을 최대 10초 붙잡는다(배치 메서드는 모든 태그를 기다린다).
+- read-timeout 5s → 10s: 재현 최대치가 6.47s 라 지금의 0.2~0.3% 타임아웃은 거의 사라진다. 대신 느린 호출 한 건이 통계 축적 틱을 최대 10초 붙잡는다(통계 축적은 한 틱의 모든 요청을 기다린다).
 
 ### 4.4 `brawlstars-client` 재구성 (커밋 3)
 
@@ -131,30 +132,17 @@ noguesstoday-backend 의 `support/http-client` 를 가져온다. 패키지 `com.
 | `BrawlStarsApiKeyInterceptor.kt` | Feign `RequestInterceptor` → `ClientHttpRequestInterceptor`. 키 여러 개를 `AtomicInteger` 로 순환해 `Authorization: Bearer <key>` 를 붙이는 동작은 같다 |
 | `BrawlStarsRateLimitInterceptor.kt` | 신규. resilience4j `RateLimiterRegistry` 의 `brawlstars` 제한기에서 요청마다 허가를 받는다(`RateLimiter.waitForPermission`). 대기 초과는 `RequestNotPermitted` 그대로 |
 | `BrawlStarsApiException.kt` | 삭제(§4.5) |
-| `BrawlStarsClient.kt` | 기존 메서드 10개는 시그니처·반환 타입 유지, `execute` 래핑 제거. 배치 메서드 추가 |
-| `BrawlStarsClientProperties.kt` | `batchConcurrency: Int = 5` 추가 |
+| `BrawlStarsClient.kt` | 기존 메서드 10개는 시그니처·반환 타입 유지, `execute` 래핑 제거. 배치 메서드는 두지 않는다(결정 2) |
 
 **인터셉터 순서** (등록 순서 = 바깥 → 안, `InterceptingClientHttpRequest` 의 `reduce(andThen)`)
 
-1. `BrawlStarsRateLimitInterceptor` — `@RateLimiter` 애노테이션을 쓰지 않는 이유: 배치 메서드가 Client 안에서 건별 메서드를 부르는 자기 호출이라 애노테이션(aspect)이 건마다 적용되지 않는다. 인터셉터는 HTTP 요청마다 걸린다. 제한기 설정(`resilience4j.ratelimiter.instances.brawlstars`, prod 초당 10회·대기 600s)은 그대로다.
+1. `BrawlStarsRateLimitInterceptor` — `@RateLimiter` 애노테이션(레거시 imstargg·develop 은 `BrawlStarsApi` 인터페이스에, noguesstoday 는 `@Component` Client 클래스에 단다)을 쓰지 않는 이유: aspect 는 쓰는 앱마다 AspectJ 가 클래스패스에 있어야 걸리고(core-batch 는 `spring-boot-starter-data-jpa` → `spring-aspects` 를 거쳐 우연히 들어온다) 빈 프록시를 거치는 호출에만 걸린다. 인터셉터는 AOP 없이 RestClient 를 지나는 모든 HTTP 요청에 걸리고 배선 테스트(§5)로 고정돼 있다. (처음의 이유였던 배치 메서드의 자기 호출은 결정 2 변경으로 없어졌다.) 제한기 설정(`resilience4j.ratelimiter.instances.brawlstars`, prod 초당 10회·대기 600s)은 그대로다.
 2. `ApiLoggingInterceptor` — 레이트리밋 대기를 뺀 응답 시간을 잰다(커넥션 풀을 늘려 임대 대기도 사실상 없다).
 3. `BrawlStarsApiKeyInterceptor` — 로깅보다 안쪽이라 키가 로그에 남지 않는다.
-
-**배치 메서드**
-
-```kotlin
-fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<ListResponse<BattleResponse>>>
-```
-
-- 중복 태그는 하나로 합치고, 결과 맵은 입력 순서를 유지한다.
-- 태그마다 가상 스레드에서 `getPlayerRecentBattles(tag)` 를 실행한다(`Executors.newVirtualThreadPerTaskExecutor()` 를 호출마다 열고 닫는다). 클라이언트 전체에서 동시에 떠 있는 배치 요청은 `Semaphore(batchConcurrency)` 로 제한한다.
-- 태그별 `Exception` 은 `Result.failure` 로 담아 나머지 태그를 막지 않는다. `Error` 는 그대로 전파한다. 예외는 RestClient 예외 그대로다(§4.5).
-- 모든 태그가 끝날 때까지 기다린다. 전체 제한 시간은 두지 않는다(건별 read-timeout 과 레이트리밋 대기가 상한).
 
 **설정 (`brawlstars-client.yml`)**
 
 - `spring.cloud.openfeign.*` 제거(풀 설정은 §4.3 으로 옮긴다).
-- `app.client.brawlstars.batch-concurrency: 5` 추가(통계 축적 `player-count: 5` 와 같다).
 - prod 프로필에 `logging.level.com.imstargg.client.brawlstars.BrawlStarsApi: WARN` — 초당 약 10회라 응답 로그(하루 약 86만 줄)는 남기지 않고 전송 실패(타임아웃·연결 실패, 소요 시간 포함)만 남긴다. HTTP 오류 상태(404·429·503 등)는 호출부 로그(§4.5)로 남는다.
 - 클라이언트 테스트 리소스 `application.yml`: 제한기 이름 `brawlstars-api`(실제 이름과 다름)를 `brawlstars` 로 고치고 Feign 설정을 제거하고 `spring.config.import: [http-client.yml, brawlstars-client.yml]` 을 넣는다.
 - `BrawlStarsClientRealTest`(`develop` 태그)의 미리 인코딩한 태그 상수(`%2388J8Q9RPV`·`%232U8CVLQQ9`)를 `#88J8Q9RPV`·`#2U8CVLQQ9` 로 바꾼다 — RestClient 는 URI 변수를 완전 인코딩해 `%` 가 `%25` 로 이중 인코딩된다(운영 코드는 `#` 태그를 넘긴다).
@@ -177,10 +165,13 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 
 호출부 변경:
 
-- `StatsBattleAccumulationService` — 전용 스레드 풀(`executor`, `@PreDestroy shutdown`)을 없애고 배치 메서드를 부른다. 결과는 스케줄러 스레드에서 플레이어 순서대로 처리한다(집계 DB 쓰기는 순차 실행 — 동시 쓰기 경합이 준다).
+- `StatsBattleAccumulationService` — 전용 플랫폼 스레드 풀(`executor`, `@PreDestroy shutdown`)을 가상 스레드 조회로 바꾼다. 결과는 스케줄러 스레드에서 플레이어 순서대로 처리한다(집계 DB 쓰기는 순차 실행 — 동시 쓰기 경합이 준다).
+  - 한 틱의 태그마다 `stats-battle-` 이름의 가상 스레드에서 `getPlayerRecentBattles(tag)` 를 부른다(executor 는 틱마다 열고 닫는다). 동시에 떠 있는 요청은 서비스 필드 `Semaphore(concurrency)` 로 제한한다 — 틱이 주기보다 길어 다음 틱과 겹쳐도 합쳐서 상한을 넘지 않는다.
+  - 한 틱 인원과 동시성은 둘 다 `StatsBattleScheduleProperties`(`app.schedule.stats-battle.*`)에 둔다: `player-count: 5`, `concurrency: 3`(1 미만이면 기동 실패). 5명을 3개씩 나눠 보내도 응답 약 0.2초면 한 틱(600ms) 안에 끝나 처리량(초당 약 8.3회)은 그대로다.
+  - 태그별 `Exception` 은 `Result.failure` 로 담아 나머지 태그를 막지 않고, `Error` 는 그대로 던진다. 모든 요청을 기다리며 전체 제한 시간은 두지 않는다(건별 read-timeout 과 레이트리밋 대기가 상한).
   - 성공 → `BattleBuilder` + `statsBattleAggregator.aggregate` (플레이어별 try/catch, 실패 시 error 로그).
   - `NotFound` → §4.7.
-  - `ServiceUnavailable` → 틱당 한 번만 점검 자동 등록. 한 틱의 요청은 배치로 함께 나가므로, 503 을 받은 뒤 남은 플레이어 호출을 건너뛰던 지금의 중단 동작은 없어진다(다음 틱부터 `isUnderMaintenance()` 가 호출을 막는다).
+  - `ServiceUnavailable` → 틱당 한 번만 점검 자동 등록. 한 틱의 요청은 함께 나가므로, 503 을 받은 뒤 남은 플레이어 호출을 건너뛰던 지금의 중단 동작은 없어진다(다음 틱부터 `isUnderMaintenance()` 가 호출을 막는다).
   - `RestClientResponseException` → warn `API 오류 status=...`, `ResourceAccessException` → warn `API 통신 실패`, 그 밖(디코드 실패 포함) → error `처리 실패`.
 - `PlayerRenewalService` — §4.8.
 - `PlayerRefreshService`·`ClubRenewalService` — catch 타입만 바꾼다. 동작은 같다(`PlayerDeactivator` 가 `stats_player` 를 지우지 않게 되는 §4.7 변경만 따라간다). 단, 새로고침 경로에서 응답 해석 실패(`RestClientResponseException` 이 아닌 `RestClientException`)는 예전 WARN `API 클라이언트 오류` 대신 ERROR `[플레이어 갱신] 처리 실패` 로 남는다 — 통계 축적과 같은 규칙(해석 실패 → error)이다.
@@ -224,7 +215,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 | `imstargg-backend/AGENTS.md` | 로깅 규칙(kotlin-logging, 파일 최상위 로거, 람다 메시지, `support:logging` 의존) 추가, core-admin 의 `support:logging` 의존 반영 | 2 |
 | `imstargg-backend/AGENTS.md` | brawlstars-client 설명 OpenFeign → HTTP Service Client(RestClient), support 트리에 `http-client`, 모듈 의존 관계, 클라이언트 규칙(RestClient 예외 그대로·재시도 없음·HTTP 설정은 `support:http-client`) | 3 |
 | `imstargg-backend/docs/brawlstars-api-maintenance.md` | "스케줄러는 503 감지 시 나머지 플레이어 처리 중단(break)" → 통계 축적은 틱당 1회 등록만 하고 다음 틱부터 차단(§4.5), 중단은 새로고침에만 해당 | 3 |
-| `client/brawlstars-client/README.md` | HTTP 설정 위치(`support:http-client`)·배치 메서드·레이트리밋 인터셉터 한 줄씩 | 3 |
+| `client/brawlstars-client/README.md` | HTTP 설정 위치(`support:http-client`)·동시 요청은 호출부가 맡음·레이트리밋 인터셉터 한 줄씩 | 3 |
 | `imstargg-backend/docs/renewal-flow.md` | `EXECUTING → NOT_FOUND` 조건을 '`/players` 404' 로, battlelog 404 → `COMPLETED`(전투 0건) 추가 | 5 |
 
 ## 5. 테스트
@@ -233,11 +224,11 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 |------|------|------|------|
 | 빌드·기존 테스트 | 1·2 | `./gradlew build` | 업그레이드·로깅 전환 후 전부 통과, `developTest` 수집 확인. `ErrorLoggerTest` 는 `toKLogger()` 로 고쳐 통과 |
 | `BrawlStarsClient` | 3 | `MockRestServiceServer` + 수동 `HttpServiceProxyFactory` 프록시 | 태그 `#` → `%23` 인코딩, 모르는 필드 무시, `PlayerResponse` 의 `@field:JsonProperty("3vs3Victories")` 등 이름 매핑, `getApiSpec` 이 `application/octet-stream` 본문을 String 으로 받음, 404 → `HttpClientErrorException.NotFound`, 503 → `ServiceUnavailable` |
-| 배치 메서드 | 3 | 단위 | 부분 실패 시 나머지 결과 유지, 동시 실행 수가 `batchConcurrency` 를 넘지 않음, 중복 태그 합침. (기존 `StatsBattleAccumulationServiceTest` 의 `한 틱의 플레이어를 동시에 수집한다` 는 동시성이 클라이언트로 옮겨가므로 지우고 이 테스트로 대신한다) |
+| 통계 축적 동시 조회 | 3 | `StatsBattleAccumulationServiceTest` 에 추가 | 동시 요청 수가 `concurrency` 에 닿고 넘지 않음, 두 틱이 겹쳐도 넘지 않음, `Error` 는 그대로 던짐 (상한을 없앤 변이에서 두 동시성 테스트가 실패함을 확인했다) |
 | 인터셉터 | 3 | 단위 | 키 순환 순서, 로그에 키 없음, 응답 INFO·전송 예외 WARN |
-| HTTP 배선 | 3 | core-worker 의 새 컨텍스트 테스트 베이스 — `CoreWorkerContextTest` 는 `BrawlStarsClient` 를 `@MockkBean` 으로 바꾸므로 상속하지 않는다. client 를 mock 하지 않는 별도 `@SpringBootTest` 에 `@Tag("context")` 를 직접 단다. `app.client.brawlstars.url` 은 `@DynamicPropertySource` 로 테스트용 HTTP 서버/응답 없는 소켓에 맞춘다 | 실제 `BrawlStarsClient` 공개 메서드로: (a) 응답 없는 소켓 → read-timeout 안에 `ResourceAccessException`(HC5 팩토리·타임아웃이 그룹에 닿음), (b) 스텁 서버가 `Authorization: Bearer <key>` 를 받음(키 인터셉터 등록), (c) 호출 수만큼 `RateLimiterRegistry.rateLimiter("brawlstars")` 허가가 줄어듦 — 배치 경로 포함(레이트리밋 인터셉터 등록), (d) processor 미등록이면 `ApiLoggingInterceptor` 가 첫 호출에서 실패하므로 같은 테스트가 함께 확인 |
+| HTTP 배선 | 3 | core-worker 의 새 컨텍스트 테스트 베이스 — `CoreWorkerContextTest` 는 `BrawlStarsClient` 를 `@MockkBean` 으로 바꾸므로 상속하지 않는다. client 를 mock 하지 않는 별도 `@SpringBootTest` 에 `@Tag("context")` 를 직접 단다. `app.client.brawlstars.url` 은 `@DynamicPropertySource` 로 테스트용 HTTP 서버/응답 없는 소켓에 맞춘다 | 실제 `BrawlStarsClient` 공개 메서드로: (a) 응답 없는 소켓 → read-timeout 안에 `ResourceAccessException`(HC5 팩토리·타임아웃이 그룹에 닿음), (b) 스텁 서버가 `Authorization: Bearer <key>` 를 받음(키 인터셉터 등록), (c) 호출 수만큼 `RateLimiterRegistry.rateLimiter("brawlstars")` 허가가 줄어듦(레이트리밋 인터셉터 등록), (d) processor 미등록이면 `ApiLoggingInterceptor` 가 첫 호출에서 실패하므로 같은 테스트가 함께 확인 |
 | DTO null | 4 | 클라이언트 디코딩 + worker 단위 | 브롤러 이름 `null`(픽스처)·`nameColor` `null`(플레이어·클럽 멤버·랭킹) 디코딩, 통계 JSON 에 `""` 로 저장, `battle_team_player` 에 null 저장 |
-| `StatsBattleAccumulationService` | 3·5 | 기존 테스트 수정(배치 메서드 stub 으로 교체) | 404 → 상태 `BATTLE_LOG_UNAVAILABLE`, 행 유지, player 미변경; `ACTIVE` 만 뽑힘(`StatsPlayerEntityFixture` 에 status 추가); 503 은 틱당 한 번 등록; 타임아웃은 warn 후 다음 플레이어 계속 |
+| `StatsBattleAccumulationService` | 3·5 | 기존 테스트 수정(건별 메서드 stub — 요청이 함께 나가 도착 순서가 정해지지 않으므로 '처음 도착한 요청'을 실패시킨다) | 404 → 상태 `BATTLE_LOG_UNAVAILABLE`, 행 유지, player 미변경; `ACTIVE` 만 뽑힘(`StatsPlayerEntityFixture` 에 status 추가); 503 은 틱당 한 번 등록; 타임아웃은 warn 후 다음 플레이어 계속 |
 | `PlayerRenewalService` | 5 | 기존 테스트 파일에 케이스 추가(지금은 집계 제출 실패 1개뿐) | battlelog 404 → 갱신 완료(전투 0건); `/players` 404 → notFound + 비활성화 |
 | `PlayerRefreshService`·`ClubRenewalService` | 3 | 새 테스트(지금 테스트 파일 없음) | 예외 타입 변경 후 `/players`·`/clubs` 404 → 비활성화, 503 → 점검 등록 |
 | `BrawlStarsApiTasklet` | 3 | 기존 테스트 수정 | `HttpServerErrorException.ServiceUnavailable` → 정상 종료 |
@@ -301,7 +292,7 @@ fun getPlayersRecentBattles(playerTags: Collection<String>): Map<String, Result<
 
 ## 7. 범위 제외 (향후 과제)
 
-- ranking-collect 가 타임아웃 한 건에 스텝 전체가 실패해 하루 종일 재시작을 반복하는 문제 — 건별 skip 이나 배치 메서드 적용은 따로 다룬다.
+- ranking-collect 가 타임아웃 한 건에 스텝 전체가 실패해 하루 종일 재시작을 반복하는 문제 — 건별 skip 이나 동시 조회 적용은 따로 다룬다.
 - 레이트리밋 대기 600s 동안 SQS 리스너 스레드가 묶이는 문제(2026-07-07 core-worker 설계 P1).
 - slf4j import 금지 Konsist 검사(architecture-test 모듈).
 - core-worker 앱 지표 수집(웹 서버가 없어 Prometheus 수집 대상이 아니다).
@@ -322,6 +313,6 @@ PR 준비 시 처리(설계 밖): 작업 브랜치는 `origin/develop` 기준의
 | `spring.http.clients.*`·풀 설정이 그룹에 조용히 적용되지 않음 | `support:http-client` 가 `spring-boot-restclient` 를 의존하고, §5 HTTP 배선 테스트로 고정 |
 | 커넥션 풀 고갈로 갱신 지연 | 라우트당 50·전체 100 + 임대 대기 10s 상한(§4.3) |
 | Jackson 3 컨버터의 모르는 필드 처리 | 모르는 필드가 섞인 픽스처 디코딩 테스트 |
-| 배치 메서드가 레이트리밋을 우회 | 제한기를 인터셉터에 두고 배치 경로 포함 배선 테스트 |
+| 동시 조회가 레이트리밋을 우회 | 제한기를 인터셉터에 두어 모든 HTTP 요청에 걸고 배선 테스트로 고정 |
 | read-timeout 10s 로 틱이 길어짐 | fixed-rate 따라잡기로 처리량은 유지될 것으로 보고, 배포 후 적재량으로 확인 |
 | 통계 JSON null 로 구버전 core-batch 실패 | 통계 JSON 에는 빈 문자열 저장(§4.6) |
