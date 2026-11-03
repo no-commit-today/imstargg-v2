@@ -27,11 +27,15 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 /**
- * 미등록 배틀 이벤트를 감지하는 잡. 전투 기반 두 스텝 뒤에 로테이션 기반 스텝이 붙는다.
+ * 배틀 이벤트 등록 상태를 점검(미등록·불일치 알림)하고 경쟁전 맵 목록을 만드는 잡. 전투 기반 두 스텝 뒤에
+ * 로테이션 기반 스텝이 붙는다.
  *
  * 통계 전투는 허용 목록의 모드만 담으므로 전투만 보면 미지원 모드의 새 맵을 놓친다.
  * 그래서 [STEP_3_NAME] 이 그날 로테이션에 나온 미등록 이벤트를 알린다. 자세한 이유와 전투 단계와의 중복 제거
  * 방식은 [UnregisteredRotationEventAlertTask] 를 본다.
+ *
+ * 전투 스텝(1·2)이 실패하면 [STEP_3_NAME] 도 그날은 건너뛴다. 그 이벤트가 아직 로테이션에 있으면 다음 날 실행이
+ * 다시 알린다.
  */
 @Configuration
 class BattleEventSyncJobConfig(

@@ -155,7 +155,7 @@ class UnregisteredRotationEventAlertTaskTest(
     }
 
     @Test
-    fun `같은 이벤트가 여러 번 수집됐으면 마지막으로 수집된 항목의 내용으로 알린다`() {
+    fun `같은 이벤트가 여러 번 나오면 마지막에 저장된 항목의 모드·맵으로 알린다`() {
         // given
         saveRotationWithEvent(collectedAt = at("2026-11-02T01:00+09:00"), mapName = "Old Map")
         saveRotationWithEvent(collectedAt = at("2026-11-02T02:00+09:00"), mapName = "Latest Map")
