@@ -31,7 +31,7 @@ describe("RotationCard", () => {
       },
     };
     render(<RotationCard rotation={gemGrab} />);
-    // findBy 는 act 환경 밖에서 기다리므로 EventCountdown 의 마운트 직후 상태 갱신이 act 경고를 내지 않는다
+    // findBy 는 act 안에서 기다리며 갱신을 비우므로 EventCountdown 의 마운트 직후 상태 갱신이 act 경고 없이 반영된다
     expect((await screen.findByText("젬 그랩")).closest(".event-card-head")).toHaveStyle({
       background: "#8F43EA",
     });
