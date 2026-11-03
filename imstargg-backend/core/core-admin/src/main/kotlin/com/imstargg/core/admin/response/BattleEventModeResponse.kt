@@ -8,7 +8,5 @@ data class BattleEventModeResponse(
     val brawlStarsName: String,
     val names: Map<Language, String>,
     val iconImageUrl: String?,
-    val resultType: BattleEventModeResultType,
-    val playerCounts: List<Int>,
-    val color: String,
+    val resultType: BattleEventModeResultType?,
 )
