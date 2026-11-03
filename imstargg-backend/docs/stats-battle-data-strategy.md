@@ -41,10 +41,17 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 ## 3. 데이터 흐름
 
 ```
-BattleEntity (원본 배틀 데이터)
+BrawlStars battlelog API 응답
     │
-    ├── 조건 1: 최근 7일 이내 전투만 (StatsBattleHelper.BATTLE_MAX_AGE_DAYS)
-    ├── 조건 2: Unique Index 기반 중복 방지
+    ▼
+BattleBuilder → Battle (core-worker 도메인 모델)
+    │
+    ▼
+StatsBattleAggregateApplier (core-worker)
+    │
+    ├── 조건 1: 최근 7일 이내 전투만 (StatsBattleAggregateApplier.BATTLE_MAX_AGE_DAYS)
+    ├── 조건 2~8: 수집 대상 조건 (아래 표)
+    ├── 조건 9: Unique Index 기반 중복 방지
     │
     ├─────────────────────────────────────────────────┐
     │                                                 │
@@ -55,10 +62,27 @@ StatsResultBattleEntity                    StatsRankBattleEntity
 
 ### 수집 프로세스
 
-1. **배틀 데이터 조회**: `BattleEntity`에서 최근 7일 이내 배틀 조회
-2. **중복 체크**: Stats 테이블에서 이미 처리된 키인지 확인
-3. **Stats Battle 저장**: 중복이 아닌 경우 Stats 테이블에 저장 (`battleDate`는 `battleAt`에서 자동 계산)
-4. **통계 반영**: 배치에서 Stats 데이터를 집계하여 통계 반영
+원천은 DB 의 전투 테이블이 아니라 battlelog API 응답이다. 갱신 경로(`StatsBattleAggregator.asyncAggregate`)와 축적 스케줄러(`StatsBattleAggregator.aggregate`)가 `Battle` 목록을 `StatsBattleAggregateApplier.apply` 에 넘긴다.
+
+1. **수집 대상 판정**: 전투마다 아래 조건을 순서대로 검사하고, 하나라도 어기면 그 전투를 버린다.
+
+   | 순서 | 조건 | 비고 |
+   |------|------|------|
+   | 1 | 7일 이내 | `StatsBattleAggregateApplier.BATTLE_MAX_AGE_DAYS` |
+   | 2 | 이벤트·맵·mode·type 이 있어야 한다 | 이벤트 ID, 모드 ID, 맵이 모두 있어야 한다 |
+   | 3 | 친선전 제외 | `BattleType.FRIENDLY` |
+   | 4 | 브롤러 중복 없음 | 전투 전체에서 같은 브롤러가 두 번 나오면 버린다 |
+   | 5 | 최저 트로피 | 일반 전투는 `StatsTierRange.MIN_TROPHY`(1000) 이상, 경쟁전(`soloRanked`)은 `MIN_SOLO_RANK_TIER`(신화 1) 이상 |
+   | 6 | `StatsEventMode` 허용 목록 | `modeBrawlStarsId` 로만 판정한다. 목록 밖 모드(와이프아웃 25, 태그팀/듀얼 24, 5v5 등)는 버린다 |
+   | 7 | 팀 구성 일치 | 팀 수가 `teamCount`, 모든 팀의 인원이 `teamSize` 와 같아야 한다 |
+   | 8 | 유형과 경로 일치 | 순위형 테이블은 `battleRank` 가 있고 `resultType == RANK` 인 모드, 결과형 테이블은 `result` 가 있고 `resultType == RESULT` 인 모드만 받는다 |
+
+   - 6번은 `battle.mode` 문자열을 쓰지 않는다. battlelog 가 하키(45)를 `brawlBall`, 아레나(48)를 `siege` 로 보내는 등 문자열을 믿을 수 없기 때문이다.
+   - 듀얼은 `BattleBuilder` 가 같은 태그로 브롤러 3개씩 2×3 으로 펼치므로 7번은 통과한다. 6번에서 걸려 버려진다.
+   - 허용 모드와 모드별 팀 구성은 `StatsEventMode`(core-enum)가 단일 출처다.
+2. **중복 체크**: Stats 테이블에서 이미 처리된 `battleKey` 인지 확인한다.
+3. **Stats Battle 저장**: 중복이 아닌 경우 Stats 테이블에 저장한다 (`battleDate`는 `battleAt`에서 자동 계산).
+4. **통계 반영**: 배치에서 Stats 데이터를 집계하여 통계 반영.
 
 ## 4. 파티셔닝 전략
 
@@ -157,7 +181,8 @@ ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
 
 ### 설정
 
-- `StatsBattleHelper.BATTLE_MAX_AGE_DAYS = 7`: 수집 대상 배틀의 최대 경과 일수
+- `StatsBattleAggregateApplier.BATTLE_MAX_AGE_DAYS = 7`: 수집 대상 배틀의 최대 경과 일수
+- `StatsEventMode`: 통계를 수집하는 모드의 허용 목록과 모드별 팀 구성
 
 ## 9. BattleKey 정의
 
