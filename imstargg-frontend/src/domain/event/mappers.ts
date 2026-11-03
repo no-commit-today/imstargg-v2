@@ -16,7 +16,6 @@ export function toBattleEventMode(dto: BattleEventModeResponse): BattleEventMode
     name: pickName(dto.name),
     iconImageUrl: dto.iconImageUrl,
     resultType: dto.resultType,
-    color: dto.color,
   };
 }
 

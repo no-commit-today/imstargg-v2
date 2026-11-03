@@ -21,7 +21,6 @@ export interface BattleEvent {
   id: number;
   modeName: string | null;
   modeIconUrl: string | null;
-  modeResultType: "RESULT" | "RANK" | null;
   mapName: string;
 }
 

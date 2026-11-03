@@ -4,9 +4,8 @@ export interface BattleEventMode {
   id: number;
   name: string;
   iconImageUrl: string | null;
-  resultType: BattleEventModeResultType;
-  /** 이벤트 카드 배경에 쓰이는 모드 대표색 (#RRGGBB). 백엔드 제공. */
-  color: string;
+  /** 통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null. */
+  resultType: BattleEventModeResultType | null;
 }
 
 export interface BattleEvent {
