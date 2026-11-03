@@ -64,6 +64,7 @@ describe("EventStatsSection", () => {
     renderWithProviders(ui);
 
     expect(screen.getByText(UNSUPPORTED_NOTICE)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /이벤트 통계/ })).not.toBeInTheDocument();
     expect(requested).toEqual({ result: false, rank: false });
   });
 

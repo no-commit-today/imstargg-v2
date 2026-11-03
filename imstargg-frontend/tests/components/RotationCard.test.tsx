@@ -20,4 +20,20 @@ describe("RotationCard", () => {
     render(<RotationCard rotation={rotation} />);
     expect(screen.getByText("이벤트")).toBeInTheDocument();
   });
+
+  it("젬그랩(modeId 0)이면 카드 머리가 보라 배경이다", async () => {
+    // modeId 0 은 falsy — 호출부가 event.mode?.id 를 넘기지 않거나 truthiness 로 거르면 회색이 된다
+    const gemGrab: RotationEvent = {
+      ...rotation,
+      event: {
+        ...rotation.event,
+        mode: { id: 0, name: "젬 그랩", iconImageUrl: null, resultType: "RESULT" },
+      },
+    };
+    render(<RotationCard rotation={gemGrab} />);
+    // findBy 는 act 환경 밖에서 기다리므로 EventCountdown 의 마운트 직후 상태 갱신이 act 경고를 내지 않는다
+    expect((await screen.findByText("젬 그랩")).closest(".event-card-head")).toHaveStyle({
+      background: "#8F43EA",
+    });
+  });
 });

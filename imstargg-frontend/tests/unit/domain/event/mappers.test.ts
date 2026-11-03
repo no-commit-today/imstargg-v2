@@ -41,6 +41,14 @@ describe("toBattleEventMode", () => {
     expect(result.resultType).toBeNull();
   });
 
+  it("resultType 이 응답에 없으면(undefined) null 로 정규화한다", () => {
+    // 타입상 undefined 는 올 수 없지만 필드가 빠진 응답도 "통계 미지원" 으로 읽어야 한다
+    const dto = dtoMode();
+    delete (dto as { resultType?: unknown }).resultType;
+    const result = toBattleEventMode(dto);
+    expect(result.resultType).toBeNull();
+  });
+
   it("preserves null iconImageUrl", () => {
     const result = toBattleEventMode(dtoMode({ iconImageUrl: null }));
     expect(result.iconImageUrl).toBeNull();
