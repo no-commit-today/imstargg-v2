@@ -1,8 +1,9 @@
 # 통계 대상 모드 정리 설계 (스펙 A)
 
 - 작성일: 2026-11-03
-- 대상: `core/core-enum`, `core/core-worker`(통계 전투 수집), `core/core-api`(이벤트 모드 응답·게임 수 환산), `core/core-admin`, `infrastructure/db-core`(`battle_event_mode`), `imstargg-frontend`, `imstargg-admin-frontend`, `imstargg-backend/docs`
+- 대상: `core/core-enum`, `core/core-worker`(통계 전투 수집), `core/core-api`(이벤트 모드 응답·게임 수 환산), `core/core-admin`, `core/core-batch`(미등록 이벤트 감지), `infrastructure/db-core`(`battle_event_mode`), `imstargg-frontend`, `imstargg-admin-frontend`, `imstargg-backend/docs`
 - 상태: 설계 확정 (구현 전)
+- 변경: 2026-11-03 — 코드 대조 검토 반영. 테스트 목록·KDoc 목록·상수 위치·프론트 분기 위치를 정했고, 미등록 이벤트 감지를 로테이션으로 넓혔다(결정 11, §3.9)
 - 관련: 같은 검토에서 나온 스펙 B(조합 통계 재구성 — 보존 정책·이벤트 키·3인 조합)와 스펙 C(티어 스코어 개선)는 이 스펙 다음에 따로 작성한다. 두 스펙의 입력이 되는 데이터 근거는 [부록](#부록-통계-검토-근거-2026-11-03)에 남긴다.
 
 ## 1. 배경
@@ -26,11 +27,12 @@
 | 3 | **수집 시점(core-worker)** 에서 거른다 | 다운스트림(배치 5종·API)이 코드 변경 없이 자동 제한. 저장 공간 절약. 집계·조회 시점 필터보다 고칠 곳이 적다 |
 | 4 | 팀 구성(팀 수 × 팀당 인원)도 enum 과 정확히 같아야 수집한다 | 예외 구성 전투 방어. 최근 순위형 표본은 100% 세 구성 중 하나 |
 | 5 | `battle_event_mode` 에서 `result_type`·`player_counts`·`color` 컬럼 제거 | 결과형/순위형은 enum 이 단일 출처. 게임 수는 3v3 상수. 색은 프론트로 |
-| 6 | 유형 enum 이름 `BattleEventModeResultType` 과 API 필드 `mode.resultType` 은 **이름 유지, nullable 로만 변경**(null = 통계 미지원 모드) | 결과형/순위형은 모드 자체의 성질이다. 통계 지원 여부는 `StatsEventMode` 소속으로 표현된다. 변경 범위가 가장 작다 |
+| 6 | 유형 enum 이름 `BattleEventModeResultType` 과 API 필드 `mode.resultType` 은 **이름 유지, nullable 로만 변경**. API 의 `resultType` 은 **통계 수집 유형**이다. 미지원 모드는 본래 결과형(예: 하키)이어도 null 이다 | enum 값(RESULT/RANK)은 모드가 결과를 주는 방식이라 이름이 맞다. 필드는 그 enum 을 `StatsEventMode` 에서 꺼낸 값이라 같은 이름을 쓴다. 변경 범위가 가장 작다 |
 | 7 | 미지원 모드 이벤트는 로테이션·검색에 **그대로 노출**하고, 이벤트 상세의 통계 영역만 안내로 바꾼다 | 맵 정보·전투 기록은 유지 |
 | 8 | 카드 배경색은 **지원 9개 모드만 프론트 상수**(modeId → 색), 나머지는 기본 회색 | 지원 모드가 고정이라 관리할 것이 거의 없다 |
 | 9 | 과거 통계 행은 지우지 않는다 | 조회 범위가 최대 약 2개월(`SINCE_LAST_MONTH`)이라 자연히 밀려나고, 스펙 B 의 보존 정책이 정리한다. 지우려면 이벤트→모드 매핑이 필요한데 그 매핑이 불완전하다 |
 | 10 | 배포 순서 관문을 두지 않는다 | 사용자 판단 — 몇 분의 오류는 감수한다. 컬럼 DROP 은 코드 배포 직후 적용 |
+| 11 | 미등록 이벤트 감지를 **로테이션 항목까지 넓힌다**. `battleEventSyncJob`(매일 08:00 KST)이 그날 수집된 로테이션 항목도 본다 | 미등록 감지가 통계 전투에만 의존해, 수집을 9개 모드로 거르면 미지원 모드의 새 맵이 감지·등록되지 않고 로테이션에서 빠진다(결정 7 이 깨짐). 로테이션 잡(매시)에 붙이면 미등록 맵마다 하루 24건이 와서 일일 잡에 둔다 |
 
 ## 3. 설계
 
@@ -55,12 +57,16 @@ enum class StatsEventMode(
     ;
 
     companion object {
+        /** 결과형 1게임당 슬롯 수. 결과형 항목이 모두 2×3 이라는 전제에서 나온다(StatsEventModeTest 가 고정). */
+        const val RESULT_SLOTS_PER_GAME = 6
+
         fun find(modeBrawlStarsId: Long): StatsEventMode? = ...
     }
 }
 ```
 
 - 값의 표기(named arguments 여부)는 프로젝트 규칙을 따른다. 인자가 3개 이상이므로 생성자 호출에 이름을 붙인다.
+- `RESULT_SLOTS_PER_GAME` 를 enum 옆에 두는 이유: core-enum 은 core-api 에 의존하지 않는다. 상수를 core-api 에 두면 enum 테스트가 상수와 항목을 함께 검증할 수 없다. core-api 는 이 상수를 참조한다(§3.3).
 - KDoc 에 결정 이력을 남긴다. 2026-11 기준 핵심 6개가 결과형의 91% 라는 점, mode 문자열을 믿을 수 없다는 점(45→`brawlBall`, 48→`siege`), `player_counts` 가 관리되지 않았다는 점, 듀얼 펼침 오류다.
 - 모드를 추가하는 절차도 KDoc 에 적는다. ① 운영 `stats_*_battle` 이 아닌 battlelog 표본으로 팀 구성을 확인한다(추가 전에는 수집되지 않으므로). ② 항목을 추가한다. ③ 프론트 `MODE_COLORS` 에 색을 추가한다. ④ 결과형이면 반드시 2×3 이어야 한다(§3.3 상수의 전제).
 - `BattleEventModeResultType`(RESULT/RANK)은 이름 그대로 둔다. 엔티티 컬럼이 사라진 뒤에는 이 enum 과 API 응답에서만 쓰인다.
@@ -69,11 +75,11 @@ enum class StatsEventMode(
 
 `canCreateStatsBattle` 에 조건을 더한다. 기존 조건(이벤트 필드 존재, 친선전 제외, 브롤러 중복 없음, 최저 트로피)은 그대로 둔다.
 
-1. `StatsEventMode.find(event.modeBrawlStarsId)` 가 null 이면 버린다.
-2. `battle.teams` 의 팀 수가 `teamCount` 이고 모든 팀의 인원이 `teamSize` 여야 한다.
+1. `val statsEventMode = StatsEventMode.find(event.modeBrawlStarsId)` 가 null 이면 버린다. battlelog 의 `battle.mode` 문자열은 쓰지 않는다(§1). 아래 2·3번은 이 조회 결과를 쓴다.
+2. `battle.teams` 의 팀 수가 `statsEventMode.teamCount` 이고 모든 팀의 인원이 `statsEventMode.teamSize` 여야 한다. `BattleBuilder` 는 솔로 쇼다운의 `players` 를 1인 팀 10개로 감싸므로 10×1 검사가 성립한다.
 3. 경로별 유형 일치:
-   - 순위형(`canCreateRankBattle`): `mode.resultType == RANK` 이고 `battleRank != null`.
-   - 결과형(`canCreateResultBattle`): `mode.resultType == RESULT` 이고 `result != null`.
+   - 순위형(`canCreateRankBattle`): `statsEventMode.resultType == RANK` 이고 `battleRank != null`.
+   - 결과형(`canCreateResultBattle`): `statsEventMode.resultType == RESULT` 이고 `result != null`.
    - 지금은 필드 존재만 보므로 한 전투가 두 테이블에 동시에 들어갈 수 있다. 이 구멍도 함께 막힌다.
 
 효과:
@@ -85,16 +91,28 @@ enum class StatsEventMode(
 ### 3.3 결과형 게임 수 환산 — 상수화 (core-api)
 
 - `GameSlot`·`GameSlots`·`GameSlotRepository` 와 그 테스트(`GameSlotTest`·`GameSlotsTest`·`GameSlotRepositoryTest`)를 지운다.
-- 결과형 총 게임 수 = **조회 범위의 결과형 슬롯 합 ÷ 6**. 6 은 "결과형 지원 모드는 모두 2×3" 이라는 §3.1 의 전제에서 나온다. 상수는 결과형 통계 도메인(`BrawlerResultStatistics` 또는 `StatsRate` 근처)에 한 곳만 두고, 이 전제를 KDoc 으로 연결한다. enum 테스트가 전제를 고정한다(§5).
-- 사용처: `BattleResultStatisticsRepository.computeTotalGameCount`(결과·조합·카운터 픽률 분모 공통), `BrawlerResultStatistics.create`.
-- 지금은 이벤트별로 `slot_e / 6` 을 정수 나눗셈한 뒤 더한다. 새 식은 합한 뒤 한 번 나눈다. 차이는 조회 범위의 이벤트 수 이하로 무시할 수 있으며, 테스트 기대값만 맞춘다.
+- 결과형 총 게임 수 = **조회 범위의 결과형 슬롯 합 ÷ `StatsEventMode.RESULT_SLOTS_PER_GAME`(6)**. 나눗셈 규칙은 `StatsRate` 에 한 함수로 둔다(예: `StatsRate.resultGameCount(resultSlotSum)`). `StatsRate` 는 이미 픽률 분모·분자 의미의 단일 정본이다.
+- 사용처는 둘이다.
+  - 조합·카운터 분모: `BattleResultStatisticsRepository.computeTotalGameCount`(pair·enemy 경로가 호출). 기존 이벤트별 슬롯 합 조회는 그대로 두고 합계에 새 함수를 적용한다.
+  - 결과형 분모: `findBrawlerResultStatistics` → `BrawlerResultStatistics.create`. `gameSlots` 파라미터를 지우고 `rows` 의 슬롯 합에 새 함수를 적용한다.
+  - `BattleResultStatisticsRepository` 생성자의 `gameSlotRepository` 의존성을 지운다.
+- 지금은 이벤트별로 `slot_e / resultSlotsPerGame_e` 를 정수 나눗셈한 뒤 더한다. 새 식은 합한 뒤 한 번 나눈다.
+  - 지원 모드끼리는 차이가 조회 범위의 이벤트 수 이하라 무시할 수 있다.
+  - `player_counts` 가 `[3, 3]` 이 아니던 유일한 모드(84, `[20]`)의 과거 행이 조회 범위에 있으면 차이가 더 클 수 있다. 최근 2일 수집분에는 이 모드가 없다. §4 의 과거 행 혼입과 같은 범주로 감수한다.
 - tier 구간은 슬롯마다 그 플레이어의 트로피로 정해지므로, 상위 구간에서는 한 게임이 6 슬롯보다 적게 들어갈 수 있다. "슬롯 합 ÷ 6" 은 그때도 근사값이다. 지금과 같은 근사이며 이 스펙에서 바꾸지 않는다.
 - Redis `statistics` 캐시 객체 형태가 바뀌지 않으므로 캐시 키 버전을 올리지 않는다. `StatisticsCacheKeyTest` 는 그대로 통과해야 한다.
-- `StatsRate.pickRate` KDoc 의 "환산 규칙은 [GameSlots.totalGameCount] 참조" 를 새 상수 위치로 고친다.
+- 지워지는 심볼을 가리키는 KDoc·주석을 새 위치로 고친다.
+  - `StatsRate.pickRate` 의 "[GameSlots.totalGameCount] 참조"
+  - `BattleResultStatisticsRepository` 의 "총 게임 수 — 계산 규칙은 [GameSlots.totalGameCount] 가 단일 진실 출처"(181행 근처)
+  - db-core `BrawlerBattleResultStatsEntity`(`BattleEventMode.playerCounts`·`GameSlot(...)` 언급)와 `BrawlerBattleRankStatsEntity`(`BattleEventMode.playerCounts` 언급)
+- `GameSlots.totalGameCount` KDoc 의 결정 이력은 새 함수의 KDoc 으로 옮긴다. "Pair/Enemy 분모도 Result 슬롯 합 기준으로 계산하며, 같은 게임 수가 보장되므로 Result 테이블이 단일 출처" 라는 내용이다.
 
 ### 3.4 스키마 — `battle_event_mode` (db-core)
 
-- `BattleEventModeEntity` 에서 `resultType`·`playerCounts`·`color` 필드, `updateResultType`·`updatePlayerCounts`·`updateColor`, 검증 함수, `DEFAULT_PLAYER_COUNTS`·`DEFAULT_COLOR` 를 지운다. 테스트 픽스처(`BattleEventModeEntityFixture`)도 맞춘다.
+- `BattleEventModeEntity` 에서 `resultType`·`playerCounts`·`color` 필드, `updateResultType`·`updatePlayerCounts`·`updateColor`, 검증 함수, `DEFAULT_PLAYER_COUNTS`·`DEFAULT_COLOR` 를 지운다.
+- 테스트
+  - `BattleEventModeEntityTest`(db-core)는 지운다. 6개 테스트가 모두 지워지는 멤버(`playerCounts`·`color` round-trip, `update*` 검증)만 검사해 남는 검증 대상이 없다.
+  - 픽스처 `BattleEventModeEntityFixture` 의 `withResultType`·`withPlayerCounts`·`withColor` 를 지운다.
 - `schema.sql` 의 `battle_event_mode` 정의에서 세 컬럼을 지운다.
 - 증분 마이그레이션 `V261103__drop_battle_event_mode_stats_columns.sql`(구현일에 맞춰 날짜 조정):
 
@@ -106,24 +124,31 @@ enum class StatsEventMode(
   ```
 
 - 코드 배포 직후 수동으로 적용한다. 세 컬럼 모두 DB 기본값이 있어, 그 사이 새 코드의 INSERT 는 실패하지 않는다. 반대로 DDL 이 먼저 적용되면 구버전 앱의 조회가 잠시 실패한다(결정 10 으로 감수).
+- `battle_event_mode` 를 읽는 앱은 core-api·core-batch·core-admin 이다(core-worker 는 읽지 않는다).
+  - core-api·core-batch 는 Deploy 워크플로로 배포된다.
+  - **core-admin 은 Deploy 워크플로 밖에서 로컬로 띄운다.** DROP 뒤 예전 체크아웃의 core-admin 을 운영 DB 에 붙이면 모드 목록·대시보드가 실패한다. 그래서 DROP 뒤에는 core-admin 을 새 코드로 다시 띄운다.
 
 ### 3.5 이벤트 모드 응답 — core-api
 
 - 도메인 `BattleEventMode`(`core/domain/brawlstars/event`)에서 `playerCounts`·`color`·`DEFAULT_PLAYER_COUNTS` 를 지운다. `resultType` 은 `BattleEventModeResultType?` 로 바꾸고 `StatsEventMode.find(id)?.resultType` 으로 정한다. 매핑은 `BattleEventRepository` 의 두 `BattleEventMode(...)` 생성 지점에서 한다.
-- `BattleEventModeResponse`: `color` 를 지우고 `resultType` 을 nullable 로 바꾼다. KDoc 에 "null = 통계를 모으지 않는 모드" 를 적는다.
+- `BattleEventModeResponse`: `color` 를 지우고 `resultType` 을 nullable 로 바꾼다. KDoc 에 정의를 적는다. "통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null"(결정 6). 도메인 `BattleEventMode.resultType`, 관리자 응답(§3.6), 프론트 타입 주석(§3.7)에도 같은 정의를 쓴다.
+- Jackson 직렬화 설정(`default-property-inclusion`·`@JsonInclude`)이 없어 null 은 생략되지 않고 `"resultType": null` 로 나간다. core-admin 도 같다.
 - 같은 응답을 품는 곳(로테이션, 이벤트 상세, 경쟁전 맵, 이벤트 검색, 전투 기록의 `BattleResponse`)에 그대로 반영된다.
 - `BATTLE_EVENT` 캐시는 로컬(Caffeine)이라 형태가 바뀌어도 재시작 때 비워진다. 버전 prefix 가 필요 없다.
 - 통계 API 는 미지원 eventId 요청도 그대로 받는다(프론트가 보내지 않으므로 막지 않는다).
 
 ### 3.6 관리자 API — core-admin
 
-- `BattleEventModeCreateRequest`: `resultType`·`playerCounts`·`color` 를 지운다. 남는 필드는 `brawlStarsId`·`brawlStarsName`·`names` 다.
+- `BattleEventModeCreateRequest`: `resultType`·`playerCounts`·`color` 와 "엔티티 기본값과 일치" 주석을 지운다. 남는 필드는 `brawlStarsId`·`brawlStarsName`·`names` 다.
 - `BattleEventModeUpdateRequest`·`BattleEventModeColorUpdateRequest` 와 `PATCH /event-modes/{brawlStarsId}`·`PUT /event-modes/{brawlStarsId}/color`, `BattleEventService.updateMode`·`updateModeColor` 를 지운다.
 - `BattleEventModeResponse`(관리자): `playerCounts`·`color` 를 지우고, `resultType` 은 `StatsEventMode.find(brawlStarsId)?.resultType` 으로 채우는 nullable 읽기 전용 값으로 바꾼다. 운영자는 "통계 지원: 결과형/순위형/미지원" 으로 본다.
 
 ### 3.7 사용자 프론트 — imstargg-frontend
 
-- **타입·매퍼**: `src/api/types.ts`·`src/domain/event/types.ts`·`src/domain/event/mappers.ts` 에서 `color` 를 지우고 `resultType` 을 `"RESULT" | "RANK" | null` 로 바꾼다. 타입 주석에 null 의 의미를 적는다. 전투 기록 매퍼(`src/domain/battle/mappers.ts`)의 `modeResultType` 은 읽는 컴포넌트가 없으므로 지운다.
+- **타입·매퍼**
+  - `src/api/types.ts`·`src/domain/event/types.ts`·`src/domain/event/mappers.ts` 에서 `color` 를 지운다.
+  - 공용 별칭 `BattleEventModeResultType = "RESULT" | "RANK"` 은 **non-null 그대로** 둔다. DTO·도메인의 `resultType` 필드만 `BattleEventModeResultType | null` 로 넓히고, 주석에 결정 6 의 정의를 적는다. 별칭에 null 을 넣으면 패널·훅 prop 까지 null 이 흘러도 타입 오류가 나지 않는다. 그러면 `EventStatsPanel` 이 결과형 API 를 부르고, `EventSelectedBrawlerPanel` 이 "불러오는 중" 에서 멈춘다.
+  - 전투 기록의 `modeResultType`(`src/domain/battle/types.ts` 필드와 `src/domain/battle/mappers.ts` 매핑)은 읽는 컴포넌트가 없으므로 지운다.
 - **카드 색**: `app/events/_components/modeStyles.ts`
   - `MODE_COLORS: Record<number, string>` 상수를 둔다. 값은 현재 DB 값을 옮긴다.
 
@@ -138,22 +163,44 @@ enum class StatsEventMode(
     | 솔로·듀오·트리오 쇼다운 6·9·38 | `#95D449` |
 
   - `getModeStyle(modeId: number | null | undefined)` 로 바꾼다. 목록에 없으면 기존 `DEFAULT_STYLE`(`#2A2E38`) 이다. 명도로 글자색을 고르는 `pickFg` 는 유지한다.
-  - 상수 옆 주석에 "백엔드 `StatsEventMode` 에 모드를 추가할 때 함께 추가" 라고 적고, "색 단일 출처는 백엔드" 라는 기존 주석을 고친다.
-  - `RotationCard`·`SoloRankCard` 는 `event.mode?.id` 를 넘긴다.
+  - **젬그랩의 modeId 는 0 이다.** 지금 가드인 `if (!color)` 같은 falsy 검사를 그대로 옮기면 젬그랩이 회색이 된다. `modeId == null` 로 검사하고 `MODE_COLORS[modeId]` 조회 결과가 없으면 기본값으로 떨어뜨린다.
+  - 상수 옆 주석에 "백엔드 `StatsEventMode` 에 모드를 추가할 때 함께 추가" 라고 적는다. "색 단일 출처는 백엔드" 주석과 `DEFAULT_STYLE` 의 "백엔드 DEFAULT_COLOR 와 일치" 주석을 고친다.
+  - `RotationCard`·`SoloRankCard` 는 `event.mode?.id` 를 넘긴다. `getModeStyle` 의 다른 호출부는 없다.
 - **이벤트 상세** (`app/events/[id]/`)
-  - `_components/EventStatsSection.tsx`·`src/hooks/queries/useEventStats.ts`·`_components/EventStatsPanel.tsx`·`_components/EventSelectedBrawlerPanel.tsx`: `resultType` 이 RESULT 면 결과형, RANK 면 순위형 통계를 보여 준다(지금과 같다). **null 이면 통계 API 를 부르지 않고** 통계 영역 자리에 "이 모드는 통계를 제공하지 않습니다" 안내를 띄운다(문구는 구현 때 다듬는다).
-  - `_components/EventHero.tsx` 배지와 `page.tsx` 라벨은 `resultType` 이 있을 때만 결과형/순위형을 표시한다.
-  - `mode` 자체가 null 인 이벤트(모드 미등록)도 같은 안내 경로를 탄다.
+  - 분기는 **서버 컴포넌트 `_components/EventStatsSection.tsx` 한 곳에서만** 한다.
+    - `resultType` 이 RESULT·RANK 면 지금처럼 `EventStatsPanel` 을 렌더한다.
+    - null 이면 통계를 fetch 하지 않고, `EventStatsPanel` 대신 "이 모드는 통계를 제공하지 않습니다" 안내를 렌더한다(문구는 구현 때 다듬는다).
+    - `EventStatsPanel`·`EventSelectedBrawlerPanel`·`useEventStats` 의 `resultType` prop 은 non-null 로 유지해 바꾸지 않는다.
+  - `_components/EventHero.tsx` 배지와 `page.tsx` 의 라벨·`generateMetadata` 설명("결과 타입: …")은 `resultType` 이 있을 때만 결과형/순위형을 쓴다. 하키처럼 본래 결과형인 미지원 모드도 이 표기를 잃는데, 결정 6 의 정의상 의도된 동작이다.
+  - **동작 변경**: 지금 `EventStatsSection` 은 `event.mode?.resultType ?? "RESULT"` 라서 모드가 연결되지 않은 이벤트도 결과형 통계를 보여 준다. 바뀐 뒤에는 안내 경로를 탄다. 운영 `battle_event` 665건 중 모드가 null 인 이벤트는 0건이다(2026-11-03)라 지금은 영향이 없다.
 
 ### 3.8 관리자 프론트 — imstargg-admin-frontend
 
-- `lib/types.ts`·`lib/api.ts`: 생성 요청과 응답에서 `playerCounts`·`color` 를, 생성 요청에서 `resultType` 을 지운다. 유형·인원 수정과 색 수정 API 함수를 지운다.
-- `app/event-modes/page.tsx`: 생성 폼에서 세 입력을 지운다. 목록의 유형 열은 응답의 nullable `resultType` 을 "결과형/순위형/미지원" 으로 읽기 전용 표시한다.
+- `lib/types.ts`·`lib/api.ts`
+  - 생성 요청과 응답에서 `playerCounts`·`color` 를, 생성 요청에서 `resultType` 을 지운다.
+  - 응답의 `resultType` 은 `BattleEventModeResultType | null` 로 바꾼다.
+  - 유형·인원 수정과 색 수정 API 함수를 지운다.
+  - 두 폼에서만 쓰던 선택지 상수 `BATTLE_EVENT_MODE_RESULT_TYPES` 를 지운다.
+- `app/event-modes/page.tsx`: 생성 폼에서 세 입력과 로컬 `DEFAULT_COLOR` 를 지운다. 목록의 유형 열은 응답의 nullable `resultType` 을 "결과형/순위형/미지원" 으로 읽기 전용 표시한다.
 - `app/event-modes/[brawlStarsId]/edit/page.tsx`: 유형·인원·색 편집 영역을 지운다. 이름·이미지 편집은 남긴다.
+
+### 3.9 미등록 이벤트 감지 확장 — core-batch (결정 11)
+
+- 현재 미등록 이벤트 감지는 `battleEventSyncJob` 의 `BattleEventSyncItemWriter.detectEventChanges` 하나뿐이고, `stats_rank_battle`·`stats_result_battle` 만 읽는다. §3.2 이후 미지원 모드 전투는 이 테이블에 들어오지 않는다.
+- 이벤트 등록은 관리자 수동 생성뿐이다. core-api 로테이션은 미등록 이벤트를 버린다(`BattleEventRepositoryWithCache.findAllCurrentRotationEvents` 의 `mapNotNull`). 감지가 끊기면 미지원 모드의 새 맵은 화면에 나오지 않는다.
+- `battleEventSyncJob` 에 로테이션 기반 감지를 더한다.
+  - 대상: 잡 파라미터 `date`(운영 cron 은 KST 전날)에 수집된 로테이션 항목의 이벤트. `battle_event_rotation.collected_at` 이 KST 기준 그날인 항목이다.
+  - 처리: `battle_event` 에 없는 이벤트를 기존 "미등록 배틀 이벤트 감지" 알림과 같은 형식으로 알린다. 내용은 eventBrawlStarsId·modeBrawlStarsId·map 이다.
+  - 중복 제거: 같은 실행에서 전투 기반 감지가 이미 알린 이벤트는 다시 알리지 않는다. 기존 `checkedEventIds` 와 같은 방식으로 이벤트당 1건이다.
+- 하루 한 번 이벤트당 1건이라 알림 빈도는 지금과 같다.
+  - 로테이션 동기화 잡(`battleEventRotationSyncJob`, 매시)에 붙이지 않는 이유: 미등록 맵마다 하루 24건이 온다.
+  - 지금도 미등록인 하키(로테이션 이벤트 12개)·아레나(9개) 맵은 그동안처럼 매일 알림이 온다.
+- 경쟁전 맵 목록(`createSoloRankEvents`)은 그대로 통계 전투에서 만든다. 경쟁전은 핵심 6모드뿐이라 영향이 없다. 다만 경쟁전에 다른 모드가 들어오면 그 맵이 목록에서 빠지는 결합이 있다는 점을 KDoc 에 남긴다.
+- 단계 구성(기존 chunk step 뒤에 tasklet step 을 둘지, 별도 Task 클래스로 뺄지)은 구현 계획에서 기존 잡 구조에 맞춰 정한다.
 
 ## 4. 바꾸지 않는 것 (비목표)
 
-- core-batch 집계 코드와 `battleEventModeSyncTask`(새 모드 알림)·`battleEventSyncJob`(미등록 이벤트 알림). 미지원 모드의 미등록 이벤트 알림이 계속 올 수 있지만 이번 범위가 아니다.
+- core-batch 집계 코드와 `battleEventModeSyncTask`(새 모드 알림). `battleEventSyncJob` 의 전투 기반 감지·불일치 알림은 그대로 두되, 입력이 9개 모드로 줄어든다. 미지원 모드는 §3.9 의 로테이션 기반 감지가 맡는다. 미지원 모드 이벤트의 "불일치" 알림(등록된 맵 이름·모드가 실제와 다름)은 더 오지 않는다.
 - `BattleBuilder` 의 듀얼 펼침(전투 기록 표시에 필요).
 - 과거 통계 행 정리(결정 9). 미지원 모드의 과거 행은 최대 약 2개월 동안 "전체 이벤트" 맥락(`/brawlers`·브롤러 상세의 조합·카운터)에 섞여 있다가 사라진다.
 - 조합 통계의 이벤트 키·보존 정책·3인 조합(스펙 B), 티어 스코어 산식(스펙 C).
@@ -162,23 +209,38 @@ enum class StatsEventMode(
 
 **백엔드**
 
-- core-enum `StatsEventModeTest`: `find` 결과, modeId 중복 없음, **모든 RESULT 항목이 2×3**(게임 수 상수 6 의 전제 고정).
-- core-worker `StatsBattleAggregateApplierTest` 에 다음 사례를 추가한다.
-  - 허용 목록 밖 모드는 두 테이블 어디에도 저장되지 않는다. 하키(modeId 45, mode `brawlBall`)와 듀얼(24, 펼친 3명 팀)을 넣는다.
-  - 핵심 모드라도 팀 구성이 다르면(예: 2팀 × 2명) 버린다.
-  - 유형이 어긋나면(핵심 모드인데 `battleRank` 만 있음, 쇼다운인데 `result` 만 있음) 버린다.
-  - 솔로(10×1)·듀오(5×2)·트리오(4×3) 쇼다운은 순위형으로 저장된다.
+- core-enum `StatsEventModeTest`: `find` 결과, modeId 중복 없음, **모든 RESULT 항목의 `teamCount * teamSize` 가 `RESULT_SLOTS_PER_GAME` 과 같다**(게임 수 상수의 전제 고정).
+- core-worker `StatsBattleAggregateApplierTest`
+  - **기존 픽스처부터 고친다.** 지금 순위형 픽스처(`createRankBattle`)는 modeId 2 를 쓴다. 이것은 새 enum 에서 HEIST(RESULT, 2×3)라 유형·구성 검사에서 버려진다. 결과형 픽스처(`createResultBattle`)는 modeId 1(허용 목록 밖)을 쓴다. 그래서 기존 테스트 3개(같은 팀 rank 1 row, 같은 key result 1 row, 브롤러 이름 null)가 모두 실패한다. 순위형은 6(SOLO_SHOWDOWN, `createSoloTeams` 10×1), 결과형은 20(KNOCKOUT, `createTeam3v3` 2×3)으로 바꾼다.
+  - 다음 사례를 추가한다.
+    - 허용 목록 밖 모드는 두 테이블 어디에도 저장되지 않는다. 하키(modeId 45, mode `brawlBall`)와 듀얼(24, 펼친 3명 팀)을 넣는다.
+    - 핵심 모드라도 팀 구성이 다르면(예: 2팀 × 2명) 버린다.
+    - 유형이 어긋나면(핵심 모드인데 `battleRank` 만 있음, 쇼다운인데 `result` 만 있음) 버린다.
+    - 솔로(10×1)·듀오(5×2)·트리오(4×3) 쇼다운은 순위형으로 저장된다.
 - core-api
   - `BattleEventRepository` 매핑: 지원 모드는 RESULT/RANK, 미지원 모드는 null.
-  - `BattleEventModeResponse` 직렬화(`resultType: null`, `color` 없음).
-  - `BrawlerResultStatisticsTest` 등 `GameSlots` 를 쓰던 테스트를 상수 6 기준으로 고친다. `StatisticsCacheKeyTest` 는 바뀌지 않는다.
+  - `BattleEventModeResponse` 직렬화(`"resultType": null` 이 나가고 `color` 는 없다).
+  - `BrawlerResultStatisticsTest`: 비 3v3 이벤트를 섞는 테스트(`다중 이벤트 mix 시 게임수 분모는 이벤트별 환산 합`, 기대값 360/6 + 500/10)와 `GameSlots 에 누락된 이벤트는 default 로 폴백` 은 전제가 없어지므로 지운다. 대신 "여러 3v3 이벤트의 슬롯 합 ÷ 6" 사례를 넣는다.
+  - `BattleResultStatisticsRepositoryTest`: `save3v3Event` 헬퍼가 `BattleEventModeEntity(playerCounts = ...)` 로 엔티티를 만든다. 이 인자를 지우고, `GameSlotRepository` 가 사라져 모드·이벤트 저장이 아예 필요 없는지 보고 정리한다.
+  - `StatsRate` 의 새 게임 수 함수 단위 테스트를 둔다. `StatisticsCacheKeyTest` 는 바뀌지 않는다.
 - core-admin `BattleEventServiceTest`: 생성 요청 축소, 목록 응답의 `resultType` 이 enum 에서 오는지 확인.
+- core-batch `battleEventSyncJob` 테스트
+  - 로테이션 항목만 있는 미등록 이벤트(미지원 모드)가 알림을 낸다.
+  - 같은 날 전투와 로테이션 양쪽에 나온 미등록 이벤트는 1건만 알린다.
+  - 등록된 이벤트는 알리지 않는다.
 - `./gradlew ktlintCheck`, `./gradlew test`.
 - 마이그레이션 SQL 은 일회용 `postgres:17-alpine` 컨테이너에서 `schema.sql` 의 이전 정의로 테이블을 만든 뒤 두 번 적용해 멱등을 확인한다. 테스트 DB 가 H2(엔티티로 DDL 생성)라 테스트로는 드러나지 않는다.
 
 **프론트**
 
-- imstargg-frontend: `tests/components/EventStatsPanel.test.tsx`·`EventStatsTables.test.tsx` 등 픽스처를 고친다. 새로 넣을 테스트는 두 가지다. `resultType` 이 null 이면 안내가 뜨고 통계 요청이 나가지 않는지, `getModeStyle` 의 매핑과 기본값이다. 단위·컴포넌트 테스트, 타입 체크, lint 를 돌린다.
+- imstargg-frontend
+  - 고칠 테스트
+    - `tests/domain/battle/mappers.test.ts`: 픽스처의 `color` 를 지우고 `modeResultType` 단언을 지운다.
+    - `tests/unit/domain/event/mappers.test.ts`: `color` 를 지우고 `resultType: null` 사례를 추가한다.
+    - `tests/unit/events/modeStyles.test.ts`: 색 문자열 인자 대신 **modeId 기준으로 다시 쓴다**. `getModeStyle(0)` → `#8F43EA`(젬그랩), 목록 밖 modeId·null → 기본 회색을 넣는다.
+  - `EventStatsPanel.test.tsx` 는 패널 prop 이 non-null 로 유지되므로 바꾸지 않는다. `EventStatsTables.test.tsx` 는 모드 필드가 없어 영향이 없다.
+  - 새 테스트: `EventStatsSection` 이 `resultType` null(그리고 `mode` null)일 때 안내를 렌더하고 통계 fetch 를 하지 않는지.
+  - 단위·컴포넌트 테스트, 타입 체크, lint 를 돌린다.
 - imstargg-admin-frontend: CI 테스트가 없으므로 로컬 build·lint 후 모드 목록·생성·편집 화면을 직접 확인한다.
 
 **배포 후 확인**
@@ -189,7 +251,12 @@ enum class StatsEventMode(
 ## 6. 문서·버전
 
 - `imstargg-backend/docs/stats-battle-data-strategy.md` 의 수집 조건에 허용 목록·팀 구성 검사를 추가한다.
-- `StatsEventMode` 결정 이력 KDoc(§3.1), 게임 수 상수 KDoc(§3.3), `BattleEventModeResponse` 의 null 의미 KDoc(§3.5).
+- KDoc
+  - `StatsEventMode` 결정 이력(§3.1)
+  - 게임 수 함수(§3.3). `GameSlots` 에서 옮긴 이력도 여기에 넣는다.
+  - 지워지는 심볼을 가리키던 KDoc 정리(§3.3 마지막 항목)
+  - `BattleEventModeResponse` 의 `resultType` 정의(§3.5)
+  - `battleEventSyncJob` 의 감지 출처와 경쟁전 맵 결합(§3.9)
 - PR 단계에서 `/release` 스킬로 core-api·core-worker·core-batch·frontend 버전을 올린다(core-batch 는 db-core 엔티티 변경으로 산출물이 바뀐다). core-admin·admin-frontend 는 버전 관리 대상이 아니다.
 
 ## 7. 위험과 대응
@@ -200,6 +267,9 @@ enum class StatsEventMode(
 | 핵심 모드가 일시적으로 다른 인원(예: 이벤트성 2v2)으로 열린다 | 별도 modeId(46·49~53)로 오므로 허용 목록 밖이다 |
 | 순위형 전투의 팀 구성 예외(탈주·봇 등) | 최근 표본은 100% 정상 구성이었다. 배포 후 적재량을 이전과 비교해 급감하면 검사를 다시 본다 |
 | 컬럼 DROP 과 배포 사이 몇 분의 오류 | 결정 10 으로 감수 |
+| DROP 뒤 예전 코드의 core-admin 을 운영 DB 에 붙임(Deploy 워크플로 밖이라 자동 갱신되지 않음) | DROP 뒤 core-admin 을 새 코드로 다시 띄운다(§3.4) |
+| 미지원 모드의 새 맵이 감지되지 않아 로테이션에서 빠짐 | §3.9 의 로테이션 기반 감지 |
+| 경쟁전에 핵심 6 밖의 모드가 들어옴 | 그 모드 전투가 수집되지 않아 경쟁전 맵 목록(`createSoloRankEvents`)에서도 빠진다. 새 모드 알림으로 인지하고 허용 목록에 추가할지 정한다 |
 
 ## 부록: 통계 검토 근거 (2026-11-03)
 
