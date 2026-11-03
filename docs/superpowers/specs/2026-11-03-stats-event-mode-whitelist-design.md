@@ -203,7 +203,7 @@ enum class StatsEventMode(
 - `battleEventSyncJob` 에 로테이션 기반 감지를 더한다.
   - 대상: 잡 파라미터 `date`(운영 cron 은 KST 전날)에 수집된 로테이션 항목의 이벤트. `battle_event_rotation.collected_at` 이 KST 기준 그날인 항목이다.
   - 처리: `battle_event` 에 없는 이벤트를 기존 "미등록 배틀 이벤트 감지" 알림과 같은 형식으로 알린다. 내용은 eventBrawlStarsId·modeBrawlStarsId·map 이다.
-  - 중복 제거: 같은 실행에서 전투 기반 감지가 이미 알린 이벤트는 다시 알리지 않는다. 기존 `checkedEventIds` 와 같은 방식으로 이벤트당 1건이다.
+  - 중복 제거: 같은 실행에서 전투 기반 감지가 이미 알린 이벤트는 다시 알리지 않는다. 그날 통계 전투(`stats_rank_battle`·`stats_result_battle`)에 나온 이벤트는 전투 단계가 알리므로 로테이션 단계에서 뺀다. 라이터의 `checkedEventIds` 는 스텝마다 따로라 공유할 수 없다. 하루에 여러 번 수집된 같은 이벤트도 1건만 알린다.
 - 하루 한 번 이벤트당 1건이라 알림 빈도는 지금과 같다.
   - 로테이션 동기화 잡(`battleEventRotationSyncJob`, 매시)에 붙이지 않는 이유: 미등록 맵마다 하루 24건이 온다.
   - 하키·아레나는 지원 모드가 되므로 전투 기반 감지가 계속 알린다.
