@@ -80,7 +80,7 @@ StatsResultBattleEntity                    StatsRankBattleEntity
    - 6번은 `battle.mode` 문자열을 쓰지 않는다. battlelog 가 하키(45)를 `brawlBall`, 아레나(48)를 `siege` 로 보내는 등 문자열을 믿을 수 없기 때문이다.
    - 듀얼은 `BattleBuilder` 가 같은 태그로 브롤러 3개씩 2×3 으로 펼치므로 7번은 통과한다. 6번에서 걸려 버려진다.
    - 허용 모드와 모드별 팀 구성은 `StatsEventMode`(core-enum)가 단일 출처다.
-   - core-batch `statsPlayerSyncJob`(통계 전투에서 수집 대상 플레이어 발굴)도 허용 목록 모드의 전투로만 발굴한다(미지원 모드에서만 보인 플레이어는 이 경로로 들어오지 않는다).
+   - core-batch `statsPlayerSyncJob`(통계 전투에서 수집 대상 플레이어 발굴)은 모드를 거르지 않고 통계 전투 테이블을 그대로 읽는다. 그래서 허용 목록 적용 뒤 수집된 전투로는 허용 목록 모드에서 본 플레이어만 발굴한다(미지원 모드에서만 보인 플레이어는 이 경로로 들어오지 않는다). 적용 전에 쌓인 행은 파티션 보존 기간 동안 그대로 발굴에 쓰인다.
 2. **중복 체크**: Stats 테이블에서 이미 처리된 `battleKey` 인지 확인한다.
 3. **Stats Battle 저장**: 중복이 아닌 경우 Stats 테이블에 저장한다 (`battleDate`는 `battleAt`에서 자동 계산).
 4. **통계 반영**: 배치에서 Stats 데이터를 집계하여 통계 반영.
