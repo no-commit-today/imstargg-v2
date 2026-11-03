@@ -78,16 +78,13 @@ export interface BattleEvent {
 
 export type BattleEventModeResultType = "RESULT" | "RANK";
 
-export const BATTLE_EVENT_MODE_RESULT_TYPES: BattleEventModeResultType[] = ["RESULT", "RANK"];
-
 export interface BattleEventMode {
   brawlStarsId: number;
   brawlStarsName: string;
   names: Record<Language, string>;
   iconImageUrl: string | null;
-  resultType: BattleEventModeResultType;
-  playerCounts: number[];
-  color: string;
+  // 통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null
+  resultType: BattleEventModeResultType | null;
 }
 
 export interface Maintenance {

@@ -30,15 +30,28 @@ test("/brawlers/[id] 상세 통계가 모두 렌더된다", async ({ page }) => 
 });
 
 test("/events/[id] 통계 행 클릭 시 brawlerId URL + 선택 패널", async ({ page }) => {
-  // event id 는 rotation 첫번째로 가져온다 (RESULT/RANK 모드 공통 동작)
+  // 카드를 최대 5장 넘기며 장당 최대 15s 기다리므로 기본 30s 로는 반복 도중 시간 초과가 나 실패 메시지가 묻힌다.
+  test.setTimeout(90_000);
+  // 통계 미지원 모드의 이벤트는 통계 대신 안내를 보이므로, 안내가 보이면 다음 카드로 넘어간다 (최대 5장).
+  // 결과형/순위형 모드는 공통 동작이라 어느 쪽이든 상관없다.
   await page.goto("/events");
-  const eventLink = page.locator('a[href^="/events/"]').first();
-  const href = await eventLink.getAttribute("href");
-  if (!href) test.skip();
-  await page.goto(href!);
-  await expect(page.getByRole("heading", { name: /이벤트 통계/ })).toBeVisible({
-    timeout: 15_000,
-  });
+  const eventLinks = page.locator('a[href^="/events/"]');
+  await eventLinks.first().waitFor();
+  const hrefs = (
+    await eventLinks.evaluateAll((links) => links.slice(0, 5).map((a) => a.getAttribute("href")))
+  ).filter((href): href is string => href !== null);
+  const statsHeading = page.getByRole("heading", { name: /이벤트 통계/ });
+  const unsupportedNotice = page.getByText("이 모드는 통계를 제공하지 않습니다");
+  let found = false;
+  for (const href of hrefs) {
+    await page.goto(href);
+    await expect(statsHeading.or(unsupportedNotice)).toBeVisible({ timeout: 15_000 });
+    if (await statsHeading.isVisible()) {
+      found = true;
+      break;
+    }
+  }
+  expect(found, "통계를 제공하는 모드의 이벤트가 앞 5장 안에 있어야 한다").toBe(true);
   // 통계 행은 aria-pressed 토글 버튼 (button:has(img) 는 TopNav 로고와 충돌)
   const firstStatRow = page.locator("button[aria-pressed]").first();
   await firstStatRow.click();

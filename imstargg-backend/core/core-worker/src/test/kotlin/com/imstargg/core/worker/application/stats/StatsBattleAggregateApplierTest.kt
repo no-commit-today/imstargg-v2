@@ -123,10 +123,264 @@ class StatsBattleAggregateApplierTest(
         }
     }
 
+    @Nested
+    inner class `apply 수집 모드` {
+        @Test
+        fun `허용 목록 밖 모드의 결과형 전투는 저장하지 않는다`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "wipeout-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#A1",
+                    modeBrawlStarsId = 25L,
+                    mode = "wipeout",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `듀얼은 2x3 으로 펼쳐져도 저장하지 않는다`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "duel-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#DUEL0",
+                    teams = createDuelTeams(),
+                    modeBrawlStarsId = 24L,
+                    mode = "duels",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `mode 문자열이 아니라 modeId 로 판정한다`() {
+            // given
+            val battleAt = recentBattleAt()
+            val battles =
+                listOf(
+                    createResultBattle(
+                        battleKey = "hockey-battle-key",
+                        battleAt = battleAt,
+                        playerBrawlStarsTag = "#A1",
+                        modeBrawlStarsId = 45L,
+                        mode = "brawlBall",
+                    ),
+                    createResultBattle(
+                        battleKey = "wipeout-battle-key",
+                        battleAt = battleAt,
+                        playerBrawlStarsTag = "#A1",
+                        modeBrawlStarsId = 25L,
+                        mode = "gemGrab",
+                    ),
+                )
+
+            // when
+            sut.apply(battles)
+
+            // then
+            assertThat(statsResultBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .containsExactly(45L)
+        }
+
+        @Test
+        fun `핵심 모드라도 팀 구성이 다르면 저장하지 않는다`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "2x2-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#T0P0",
+                    teams = createTeams(teamCount = 2, teamSize = 2),
+                    modeBrawlStarsId = 20L,
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `팀 수가 다르면 팀당 인원이 맞아도 저장하지 않는다 - 솔로 쇼다운 9팀`() {
+            // given
+            val battle =
+                createRankBattle(
+                    battleKey = "solo-9-teams-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#T0P0",
+                    modeBrawlStarsId = 6L,
+                    teams = createTeams(teamCount = 9, teamSize = 1),
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsRankBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `팀 수가 다르면 팀당 인원이 맞아도 저장하지 않는다 - 넉아웃 3팀`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "knockout-3-teams-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#T0P0",
+                    teams = createTeams(teamCount = 3, teamSize = 3),
+                    modeBrawlStarsId = 20L,
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `아레나는 battlelog 가 siege 로 보내도 modeId 48 이면 결과형으로 저장된다`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "arena-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#A1",
+                    modeBrawlStarsId = 48L,
+                    mode = "siege",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .containsExactly(48L)
+        }
+
+        @Test
+        fun `결과형 모드의 순위 전투는 순위형으로 저장하지 않는다`() {
+            // given
+            val battle =
+                createRankBattle(
+                    battleKey = "knockout-rank-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#T0P0",
+                    modeBrawlStarsId = 20L,
+                    teams = createTeams(teamCount = 2, teamSize = 3),
+                    battleRank = 1,
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsRankBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `쇼다운의 결과 전투는 결과형으로 저장하지 않는다`() {
+            // given
+            val battle =
+                createRankBattle(
+                    battleKey = "showdown-result-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#SOLO1",
+                    modeBrawlStarsId = 6L,
+                    battleRank = null,
+                    result = "victory",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `솔로·듀오·트리오 쇼다운은 순위형으로 저장된다`() {
+            // given
+            val battleAt = recentBattleAt()
+            val battles =
+                listOf(
+                    createRankBattle(
+                        battleKey = "solo-battle-key",
+                        battleAt = battleAt,
+                        playerBrawlStarsTag = "#T0P0",
+                        modeBrawlStarsId = 6L,
+                        teams = createTeams(teamCount = 10, teamSize = 1),
+                    ),
+                    createRankBattle(
+                        battleKey = "duo-battle-key",
+                        battleAt = battleAt,
+                        playerBrawlStarsTag = "#T0P0",
+                        modeBrawlStarsId = 9L,
+                        teams = createTeams(teamCount = 5, teamSize = 2),
+                    ),
+                    createRankBattle(
+                        battleKey = "trio-battle-key",
+                        battleAt = battleAt,
+                        playerBrawlStarsTag = "#T0P0",
+                        modeBrawlStarsId = 38L,
+                        teams = createTeams(teamCount = 4, teamSize = 3),
+                    ),
+                )
+
+            // when
+            sut.apply(battles)
+
+            // then
+            assertThat(statsRankBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .containsExactlyInAnyOrder(6L, 9L, 38L)
+        }
+
+        @Test
+        fun `트로피전 솔로 쇼다운도 순위형으로 저장된다`() {
+            // given
+            // 운영의 실제 쇼다운 경로는 경쟁전(soloRanked)이 아니라 트로피전(ranked)이다 — MIN_TROPHY 분기를 거친다
+            val battle =
+                createRankBattle(
+                    battleKey = "trophy-solo-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#SOLO1",
+                    modeBrawlStarsId = 6L,
+                    type = "ranked",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsRankBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .containsExactly(6L)
+        }
+    }
+
+    private fun recentBattleAt(): Instant = clock.instant().minus(Duration.ofHours(1))
+
     private fun createRankBattle(
         battleKey: String,
         battleAt: Instant,
         playerBrawlStarsTag: String,
+        modeBrawlStarsId: Long = 6L,
+        teams: List<List<BattleTeamPlayer>> = createSoloTeams(),
+        battleRank: Int? = 1,
+        result: String? = null,
+        type: String = "soloRanked",
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleAt,
@@ -134,18 +388,18 @@ class StatsBattleAggregateApplierTest(
             BattleEvent(
                 brawlStarsId = 10000001L,
                 modeBrawlStarsName = "soloShowdown",
-                modeBrawlStarsId = 2L,
+                modeBrawlStarsId = modeBrawlStarsId,
                 map = "Flying Fantasies",
             ),
         mode = "soloShowdown",
-        type = "soloRanked",
-        result = null,
+        type = type,
+        result = result,
         duration = 117,
         starPlayerBrawlStarsTag = null,
         playerBrawlStarsTag = playerBrawlStarsTag,
-        battleRank = 1,
+        battleRank = battleRank,
         trophyChange = null,
-        teams = createSoloTeams(),
+        teams = teams,
     )
 
     private fun createResultBattle(
@@ -153,26 +407,73 @@ class StatsBattleAggregateApplierTest(
         battleAt: Instant,
         playerBrawlStarsTag: String,
         teams: List<List<BattleTeamPlayer>> = createTeam3v3(),
+        modeBrawlStarsId: Long = 20L,
+        mode: String = "knockout",
+        battleRank: Int? = null,
+        result: String? = "victory",
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleAt,
         event =
             BattleEvent(
                 brawlStarsId = 10000001L,
-                modeBrawlStarsName = "knockout",
-                modeBrawlStarsId = 1L,
+                modeBrawlStarsName = mode,
+                modeBrawlStarsId = modeBrawlStarsId,
                 map = "Flaring Phoenix",
             ),
-        mode = "knockout",
+        mode = mode,
         type = "ranked",
-        result = "victory",
+        result = result,
         duration = 117,
         starPlayerBrawlStarsTag = null,
         playerBrawlStarsTag = playerBrawlStarsTag,
-        battleRank = null,
+        battleRank = battleRank,
         trophyChange = 8,
         teams = teams,
     )
+
+    private fun createTeams(
+        teamCount: Int,
+        teamSize: Int,
+    ): List<List<BattleTeamPlayer>> =
+        (0 until teamCount).map { teamIdx ->
+            (0 until teamSize).map { playerIdx ->
+                // 브롤러 ID 가 전투 안에서 고유해야 브롤러 중복 검사가 아니라 모드·팀 구성 검사로 걸러진다
+                val idx = teamIdx * teamSize + playerIdx + 1
+                BattleTeamPlayer(
+                    brawlStarsTag = "#T${teamIdx}P$playerIdx",
+                    name = "t${teamIdx}p$playerIdx",
+                    brawler =
+                        BattleTeamPlayerBrawler(
+                            brawlStarsId = 10000000L + idx,
+                            name = "brawler$idx",
+                            power = 11,
+                            trophies = 2000,
+                            trophyChange = null,
+                        ),
+                )
+            }
+        }
+
+    // BattleBuilder 가 듀얼을 펼친 모양이다 — 플레이어 1명이 같은 태그로 브롤러 3개를 낸 팀 2개
+    private fun createDuelTeams(): List<List<BattleTeamPlayer>> =
+        (0 until 2).map { teamIdx ->
+            (0 until 3).map { brawlerIdx ->
+                val idx = teamIdx * 3 + brawlerIdx + 1
+                BattleTeamPlayer(
+                    brawlStarsTag = "#DUEL$teamIdx",
+                    name = "duel$teamIdx",
+                    brawler =
+                        BattleTeamPlayerBrawler(
+                            brawlStarsId = 10000000L + idx,
+                            name = "brawler$idx",
+                            power = 11,
+                            trophies = 2000,
+                            trophyChange = null,
+                        ),
+                )
+            }
+        }
 
     private fun createSoloTeams(): List<List<BattleTeamPlayer>> =
         (1..10).map { idx ->

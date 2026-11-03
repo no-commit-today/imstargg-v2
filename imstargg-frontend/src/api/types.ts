@@ -166,8 +166,8 @@ export interface BattleEventModeResponse {
   id: number;
   name: MessagesResponse;
   iconImageUrl: string | null;
-  resultType: BattleEventModeResultType;
-  color: string;
+  /** 통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null. */
+  resultType: BattleEventModeResultType | null;
 }
 
 export interface BattleEventResponse {

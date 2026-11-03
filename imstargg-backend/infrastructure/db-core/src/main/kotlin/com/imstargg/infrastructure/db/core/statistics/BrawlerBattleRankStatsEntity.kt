@@ -28,7 +28,7 @@ import java.time.LocalDate
  *
  * ## 게임 수 정확 계산 불가
  * Result 통계와 달리 한 게임의 **일부 슬롯만** 통계에 들어가므로
- * `BattleEventMode.playerCounts` 만으로는 게임 수를 도출할 수 없다.
+ * 슬롯 합과 `StatsEventMode` 의 팀 구성만으로는 게임 수를 도출할 수 없다.
  *
  * 따라서 결과형 통계(`BrawlerResultStatistics` 등)에 도입된
  * "게임 수 분모 픽률" 정의를 이 엔티티에 그대로 옮길 수 없다.

@@ -15,7 +15,6 @@ const dtoMode = (overrides: Partial<BattleEventModeResponse> = {}): BattleEventM
   name: { ko: "젬 그랩", en: "Gem Grab" },
   iconImageUrl: "https://cdn/gem.png",
   resultType: "RESULT",
-  color: "#8F43EA",
   ...overrides,
 });
 
@@ -34,8 +33,20 @@ describe("toBattleEventMode", () => {
       name: "젬 그랩",
       iconImageUrl: "https://cdn/gem.png",
       resultType: "RESULT",
-      color: "#8F43EA",
     });
+  });
+
+  it("통계를 모으지 않는 모드(resultType null)는 resultType 을 null 로 매핑한다", () => {
+    const result = toBattleEventMode(dtoMode({ resultType: null }));
+    expect(result.resultType).toBeNull();
+  });
+
+  it("resultType 이 응답에 없으면(undefined) null 로 정규화한다", () => {
+    // 타입상 undefined 는 올 수 없지만 필드가 빠진 응답도 "통계 미지원" 으로 읽어야 한다
+    const dto = dtoMode();
+    delete (dto as { resultType?: unknown }).resultType;
+    const result = toBattleEventMode(dto);
+    expect(result.resultType).toBeNull();
   });
 
   it("preserves null iconImageUrl", () => {

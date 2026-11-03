@@ -4,10 +4,6 @@ import com.imstargg.CoreApiContextTest
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.StatsRate
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
-import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
-import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
@@ -23,8 +19,6 @@ import java.time.LocalDate
 
 class BattleResultStatisticsRepositoryTest(
     private val sut: BattleResultStatisticsRepository,
-    private val battleEventJpaRepository: BattleEventJpaRepository,
-    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val resultStatsJpaRepository: BrawlerBattleResultStatsJpaRepository,
     private val pairStatsJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
     private val enemyStatsJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
@@ -38,23 +32,9 @@ class BattleResultStatisticsRepositoryTest(
         cleanUp.all()
     }
 
-    private fun save3v3Event(eventId: Long): BrawlStarsId {
-        // mode 의 brawlStarsId 는 event 와 별개 테이블 PK 라 충돌 위험 없음 — 단순 distinct 값.
-        val mode =
-            battleEventModeJpaRepository.save(
-                BattleEventModeEntity(
-                    brawlStarsId = 48000000L + eventId,
-                    brawlStarsName = "gemGrab",
-                    playerCounts = listOf(3, 3),
-                ),
-            )
-        battleEventJpaRepository.save(BattleEventEntity(brawlStarsId = eventId, mode = mode, mapName = "X"))
-        return BrawlStarsId(eventId)
-    }
-
     @Test
-    fun `findBrawlerResultStatistics - 3v3 이벤트의 게임 수 분모로 픽률 계산`() {
-        val event = save3v3Event(eventId = 100L)
+    fun `findBrawlerResultStatistics - 게임 수 분모로 픽률 계산`() {
+        val event = BrawlStarsId(100L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
                 eventBrawlStarsId = event.value,
@@ -75,7 +55,7 @@ class BattleResultStatisticsRepositoryTest(
 
     @Test
     fun `findBrawlerPairResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
-        val event = save3v3Event(eventId = 101L)
+        val event = BrawlStarsId(101L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
                 eventBrawlStarsId = event.value,
@@ -114,11 +94,11 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
-    fun `findBrawlerPairResultStatistics - 다중 날짜에 걸친 분모는 일별 Result 슬롯합 환산의 합`() {
-        val event = save3v3Event(eventId = 104L)
+    fun `findBrawlerPairResultStatistics - 다중 날짜에 걸친 분모는 Result 슬롯 합 전체 ÷ 6`() {
+        val event = BrawlStarsId(104L)
         val day1 = date
         val day2 = date.plusDays(1)
-        // Result 슬롯: day1 6 슬롯(=1 게임) + day2 6 슬롯(=1 게임) → 분모 = 2
+        // Result 슬롯: day1 6 + day2 6 = 12 슬롯 → 12 ÷ 6 = 분모 2
         listOf(day1, day2).forEach { d ->
             resultStatsJpaRepository.save(
                 BrawlerBattleResultStatsEntity(
@@ -158,8 +138,53 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
+    fun `findBrawlerPairResultStatistics - 이벤트를 지정하지 않으면 이벤트별 슬롯을 합산한 뒤 한 번만 ÷6 한다`() {
+        // given
+        val eventA = BrawlStarsId(107L)
+        val eventB = BrawlStarsId(108L)
+        // Result 슬롯: 이벤트 A 4 + 이벤트 B 5 = 9 슬롯 → 9 ÷ 6 = 분모 1 (이벤트별로 나누면 4÷6 + 5÷6 = 0)
+        listOf(eventA to 2L, eventB to 3L).forEach { (event, victoryCount) ->
+            resultStatsJpaRepository.save(
+                BrawlerBattleResultStatsEntity(
+                    eventBrawlStarsId = event.value,
+                    tierRange = tierRange,
+                    battleDate = date,
+                    brawlerBrawlStarsId = 10L,
+                    resultCount = ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = 2, drawCount = 0),
+                    starPlayerCount = 0,
+                ),
+            )
+            pairStatsJpaRepository.save(
+                BrawlerPairBattleResultStatsEntity(
+                    eventBrawlStarsId = event.value,
+                    tierRange = tierRange,
+                    startBattleDate = date,
+                    endBattleDate = date,
+                    brawlerBrawlStarsId = 10L,
+                    pairBrawlerBrawlStarsId = 20L,
+                    resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
+                ),
+            )
+        }
+
+        // when
+        val result =
+            sut.findBrawlerPairResultStatistics(
+                eventId = null,
+                brawlerId = BrawlStarsId(10L),
+                pairBrawlerId = null,
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.totalBattleCount).isEqualTo(1)
+    }
+
+    @Test
     fun `findBrawlerEnemyResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
-        val event = save3v3Event(eventId = 102L)
+        val event = BrawlStarsId(102L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
                 eventBrawlStarsId = event.value,
@@ -198,7 +223,7 @@ class BattleResultStatisticsRepositoryTest(
 
     @Test
     fun `findBrawlerDailyResultStatistics - 날짜별 row 반환`() {
-        val event = save3v3Event(eventId = 103L)
+        val event = BrawlStarsId(103L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
                 eventBrawlStarsId = event.value,
@@ -224,8 +249,8 @@ class BattleResultStatisticsRepositoryTest(
 
     @Test
     fun `findBrawlerDailyResultStatistics - 같은 날짜의 여러 이벤트 row 를 병합한다`() {
-        val event1 = save3v3Event(eventId = 105L)
-        val event2 = save3v3Event(eventId = 106L)
+        val event1 = BrawlStarsId(105L)
+        val event2 = BrawlStarsId(106L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
                 eventBrawlStarsId = event1.value,
