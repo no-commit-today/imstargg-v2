@@ -22,17 +22,17 @@
 
 | # | 결정 | 이유 |
 |---|---|---|
-| 1 | 통계 수집 모드 = **핵심 6(3v3 결과형) + 솔로·듀오·트리오 쇼다운(순위형)** 9개 | 검증되고 대부분의 전투를 차지하는 모드만. 하키·아레나는 제외(맵이 이벤트 테이블에 미등록) |
+| 1 | 통계 수집 모드 = **핵심 6 + 하키(45)·아레나(48)·농구(22)(3v3 결과형) + 솔로·듀오·트리오 쇼다운(순위형)** 12개 | 핵심 6 은 검증되고 대부분의 전투를 차지한다. 하키·아레나·농구는 30주 상시 로테이션이고, 팀 구성이 100% 2×3 이며, 맵당 하루 4.8~6.7천 판이 쌓인다(10-30~11-02). 제외: 와이프아웃(맵당 하루 1.5천 판으로 얇음), 태그팀/듀얼(24, 팀당 플레이어 1명이라 조합 통계 불성립), 5v5(2×3 아님) |
 | 2 | 허용 목록은 **코드 enum** 으로 둔다 | 관리자 데이터 관리 부담 제거. 모드 추가는 드물고 코드 한 줄 |
 | 3 | **수집 시점(core-worker)** 에서 거른다 | 다운스트림(배치 5종·API)이 코드 변경 없이 자동 제한. 저장 공간 절약. 집계·조회 시점 필터보다 고칠 곳이 적다 |
 | 4 | 팀 구성(팀 수 × 팀당 인원)도 enum 과 정확히 같아야 수집한다 | 예외 구성 전투 방어. 최근 순위형 표본은 100% 세 구성 중 하나 |
 | 5 | `battle_event_mode` 에서 `result_type`·`player_counts`·`color` 컬럼 제거 | 결과형/순위형은 enum 이 단일 출처. 게임 수는 3v3 상수. 색은 프론트로 |
 | 6 | 유형 enum 이름 `BattleEventModeResultType` 과 API 필드 `mode.resultType` 은 **이름 유지, nullable 로만 변경**. API 의 `resultType` 은 **통계 수집 유형**이다. 미지원 모드는 본래 결과형(예: 하키)이어도 null 이다 | enum 값(RESULT/RANK)은 모드가 결과를 주는 방식이라 이름이 맞다. 필드는 그 enum 을 `StatsEventMode` 에서 꺼낸 값이라 같은 이름을 쓴다. 변경 범위가 가장 작다 |
 | 7 | 미지원 모드 이벤트는 로테이션·검색에 **그대로 노출**하고, 이벤트 상세의 통계 영역만 안내로 바꾼다 | 맵 정보·전투 기록은 유지 |
-| 8 | 카드 배경색은 **지원 9개 모드만 프론트 상수**(modeId → 색), 나머지는 기본 회색 | 지원 모드가 고정이라 관리할 것이 거의 없다 |
+| 8 | 카드 배경색은 **지원 12개 모드만 프론트 상수**(modeId → 색), 나머지는 기본 회색 | 지원 모드가 고정이라 관리할 것이 거의 없다 |
 | 9 | 과거 통계 행은 지우지 않는다 | 조회 범위가 최대 약 2개월(`SINCE_LAST_MONTH`)이라 자연히 밀려나고, 스펙 B 의 보존 정책이 정리한다. 지우려면 이벤트→모드 매핑이 필요한데 그 매핑이 불완전하다 |
 | 10 | 배포 순서 관문을 두지 않는다 | 사용자 판단 — 몇 분의 오류는 감수한다. 컬럼 DROP 은 코드 배포 직후 적용 |
-| 11 | 미등록 이벤트 감지를 **로테이션 항목까지 넓힌다**. `battleEventSyncJob`(매일 08:00 KST)이 그날 수집된 로테이션 항목도 본다 | 미등록 감지가 통계 전투에만 의존해, 수집을 9개 모드로 거르면 미지원 모드의 새 맵이 감지·등록되지 않고 로테이션에서 빠진다(결정 7 이 깨짐). 로테이션 잡(매시)에 붙이면 미등록 맵마다 하루 24건이 와서 일일 잡에 둔다 |
+| 11 | 미등록 이벤트 감지를 **로테이션 항목까지 넓힌다**. `battleEventSyncJob`(매일 08:00 KST)이 그날 수집된 로테이션 항목도 본다 | 미등록 감지가 통계 전투에만 의존해, 수집을 12개 모드로 거르면 미지원 모드의 새 맵이 감지·등록되지 않고 로테이션에서 빠진다(결정 7 이 깨짐). 로테이션 잡(매시)에 붙이면 미등록 맵마다 하루 24건이 와서 일일 잡에 둔다 |
 
 ## 3. 설계
 
@@ -51,6 +51,9 @@ enum class StatsEventMode(
     BRAWL_BALL(5, RESULT, 2, 3),
     HOT_ZONE(17, RESULT, 2, 3),
     KNOCKOUT(20, RESULT, 2, 3),
+    BASKET_BRAWL(22, RESULT, 2, 3),
+    BRAWL_HOCKEY(45, RESULT, 2, 3),
+    BRAWL_ARENA(48, RESULT, 2, 3),
     SOLO_SHOWDOWN(6, RANK, 10, 1),
     DUO_SHOWDOWN(9, RANK, 5, 2),
     TRIO_SHOWDOWN(38, RANK, 4, 3),
@@ -67,7 +70,12 @@ enum class StatsEventMode(
 
 - 값의 표기(named arguments 여부)는 프로젝트 규칙을 따른다. 인자가 3개 이상이므로 생성자 호출에 이름을 붙인다.
 - `RESULT_SLOTS_PER_GAME` 를 enum 옆에 두는 이유: core-enum 은 core-api 에 의존하지 않는다. 상수를 core-api 에 두면 enum 테스트가 상수와 항목을 함께 검증할 수 없다. core-api 는 이 상수를 참조한다(§3.3).
-- KDoc 에 결정 이력을 남긴다. 2026-11 기준 핵심 6개가 결과형의 91% 라는 점, mode 문자열을 믿을 수 없다는 점(45→`brawlBall`, 48→`siege`), `player_counts` 가 관리되지 않았다는 점, 듀얼 펼침 오류다.
+- KDoc 에 결정 이력을 남긴다.
+  - 2026-11 기준 핵심 6개가 결과형의 91%, 하키·아레나·농구를 더하면 약 98% 다.
+  - 세 모드는 상시 로테이션이고 구성이 100% 2×3 이라 넣었다.
+  - 와이프아웃·태그팀/듀얼·5v5 를 뺀 이유(결정 1)를 적는다.
+  - mode 문자열을 믿을 수 없다(45→`brawlBall`, 48→`siege`). 지원 모드인 하키·아레나도 modeId 로만 식별된다.
+  - `player_counts` 가 관리되지 않았고, 듀얼 펼침 오류가 있었다.
 - 모드를 추가하는 절차도 KDoc 에 적는다. ① 운영 `stats_*_battle` 이 아닌 battlelog 표본으로 팀 구성을 확인한다(추가 전에는 수집되지 않으므로). ② 항목을 추가한다. ③ 프론트 `MODE_COLORS` 에 색을 추가한다. ④ 결과형이면 반드시 2×3 이어야 한다(§3.3 상수의 전제).
 - `BattleEventModeResultType`(RESULT/RANK)은 이름 그대로 둔다. 엔티티 컬럼이 사라진 뒤에는 이 enum 과 API 응답에서만 쓰인다.
 
@@ -84,9 +92,10 @@ enum class StatsEventMode(
 
 효과:
 
-- `stats_result_battle`·`stats_rank_battle` 에 9개 모드만 들어간다. core-batch 집계 5종(`brawler_battle_result_stats`·`brawler_battle_rank_stats`·`brawler_enemy_battle_result_stats`·`brawler_pair_battle_result_stats`·`brawler_pair_battle_rank_stats`)과 core-api 는 코드 변경 없이 자동으로 제한된다.
+- `stats_result_battle`·`stats_rank_battle` 에 12개 모드만 들어간다. core-batch 집계 5종(`brawler_battle_result_stats`·`brawler_battle_rank_stats`·`brawler_enemy_battle_result_stats`·`brawler_pair_battle_result_stats`·`brawler_pair_battle_rank_stats`)과 core-api 는 코드 변경 없이 자동으로 제한된다.
 - 듀얼(24)이 빠지므로 듀얼 펼침이 조합 통계를 오염시키던 문제가 사라진다. `BattleBuilder` 의 펼침 자체는 전투 기록 표시용이라 그대로 둔다.
-- 통계 전투 적재량이 약 9% 준다(결과형 기준).
+- 통계 전투 적재량이 약 2% 준다(결과형 기준). 빠지는 것은 태그팀/듀얼·와이프아웃·5v5·기간 한정 모드다.
+- 하키·아레나·농구는 지금처럼 계속 수집되므로, "전체 이벤트" 합산 맥락(`/brawlers` 티어, 브롤러 상세의 조합·카운터)에 계속 섞인다. 비중은 트로피전의 약 14%(지금은 비핵심 전체 약 19%)이고, 경쟁전은 핵심 6모드뿐이라 영향이 없다. 합산 맥락을 핵심 6모드로 좁힐지는 스펙 C 에서 다룬다.
 
 ### 3.3 결과형 게임 수 환산 — 상수화 (core-api)
 
@@ -160,6 +169,9 @@ enum class StatsEventMode(
     | 브롤볼 5 | `#909FDB` |
     | 핫존 17 | `#FF8A1F` |
     | 녹아웃 20 | `#E8893A` |
+    | 농구 22 | `#62C1F4` |
+    | 하키 45 | `#D2D2FB` |
+    | 아레나 48 | 없음 — DB 에도 기본 회색(`#2A2E38`)이라 상수에 넣지 않고 기본값을 쓴다. 색을 정하면 상수에 한 줄 추가한다 |
     | 솔로·듀오·트리오 쇼다운 6·9·38 | `#95D449` |
 
   - `getModeStyle(modeId: number | null | undefined)` 로 바꾼다. 목록에 없으면 기존 `DEFAULT_STYLE`(`#2A2E38`) 이다. 명도로 글자색을 고르는 `pickFg` 는 유지한다.
@@ -194,13 +206,20 @@ enum class StatsEventMode(
   - 중복 제거: 같은 실행에서 전투 기반 감지가 이미 알린 이벤트는 다시 알리지 않는다. 기존 `checkedEventIds` 와 같은 방식으로 이벤트당 1건이다.
 - 하루 한 번 이벤트당 1건이라 알림 빈도는 지금과 같다.
   - 로테이션 동기화 잡(`battleEventRotationSyncJob`, 매시)에 붙이지 않는 이유: 미등록 맵마다 하루 24건이 온다.
-  - 지금도 미등록인 하키(로테이션 이벤트 12개)·아레나(9개) 맵은 그동안처럼 매일 알림이 온다.
+  - 하키·아레나는 지원 모드가 되므로 전투 기반 감지가 계속 알린다.
 - 경쟁전 맵 목록(`createSoloRankEvents`)은 그대로 통계 전투에서 만든다. 경쟁전은 핵심 6모드뿐이라 영향이 없다. 다만 경쟁전에 다른 모드가 들어오면 그 맵이 목록에서 빠지는 결합이 있다는 점을 KDoc 에 남긴다.
 - 단계 구성(기존 chunk step 뒤에 tasklet step 을 둘지, 별도 Task 클래스로 뺄지)은 구현 계획에서 기존 잡 구조에 맞춰 정한다.
 
+### 3.10 운영 작업 — 하키·아레나 맵 등록
+
+- 하키(45)·아레나(48) 맵은 로테이션에 나온 이벤트가 각각 12개·9개인데, `battle_event` 에는 한 건도 등록되지 않았다(2026-11-03). 농구(22)는 4개 모두 등록돼 있다.
+- 미등록 이벤트는 core-api 로테이션·이벤트 상세에 나오지 않는다. 그래서 통계가 쌓여도 볼 화면이 없다.
+- 배포 뒤 관리자 화면에서 현재 로테이션에 있는 하키·아레나 맵을 모드와 함께 등록한다. 대상 목록은 `battleEventSyncJob` 의 미등록 알림이나 `battle_event_rotation_item` 에서 얻는다. 이후 새 맵은 §3.9 의 알림을 보고 등록한다.
+- `battle_event_mode` 에는 두 모드가 이미 있다(45 `BRAWL HOCKEY`, 48 `BRAWL ARENA`). 57 `BRAWL HOCKEY` 행도 있지만 로테이션에 나온 적이 없어 허용 목록에 넣지 않는다.
+
 ## 4. 바꾸지 않는 것 (비목표)
 
-- core-batch 집계 코드와 `battleEventModeSyncTask`(새 모드 알림). `battleEventSyncJob` 의 전투 기반 감지·불일치 알림은 그대로 두되, 입력이 9개 모드로 줄어든다. 미지원 모드는 §3.9 의 로테이션 기반 감지가 맡는다. 미지원 모드 이벤트의 "불일치" 알림(등록된 맵 이름·모드가 실제와 다름)은 더 오지 않는다.
+- core-batch 집계 코드와 `battleEventModeSyncTask`(새 모드 알림). `battleEventSyncJob` 의 전투 기반 감지·불일치 알림은 그대로 두되, 입력이 12개 모드로 줄어든다. 미지원 모드는 §3.9 의 로테이션 기반 감지가 맡는다. 미지원 모드 이벤트의 "불일치" 알림(등록된 맵 이름·모드가 실제와 다름)은 더 오지 않는다.
 - `BattleBuilder` 의 듀얼 펼침(전투 기록 표시에 필요).
 - 과거 통계 행 정리(결정 9). 미지원 모드의 과거 행은 최대 약 2개월 동안 "전체 이벤트" 맥락(`/brawlers`·브롤러 상세의 조합·카운터)에 섞여 있다가 사라진다.
 - 조합 통계의 이벤트 키·보존 정책·3인 조합(스펙 B), 티어 스코어 산식(스펙 C).
@@ -213,7 +232,8 @@ enum class StatsEventMode(
 - core-worker `StatsBattleAggregateApplierTest`
   - **기존 픽스처부터 고친다.** 지금 순위형 픽스처(`createRankBattle`)는 modeId 2 를 쓴다. 이것은 새 enum 에서 HEIST(RESULT, 2×3)라 유형·구성 검사에서 버려진다. 결과형 픽스처(`createResultBattle`)는 modeId 1(허용 목록 밖)을 쓴다. 그래서 기존 테스트 3개(같은 팀 rank 1 row, 같은 key result 1 row, 브롤러 이름 null)가 모두 실패한다. 순위형은 6(SOLO_SHOWDOWN, `createSoloTeams` 10×1), 결과형은 20(KNOCKOUT, `createTeam3v3` 2×3)으로 바꾼다.
   - 다음 사례를 추가한다.
-    - 허용 목록 밖 모드는 두 테이블 어디에도 저장되지 않는다. 하키(modeId 45, mode `brawlBall`)와 듀얼(24, 펼친 3명 팀)을 넣는다.
+    - 허용 목록 밖 모드는 두 테이블 어디에도 저장되지 않는다. 와이프아웃(25, 2×3)과 듀얼(24, 펼친 3명 팀)을 넣는다.
+    - mode 문자열이 다른 모드를 가리켜도 modeId 로 판정한다. 하키(modeId 45, mode `brawlBall`)는 결과형으로 저장되고, mode 가 `gemGrab` 이어도 modeId 25 면 버린다.
     - 핵심 모드라도 팀 구성이 다르면(예: 2팀 × 2명) 버린다.
     - 유형이 어긋나면(핵심 모드인데 `battleRank` 만 있음, 쇼다운인데 `result` 만 있음) 버린다.
     - 솔로(10×1)·듀오(5×2)·트리오(4×3) 쇼다운은 순위형으로 저장된다.
@@ -245,7 +265,8 @@ enum class StatsEventMode(
 
 **배포 후 확인**
 
-- 최신 `stats_result_battle`·`stats_rank_battle` 파티션의 `event_mode_brawlstars_id` 가 9개 값만 갖는지 DB 로 확인한다.
+- 최신 `stats_result_battle`·`stats_rank_battle` 파티션의 `event_mode_brawlstars_id` 가 12개 값만 갖는지 DB 로 확인한다.
+- §3.10 의 맵 등록 뒤 하키·아레나 이벤트가 로테이션에 나오고, 상세에 결과형 통계가 보이는지 확인한다.
 - 미지원 이벤트(예: 농구 맵) 상세에 안내가 뜨고, 지원 이벤트 카드 색이 이전과 같은지 확인한다.
 
 ## 6. 문서·버전
@@ -359,7 +380,7 @@ enum class StatsEventMode(
   | 고정 pp 컷 | — | 0.39 | 0.73 |
 
 - 저표본 맥락(수백~천여 판)에서 z·백분위 티어는 4~11판 브롤러에게도 S/D 를 준다. 최소 판수 규칙과 절대 편차 하한이 필요하다. 합성 시뮬레이션에서도 z·백분위 방식은 순수 잡음에서 S/D 를 약 9% 만들었다.
-- 전체 이벤트 맥락의 비핵심 모드 비중은 트로피 19%, 경쟁전 0% 다. 스펙 A 이후 해소된다.
+- 전체 이벤트 맥락의 비핵심 모드 비중은 트로피 19%, 경쟁전 0% 다. 스펙 A 이후에도 하키·아레나·농구가 트로피전의 약 14% 로 남는다(결정 1). 합산 맥락을 핵심 6모드로 좁힐지는 스펙 C 에서 정한다.
 - Wilson 하한은 0 쪽으로 끌리고 예측력이 가장 낮다.
 - Redis `statistics` 캐시(TTL 30분)가 `tierScore` 를 품은 `BrawlerResultStatistics` 를 저장한다. 산식만 바뀌면 객체 형태는 같아 역직렬화는 깨지지 않는다. 다만 배포 직후 30분 동안 옛 점수와 새 점수가 섞이지 않게 `v2:brawlerResultStats` 키 버전을 올리는 편이 낫다.
 
