@@ -20,20 +20,12 @@ data class BrawlerResultStatistics(
     val items: List<BrawlerResultStatisticsItem>,
 ) {
     companion object {
-        fun create(
-            rows: List<BrawlerEventResultCount>,
-            gameSlots: GameSlots,
-        ): BrawlerResultStatistics {
+        fun create(rows: List<BrawlerEventResultCount>): BrawlerResultStatistics {
             if (rows.isEmpty()) {
                 return BrawlerResultStatistics(totalBattleCount = 0L, items = emptyList())
             }
 
-            val totalBattleCount: Long =
-                gameSlots.totalGameCount(
-                    rows
-                        .groupBy { it.eventId }
-                        .mapValues { (_, eventRows) -> eventRows.sumOf { it.resultCount.totalCount } },
-                )
+            val totalBattleCount: Long = StatsRate.resultGameCount(rows.sumOf { it.resultCount.totalCount })
 
             val brawlerAggregates =
                 rows

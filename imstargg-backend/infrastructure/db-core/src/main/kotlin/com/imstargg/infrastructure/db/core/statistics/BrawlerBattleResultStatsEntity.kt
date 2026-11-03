@@ -27,10 +27,10 @@ import java.time.LocalDate
  * 3v3 의 경우 한 게임당 6 슬롯이 다수 row 에 분산 기록된다.
  *
  * ## 게임 수 도출
- * `BattleEventMode.playerCounts` 가 알려진다면 게임 수를 정확히 도출할 수 있다:
+ * 결과형 지원 모드는 모두 2×3 이라 게임 수 = 슬롯 합 ÷ `StatsEventMode.RESULT_SLOTS_PER_GAME` 이다:
  *
- *     eventSlotSum = Σ totalCount over brawlers within event
- *     gameCount    = eventSlotSum / GameSlot(playerCounts).resultSlotsPerGame
+ *     slotSum   = Σ totalCount over brawlers
+ *     gameCount = slotSum / StatsEventMode.RESULT_SLOTS_PER_GAME
  *
  * 픽률 (= 브롤러 슬롯 수 / 게임 수) 계산이 이 관계에 의존한다.
  * `BrawlerBattleRankStatsEntity` 와의 결정적 차이는 이 엔티티가 양 팀을 모두 집계한다는 점이다.
