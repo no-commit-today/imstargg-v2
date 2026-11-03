@@ -20,7 +20,8 @@ object StatsRate {
      *   같은 게임 수가 보장되므로 Result 테이블이 단일 출처다.
      * - 2026-11 스펙 A 로 "이벤트별 내림 후 합산" 에서 "합산 후 한 번 나누기" 로 바꿨다.
      *   지원하는 결과형 모드가 모두 2×3 이라 이벤트마다 슬롯 수가 달라지지 않기 때문이다.
-     *   이벤트 단위로 내리는 동작을 고정하던 `GameSlotsTest` 의 테스트는 이 변경으로 의도적으로 뒤집었다.
+     *   이전 GameSlots 의 이벤트 단위 내림 테스트(2026-11 스펙 A 에서 삭제)는 이 변경으로 의도적으로 뒤집었다.
+     *   합산 후 한 번만 나누는 동작은 `BattleResultStatisticsRepositoryTest` 가 저장소 수준에서 고정한다.
      *
      * @param resultSlotSum 조회 범위 안 결과형 통계의 슬롯 합 (victory + defeat + draw)
      */

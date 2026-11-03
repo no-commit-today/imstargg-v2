@@ -33,7 +33,7 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
-    fun `findBrawlerResultStatistics - 3v3 이벤트의 게임 수 분모로 픽률 계산`() {
+    fun `findBrawlerResultStatistics - 게임 수 분모로 픽률 계산`() {
         val event = BrawlStarsId(100L)
         resultStatsJpaRepository.save(
             BrawlerBattleResultStatsEntity(
@@ -94,11 +94,11 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
-    fun `findBrawlerPairResultStatistics - 다중 날짜에 걸친 분모는 일별 Result 슬롯합 환산의 합`() {
+    fun `findBrawlerPairResultStatistics - 다중 날짜에 걸친 분모는 Result 슬롯 합 전체 ÷ 6`() {
         val event = BrawlStarsId(104L)
         val day1 = date
         val day2 = date.plusDays(1)
-        // Result 슬롯: day1 6 슬롯(=1 게임) + day2 6 슬롯(=1 게임) → 분모 = 2
+        // Result 슬롯: day1 6 + day2 6 = 12 슬롯 → 12 ÷ 6 = 분모 2
         listOf(day1, day2).forEach { d ->
             resultStatsJpaRepository.save(
                 BrawlerBattleResultStatsEntity(
@@ -135,6 +135,51 @@ class BattleResultStatisticsRepositoryTest(
 
         assertThat(result.totalBattleCount).isEqualTo(2)
         assertThat(result.items).hasSize(1)
+    }
+
+    @Test
+    fun `findBrawlerPairResultStatistics - 이벤트를 지정하지 않으면 이벤트별 슬롯을 합산한 뒤 한 번만 ÷6 한다`() {
+        // given
+        val eventA = BrawlStarsId(107L)
+        val eventB = BrawlStarsId(108L)
+        // Result 슬롯: 이벤트 A 4 + 이벤트 B 5 = 9 슬롯 → 9 ÷ 6 = 분모 1 (이벤트별로 나누면 4÷6 + 5÷6 = 0)
+        listOf(eventA to 2L, eventB to 3L).forEach { (event, victoryCount) ->
+            resultStatsJpaRepository.save(
+                BrawlerBattleResultStatsEntity(
+                    eventBrawlStarsId = event.value,
+                    tierRange = tierRange,
+                    battleDate = date,
+                    brawlerBrawlStarsId = 10L,
+                    resultCount = ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = 2, drawCount = 0),
+                    starPlayerCount = 0,
+                ),
+            )
+            pairStatsJpaRepository.save(
+                BrawlerPairBattleResultStatsEntity(
+                    eventBrawlStarsId = event.value,
+                    tierRange = tierRange,
+                    startBattleDate = date,
+                    endBattleDate = date,
+                    brawlerBrawlStarsId = 10L,
+                    pairBrawlerBrawlStarsId = 20L,
+                    resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
+                ),
+            )
+        }
+
+        // when
+        val result =
+            sut.findBrawlerPairResultStatistics(
+                eventId = null,
+                brawlerId = BrawlStarsId(10L),
+                pairBrawlerId = null,
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.totalBattleCount).isEqualTo(1)
     }
 
     @Test
