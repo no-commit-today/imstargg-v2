@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.brawlstars.task
 
+import com.imstargg.core.batch.job.brawlstars.BattleEventSyncItemWriter
 import com.imstargg.core.batch.job.brawlstars.BattleEventSyncJobConfig
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
@@ -27,7 +28,10 @@ private val log = KotlinLogging.logger {}
  *   이 단계는 하루에 한 번, 이벤트마다 한 건만 알린다.
  * - 전투 단계와 중복을 피하는 방식: 전투 단계의 `checkedEventIds` 는 `@StepScope` 라이터마다 따로 있어 이 단계가
  *   볼 수 없다. 대신 그날 통계 전투에 나온 이벤트는 전투 단계가 이미 알렸다는 사실을 쓴다. 그런 이벤트는 여기서
- *   뺀다. 이 단계는 전투 단계가 다룬 이벤트를 다시 알리지 않는다.
+ *   뺀다. 이 단계는 전투 단계가 다룬 이벤트를 다시 알리지 않는다. 전투 단계도 스텝마다 이벤트당 한 번만 알리고
+ *   ([BattleEventSyncItemWriter]). 또 core-worker 가 전투 모드의 [StatsEventMode.resultType] 으로 두 통계 테이블 중
+ *   한쪽만 고르므로 한 이벤트의 전투는 한 테이블에만 들어간다. 그래서 세 단계를 합쳐 그날 미등록 이벤트마다 많아야
+ *   한 건이 온다.
  *
  * 스텝이 트랜잭션 없이 돌므로 항목의 LAZY `battleEventRotation` 은 따라가지 않는다. 날짜 조건은 로테이션
  * 조회 쿼리에서 건다.

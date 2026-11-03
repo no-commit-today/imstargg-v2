@@ -29,6 +29,12 @@ open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
         createSoloRankEvents(chunk)
     }
 
+    /**
+     * 이벤트마다 경고는 한 번만 보낸다. 경고한 이벤트는 그 자리에서 확인한 것으로 두어 같은 청크의 뒤 전투에서 다시
+     * 경고하지 않는다(예전에는 루프가 끝난 뒤에야 확인 목록에 넣어, 한 청크에 같은 이벤트 전투가 N판이면 경고도 N건이
+     * 나갔다). 확인 목록에는 경고한 그 이벤트만 넣는다. 같은 청크의 다른 이벤트는 따로 대조해야 하기 때문이다.
+     * 일치한 이벤트는 청크 끝까지 대조를 이어가 뒤 전투의 불일치도 잡는다.
+     */
     private fun detectEventChanges(chunk: Chunk<out BaseStatsBattleEntity>) {
         val uncheckedIds =
             chunk.items
@@ -49,8 +55,10 @@ open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
             val event = events[battle.eventBrawlStarsId]
             if (event == null) {
                 alertUnregisteredEvent(battle)
+                checkedEventIds.add(battle.eventBrawlStarsId)
             } else if (!matches(battle, event)) {
                 alertMismatch(battle, event)
+                checkedEventIds.add(battle.eventBrawlStarsId)
             }
         }
 
