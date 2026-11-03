@@ -3,6 +3,7 @@ package com.imstargg.core.application.brawlstars
 import com.imstargg.CoreApiContextTest
 import com.imstargg.core.config.CacheNames
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.Language
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
@@ -11,10 +12,12 @@ import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventSoloRankEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import com.imstargg.infrastructure.db.core.test.fixture.BattleEventEntityFixture.Companion.aBattleEventEntity
+import com.imstargg.infrastructure.db.core.test.fixture.BattleEventModeEntityFixture.Companion.aBattleEventModeEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
 import org.junit.jupiter.api.BeforeEach
@@ -33,6 +36,7 @@ class BattleEventServiceTest(
     private val sut: BattleEventService,
     private val cleanUp: CleanUp,
     private val battleEventJpaRepository: BattleEventJpaRepository,
+    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val cacheManager: CacheManager,
@@ -73,6 +77,50 @@ class BattleEventServiceTest(
         // then
         assertThat(result.id.value).isEqualTo(15_000_001L)
         assertThat(result.mode).isNull()
+    }
+
+    @Test
+    fun `get 은 지원 모드 이벤트의 resultType 을 통계 수집 유형으로 채운다`() {
+        // given
+        saveEventWithMode(eventId = 15_000_201L, modeBrawlStarsId = 0L)
+        saveEventWithMode(eventId = 15_000_202L, modeBrawlStarsId = 6L)
+
+        // when
+        val resultModeEvent = sut.get(BrawlStarsId(15_000_201L))
+        val rankModeEvent = sut.get(BrawlStarsId(15_000_202L))
+
+        // then
+        assertThat(resultModeEvent.mode?.resultType).isEqualTo(BattleEventModeResultType.RESULT)
+        assertThat(rankModeEvent.mode?.resultType).isEqualTo(BattleEventModeResultType.RANK)
+    }
+
+    @Test
+    fun `get 은 미지원 모드 이벤트의 resultType 을 null 로 채운다`() {
+        // given
+        saveEventWithMode(eventId = 15_000_203L, modeBrawlStarsId = 25L)
+
+        // when
+        val result = sut.get(BrawlStarsId(15_000_203L))
+
+        // then
+        assertThat(result.mode).isNotNull
+        assertThat(result.mode?.resultType).isNull()
+    }
+
+    @Test
+    fun `search 도 같은 규칙으로 resultType 을 채운다`() {
+        // given
+        saveEventWithMode(eventId = 15_000_211L, modeBrawlStarsId = 45L, mapName = "Search Rink")
+        saveEventWithMode(eventId = 15_000_212L, modeBrawlStarsId = 24L, mapName = "Search Duel")
+
+        // when
+        val result = sut.search("search").associateBy { it.id.value }
+
+        // then
+        assertThat(result).hasSize(2)
+        assertThat(result.getValue(15_000_211L).mode?.resultType).isEqualTo(BattleEventModeResultType.RESULT)
+        assertThat(result.getValue(15_000_212L).mode).isNotNull
+        assertThat(result.getValue(15_000_212L).mode?.resultType).isNull()
     }
 
     @Test
@@ -232,6 +280,34 @@ class BattleEventServiceTest(
 
         // then
         assertThat(ex.errorType).isEqualTo(ErrorType.INVALID_REQUEST)
+    }
+
+    private fun saveEventWithMode(
+        eventId: Long,
+        modeBrawlStarsId: Long,
+        mapName: String? = null,
+    ) {
+        val mode =
+            battleEventModeJpaRepository.save(
+                aBattleEventModeEntity().withBrawlStarsId(modeBrawlStarsId).build(),
+            )
+        battleEventJpaRepository.save(
+            aBattleEventEntity()
+                .withBrawlStarsId(eventId)
+                .withMode(mode)
+                .withMapBrawlStarsName(mapName)
+                .build(),
+        )
+        if (mapName != null) {
+            messageJpaRepository.save(
+                MessageEntity(
+                    type = MessageType.BATTLE_EVENT_NAME,
+                    brawlStarsId = eventId,
+                    lang = Language.DEFAULT,
+                    content = mapName,
+                ),
+            )
+        }
     }
 
     private fun saveSoloRankEvent(
