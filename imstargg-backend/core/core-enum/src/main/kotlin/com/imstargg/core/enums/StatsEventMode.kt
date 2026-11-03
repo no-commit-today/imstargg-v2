@@ -17,8 +17,10 @@ package com.imstargg.core.enums
  * ## 모드를 추가하는 절차
  * 1. 운영 `stats_*_battle` 이 아닌 battlelog 표본으로 팀 구성을 확인한다. 추가하기 전에는 수집되지 않으므로 운영 테이블에 표본이 없다.
  * 2. 이 enum 에 항목을 추가한다.
- * 3. 프론트 `MODE_COLORS` 에 모드 색을 추가한다.
- * 4. 결과형이면 반드시 2×3 이어야 한다. [RESULT_SLOTS_PER_GAME] 의 전제다.
+ * 3. `StatsEventModeTest` 의 기대 집합(허용 목록 전체를 고정한다)에 같은 항목을 더한다.
+ * 4. 프론트 `MODE_COLORS`(`imstargg-frontend/app/events/_components/modeStyles.ts`)에 모드 색을 추가한다.
+ *    색을 정하지 않은 모드(아레나 48)는 기본 회색으로 보인다.
+ * 5. 결과형이면 반드시 2×3 이어야 한다. [RESULT_SLOTS_PER_GAME] 의 전제다.
  *
  * @property modeBrawlStarsId 브롤스타즈가 부여한 모드 ID
  * @property resultType 통계 수집 유형. 결과(승/패/무)를 모으는지, 순위를 모으는지 나타낸다
