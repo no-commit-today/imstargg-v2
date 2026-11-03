@@ -113,6 +113,10 @@ open class BattleEventSyncItemWriter<T : BaseStatsBattleEntity>(
         )
     }
 
+    /**
+     * 경쟁전 맵 목록은 통계 전투에서만 만든다. 경쟁전에 허용 목록 밖 모드가 들어오면 그 모드의 전투는
+     * 통계 전투에 없으므로 그 맵이 목록에서 빠진다.
+     */
     private fun createSoloRankEvents(chunk: Chunk<out BaseStatsBattleEntity>) {
         val soloRankBattles = chunk.items.filter { it.type == BattleType.SOLO_RANKED.code }
 
