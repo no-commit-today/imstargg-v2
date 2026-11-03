@@ -214,6 +214,64 @@ class StatsBattleAggregateApplierTest(
         }
 
         @Test
+        fun `팀 수가 다르면 팀당 인원이 맞아도 저장하지 않는다 - 솔로 쇼다운 9팀`() {
+            // given
+            val battle =
+                createRankBattle(
+                    battleKey = "solo-9-teams-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#T0P0",
+                    modeBrawlStarsId = 6L,
+                    teams = createTeams(teamCount = 9, teamSize = 1),
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsRankBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `팀 수가 다르면 팀당 인원이 맞아도 저장하지 않는다 - 넉아웃 3팀`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "knockout-3-teams-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#T0P0",
+                    teams = createTeams(teamCount = 3, teamSize = 3),
+                    modeBrawlStarsId = 20L,
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `아레나는 battlelog 가 siege 로 보내도 modeId 48 이면 결과형으로 저장된다`() {
+            // given
+            val battle =
+                createResultBattle(
+                    battleKey = "arena-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#A1",
+                    modeBrawlStarsId = 48L,
+                    mode = "siege",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsResultBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .containsExactly(48L)
+        }
+
+        @Test
         fun `결과형 모드의 순위 전투는 순위형으로 저장하지 않는다`() {
             // given
             val battle =
@@ -289,6 +347,27 @@ class StatsBattleAggregateApplierTest(
             assertThat(statsRankBattleRepository.findAll().map { it.eventModeBrawlStarsId })
                 .containsExactlyInAnyOrder(6L, 9L, 38L)
         }
+
+        @Test
+        fun `트로피전 솔로 쇼다운도 순위형으로 저장된다`() {
+            // given
+            // 운영의 실제 쇼다운 경로는 경쟁전(soloRanked)이 아니라 트로피전(ranked)이다 — MIN_TROPHY 분기를 거친다
+            val battle =
+                createRankBattle(
+                    battleKey = "trophy-solo-battle-key",
+                    battleAt = recentBattleAt(),
+                    playerBrawlStarsTag = "#SOLO1",
+                    modeBrawlStarsId = 6L,
+                    type = "ranked",
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            assertThat(statsRankBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .containsExactly(6L)
+        }
     }
 
     private fun recentBattleAt(): Instant = clock.instant().minus(Duration.ofHours(1))
@@ -301,6 +380,7 @@ class StatsBattleAggregateApplierTest(
         teams: List<List<BattleTeamPlayer>> = createSoloTeams(),
         battleRank: Int? = 1,
         result: String? = null,
+        type: String = "soloRanked",
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleAt,
@@ -312,7 +392,7 @@ class StatsBattleAggregateApplierTest(
                 map = "Flying Fantasies",
             ),
         mode = "soloShowdown",
-        type = "soloRanked",
+        type = type,
         result = result,
         duration = 117,
         starPlayerBrawlStarsTag = null,
