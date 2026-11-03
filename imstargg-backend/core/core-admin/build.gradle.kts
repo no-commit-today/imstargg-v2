@@ -5,6 +5,7 @@ tasks.getByName("bootJar") { enabled = true }
 dependencies {
     implementation(project(":core:core-enum"))
     implementation(project(":infrastructure:db-core"))
+    implementation(project(":support:logging"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
 

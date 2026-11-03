@@ -1,9 +1,11 @@
 package com.imstargg.core.batch.job.statistics.battlerank
 
 import com.imstargg.core.batch.domain.statistics.BrawlerBattleRankStatsAggregator
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.time.LocalDate
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class BrawlerBattleRankStatsTask(
@@ -11,25 +13,18 @@ class BrawlerBattleRankStatsTask(
     private val writer: BrawlerBattleRankStatsWriter,
 ) {
     fun aggregate(date: LocalDate) {
-        log.info("[{}] 시작 - date: {}", JOB_NAME, date)
+        log.info { "[$JOB_NAME] 시작 - date: $date" }
         val aggregator = BrawlerBattleRankStatsAggregator()
         val totalRead =
             reader.read(date) { battles ->
                 battles.forEach { aggregator.aggregate(it) }
-                log.debug("[{}] 읽기 진행 - date: {}", JOB_NAME, date)
+                log.debug { "[$JOB_NAME] 읽기 진행 - date: $date" }
             }
         val totalEntities = writer.write(date, aggregator)
-        log.info(
-            "[{}] 완료 - date: {}, 전투: {}건, 집계: {}건",
-            JOB_NAME,
-            date,
-            totalRead,
-            totalEntities,
-        )
+        log.info { "[$JOB_NAME] 완료 - date: $date, 전투: ${totalRead}건, 집계: ${totalEntities}건" }
     }
 
     companion object {
         private const val JOB_NAME = "brawlerBattleRankStatsJob"
-        private val log = LoggerFactory.getLogger(BrawlerBattleRankStatsTask::class.java)
     }
 }

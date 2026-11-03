@@ -18,6 +18,7 @@ management:
     metrics:
       export:
         enabled: false
-    tracing:
-      export:
+  tracing:
+    export:
+      otlp:
         enabled: false

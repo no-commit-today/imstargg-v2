@@ -15,9 +15,11 @@ import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.Brawler
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.GadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.HyperChargeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.brawler.repository.StarPowerJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+
+private val log = KotlinLogging.logger {}
 
 /**
  * 브롤스타즈 API 와 DB 를 비교해 브롤러/하위 항목의 생성·삭제를 감지하고 알림만 발송한다.
@@ -36,7 +38,7 @@ class BrawlerSyncTask(
     private val changeDetector = BrawlerChangeDetector()
 
     fun sync() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info { "[$JOB_NAME] 시작" }
         val apiBrawlers = brawlStarsClient.getBrawlers().items
         val changes =
             changeDetector.detect(
@@ -51,13 +53,7 @@ class BrawlerSyncTask(
         alertAddedBrawlers(addedBrawlers, apiBrawlers.associateBy { it.id })
         alertRemovedBrawlers(removedBrawlers)
         alertItemChanges(itemChanges)
-        log.info(
-            "[{}] 완료 - 신규: {}건, 삭제: {}건, 항목 변경: {}건",
-            JOB_NAME,
-            addedBrawlers.size,
-            removedBrawlers.size,
-            itemChanges.size,
-        )
+        log.info { "[$JOB_NAME] 완료 - 신규: ${addedBrawlers.size}건, 삭제: ${removedBrawlers.size}건, 항목 변경: ${itemChanges.size}건" }
     }
 
     private fun BrawlerResponse.toSnapshot(): BrawlerSnapshot =
@@ -171,7 +167,6 @@ class BrawlerSyncTask(
 
     companion object {
         private const val JOB_NAME = "brawlerSyncJob"
-        private val log = LoggerFactory.getLogger(BrawlerSyncTask::class.java)
         private val jsonMapper = JsonMapper.builder().build()
     }
 }

@@ -1,17 +1,3 @@
-spring.cloud.openfeign:
-  client:
-    config:
-      brawlstars:
-        connect-timeout: 2100
-        read-timeout: 5000
-        logger-level: full
-  compression:
-    response:
-      enabled: false
-  httpclient:
-    max-connections: 2000
-    max-connections-per-route: 500
-
 resilience4j.ratelimiter:
   instances:
     brawlstars:
@@ -23,8 +9,7 @@ app:
   client:
     brawlstars:
       url: https://api.brawlstars.com
-      api-keys:
-        - ${BRAWLSTARS_API_KEYS:}
+      api-keys: ${BRAWLSTARS_API_KEYS:}
 
 ---
 spring:
@@ -45,3 +30,6 @@ resilience4j.ratelimiter:
   instances:
     brawlstars:
       limit-for-period: 10
+
+# 초당 약 10회라 응답 로그(INFO)는 남기지 않고 전송 실패(WARN — 타임아웃·연결 실패)만 남긴다. HTTP 오류 상태는 호출부가 로그로 남긴다
+logging.level.com.imstargg.client.brawlstars.BrawlStarsApi: WARN

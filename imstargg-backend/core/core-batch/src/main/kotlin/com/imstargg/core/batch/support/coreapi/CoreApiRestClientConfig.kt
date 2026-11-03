@@ -12,8 +12,8 @@ import java.time.Duration
  * core-api 호출용 [RestClient] 설정.
  *
  * 배치가 수백~천여 건을 순차 호출하므로 커넥션 1개가 행에 걸려도 배치 전체가 무기한
- * 정지하지 않도록 connect/read 타임아웃을 명시한다 — 값은 brawlstars-client
- * (connect 2100ms/read 5000ms)와 같은 자릿수 기준.
+ * 정지하지 않도록 connect/read 타임아웃(3s/5s)을 명시한다. 참고로 외부 API 클라이언트 기본값은
+ * `support:http-client` 의 connect 3s/read 10s 다 — 이 클라이언트는 그 설정을 쓰지 않고 요청 팩토리를 직접 만든다.
  */
 @Configuration
 class CoreApiRestClientConfig {

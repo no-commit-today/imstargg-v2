@@ -1,6 +1,5 @@
 package com.imstargg.client.brawlstars
 
-import com.imstargg.client.brawlstars.request.PagingParam
 import com.imstargg.client.brawlstars.response.BattleResponse
 import com.imstargg.client.brawlstars.response.BrawlerResponse
 import com.imstargg.client.brawlstars.response.ClubMemberResponse
@@ -11,19 +10,11 @@ import com.imstargg.client.brawlstars.response.ListResponse
 import com.imstargg.client.brawlstars.response.PlayerRankingResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.client.brawlstars.response.ScheduledEventResponse
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter
-import org.springframework.cloud.openfeign.FeignClient
-import org.springframework.cloud.openfeign.SpringQueryMap
-import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.service.annotation.GetExchange
+import org.springframework.web.service.annotation.HttpExchange
 
-@FeignClient(
-    value = "brawlstars",
-    url = "\${app.client.brawlstars.url}",
-    configuration = [BrawlStarsApiConfig::class],
-)
-@RateLimiter(name = "brawlstars")
+@HttpExchange
 internal interface BrawlStarsApi {
     /**
      * Get list of recent battle results for a player.
@@ -31,7 +22,7 @@ internal interface BrawlStarsApi {
      *
      * @param playerTag Tag of the player.
      */
-    @GetMapping(value = ["/v1/players/{playerTag}/battlelog"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/players/{playerTag}/battlelog")
     fun getLogOfRecentBattlesForAPlayer(
         @PathVariable playerTag: String,
     ): ListResponse<BattleResponse>
@@ -42,7 +33,7 @@ internal interface BrawlStarsApi {
      *
      * @param playerTag Tag of the player.
      */
-    @GetMapping(value = ["/v1/players/{playerTag}"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/players/{playerTag}")
     fun getPlayerInformation(
         @PathVariable playerTag: String,
     ): PlayerResponse
@@ -52,10 +43,9 @@ internal interface BrawlStarsApi {
      *
      * @param clubTag Tag of the club.
      */
-    @GetMapping(value = ["/v1/clubs/{clubTag}/members"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/clubs/{clubTag}/members")
     fun getListClubMembers(
         @PathVariable clubTag: String,
-        @SpringQueryMap paging: PagingParam,
     ): ListResponse<ClubMemberResponse>
 
     /**
@@ -66,7 +56,7 @@ internal interface BrawlStarsApi {
      *
      * @param clubTag Tag of the club.
      */
-    @GetMapping(value = ["/v1/clubs/{clubTag}"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/clubs/{clubTag}")
     fun getClubInformation(
         @PathVariable clubTag: String,
     ): ClubResponse
@@ -76,10 +66,9 @@ internal interface BrawlStarsApi {
      *
      * @param countryCode Two letter country code, or 'global' for global rankings.
      */
-    @GetMapping(value = ["/v1/rankings/{countryCode}/clubs"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/rankings/{countryCode}/clubs")
     fun getClubRankingsForACountryOrGlobalRankings(
         @PathVariable countryCode: String,
-        @SpringQueryMap paging: PagingParam,
     ): ListResponse<ClubRankingResponse>
 
     /**
@@ -89,11 +78,10 @@ internal interface BrawlStarsApi {
      * @param countryCode Two letter country code, or 'global' for global rankings.
      * @param brawlerId Identifier of the brawler.
      */
-    @GetMapping(value = ["/v1/rankings/{countryCode}/brawlers/{brawlerId}"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/rankings/{countryCode}/brawlers/{brawlerId}")
     fun getBrawlerRankingsForACountryOrGlobalRankings(
         @PathVariable countryCode: String,
         @PathVariable brawlerId: Long,
-        @SpringQueryMap paging: PagingParam,
     ): ListResponse<PlayerRankingResponse>
 
     /**
@@ -101,24 +89,21 @@ internal interface BrawlStarsApi {
      *
      * @param countryCode Two letter country code, or 'global' for global rankings.
      */
-    @GetMapping(value = ["/v1/rankings/{countryCode}/players"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/rankings/{countryCode}/players")
     fun getPlayerRankingsForACountryOrGlobalRankings(
         @PathVariable countryCode: String,
-        @SpringQueryMap paging: PagingParam,
     ): ListResponse<PlayerRankingResponse>
 
     /**
      * Get list of available brawlers.
      */
-    @GetMapping(value = ["/v1/brawlers"], consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun getListOfAvailableBrawlers(
-        @SpringQueryMap paging: PagingParam,
-    ): ListResponse<BrawlerResponse>
+    @GetExchange("/v1/brawlers")
+    fun getListOfAvailableBrawlers(): ListResponse<BrawlerResponse>
 
     /**
      * Get information about a brawler.
      */
-    @GetMapping(value = ["/v1/brawlers/{brawlerId}"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/brawlers/{brawlerId}")
     fun getInformationAboutABrawler(
         @PathVariable brawlerId: Long,
     ): BrawlerResponse
@@ -126,21 +111,19 @@ internal interface BrawlStarsApi {
     /**
      * Get event rotation for ongoing events.
      */
-    @GetMapping(value = ["/v1/events/rotation"], consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @GetExchange("/v1/events/rotation")
     fun getEventRotation(): List<ScheduledEventResponse>
 
     /**
      * Get list of available game modes.
      */
-    @GetMapping(value = ["/v1/gamemodes"], consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun getGameModes(
-        @SpringQueryMap paging: PagingParam,
-    ): ListResponse<EventTypeResponse>
+    @GetExchange("/v1/gamemodes")
+    fun getGameModes(): ListResponse<EventTypeResponse>
 
     /**
      * Get the API specification (swagger 2.0 YAML).
      * NOTE: The response content type is application/octet-stream.
      */
-    @GetMapping(value = ["/v1"])
+    @GetExchange("/v1")
     fun getApiSpec(): String
 }

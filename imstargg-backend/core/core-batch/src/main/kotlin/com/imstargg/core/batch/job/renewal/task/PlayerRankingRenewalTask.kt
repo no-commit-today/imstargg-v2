@@ -8,11 +8,13 @@ import com.imstargg.core.enums.RenewalType
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.renewal.repository.RenewalJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.Clock
 import java.time.Duration
+
+private val log = KotlinLogging.logger {}
 
 /**
  * 랭킹에 노출되는 플레이어를 사전 갱신한다 — 랭킹 페이지에서 링크를 타고 들어간
@@ -36,7 +38,7 @@ class PlayerRankingRenewalTask(
     fun renewAll() {
         val tags = collectRankedTags()
         val targets = filterFreshlyRenewed(tags)
-        log.info("[{}] 랭킹 태그 {}건 중 갱신 대상 {}건", STEP_NAME, tags.size, targets.size)
+        log.info { "[$STEP_NAME] 랭킹 태그 ${tags.size}건 중 갱신 대상 ${targets.size}건" }
 
         var accepted = 0
         var skipped = 0
@@ -46,7 +48,7 @@ class PlayerRankingRenewalTask(
                 PlayerRenewalResult.ACCEPTED -> accepted++
                 PlayerRenewalResult.ALREADY_IN_PROGRESS, PlayerRenewalResult.PLAYER_DELETED -> skipped++
                 PlayerRenewalResult.API_UNDER_MAINTENANCE -> {
-                    log.warn("[{}] 브롤스타즈 API 점검 중 - 남은 {}건 중단", STEP_NAME, targets.size - index)
+                    log.warn { "[$STEP_NAME] 브롤스타즈 API 점검 중 - 남은 ${targets.size - index}건 중단" }
                     break
                 }
                 PlayerRenewalResult.FAILED -> failed++
@@ -55,7 +57,7 @@ class PlayerRankingRenewalTask(
                 Thread.sleep(requestIntervalMillis)
             }
         }
-        log.info("[{}] 완료 - 접수: {}건, 스킵: {}건, 실패: {}건", STEP_NAME, accepted, skipped, failed)
+        log.info { "[$STEP_NAME] 완료 - 접수: ${accepted}건, 스킵: ${skipped}건, 실패: ${failed}건" }
     }
 
     private fun collectRankedTags(): Set<String> =
@@ -83,6 +85,5 @@ class PlayerRankingRenewalTask(
         private const val STEP_NAME = "playerRankingRenewalStep"
         private const val CHUNK_SIZE = 1000
         private val FRESH_DURATION: Duration = Duration.ofHours(24)
-        private val log = LoggerFactory.getLogger(PlayerRankingRenewalTask::class.java)
     }
 }

@@ -72,6 +72,57 @@ class StatsBattleAggregateApplierTest(
         }
     }
 
+    @Nested
+    inner class `apply 브롤러 이름` {
+        @Test
+        fun `브롤러 이름이 null 이면 통계 JSON 에 빈 문자열로 저장한다`() {
+            // given
+            val battleAt = clock.instant().minus(Duration.ofHours(1))
+            val teams =
+                createTeam3v3().map { team ->
+                    team.map { player ->
+                        if (player.brawlStarsTag == "#A1") {
+                            BattleTeamPlayer(
+                                brawlStarsTag = player.brawlStarsTag,
+                                name = player.name,
+                                brawler =
+                                    BattleTeamPlayerBrawler(
+                                        brawlStarsId = player.brawler.brawlStarsId,
+                                        name = null,
+                                        power = player.brawler.power,
+                                        trophies = player.brawler.trophies,
+                                        trophyChange = player.brawler.trophyChange,
+                                    ),
+                            )
+                        } else {
+                            player
+                        }
+                    }
+                }
+            val battle =
+                createResultBattle(
+                    battleKey = "hidden-brawler-battle-key",
+                    battleAt = battleAt,
+                    playerBrawlStarsTag = "#A1",
+                    teams = teams,
+                )
+
+            // when
+            sut.apply(listOf(battle))
+
+            // then
+            val brawlerNames =
+                statsResultBattleRepository
+                    .findAll()
+                    .single()
+                    .teams
+                    .flatten()
+                    .associate { it.brawlStarsTag to it.brawler.name }
+            assertThat(brawlerNames["#A1"]).isEqualTo("")
+            assertThat(brawlerNames["#A2"]).isEqualTo("brawler2")
+        }
+    }
+
     private fun createRankBattle(
         battleKey: String,
         battleAt: Instant,
@@ -101,6 +152,7 @@ class StatsBattleAggregateApplierTest(
         battleKey: String,
         battleAt: Instant,
         playerBrawlStarsTag: String,
+        teams: List<List<BattleTeamPlayer>> = createTeam3v3(),
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleAt,
@@ -119,7 +171,7 @@ class StatsBattleAggregateApplierTest(
         playerBrawlStarsTag = playerBrawlStarsTag,
         battleRank = null,
         trophyChange = 8,
-        teams = createTeam3v3(),
+        teams = teams,
     )
 
     private fun createSoloTeams(): List<List<BattleTeamPlayer>> =

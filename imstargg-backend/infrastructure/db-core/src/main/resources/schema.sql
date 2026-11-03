@@ -197,7 +197,7 @@ create table if not exists battle_team_player
     brawlstars_tag          varchar(45)   not null,
     name                    varchar(105)  not null,
     brawler_brawlstars_id   bigint        not null,
-    brawler_name            varchar(65)   not null,
+    brawler_name            varchar(65)   null,
     brawler_power           int           not null,
     brawler_trophies        int           not null,
     brawler_trophy_change   int           null,
@@ -349,6 +349,7 @@ create table if not exists stats_player
 (
     stats_player_id bigint generated always as identity primary key,
     brawlstars_tag  varchar(45)  not null,
+    status          varchar(25)  not null default 'ACTIVE',
     created_at      timestamptz  not null default now(),
     updated_at      timestamptz  not null default now()
 );

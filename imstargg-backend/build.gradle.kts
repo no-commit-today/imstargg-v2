@@ -48,7 +48,6 @@ subprojects {
 
     dependencyManagement {
         imports {
-            mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
             mavenBom("io.sentry:sentry-bom:${property("sentryVersion")}")
             mavenBom("io.awspring.cloud:spring-cloud-aws-dependencies:${property("springCloudAwsVersion")}")
         }
@@ -83,10 +82,24 @@ subprojects {
         }
     }
 
-    tasks.withType<Test> {
-        useJUnitPlatform {
-            excludeTags("develop")
+    // develop 태그는 CI 에서 돌지 않는 수동 테스트라 기본적으로 모든 Test 태스크에서 제외한다.
+    // 단, developTest 는 그 태그를 골라 실행하는 태스크라 여기서 빼야 한다 — 함께 걸리면
+    // useJUnitPlatform 옵션이 누적되어 "tag 'develop' is both included and excluded" 로 0건이 수집된다.
+    tasks
+        .withType<Test>()
+        .matching { it.name != "developTest" }
+        .configureEach {
+            useJUnitPlatform {
+                excludeTags("develop")
+            }
         }
+
+    // 테스트 출력 잡음 끄기 — developTest 까지 모든 Test 태스크에 건다.
+    // kotlin-logging 이 첫 로거를 만들 때 stdout 에 찍는 "kotlin-logging: initializing..." 줄,
+    // mockk(byte-buddy)가 에이전트를 동적으로 붙일 때 JDK 21+ 가 stderr 에 찍는 WARNING 4줄
+    tasks.withType<Test>().configureEach {
+        systemProperty("kotlin-logging.logStartupMessage", "false")
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
     }
 
     tasks.register<Test>("unitTest") {

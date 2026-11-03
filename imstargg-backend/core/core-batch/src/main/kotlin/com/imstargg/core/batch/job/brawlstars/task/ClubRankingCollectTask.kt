@@ -6,9 +6,11 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.ClubRankingItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.ClubRankingJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.time.Clock
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class ClubRankingCollectTask(
@@ -18,7 +20,7 @@ class ClubRankingCollectTask(
     private val clubRankingItemJpaRepository: ClubRankingItemJpaRepository,
 ) {
     fun collect() {
-        log.info("[{}] 시작", STEP_NAME)
+        log.info { "[$STEP_NAME] 시작" }
         Country.entries.forEach { country ->
             val collectedAt = clock.instant()
             val response = brawlStarsClient.getClubRanking(country.code)
@@ -41,15 +43,9 @@ class ClubRankingCollectTask(
             clubRankingItemJpaRepository.saveAll(items)
 
             val outdated = deleteOutdated(country)
-            log.debug(
-                "[{}] 국가 {} 수집 - {}건 (정리: {}건)",
-                STEP_NAME,
-                country,
-                items.size,
-                outdated,
-            )
+            log.debug { "[$STEP_NAME] 국가 $country 수집 - ${items.size}건 (정리: ${outdated}건)" }
         }
-        log.info("[{}] 완료", STEP_NAME)
+        log.info { "[$STEP_NAME] 완료" }
     }
 
     private fun deleteOutdated(country: Country): Int {
@@ -67,6 +63,5 @@ class ClubRankingCollectTask(
     companion object {
         private const val STEP_NAME = "clubRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
-        private val log = LoggerFactory.getLogger(ClubRankingCollectTask::class.java)
     }
 }

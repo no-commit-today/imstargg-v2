@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
  *
  * 재시도 소진 후의 예외는 호출측이 처리한다 — 비동기 renewal 경로는 @Async 스레드에서
  * AsyncExceptionHandler 가 로그만 남기고, 축적 스케줄러 경로는 per-player catch. 둘 다 허용된 드문
- * 유실이며, 대상 플레이어가 stats_player 에 있으면 축적 스케줄러가 7일 내 재수집할 수 있다.
+ * 유실이며, 대상 플레이어가 stats_player 에 ACTIVE 로 있으면 축적 스케줄러가 7일 내 재수집할 수 있다.
  */
 @Component
 class StatsBattleRetryableAggregator(

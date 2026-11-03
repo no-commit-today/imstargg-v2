@@ -1,10 +1,12 @@
 package com.imstargg.core.batch.support.coreapi
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
+
+private val log = KotlinLogging.logger {}
 
 /**
  * core-batch → core-api 내부 호출 클라이언트.
@@ -30,16 +32,12 @@ class CoreApiClient(
                 410 -> PlayerRenewalResult.PLAYER_DELETED
                 503 -> PlayerRenewalResult.API_UNDER_MAINTENANCE
                 else -> {
-                    log.warn("플레이어 갱신 요청 실패 - tag: {}, status: {}", tag, ex.statusCode)
+                    log.warn { "플레이어 갱신 요청 실패 - tag: $tag, status: ${ex.statusCode}" }
                     PlayerRenewalResult.FAILED
                 }
             }
         } catch (ex: RestClientException) {
-            log.warn("플레이어 갱신 요청 실패 - tag: {}", tag, ex)
+            log.warn(ex) { "플레이어 갱신 요청 실패 - tag: $tag" }
             PlayerRenewalResult.FAILED
         }
-
-    companion object {
-        private val log = LoggerFactory.getLogger(CoreApiClient::class.java)
-    }
 }

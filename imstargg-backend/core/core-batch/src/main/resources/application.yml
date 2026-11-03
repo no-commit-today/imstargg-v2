@@ -15,6 +15,7 @@ spring:
   config:
     import:
       - logging.yml
+      - http-client.yml
       - brawlstars-client.yml
 
   main.web-application-type: none

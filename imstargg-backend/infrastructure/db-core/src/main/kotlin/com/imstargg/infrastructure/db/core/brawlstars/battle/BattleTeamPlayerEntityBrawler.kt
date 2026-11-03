@@ -7,8 +7,8 @@ import jakarta.persistence.Embeddable
 data class BattleTeamPlayerEntityBrawler(
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlStarsId: Long,
-    @Column(name = "brawler_name", length = 65, updatable = false, nullable = false)
-    val name: String,
+    @Column(name = "brawler_name", length = 65, updatable = false, nullable = true)
+    val name: String?,
     @Column(name = "brawler_power", updatable = false, nullable = false)
     val power: Int,
     @Column(name = "brawler_trophies", updatable = false, nullable = false)

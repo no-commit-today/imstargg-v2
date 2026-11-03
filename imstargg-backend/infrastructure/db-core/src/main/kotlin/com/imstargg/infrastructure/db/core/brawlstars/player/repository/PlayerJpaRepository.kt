@@ -16,7 +16,7 @@ interface PlayerJpaRepository : JpaRepository<PlayerEntity, Long> {
 
     fun findTopByStatusOrderByIdDesc(status: PlayerStatus): PlayerEntity?
 
-    fun findAllByStatusAndIdGreaterThanEqual(
+    fun findAllByStatusAndIdGreaterThanEqualOrderByIdAsc(
         status: PlayerStatus,
         id: Long,
         pageable: Pageable,

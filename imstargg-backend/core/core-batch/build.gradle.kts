@@ -16,7 +16,6 @@ dependencies {
     implementation("org.yaml:snakeyaml")
 
     // Test
-    testImplementation("io.github.openfeign:feign-core")
     testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

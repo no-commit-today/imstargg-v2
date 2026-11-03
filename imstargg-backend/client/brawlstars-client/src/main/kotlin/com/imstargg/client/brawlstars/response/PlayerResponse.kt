@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class PlayerResponse(
     val tag: String,
     val name: String,
-    val nameColor: String,
+    val nameColor: String?,
     val icon: PlayerIconResponse,
     val trophies: Int,
     val highestTrophies: Int,

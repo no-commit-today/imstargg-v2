@@ -1,0 +1,17 @@
+spring:
+
+  # HTTP 클라이언트 호출 타임아웃 기본값 — 이 모듈을 쓰는 앱(core-worker·core-batch)이 spring.config.import 로 가져온다. 타임아웃이 없으면 상대가
+  # 응답을 물고 있을 때 호출이 끝나지 않는다.
+  # spring.http.clients.* 는 spring-boot-restclient 의 HttpServiceClientAutoConfiguration 이 앱이 싣는 @ImportHttpServices 그룹의
+  # requestFactory 에 적용한다 — 그 모듈이 클래스패스에 없으면 조용히 무시되므로 이 모듈이 의존을 갖는다(build.gradle.kts).
+  # 그룹별로 다르게 하려면 spring.http.serviceclient.<group>.* 로 오버라이드한다(예: spring.http.serviceclient.brawlstars.read-timeout).
+  # factory 는 Apache HttpClient 5 로 고정한다 — JDK 클라이언트의 read-timeout 은 헤더+본문 전체 데드라인이지만, Apache 는 소켓 무활동 시간이라
+  # 10초 하나로 모든 호출을 덮는다. 명시해 두면 의존이 빠졌을 때 부팅에서 드러난다.
+  # Apache 의 자체 재시도(429·503 1회) 끄기와 커넥션 풀 크기는 HttpClientConfig 가 맡는다 — 클라이언트는 재시도하지 않는다.
+  # connect 3s 는 TCP SYN 재전송(1s·3s) 한 번을 덮는 값이다.
+  http:
+    clients:
+      imperative:
+        factory: http-components
+      connect-timeout: 3s
+      read-timeout: 10s
