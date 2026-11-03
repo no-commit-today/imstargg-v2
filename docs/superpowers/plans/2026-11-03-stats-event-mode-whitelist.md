@@ -36,7 +36,7 @@
 2. **로테이션 수집 시각의 KST 날짜 경계.** `collected_at` 은 `Instant` 이고 잡 파라미터 `date` 는 KST 날짜다. UTC 로 자르면 KST 00:00~09:00 수집분이 전날로 간다. → Task 7 에 경계 테스트 2개(전날 23:59 KST 제외, 당일 00:00 KST 포함)를 둔다.
 3. **하루에 24번 수집되는 같은 미등록 이벤트.** 로테이션은 매시 저장된다. → Task 7 에서 같은 이벤트는 1건만 알리는지 테스트한다.
 4. **`mode` 가 null 인 이벤트 상세.** 지금은 결과형으로 처리하지만, 바뀐 뒤에는 안내만 보이고 통계 요청이 나가지 않아야 한다. → Task 8 의 `EventStatsSection` 테스트에 `mode: null` 사례를 넣는다.
-5. **미지원 모드 이벤트의 메타 설명.** `generateMetadata` 가 null 을 "결과형" 으로 떨어뜨려도 tsc 가 잡지 못한다. → Task 8 에서 `generateMetadata` 테스트로 고정한다.
+5. **미지원 모드 이벤트의 메타 설명.** `generateMetadata` 가 null 을 "결과형" 으로 떨어뜨려도 tsc 가 잡지 못한다. → Task 8 에서 설명 문자열을 순수 함수로 떼어 정확한 값으로 고정한다. `generateMetadata` 는 `try/catch` 로 감싸여 있어, 페이지째 테스트하면 실패 경로에서도 "포함하지 않는다" 단언이 통과해 버린다.
 
 ---
 
@@ -322,6 +322,8 @@ fun `솔로·듀오·트리오 쇼다운은 순위형으로 저장된다`() {
     - `get 은 지원 모드 이벤트의 resultType 을 통계 수집 유형으로 채운다`: 모드 0 → `sut.get(BrawlStarsId(eventId)).mode?.resultType` 이 `RESULT`, 모드 6 → `RANK`
     - `get 은 미지원 모드 이벤트의 resultType 을 null 로 채운다`: 모드 25 → `isNull()`
     - `search 도 같은 규칙으로 resultType 을 채운다`: `sut.search(맵 이름)` 결과에서 모드 45 → `RESULT`, 모드 24 → null. `toBattleEvent` 경로를 덮는다.
+      - `search` 는 `map_name` 컬럼이 있고 `MessageType.BATTLE_EVENT_NAME` 메시지가 맵 이름과 부분 일치하는 이벤트만 돌려준다.
+      - 데이터는 기존 테스트 `search 는 맵 이름 메시지에 부분 일치(대소문자 무시)하는 이벤트를 반환한다`(L100 근처)와 같은 방식으로 넣는다. `aBattleEventEntity().withMapBrawlStarsName(...)` 와 `MessageEntity(type = MessageType.BATTLE_EVENT_NAME, ...)` 를 저장한다.
   - `BattleEventControllerTest`
     - `StatisticsControllerTest` 와 같은 패턴(`CoreApiContextTest` + `@AutoConfigureMockMvc` + `@MockkBean(relaxed = true) BattleEventService`)을 쓴다.
     - `미지원 모드 이벤트는 resultType null 을 내보내고 color 를 내보내지 않는다`: `every { battleEventService.get(any()) }` 로 `resultType = null` 인 모드의 `BattleEvent` 를 돌려주고 `mockMvc.get("/v1/events/{id}", ...)` 를 부른다.
@@ -520,12 +522,14 @@ fun `KST 당일 0시에 수집된 로테이션은 본다`()               // 202
 - Modify: `app/events/_components/modeStyles.ts`, `RotationCard.tsx` (L13), `SoloRankCard.tsx` (L11)
 - Modify: `app/events/[id]/_components/EventStatsSection.tsx` (L15), `EventHero.tsx` (L40-44), `app/events/[id]/page.tsx` (L34-37)
 - Modify tests: `tests/unit/events/modeStyles.test.ts`, `tests/unit/domain/event/mappers.test.ts`, `tests/domain/battle/mappers.test.ts`, `tests/e2e/statistics.spec.ts` (L32 근처)
-- Create tests: `tests/components/EventStatsSection.test.tsx`, `tests/unit/events/eventMetadata.test.ts`
+- Create: `src/domain/event/metadata.ts` (메타 설명 문자열 순수 함수)
+- Create tests: `tests/components/EventStatsSection.test.tsx`, `tests/unit/domain/event/metadata.test.ts`
 
 **Interfaces:**
 - Consumes: Task 4 의 JSON — `mode.resultType: "RESULT" | "RANK" | null`, `color` 없음
 - Produces:
   - `export function getModeStyle(modeId: number | null | undefined): ModeStyle`
+  - `export function eventMetadataDescription(event: BattleEvent): string` (`src/domain/event/metadata.ts`)
   - `BattleEventModeResponse.resultType: BattleEventModeResultType | null`
   - 도메인 `BattleEventMode.resultType: BattleEventModeResultType | null`
   - 패널·훅 prop 타입은 바꾸지 않는다.
@@ -561,12 +565,26 @@ it("목록에 없는 모드(48 아레나, 25)와 null/undefined 는 기본 회�
     - `resultType 이 null 이면 안내를 보이고 통계를 요청하지 않는다`: `screen.getByText("이 모드는 통계를 제공하지 않습니다")` 가 있고, 플래그는 false 다.
     - `mode 가 null 이어도 안내를 보이고 통계를 요청하지 않는다`
     - `resultType 이 RESULT 면 결과형 통계를 요청한다`: result 핸들러가 빈 통계를 돌려주면 플래그가 true 다.
-  - `tests/unit/events/eventMetadata.test.ts`
-    - MSW 로 `*/v1/events/:id` 가 `mode.resultType: null` 인 이벤트를 돌려주게 한다.
-    - `generateMetadata({ params: Promise.resolve({ id: "15000001" }) })` 의 `description` 이 `"결과 타입"` 을 포함하지 않는다.
-    - `resultType: "RANK"` 이면 `"결과 타입: 순위형"` 을 포함한다.
+  - `tests/unit/domain/event/metadata.test.ts`: 정확한 값으로 비교한다(`toBe`).
 
-- [ ] **Step 2: 실패 확인** — `pnpm test:run tests/unit/events tests/unit/domain/event/mappers.test.ts tests/domain/battle/mappers.test.ts tests/components/EventStatsSection.test.tsx` → `getModeStyle(0)`, 안내 문구, 메타 설명이 FAIL.
+```ts
+it("통계 미지원 모드면 결과 타입을 쓰지 않는다", () => {
+  expect(eventMetadataDescription(event({ name: "와이프아웃", resultType: null }))).toBe("모드: 와이프아웃");
+});
+it("순위형이면 결과 타입: 순위형", () => {
+  expect(eventMetadataDescription(event({ name: "솔로 쇼다운", resultType: "RANK" }))).toBe("모드: 솔로 쇼다운 · 결과 타입: 순위형");
+});
+it("결과형이면 결과 타입: 결과형", () => {
+  expect(eventMetadataDescription(event({ name: "젬 그랩", resultType: "RESULT" }))).toBe("모드: 젬 그랩 · 결과 타입: 결과형");
+});
+it("모드가 없으면 이벤트로 쓴다", () => {
+  expect(eventMetadataDescription({ ...event({ name: "x", resultType: "RESULT" }), mode: null })).toBe("모드: 이벤트");
+});
+```
+
+    `event(...)` 는 도메인 `BattleEvent` 를 만드는 테스트 내 헬퍼다(mode 의 `id`·`iconImageUrl` 은 아무 값).
+
+- [ ] **Step 2: 실패 확인** — `pnpm test:run tests/unit/events tests/unit/domain/event tests/domain/battle/mappers.test.ts tests/components/EventStatsSection.test.tsx` → `getModeStyle(0)`·안내 문구가 FAIL, `eventMetadataDescription` 은 미정의로 FAIL.
 
 - [ ] **Step 3: 구현**
   - 타입·매퍼: Interfaces 대로 바꾼다. 주석에 Global Constraints 의 `resultType` 정의를 적는다. `BattleEvent.modeResultType` 필드와 매핑을 지운다. `Battle.resultType`(전투 기록 결과형/순위형)은 별개라 남긴다.
@@ -580,7 +598,10 @@ it("목록에 없는 모드(48 아레나, 25)와 null/undefined 는 기본 회�
     - null 이면 fetch 없이 안내를 렌더한다. 마크업은 기존 빈 상태(`EventResultStatsTable.tsx:83` 의 `px-4 py-12 text-center text-sm text-[#5C6271]`)를 따른다.
     - 나머지 분기는 지금과 같다.
   - `EventHero`: `event.mode?.resultType` 이 있을 때만 배지를 렌더한다.
-  - `page.tsx` `generateMetadata`: `resultType` 이 있으면 `모드: ${modeName} · 결과 타입: ${resultLabel}`, 없으면 `모드: ${modeName}`.
+  - `eventMetadataDescription(event)` 를 `src/domain/event/metadata.ts` 에 만든다.
+    - `modeName = event.mode?.name ?? "이벤트"`
+    - `resultType` 이 있으면 `모드: ${modeName} · 결과 타입: ${"순위형" | "결과형"}`, 없으면 `모드: ${modeName}` 이다.
+    - `page.tsx` 의 `generateMetadata` 는 L34·L37 의 인라인 계산 대신 이 함수를 쓴다.
   - `tests/e2e/statistics.spec.ts` 의 "/events/[id] 통계 행 클릭 …" 은 첫 로테이션 카드에 고정돼 있다. 상세에 안내 문구가 보이면 다음 카드로 넘어가도록 고친다(최대 5장). e2e 는 운영 API 를 거쳐서 배포 뒤에만 의미가 있고, CI 에서는 돌지 않는다.
 
 - [ ] **Step 4: 통과 확인** — `pnpm test:run`(전체) PASS, `pnpm typecheck`, `pnpm lint`.
