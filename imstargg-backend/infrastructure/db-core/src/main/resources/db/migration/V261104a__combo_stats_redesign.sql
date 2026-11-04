@@ -6,7 +6,7 @@
 -- 배경: 스펙 B(조합 통계 재구성, docs/superpowers/specs/2026-11-04-combo-stats-redesign-design.md).
 --   - 결정 1: 2인 조합·카운터에서 이벤트 키를 뺀다. 맵에 따른 조합 승률 차이는 거의 다 개인 브롤러의 맵 효과이고,
 --     이벤트별 칸은 표본이 얇아 예측에 보탬이 없다.
---   - 결정 3: 3인 조합(3v3 한 팀 전체)을 전 티어로 더한다. 이관할 데이터는 없고, 첫 집계가 원본(보존 10일)에서 시작한다.
+--   - 결정 3: 3인 조합(3v3 한 팀 전체)을 전 티어로 더한다. 이관할 데이터는 없고, 첫 집계가 원본(보존 10일)에서 시작한다(⑤).
 --   - 결정 6: 보존 정책. 세 테이블을 start_battle_date 월 범위 파티션({table}_p_YYYYMM, default 파티션 없음)으로 만들고
 --     partitionManageJob 이 지난달 1일 이전 파티션을 지운다. API 최대 범위 SINCE_LAST_MONTH 와 같은 경계다.
 --   - 결정 7: 기존 2인·카운터 행을 전 티어 이관한다. 범위는 보존 정책과 같은 지난달 1일 이후 버킷이다.
@@ -29,7 +29,11 @@
 --      1차 커밋 ~ ② 사이가 조합·카운터·쇼다운 조합 순위 응답과 그 잡들만 끊기는 구간이다(2차 트랜잭션 시간 + 배포 시간).
 --   ③ imstargg-deploy: core-batch CronJob trio-battle-result-stats 추가, pair-battle-rank-stats 삭제.
 --   ④ 프론트(Amplify) 배포. core-api 뒤에 올린다.
---   ⑤ 3인 잡(brawlerTrioBattleResultStatsJob) 1회 수동 실행(date = KST 전일).
+--   ⑤ 3인 잡(brawlerTrioBattleResultStatsJob) 수동 실행 — date 를 바꿔 두 번: date = KST 전일(이번 주), date = 지난주 일요일(지난주).
+--      잡 한 번은 StatsWeekRange.currentAndPrevious(date) 버킷(전날이 같은 주면 하나)만 채워 SINCE_LAST_WEEK·LAST_WEEK 의 지난주가 빈다.
+--      지난주 월요일 ~ KST 전일 사이에 월 1일이 있으면 date = 그 1일도 돌린다(1일 버킷과 말일 버킷을 함께 채운다). 같은 date 는 생략.
+--      원본은 date - 10일 보다 이른 일 파티션이 지워져 지난주 버킷은 월~목 실행일 때만 온전하다(금~일은 앞쪽 며칠이 빠진다).
+--      같은 (잡, date) 가 이미 COMPLETED 면 JobInstanceAlreadyCompleteException — 다시 돌릴 때는 rerun=1 을 더한다(스펙 §3.8 ⑤).
 --   ⑥ 배포 후 확인: 새 테이블 버킷·행 수, 기본 티어에서 _legacy 방향 합계와 새 행 수 일치(파일 끝 검증 쿼리), 3인 잡 성공,
 --      trio API(/v1/statistics/trio/result, /v1/statistics/brawler/trio/result) 응답, 화면, Redis 에 새 키 버전만 생기는지,
 --      다음 날 02:00 KST partitionManageJob 의 월 파티션 스텝 성공.

@@ -12,7 +12,7 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 - **저장 공간 최적화**: 파티션 기반 데이터 보관/삭제
 
 ### 날짜 기준
-- 모든 테이블은 **battleDate** (전투일, 한국 시간 기준) 를 기준으로 파티셔닝 및 저장
+- 원본 두 테이블(`stats_result_battle`, `stats_rank_battle`)은 **`battle_date`**(전투일, 한국 시간 기준) 일별 파티션, 조합 통계 세 테이블은 **`start_battle_date`**(주 버킷 시작일) 월별 파티션이다(섹션 4.1)
 - `battleDate`는 `battleAt` (배틀 발생 시각, OffsetDateTime)을 한국 시간(Asia/Seoul)으로 변환한 날짜
 
 ## 2. 테이블 구조 및 역할
@@ -113,7 +113,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 ### 5.1 멱등 배치
 
 통계 집계 배치는 **멱등(idempotent)** 하게 설계합니다.
-- 동일한 날짜에 대해 배치를 재실행해도 안전
+- 동일한 날짜에 대해 배치를 재실행해도 안전(원본이 남아 있는 동안). 단 조합·카운터·3인 잡은 버킷을 통째로 덮어쓰므로, 원본 10일 보존보다 오래된 버킷이나 이관된 버킷의 `date` 로 재실행하면 남은 원본만으로 덮어써 부분 데이터가 된다(섹션 10)
 - 기존 통계를 삭제 후 재집계하는 방식
 
 ### 5.2 재집계 범위
@@ -283,4 +283,5 @@ java -jar core-batch.jar \
 
 - Job 의 `DefaultJobParametersValidator` 는 `date` 만 required 로 강제하고 optional 리스트는 비워둔다. Spring Batch 6 의 `DefaultJobParametersValidator.validate()` 는 optional 리스트가 비어있으면 required 외 키에 대한 검사를 아예 건너뛰므로, 운영자는 임의 이름의 재실행 구분 키를 자유롭게 붙일 수 있다 (`rerun=1`, `manualRun=1` 등). `date` 만 누락되지 않으면 검증을 통과한다.
 - 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Drerun=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
+- **덮어쓰기 주의**: 조합·카운터·3인 잡은 `currentAndPrevious(date)` 버킷을 통째로 지우고 다시 쓴다. 원본 10일 보존보다 오래된 버킷이나 이관된 버킷(지난달 1일 ~ 배포일 − 7일, `V261104a` 머리말)의 `date` 로 재실행하면 남은 원본만으로 덮어써 부분 데이터가 된다.
 - `run.id` 같은 Spring Batch 예약 키는 피한다. `RunIdIncrementer` 가 쓰는 키라 혼동 소지가 있음. 본 프로젝트는 `RunIdIncrementer` 를 도입하지 않았다 — `JobLauncherApplicationRunner` 는 CLI 파라미터로 JobInstance 를 먼저 조회하고, 완료 상태면 incrementer 를 호출하지 않기 때문에 정기 스케줄 케이스에서 효과가 없다 (Spring Boot issue #22602).

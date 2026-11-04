@@ -72,7 +72,7 @@
   - `drop_old_month_partitions(base_date date)`: 파티션 월이 `date_trunc('month', base_date) - interval '1 month'` 보다 이전이면 DETACH 후 DROP. 즉 매월 1일 실행에서 두 달 전 파티션이 떨어진다. API 의 `SINCE_LAST_MONTH`(지난달 1일~)와 같은 경계다.
 - `PartitionManageJobConfig`(02:00 KST, `date`=KST 오늘)에 스텝 둘(월 파티션 생성, 월 파티션 삭제)을 더한다. 상수 `MONTHS_AHEAD = 1`.
 - `partition-manage.sql` 은 앱이 적용하지 않는다. 운영자가 새 core-batch 이미지가 돌기 전에 DB 에 적용한다(§3.8 ①, §8 3번).
-- 매일 다시 쓰는 두 버킷의 삭제 흔적은 그 달 파티션 안에서 autovacuum 이 정리한다. 월 단위 DROP 은 블로트를 남기지 않는다.
+- 매일 다시 쓰는 버킷의 삭제 흔적은 그 달 파티션 안에서 autovacuum 이 정리한다. 월 단위 DROP 은 블로트를 남기지 않는다.
 
 ### 3.4 이관 — 마이그레이션 SQL
 
@@ -89,10 +89,13 @@
 4. 이관(`insert … select`). 범위는 `start_battle_date >= date_trunc('month', current_date) - interval '1 month'` 다. 그 이전 legacy 행은 옮기지 않는다(보존 정책과 같음).
    - **2인**: legacy 를 `(tier_range, start_battle_date, end_battle_date, least(brawler, pair), greatest(brawler, pair), brawler < pair)` 로 묶어 이벤트를 합산한 뒤, 방향 둘 중 `total_count` 합이 작은 쪽을 택한다(같으면 `brawler < pair` 쪽). 기본 티어(트로피 1000+, 신화+)는 두 방향 값이 같아 정확하다. 상위 티어는 "기준 플레이어만 티어 이상" 행이므로 새 정의("전원 티어 이상")의 상한이고, 둘 중 작은 쪽이 가장 좁은 상한이다.
    - **카운터**: `(tier_range, start_battle_date, end_battle_date, brawler, enemy)` 로 이벤트만 합산한다. 의미가 바뀌지 않으므로 정확하다.
+
+**트랜잭션 밖:** 아래 둘은 두 트랜잭션 어디에도 들어 있지 않다(5 는 파일의 주석, 6 은 별도 파일).
+
 5. 검증 쿼리(주석으로 함께 둔다): 기본 티어에서 legacy 의 `brawler < pair` 방향 합산 행 수·합계와 새 테이블이 같은지, 카운터는 전 티어에서 합계가 같은지.
 6. `_legacy` 두 테이블의 DROP 은 `V261104b__drop_combo_stats_legacy.sql` 로 배포 뒤 확인하고 적용한다.
 
-- 3인은 이관할 데이터가 없다. 첫 실행이 원본(보존 10일)에서 현재·직전 주를 집계하므로 최대 약 10일분부터 시작한다.
+- 3인은 이관할 데이터가 없다. 잡 한 번은 `StatsWeekRange.currentAndPrevious(date)` 의 버킷만 채운다(전날이 같은 주면 현재 주 하나, §8 7번). 그래서 첫 적재는 `date` 를 바꿔 두 번(월 경계가 끼면 세 번) 돌린다(§3.8 ⑤). 원본 보존이 10일이라 지난주 버킷은 지난주 월요일이 실행일 − 10일 이후일 때(월~목 실행)만 온전하다.
 - 이관한 버킷의 날짜로 잡을 수동 재실행하면 원본 10일치로 덮어쓴다. 마이그레이션 머리말과 릴리즈 노트에 "지난달 1일부터 배포 전 7일 전까지의 date 로 pair·enemy 잡을 재실행하지 않는다"고 적는다.
 - 과거 행에 섞인 허용 목록 밖 모드(스펙 A 결정 9)는 합산 뒤 분리할 수 없고 2개월 안에 소멸한다.
 - 파티션 함수와 이관 SQL 은 H2 에서 돌지 않으므로 docker `postgres:18` 에서 두 번 적용해 멱등을 확인한다(스펙 A 와 같은 방식). 이관 SQL 은 legacy 모양의 표본 데이터로 방향 선택과 합산을 확인한다.
@@ -142,7 +145,7 @@
 **쿼리**
 
 - 브롤러 조회: `tier_range = T AND start_battle_date BETWEEN 기간 AND (brawler1 = X OR brawler2 = X [OR brawler3 = X])` → 조합별 `SUM`. 위치 인덱스 BitmapOr. 실측 23ms(인기 브롤러, 3버킷).
-- 전체 정렬: `tier_range = T AND start_battle_date BETWEEN 기간` → 조합별 `SUM` → `HAVING SUM(total_count) >= 100`. 정렬·상위 N 은 DB 가 아니라 도메인에서 한다(티어 스코어가 하한(HAVING ≥ 100)을 통과한 조합의 평균 승률을 필요로 하므로). 하한은 DB 가 적용하므로 도메인은 하한 미만 조합을 보지 못하고, 수축의 기준 평균은 하한을 통과한 조합에서 계산한다. 결과형 2×3 전투에서 모든 조합의 평균 승률은 정확히 0.5 이므로 이 평균과의 차이는 하한을 통과한 집합의 인기 편향(많이 뽑히는 조합일수록 승률이 높은 쪽)이다. 산식 재검토(스펙 C)의 입력이다. 하한을 넘는 조합은 월 단위 수천~2만 행이다. 유니크 인덱스 범위 스캔으로 실측 0.3~0.6초(94만 행).
+- 전체 정렬: `tier_range = T AND start_battle_date BETWEEN 기간` → 조합별 `SUM` → `HAVING SUM(total_count) >= 100`. 정렬·상위 N 은 DB 가 아니라 도메인에서 한다. 수축 기준 평균은 `ComboStatsPolicy.COMBO_BASELINE_WIN_RATE`(0.5)로 고정한다 — 하한(HAVING ≥ 100)을 DB 가 적용해 도메인이 전 조합을 보지 못하기 때문이다. 결과형 2×3 전투에서 모든 조합의 평균 승률은 기본 티어에서 정확히 0.5(상위 티어는 근사)이고, 하한 통과 조합의 평균은 인기 편향(많이 뽑히는 조합일수록 승률이 높은 쪽)으로 그보다 높다. 그 평균이나 브롤러 기준 목록의 X 자기 평균을 기준으로 삼으면 같은 조합의 등급이 화면마다 달라진다(§8 5번 → 8번). 산식 재검토는 스펙 C. 하한을 넘는 조합은 월 단위 수천~2만 행이다. 유니크 인덱스 범위 스캔으로 실측 0.3~0.6초(94만 행).
 - 조회 조건은 `start_battle_date` 만 쓴다(`end_battle_date <= 종료일` 조건은 뺀다). 모든 `StatsDateRange` 가 버킷 경계와 맞고 start 가 버킷을 유일하게 정한다.
 - 응답에 쓰이지 않는 `countDistinct*`·`countTotalBattleCount` 쿼리와 `totalElementCount` 는 지운다.
 
@@ -165,10 +168,10 @@
 ### 3.6 티어 스코어 — `TierScore` (core-api)
 
 - `BrawlerTierScore` 를 `TierScore` 로 바꾼다. `data class TierScore(val value: Int) { fun grade(): TierGrade }`. 등급 enum `BrawlerTier`(S~D)는 `TierGrade` 로 바꾼다. API 필드 이름 `tierScore`·`tier` 와 값(`S`/`A`/`B`/`C`/`D`)은 그대로다.
-- `fun <K> create(…, pickRateWeight: Boolean): Map<K, TierScore>`. 입력은 키 `K`(브롤러 id, 2인 쌍, 3인 셋)마다 기간을 합산한 승·패·무이고, 정확한 입력 타입은 구현 계획에서 정한다(지금의 `BrawlerResultCount` 를 키 제네릭으로 넓히는 꼴).
-- 산식은 지금 그대로다. 평균 승률로 수축(`BAYESIAN_C = 300`, 전체 정렬의 기준 평균은 하한 통과 조합의 평균 — §8 5번), `pickRateWeight = true` 이면 `ln(1 + 100·픽률) / ln(1 + 100·최대 픽률)` 가중을 곱하고(`MIN_WEIGHT_BETA = 0.1`), `SCALING_K = 200`, 등급 임계값 55/52/48/45. 상수는 이 클래스에만 있다.
+- `fun <K> create(…, pickRateWeight: Boolean, baselineWinRate: Double? = null): Map<K, TierScore>`. 입력은 키 `K`(브롤러 id, 2인 쌍, 3인 셋)마다 기간을 합산한 승·패·무이고, 정확한 입력 타입은 구현 계획에서 정한다(지금의 `BrawlerResultCount` 를 키 제네릭으로 넓히는 꼴).
+- 산식은 지금 그대로다. 기준 평균 승률로 수축(`BAYESIAN_C = 300`. 1인은 입력 평균 `Σ승 / Σ(승 + 패)`, 2인·3인은 브롤러 기준·전체 정렬 모두 `baselineWinRate = ComboStatsPolicy.COMBO_BASELINE_WIN_RATE`(0.5) — §8 8번), `pickRateWeight = true` 이면 `ln(1 + 100·픽률) / ln(1 + 100·최대 픽률)` 가중을 곱하고(`MIN_WEIGHT_BETA = 0.1`), `SCALING_K = 200`, 등급 임계값 55/52/48/45. 상수는 이 클래스에만 있다.
 - 1인 브롤러 통계는 `pickRateWeight = true`(지금과 같은 값), 2인·3인(브롤러 기준·전체)은 `false`. 산식과 가중 정책의 재검토는 스펙 C 다.
-- 티어 스코어를 저장하지 않는 이유를 KDoc 에 남긴다: 산식이 기간 단위에서 정해지고(수축 기준 평균·최대 픽률), 2026.05.3 에 사전집계를 즉석 계산 + 캐시로 바꿨고, 산식이 바뀌면 캐시 키 버전만 올리면 된다.
+- 티어 스코어를 저장하지 않는 이유를 KDoc 에 남긴다: 사전 집계 컬럼·테이블 없이 조회 시 계산하고 결과는 Redis `statistics` 캐시에 30분 보관한다. 1인 산식은 기간 단위에서 정해지고(수축 기준 평균·최대 픽률), 2026.05.3 에 사전집계를 즉석 계산 + 캐시로 바꿨고, 산식·클래스가 바뀌면 캐시 키 버전만 올리면 된다.
 
 ### 3.7 프론트 — imstargg-frontend
 
@@ -181,18 +184,33 @@
 
 ### 3.8 배포 순서·롤백
 
+`imstargg-deploy` 는 같은 모노레포 안의 GitOps 상태(`apps/prod/<app>/values.yaml`)다. 그래서 ③ 은 따로 하는 단계가 아니라 이 PR 이 main 에 머지되는 순간 적용되고, 보통 ①·② 보다 먼저다. ② 의 Deploy 워크플로도 이미지 태그를 main 의 `values.yaml` 에 커밋하는 방식이라, 머지 뒤 ② 전까지 core-batch CronJob 은 구 이미지로 돈다.
+
 1. **DDL 1차** `V261104a`(§3.4)를 **파일 전체**(2차 트랜잭션 커밋과 `analyze` 까지) 적용한다. `partition-manage.sql` 도 함께 적용한다(앱이 적용하지 않는다 — 미적용 시 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패한다). **적용 시간대**는 트래픽이 가장 적은 때이고 통계 배치 시간대(02:00~09:00 KST) 밖이다. 1차 트랜잭션 커밋부터 ② 배포 전까지 구버전이 영향을 받는다.
    - 구 core-api 의 `pair/result`·`enemy/result`·`pair/rank` 는 캐시 미스에서 500 을 준다(새 테이블에는 event 컬럼이 없고 pair rank 테이블은 지워졌다). 바로 실패하며 기다리지 않는다.
    - 구 core-batch 의 CronJob `enemy-battle-result-stats`(04:00)·`pair-battle-result-stats`(07:00)가 그 사이에 돌면 실패하고, `pair-battle-rank-stats`(06:00)는 ③ 에서 삭제하기 전까지 돌 때마다 실패한다.
    - 다른 엔드포인트와 페이지는 영향이 없다.
 2. **core-api·core-batch 배포**(Deploy 워크플로)를 ① **V261104a 파일 전체가 끝난 뒤** 바로 이어서 한다. 2차 트랜잭션 커밋 전에 새 core-api 가 뜨면 아직 빈 새 테이블을 읽어 빈 응답을 캐시에 쌓는다. 1차 커밋 ~ ② 사이가 조합·카운터·쇼다운 조합 순위만 끊기는 구간이다(2차 트랜잭션 시간 + 배포 시간).
-3. **imstargg-deploy**: CronJob `trio-battle-result-stats` 추가, `pair-battle-rank-stats` 삭제.
+3. **imstargg-deploy**: CronJob `trio-battle-result-stats` 추가, `pair-battle-rank-stats` 삭제. main 머지 시점에 적용된다(위 GitOps 설명). 머지부터 ② 까지 05:00 KST `trio-battle-result-stats` 는 구 이미지에 잡이 없어 실패한다. 데이터는 건드리지 않고 알람만 남으므로 무해하다.
 4. **프론트 배포**(Amplify). core-api 뒤에 올린다. 그 사이 구버전 프론트는 이벤트 상세의 선택 패널에서 지워진 `pair/rank` 를 불러 그 패널만 오류를 보인다.
-5. **3인 잡 1회 수동 실행**(`date` = KST 전일). 첫 데이터는 원본 10일분이다.
+   - Amplify 빌드는 `/brawlers/[id]` 를 `generateStaticParams`(브롤러 목록)의 모든 id 로 사전 렌더링하고, 페이지마다 `statisticsApi.trioResult` 를 부른다. ② 전에는 구 core-api 가 404 를 주고 `apiFetch` 가 `!res.ok` 에서 던지므로 빌드가 실패하고 이전 프론트가 그대로 남는다. ② 뒤에 다시 빌드한다.
+   - Amplify 가 main 머지에 자동 빌드하도록 설정돼 있다면 머지 직후 빌드는 이렇게 실패한다고 예상한다.
+5. **3인 잡 수동 실행 — `date` 를 바꿔 두 번.** 잡 한 번은 `StatsWeekRange.currentAndPrevious(date)` 의 버킷만 채운다(전날이 같은 주면 하나, §8 7번). 상세 기본 기간 `SINCE_LAST_WEEK` 와 `LAST_WEEK` 는 지난주 버킷이 필요하다.
+   - `date` = KST 전일: 이번 주 버킷.
+   - `date` = 지난주 일요일: 지난주 버킷.
+   - 지난주 월요일 ~ KST 전일 사이에 월 1일이 있으면 `date` = 그 1일도 돌린다. 주 버킷이 월 경계에서 잘려 위 두 실행이 1일 앞 조각(월요일 ~ 말일)을 채우지 못하기 때문이다. 1일 실행은 1일 버킷과 전날(말일) 버킷을 함께 채운다. 이미 돌린 `date` 와 같으면 생략한다.
+   - 원본은 `date − 10일` 보다 이른 일 파티션이 지워지므로 지난주 버킷은 지난주 월요일 ≥ 실행일 − 10일(월~목 실행)일 때만 온전하다. 금~일에 실행하면 지난주 앞쪽 며칠이 빠진 부분 데이터로 남는다. 이번 주 버킷은 늘 온전하다.
+   - 같은 `(잡, date)` 가 이미 COMPLETED 면 Spring Batch 가 `JobInstanceAlreadyCompleteException` 으로 거부한다(`stats-battle-data-strategy.md` 10절 런북). 그날 05:00 CronJob 이 새 이미지로 같은 `date` 를 이미 끝냈으면 그 실행은 건너뛰고, 다시 돌려야 하면 `rerun=1` 같은 식별 파라미터를 더한다. 수동 실행은 `date=YYYY-MM-DD` 를 직접 넘긴다(CronJob args 의 `$(date …)` 는 CronJob 안에서만 계산된다).
 6. **배포 후 확인**: 새 테이블 버킷·행 수, 기본 티어에서 `_legacy` 방향 합계와 새 행 수 일치, 3인 잡 성공 로그, `/v1/statistics/trio/result` 와 `/v1/statistics/brawler/trio/result` 응답 샘플, 브롤러 목록 탭·상세 3인 표·카운터 색 반전 화면, Redis 에 새 키 버전만 생기는지, 다음 날 02:00 `partitionManageJob` 의 월 파티션 스텝 성공.
 7. **DDL 2차** `V261104b`(며칠 뒤): `_legacy` 두 테이블 DROP.
 
-롤백: `_legacy` 를 지우기 전까지 가능하다. 새 테이블을 `_v2` 로 치우고 `_legacy` 를 원래 이름으로 되돌린 뒤 구 이미지를 배포한다. 전환 기간 데이터는 `_legacy` 에 없지만 구버전 일일 잡이 현재·직전 주를 다시 집계해 하루 안에 최대 2주치가 메워진다. 3인 조합·전체 정렬·3인 CronJob 은 사라지고, 캐시는 키 버전이 달라 섞이지 않는다. 2차 DDL 뒤에는 되돌릴 수 없다.
+롤백: `_legacy` 를 지우기 전까지 가능하다. 새 테이블을 `_v2` 로 치우고 `_legacy` 를 원래 이름으로 되돌린 뒤 구 이미지를 배포한다. 프론트도 이전 빌드를 Amplify 에서 다시 배포하고, `values.yaml` 에서 trio CronJob 을 지운다(구 이미지에는 잡이 없어 매일 실패한다). 전환 기간 데이터는 `_legacy` 에 없지만 구버전 일일 잡이 현재·직전 주를 다시 집계해 하루 안에 최대 2주치가 메워진다. 3인 조합·전체 정렬·3인 CronJob 은 사라지고, 캐시는 키 버전이 달라 섞이지 않는다. 2차 DDL 뒤에는 되돌릴 수 없다.
+
+프론트를 되돌리지 않고 새 프론트가 구 API 를 보면 다음이 깨진다.
+
+- `/brawlers?view=pair|trio`: SSR 이 `pair/result`·`trio/result`(404)에서 던져 오류 페이지가 뜬다. 기본 탭(브롤러)은 괜찮다.
+- `/brawlers/[id]`: SSR 이 `brawler/trio/result`(404)에서 던져 ISR 재검증이 실패한다(이미 만든 페이지는 이전 HTML 이 남고 새로 렌더링해야 하는 페이지는 오류). 클라이언트의 3인 쿼리도 오류다.
+- 2인 표: 구 응답에 `tierScore`·`tier` 가 없어 `tierScore` 기본 정렬이 `undefined` 끼리의 뺄셈(NaN)으로 뒤섞이고, 티어 배지는 `parseTier` 기본값으로 모두 D 다.
 
 ## 4. 바꾸지 않는 것 (비목표)
 
@@ -216,7 +234,7 @@
 - `imstargg-backend/docs/stats-battle-data-strategy.md`: 조합 통계 절을 새 키·티어 규칙·보존 정책으로 고치고, "7일 보존"·"최근 3일 롤링" 같은 오래된 서술을 실제 값으로 바꾼다.
 - `schema.sql` 주석, 새 엔티티·`TierScore`·`ComboStatsPolicy`·`StatsRate` KDoc(결정 이력: 이벤트 키를 뺀 이유, 전원 티어 규칙, 저장하지 않는 티어 스코어, 조합 픽률 가중 off).
 - 버전: core-api·core-batch·frontend 는 스펙 A 에서 이미 minor SNAPSHOT(0.6.0 / 0.5.0 / 0.8.0)이다. PR 단계에서 `/release` 로 확인한다. core-worker 는 변경이 없다.
-- 릴리즈 노트에 적을 것: 카운터 의미 변화(픽률 분모·표기·색·정렬), 상위 티어 빈 목록, 이관 근사, 이관 버킷 재실행 금지, DDL 2단계와 롤백 한계, `pair-battle-rank-stats` CronJob 은 배포 도구가 삭제하지 않으면 수동 삭제, V261104a 적용 중 영향·사전 측정·중단 방법은 파일 머리말, `partition-manage.sql` 수동 적용.
+- 릴리즈 노트에 적을 것: 카운터 의미 변화(픽률 분모·표기·색·정렬), 상위 티어 빈 목록, 이관 근사, 이관 버킷 재실행 금지, DDL 2단계와 롤백 한계, `pair-battle-rank-stats` CronJob 은 배포 도구가 삭제하지 않으면 수동 삭제, V261104a 적용 중 영향·사전 측정·중단 방법은 파일 머리말, `partition-manage.sql` 수동 적용, 조합 티어 등급은 전역 기준(수축 기준 평균 0.5), 2인 픽률 척도 변경(분모 게임 수 → 팀 수, 약 절반으로 보임), 3인 첫 주는 데이터가 얇음(§3.8 ⑤ 두 번 실행 전까지), 3인 첫 버킷에 스펙 A 이전 듀얼 행 약 1% 혼입(원본 10일 보존이 지나면 새 집계에는 없다. 이미 쓴 버킷은 월 보존까지 남지만 `SINCE_LAST_WEEK` 에서는 2주 안에 빠진다).
 
 ## 7. 위험과 대응
 
@@ -240,9 +258,11 @@
 2. **배포 ① 의 영향 서술(§3.8).** "다른 통계와 페이지는 영향이 없다" 앞에 영향 범위를 정확히 적었다: 구 core-api 의 `pair/result`·`enemy/result`·`pair/rank` 는 캐시 미스에서 500, 구 CronJob `enemy-battle-result-stats`·`pair-battle-result-stats` 와 `pair-battle-rank-stats`(③ 전까지)는 돌면 실패. 적용 시간대는 02:00~09:00 KST 밖, ② 는 V261104a 파일 전체가 끝난 뒤.
 3. **`partition-manage.sql` 은 앱이 적용하지 않는다(§3.3, §3.8 ①).** 새 core-batch 이미지가 돌기 전에 운영자가 DB 에 함께 적용해야 한다. 미적용 시 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패한다.
 4. **캐시 키(§3.5).** 1인 브롤러 통계 `v3:brawlerResultStats` 도 올렸다. `BrawlerTierScore` → `TierScore` 로 클래스 이름이 바뀌어 Redis `@class` 역직렬화가 깨지기 때문이다.
-5. **티어 스코어의 기준 평균(§3.5, §3.6).** 전체 정렬의 수축 기준 평균은 "기간 전체 평균 승률"이 아니라 하한(HAVING ≥ 100)을 통과한 조합의 평균이다(DB 가 HAVING 을 적용하므로 도메인은 전체를 보지 못한다). 전체 조합의 평균은 2×3 결과 게임에서 정확히 0.5 라, 차이는 하한을 통과한 집합의 인기 편향이다. 스펙 C 입력.
+5. **티어 스코어의 기준 평균(§3.5, §3.6).** 전체 정렬의 수축 기준 평균은 "기간 전체 평균 승률"이 아니라 하한(HAVING ≥ 100)을 통과한 조합의 평균이다(DB 가 HAVING 을 적용하므로 도메인은 전체를 보지 못한다). 전체 조합의 평균은 2×3 결과 게임의 기본 티어에서 정확히 0.5(상위 티어는 근사)라, 차이는 하한을 통과한 집합의 인기 편향이다. 스펙 C 입력. → 8번에서 0.5 고정으로 바꿨다.
 6. **프론트(§3.7).** 탭은 부제 옆이 아니라 헤더 아래 전폭 라인바다. `ComboRankingTable` 에는 툴바 안내(하한 100)가 없어 빈 상태 문구에서만 보인다 — 알려진 공백.
 7. **재집계 범위의 실제 동작.** `StatsWeekRange.currentAndPrevious(date)` 는 현재 주 버킷과 `date` 전날이 속한 주를 돌려준다. 전날이 같은 주면 버킷은 하나이고 월요일·월 첫날에만 둘이다(최대 둘). 1인 브롤러 일일 잡은 `date` 하루만 집계한다(비목표 참조).
+8. **조합 티어 스코어의 수축 기준 평균을 0.5 로 고정했다(§3.5, §3.6, 최종 리뷰).** 5번대로면 기준이 화면마다 다르다. 브롤러 기준 2인·3인은 X 자기 조합의 평균, 전체 정렬은 하한 통과 조합의 평균이다. 그래서 같은 조합이 상세 배지와 목록 탭에서 다른 등급을 받고, 상세 배지가 승률 기준 행 레일 색과도 어긋난다. 2×3 결과형의 조합 평균 승률은 구성상 0.5 다(한 게임이 이기는 팀의 조합과 지는 팀의 조합을 같은 수만큼 만든다. 기본 티어 정확, 상위 티어는 전원 기준 티어 판정으로 한쪽 팀만 기록될 수 있어 근사). 이 값을 `ComboStatsPolicy.COMBO_BASELINE_WIN_RATE` 로 두고 `TierScore.create(…, baselineWinRate)` 로 넘긴다. 1인 통계는 입력 평균 그대로다. 산식 재검토는 스펙 C.
+9. **배포 ③·④·⑤·롤백(§3.8, 최종 리뷰).** ③ `imstargg-deploy` 는 GitOps 라 main 머지 시점에 적용되고, ② 전까지 trio CronJob 은 구 이미지에서 실패한다(무해). ④ Amplify 빌드는 상세 페이지 사전 렌더링이 `trio/result` 404 로 실패하므로 ② 뒤에 다시 빌드한다. ⑤ 3인 잡 한 번은 `currentAndPrevious(date)` 버킷(대개 이번 주 하나)만 채워 지난주가 비므로 `date` 를 바꿔 두 번(월 경계가 끼면 세 번) 돌린다. 앞의 "원본 10일분" 서술은 틀렸다. 롤백에 프론트 이전 빌드 재배포와 trio CronJob 제거를 더하고, 새 프론트가 구 API 를 볼 때 깨지는 화면을 적었다.
 
 ## 부록 B: 분석 근거 (2026-11-04)
 
