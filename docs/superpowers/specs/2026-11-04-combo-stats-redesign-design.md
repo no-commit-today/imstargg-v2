@@ -2,7 +2,7 @@
 
 - 작성일: 2026-11-04
 - 대상: `infrastructure/db-core`(조합·카운터 통계 테이블, 파티션 함수), `core/core-batch`(집계 잡, 보존), `core/core-api`(조합·카운터 API, 티어 스코어), `imstargg-frontend`(브롤러 목록·상세, 이벤트 상세), `imstargg-deploy`(CronJob)
-- 상태: 설계 확정 (구현 전)
+- 상태: 구현 완료 (구현 중 설계에서 달라진 점은 [§8 구현 중 정정](#8-구현-중-정정-2026-11-05))
 - 관련: 스펙 A([2026-11-03-stats-event-mode-whitelist-design.md](2026-11-03-stats-event-mode-whitelist-design.md)) 부록 A.2~A.4 가 이 스펙의 1차 입력이다. 티어 스코어 산식 자체의 재검토는 스펙 C 에서 한다. 이 스펙은 산식을 담는 자리(`TierScore`)만 바꾼다.
 
 ## 1. 배경
@@ -55,7 +55,7 @@
 
 ### 3.2 집계 — core-batch
 
-- **집계 단위**: 주 버킷마다 집계기 하나. 이벤트 루프(`readDistinctEventIds`, 이벤트별 집계기·트랜잭션)를 없앤다. 리더는 `battle_date BETWEEN 주 범위` 를 id keyset(5,000건)으로 읽고, 라이터는 버킷 `(start_battle_date, end_battle_date)` 를 지운 뒤 청크(`BATCH_SIZE` 1,000, JDBC batch 100)로 넣는다. 버킷당 트랜잭션 하나(`REQUIRES_NEW`). 매일 `StatsWeekRange.currentAndPrevious(date)` 두 버킷을 다시 집계하는 방식은 그대로다.
+- **집계 단위**: 주 버킷마다 집계기 하나. 이벤트 루프(`readDistinctEventIds`, 이벤트별 집계기·트랜잭션)를 없앤다. 리더는 `battle_date BETWEEN 주 범위` 를 id keyset(5,000건)으로 읽고, 라이터는 버킷 `(start_battle_date, end_battle_date)` 를 지운 뒤 청크(`BATCH_SIZE` 1,000, JDBC batch 100)로 넣는다. 버킷당 트랜잭션 하나(`REQUIRES_NEW`). 매일 `StatsWeekRange.currentAndPrevious(date)` 버킷(현재 주, 월요일·월 첫날에는 직전 주까지 최대 둘)을 다시 집계하는 방식은 그대로다.
 - **메모리**: 정렬 1행이라 키가 작다. 5일 누적 실측으로 버킷당 키 수는 2인 약 2.6만, 카운터 약 5.5만, 3인 약 36만(전 티어 합)이다. 3인도 수십 MB 라 티어 분할은 두지 않는다.
 - **키**: `BrawlerPairBattleStatsKey(brawler1, brawler2, tierRange)`, 신규 `BrawlerTrioBattleStatsKey(brawler1, brawler2, brawler3, tierRange)`, `BrawlerEnemyBattleStatsKey(brawler, enemy, tierRange)`. 모두 이벤트 필드가 없다.
 - **티어 판정**: 조합은 `StatsTierRange.resolveAll(battleType, 멤버 최저 trophies)`. 경쟁전은 `trophies` 필드가 랭크 티어 값이고 수집 단계(`StatsBattleAggregateApplier`)가 같은 비교를 쓴다. 카운터는 기준 플레이어의 `trophies`(변경 없음).
@@ -71,15 +71,21 @@
   - `create_month_partitions(base_date date, months_ahead int)`: 세 테이블에 `base_date` 의 달부터 `months_ahead` 달 뒤까지 `{table}_p_YYYYMM` 을 만든다. 운영 값은 1(다음 달까지).
   - `drop_old_month_partitions(base_date date)`: 파티션 월이 `date_trunc('month', base_date) - interval '1 month'` 보다 이전이면 DETACH 후 DROP. 즉 매월 1일 실행에서 두 달 전 파티션이 떨어진다. API 의 `SINCE_LAST_MONTH`(지난달 1일~)와 같은 경계다.
 - `PartitionManageJobConfig`(02:00 KST, `date`=KST 오늘)에 스텝 둘(월 파티션 생성, 월 파티션 삭제)을 더한다. 상수 `MONTHS_AHEAD = 1`.
+- `partition-manage.sql` 은 앱이 적용하지 않는다. 운영자가 새 core-batch 이미지가 돌기 전에 DB 에 적용한다(§3.8 ①, §8 3번).
 - 매일 다시 쓰는 두 버킷의 삭제 흔적은 그 달 파티션 안에서 autovacuum 이 정리한다. 월 단위 DROP 은 블로트를 남기지 않는다.
 
 ### 3.4 이관 — 마이그레이션 SQL
 
-`V261104a__combo_stats_redesign.sql` 한 파일, 한 트랜잭션. 머리말에 배경·배포 순서(§3.8)·멱등 방식·재실행 금지 기간을 적는다.
+`V261104a__combo_stats_redesign.sql` 한 파일, **두 트랜잭션**(1차: DDL·이름 변경, 2차: 이관) + `analyze`. 머리말에 배경·배포 순서(§3.8)·멱등 방식·재실행 금지 기간·적용 중 영향·사전 측정·중단 방법을 적는다. 단일 트랜잭션으로 묶지 않은 이유는 §8 첫 항목.
+
+**1차 트랜잭션** — 이름 변경·삭제·새 테이블. ACCESS EXCLUSIVE 를 몇 초만 잡는다.
 
 1. `alter table brawler_pair_battle_result_stats rename to brawler_pair_battle_result_stats_legacy`, 카운터도 같이. 인덱스·시퀀스 이름도 `_legacy` 로 바꾼다.
 2. `drop table if exists brawler_pair_battle_rank_stats`.
 3. 새 테이블 3개 생성(§3.1) + 파티션: 지난달·이번 달·다음 달.
+
+**2차 트랜잭션** — 이관. `_legacy` 에는 ACCESS SHARE, 새 테이블에는 ROW EXCLUSIVE 만 잡아 기다리는 쪽이 없다. 커밋 뒤 두 이관 테이블을 `analyze` 한다(새 core-api 의 첫 조회가 통계 없는 파티션을 만나지 않게).
+
 4. 이관(`insert … select`). 범위는 `start_battle_date >= date_trunc('month', current_date) - interval '1 month'` 다. 그 이전 legacy 행은 옮기지 않는다(보존 정책과 같음).
    - **2인**: legacy 를 `(tier_range, start_battle_date, end_battle_date, least(brawler, pair), greatest(brawler, pair), brawler < pair)` 로 묶어 이벤트를 합산한 뒤, 방향 둘 중 `total_count` 합이 작은 쪽을 택한다(같으면 `brawler < pair` 쪽). 기본 티어(트로피 1000+, 신화+)는 두 방향 값이 같아 정확하다. 상위 티어는 "기준 플레이어만 티어 이상" 행이므로 새 정의("전원 티어 이상")의 상한이고, 둘 중 작은 쪽이 가장 좁은 상한이다.
    - **카운터**: `(tier_range, start_battle_date, end_battle_date, brawler, enemy)` 로 이벤트만 합산한다. 의미가 바뀌지 않으므로 정확하다.
@@ -136,7 +142,7 @@
 **쿼리**
 
 - 브롤러 조회: `tier_range = T AND start_battle_date BETWEEN 기간 AND (brawler1 = X OR brawler2 = X [OR brawler3 = X])` → 조합별 `SUM`. 위치 인덱스 BitmapOr. 실측 23ms(인기 브롤러, 3버킷).
-- 전체 정렬: `tier_range = T AND start_battle_date BETWEEN 기간` → 조합별 `SUM` → `HAVING SUM(total_count) >= 100`. 정렬·상위 N 은 DB 가 아니라 도메인에서 한다(티어 스코어가 기간 전체의 평균 승률을 필요로 하므로). 하한을 넘는 조합은 월 단위 수천~2만 행이다. 유니크 인덱스 범위 스캔으로 실측 0.3~0.6초(94만 행).
+- 전체 정렬: `tier_range = T AND start_battle_date BETWEEN 기간` → 조합별 `SUM` → `HAVING SUM(total_count) >= 100`. 정렬·상위 N 은 DB 가 아니라 도메인에서 한다(티어 스코어가 하한(HAVING ≥ 100)을 통과한 조합의 평균 승률을 필요로 하므로). 하한은 DB 가 적용하므로 도메인은 하한 미만 조합을 보지 못하고, 수축의 기준 평균은 하한을 통과한 조합에서 계산한다. 결과형 2×3 전투에서 모든 조합의 평균 승률은 정확히 0.5 이므로 이 평균과의 차이는 하한을 통과한 집합의 인기 편향(많이 뽑히는 조합일수록 승률이 높은 쪽)이다. 산식 재검토(스펙 C)의 입력이다. 하한을 넘는 조합은 월 단위 수천~2만 행이다. 유니크 인덱스 범위 스캔으로 실측 0.3~0.6초(94만 행).
 - 조회 조건은 `start_battle_date` 만 쓴다(`end_battle_date <= 종료일` 조건은 뺀다). 모든 `StatsDateRange` 가 버킷 경계와 맞고 start 가 버킷을 유일하게 정한다.
 - 응답에 쓰이지 않는 `countDistinct*`·`countTotalBattleCount` 쿼리와 `totalElementCount` 는 지운다.
 
@@ -144,6 +150,7 @@
 
 | 메서드 | 키 |
 |---|---|
+| 1인 브롤러 통계 | `v3:brawlerResultStats:{eventId}:{tierRange}:{startDate}:{endDate}` |
 | 브롤러 기준 2인 | `v3:brawlerPairResultStats:{brawlerId}:{tierRange}:{startDate}:{endDate}` |
 | 브롤러 기준 카운터 | `v3:brawlerEnemyResultStats:{brawlerId}:{tierRange}:{startDate}:{endDate}` |
 | 브롤러 기준 3인 | `v1:brawlerTrioResultStats:{brawlerId}:{tierRange}:{startDate}:{endDate}` |
@@ -151,19 +158,21 @@
 | 전체 3인 | `v1:trioResultRanking:{tierRange}:{startDate}:{endDate}` |
 | 쇼다운 조합 순위 | 삭제 (`v1:brawlerPairRankStats`) |
 
+1인 브롤러 통계 키는 `BrawlerTierScore` 가 `TierScore` 로 바뀌며 Redis 에 캐시된 값의 `@class`(클래스 이름) 역직렬화가 깨져 버전을 올렸다. 응답 형태는 같다.
+
 **도메인** — `BrawlerPairResultStatistics`·`BrawlerEnemyResultStatistics` 는 분모 규칙·하한·정렬만 바꾼다. 신규 `BrawlerTrioResultStatistics`, `PairResultRanking`, `TrioResultRanking`. Pair/Enemy 를 통합하지 않는 원칙(`StatsRate` KDoc)은 그대로다. 카운터 `winRate` 의 KDoc 은 "X 가 Y 를 만났을 때 X 의 승률"로 적는다. 순위형 도메인(`BrawlerPairRankStatistics` 등)은 지운다.
 
 ### 3.6 티어 스코어 — `TierScore` (core-api)
 
 - `BrawlerTierScore` 를 `TierScore` 로 바꾼다. `data class TierScore(val value: Int) { fun grade(): TierGrade }`. 등급 enum `BrawlerTier`(S~D)는 `TierGrade` 로 바꾼다. API 필드 이름 `tierScore`·`tier` 와 값(`S`/`A`/`B`/`C`/`D`)은 그대로다.
 - `fun <K> create(…, pickRateWeight: Boolean): Map<K, TierScore>`. 입력은 키 `K`(브롤러 id, 2인 쌍, 3인 셋)마다 기간을 합산한 승·패·무이고, 정확한 입력 타입은 구현 계획에서 정한다(지금의 `BrawlerResultCount` 를 키 제네릭으로 넓히는 꼴).
-- 산식은 지금 그대로다. 평균 승률로 수축(`BAYESIAN_C = 300`), `pickRateWeight = true` 이면 `ln(1 + 100·픽률) / ln(1 + 100·최대 픽률)` 가중을 곱하고(`MIN_WEIGHT_BETA = 0.1`), `SCALING_K = 200`, 등급 임계값 55/52/48/45. 상수는 이 클래스에만 있다.
+- 산식은 지금 그대로다. 평균 승률로 수축(`BAYESIAN_C = 300`, 전체 정렬의 기준 평균은 하한 통과 조합의 평균 — §8 5번), `pickRateWeight = true` 이면 `ln(1 + 100·픽률) / ln(1 + 100·최대 픽률)` 가중을 곱하고(`MIN_WEIGHT_BETA = 0.1`), `SCALING_K = 200`, 등급 임계값 55/52/48/45. 상수는 이 클래스에만 있다.
 - 1인 브롤러 통계는 `pickRateWeight = true`(지금과 같은 값), 2인·3인(브롤러 기준·전체)은 `false`. 산식과 가중 정책의 재검토는 스펙 C 다.
 - 티어 스코어를 저장하지 않는 이유를 KDoc 에 남긴다: 산식이 기간 단위에서 정해지고(수축 기준 평균·최대 픽률), 2026.05.3 에 사전집계를 즉석 계산 + 캐시로 바꿨고, 산식이 바뀌면 캐시 키 버전만 올리면 된다.
 
 ### 3.7 프론트 — imstargg-frontend
 
-- **브롤러 목록(`/brawlers`)**: 탭 3개 "브롤러 / 2인 조합 / 3인 조합"(`components/ui/tabs.tsx`). URL `?view=pair|trio`, 기본은 브롤러. 티어·기간 선택기(`StatRangeSelector`)는 공유한다. 조합 탭 표(`ComboRankingTable`)는 순위 / 조합 브롤러(아이콘 2~3개, 각각 상세 링크) / 티어 배지 / 승률 / 픽률 / 전투수. 서버가 하한·상위 N·스코어 정렬을 이미 적용했으므로 클라이언트는 `SortableHeader` 로 재정렬만 한다. SSR 은 선택된 탭의 데이터만 받는다(`revalidate` SHORT). 빈 목록 문구는 "전투 100회 이상인 조합이 없습니다".
+- **브롤러 목록(`/brawlers`)**: 탭 3개 "브롤러 / 2인 조합 / 3인 조합"(`components/ui/tabs.tsx`). URL `?view=pair|trio`, 기본은 브롤러. 탭은 헤더 아래 전폭 라인바다(부제 옆이 아니다). 티어·기간 선택기(`StatRangeSelector`)는 공유한다. 조합 탭 표(`ComboRankingTable`)는 순위 / 조합 브롤러(아이콘 2~3개, 각각 상세 링크) / 티어 배지 / 승률 / 픽률 / 전투수. 서버가 하한·상위 N·스코어 정렬을 이미 적용했으므로 클라이언트는 `SortableHeader` 로 재정렬만 한다. SSR 은 선택된 탭의 데이터만 받는다(`revalidate` SHORT). 빈 목록 문구는 "전투 100회 이상인 조합이 없습니다". 이 표에는 툴바 안내가 없어 하한(100)이 빈 상태 문구에서만 보인다 — 알려진 공백이다(상세의 세 표에는 "전투 30회 이상 … 보입니다" 안내가 있다).
 - **브롤러 상세(`/brawlers/[id]`)**: `PairStatsTable`·`EnemyStatsTable` 유지(응답 의미만 바뀜). 신규 `TrioStatsTable`("3인 조합": 순위 / 조합 브롤러 2명 / 티어 배지 / 픽률 / 승률 / 전투수, 기본 정렬 `tierScore`). `PairStatsTable` 도 기본 정렬을 `tierScore` 로 바꾸고 티어 배지를 더한다. `useBrawlerStats` 와 SSR `initialData` 에 3인 쿼리를 더한다. 세 표에 "전투 30회 이상 조합만 보입니다" 안내 한 줄.
 - **카운터 표기**: 부제 "이 상대를 만났을 때 내 승률", `enemyRail` 은 55% 이상 `win`(초록), 45% 이하 `loss`(빨강), 기본 정렬 `WIN_RATE` 오름차순.
 - **이벤트 상세(`/events/[id]`)**: `EventSelectedBrawlerPanel`·`PairRankTable` 삭제. `EventStatsPanel` 의 행 선택(aria-pressed 토글), `brawlerId` URL 파라미터, `useEventStats` 의 조합·카운터·순위 조합 쿼리를 없앤다. 통계 행의 브롤러 이름은 브롤러 상세 링크로 바꾼다. 스펙 A 의 미지원 모드 안내는 그대로다.
@@ -172,8 +181,11 @@
 
 ### 3.8 배포 순서·롤백
 
-1. **DDL 1차** `V261104a`(§3.4). 이 시점부터 구버전 core-api·core-batch 는 테이블을 못 찾아 조합·카운터 응답과 두 집계 잡이 실패한다. 다른 통계와 페이지는 영향이 없다.
-2. **core-api·core-batch 배포**(Deploy 워크플로)를 바로 이어서 한다. 1~2 사이가 조합·카운터만 몇 분 끊기는 구간이다.
+1. **DDL 1차** `V261104a`(§3.4)를 **파일 전체**(2차 트랜잭션 커밋과 `analyze` 까지) 적용한다. `partition-manage.sql` 도 함께 적용한다(앱이 적용하지 않는다 — 미적용 시 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패한다). **적용 시간대**는 트래픽이 가장 적은 때이고 통계 배치 시간대(02:00~09:00 KST) 밖이다. 1차 트랜잭션 커밋부터 ② 배포 전까지 구버전이 영향을 받는다.
+   - 구 core-api 의 `pair/result`·`enemy/result`·`pair/rank` 는 캐시 미스에서 500 을 준다(새 테이블에는 event 컬럼이 없고 pair rank 테이블은 지워졌다). 바로 실패하며 기다리지 않는다.
+   - 구 core-batch 의 CronJob `enemy-battle-result-stats`(04:00)·`pair-battle-result-stats`(07:00)가 그 사이에 돌면 실패하고, `pair-battle-rank-stats`(06:00)는 ③ 에서 삭제하기 전까지 돌 때마다 실패한다.
+   - 다른 엔드포인트와 페이지는 영향이 없다.
+2. **core-api·core-batch 배포**(Deploy 워크플로)를 ① **V261104a 파일 전체가 끝난 뒤** 바로 이어서 한다. 2차 트랜잭션 커밋 전에 새 core-api 가 뜨면 아직 빈 새 테이블을 읽어 빈 응답을 캐시에 쌓는다. 1차 커밋 ~ ② 사이가 조합·카운터·쇼다운 조합 순위만 끊기는 구간이다(2차 트랜잭션 시간 + 배포 시간).
 3. **imstargg-deploy**: CronJob `trio-battle-result-stats` 추가, `pair-battle-rank-stats` 삭제.
 4. **프론트 배포**(Amplify). core-api 뒤에 올린다. 그 사이 구버전 프론트는 이벤트 상세의 선택 패널에서 지워진 `pair/rank` 를 불러 그 패널만 오류를 보인다.
 5. **3인 잡 1회 수동 실행**(`date` = KST 전일). 첫 데이터는 원본 10일분이다.
@@ -204,7 +216,7 @@
 - `imstargg-backend/docs/stats-battle-data-strategy.md`: 조합 통계 절을 새 키·티어 규칙·보존 정책으로 고치고, "7일 보존"·"최근 3일 롤링" 같은 오래된 서술을 실제 값으로 바꾼다.
 - `schema.sql` 주석, 새 엔티티·`TierScore`·`ComboStatsPolicy`·`StatsRate` KDoc(결정 이력: 이벤트 키를 뺀 이유, 전원 티어 규칙, 저장하지 않는 티어 스코어, 조합 픽률 가중 off).
 - 버전: core-api·core-batch·frontend 는 스펙 A 에서 이미 minor SNAPSHOT(0.6.0 / 0.5.0 / 0.8.0)이다. PR 단계에서 `/release` 로 확인한다. core-worker 는 변경이 없다.
-- 릴리즈 노트에 적을 것: 카운터 의미 변화(픽률 분모·표기·색·정렬), 상위 티어 빈 목록, 이관 근사, 이관 버킷 재실행 금지, DDL 2단계와 롤백 한계.
+- 릴리즈 노트에 적을 것: 카운터 의미 변화(픽률 분모·표기·색·정렬), 상위 티어 빈 목록, 이관 근사, 이관 버킷 재실행 금지, DDL 2단계와 롤백 한계, `pair-battle-rank-stats` CronJob 은 배포 도구가 삭제하지 않으면 수동 삭제, V261104a 적용 중 영향·사전 측정·중단 방법은 파일 머리말, `partition-manage.sql` 수동 적용.
 
 ## 7. 위험과 대응
 
@@ -219,6 +231,18 @@
 | 이관 버킷에 잡을 재실행하면 원본 10일치로 덮어쓴다 | 마이그레이션 머리말·릴리즈 노트에 금지 기간 명시 |
 | 배치 집계기가 버킷 전체 키를 메모리에 올린다 | 실측 3인 36만 키. 수십 MB. 늘어나면 티어 분할 |
 | 과거에 같은 모양(조합 1행)의 3인 테이블을 만들었다가 쓰이지 않아 지운 이력(V260426a→V260707a) | 이번에는 테이블·배치·API·화면을 한 PR 에서 함께 넣는다 |
+
+## 8. 구현 중 정정 (2026-11-05)
+
+구현하며 설계 문장 몇 개가 사실과 달라져 본문을 고쳤다. 달라진 점과 이유를 모아 둔다.
+
+1. **마이그레이션은 두 트랜잭션이다(§3.4).** 1차(이름 변경·pair rank 삭제·새 시퀀스·테이블·인덱스·파티션)와 2차(이관 insert 두 개)로 나누고 커밋 뒤 `analyze` 한다. 단일 트랜잭션은 legacy 전체 스캔(start_battle_date 로 시작하는 인덱스가 없어 2인 약 4.7GB·카운터 약 6.0GB, 2026-11-05 운영 기준) 내내 이름을 바꾼 테이블의 ACCESS EXCLUSIVE 를 쥔다. 그동안 구 core-api 조회가 락을 기다리며 커넥션 풀을 잠식할 수 있다. 두 트랜잭션이면 1차 커밋 뒤 구 조회가 기다리지 않고 바로 실패해 §3.8 의 "조합·카운터만 끊김" 의도대로 된다.
+2. **배포 ① 의 영향 서술(§3.8).** "다른 통계와 페이지는 영향이 없다" 앞에 영향 범위를 정확히 적었다: 구 core-api 의 `pair/result`·`enemy/result`·`pair/rank` 는 캐시 미스에서 500, 구 CronJob `enemy-battle-result-stats`·`pair-battle-result-stats` 와 `pair-battle-rank-stats`(③ 전까지)는 돌면 실패. 적용 시간대는 02:00~09:00 KST 밖, ② 는 V261104a 파일 전체가 끝난 뒤.
+3. **`partition-manage.sql` 은 앱이 적용하지 않는다(§3.3, §3.8 ①).** 새 core-batch 이미지가 돌기 전에 운영자가 DB 에 함께 적용해야 한다. 미적용 시 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패한다.
+4. **캐시 키(§3.5).** 1인 브롤러 통계 `v3:brawlerResultStats` 도 올렸다. `BrawlerTierScore` → `TierScore` 로 클래스 이름이 바뀌어 Redis `@class` 역직렬화가 깨지기 때문이다.
+5. **티어 스코어의 기준 평균(§3.5, §3.6).** 전체 정렬의 수축 기준 평균은 "기간 전체 평균 승률"이 아니라 하한(HAVING ≥ 100)을 통과한 조합의 평균이다(DB 가 HAVING 을 적용하므로 도메인은 전체를 보지 못한다). 전체 조합의 평균은 2×3 결과 게임에서 정확히 0.5 라, 차이는 하한을 통과한 집합의 인기 편향이다. 스펙 C 입력.
+6. **프론트(§3.7).** 탭은 부제 옆이 아니라 헤더 아래 전폭 라인바다. `ComboRankingTable` 에는 툴바 안내(하한 100)가 없어 빈 상태 문구에서만 보인다 — 알려진 공백.
+7. **재집계 범위의 실제 동작.** `StatsWeekRange.currentAndPrevious(date)` 는 현재 주 버킷과 `date` 전날이 속한 주를 돌려준다. 전날이 같은 주면 버킷은 하나이고 월요일·월 첫날에만 둘이다(최대 둘). 1인 브롤러 일일 잡은 `date` 하루만 집계한다(비목표 참조).
 
 ## 부록 B: 분석 근거 (2026-11-04)
 
