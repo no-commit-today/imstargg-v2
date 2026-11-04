@@ -36,7 +36,7 @@ data class BrawlerResultStatisticsResponse(
                         winRate = item.winRate,
                         starPlayerRate = item.starPlayerRate,
                         tierScore = item.tierScore.value,
-                        tier = item.tierScore.tier().name,
+                        tier = item.tierScore.grade().name,
                     )
                 },
         )

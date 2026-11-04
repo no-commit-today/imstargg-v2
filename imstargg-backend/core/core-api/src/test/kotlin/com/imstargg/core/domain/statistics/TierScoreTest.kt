@@ -5,37 +5,37 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class BrawlerTierScoreTest {
+class TierScoreTest {
     @Nested
-    inner class Tier {
+    inner class Grade {
         @Test
         fun `점수가 55 이상이면 S 티어이다`() {
-            assertThat(BrawlerTierScore(55).tier()).isEqualTo(BrawlerTier.S)
-            assertThat(BrawlerTierScore(60).tier()).isEqualTo(BrawlerTier.S)
+            assertThat(TierScore(55).grade()).isEqualTo(TierGrade.S)
+            assertThat(TierScore(60).grade()).isEqualTo(TierGrade.S)
         }
 
         @Test
         fun `점수가 52 이상 55 미만이면 A 티어이다`() {
-            assertThat(BrawlerTierScore(52).tier()).isEqualTo(BrawlerTier.A)
-            assertThat(BrawlerTierScore(54).tier()).isEqualTo(BrawlerTier.A)
+            assertThat(TierScore(52).grade()).isEqualTo(TierGrade.A)
+            assertThat(TierScore(54).grade()).isEqualTo(TierGrade.A)
         }
 
         @Test
         fun `점수가 48 이상 52 미만이면 B 티어이다`() {
-            assertThat(BrawlerTierScore(48).tier()).isEqualTo(BrawlerTier.B)
-            assertThat(BrawlerTierScore(51).tier()).isEqualTo(BrawlerTier.B)
+            assertThat(TierScore(48).grade()).isEqualTo(TierGrade.B)
+            assertThat(TierScore(51).grade()).isEqualTo(TierGrade.B)
         }
 
         @Test
         fun `점수가 45 이상 48 미만이면 C 티어이다`() {
-            assertThat(BrawlerTierScore(45).tier()).isEqualTo(BrawlerTier.C)
-            assertThat(BrawlerTierScore(47).tier()).isEqualTo(BrawlerTier.C)
+            assertThat(TierScore(45).grade()).isEqualTo(TierGrade.C)
+            assertThat(TierScore(47).grade()).isEqualTo(TierGrade.C)
         }
 
         @Test
         fun `점수가 45 미만이면 D 티어이다`() {
-            assertThat(BrawlerTierScore(44).tier()).isEqualTo(BrawlerTier.D)
-            assertThat(BrawlerTierScore(0).tier()).isEqualTo(BrawlerTier.D)
+            assertThat(TierScore(44).grade()).isEqualTo(TierGrade.D)
+            assertThat(TierScore(0).grade()).isEqualTo(TierGrade.D)
         }
     }
 
@@ -47,7 +47,7 @@ class BrawlerTierScoreTest {
             val counts = emptyList<BrawlerResultCount>()
 
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
             assertThat(result).isEmpty()
@@ -70,10 +70,10 @@ class BrawlerTierScoreTest {
                     ),
                 )
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
-            assertThat(result[BrawlStarsId(1)]!!.tier()).isEqualTo(BrawlerTier.B)
+            assertThat(result[BrawlStarsId(1)]!!.grade()).isEqualTo(TierGrade.B)
         }
 
         @Test
@@ -93,7 +93,7 @@ class BrawlerTierScoreTest {
                     ),
                 )
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
             val strongBrawler = result[BrawlStarsId(1)]!!
@@ -123,7 +123,7 @@ class BrawlerTierScoreTest {
                     ),
                 )
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
             val lowPickHighWinBrawler = result[BrawlStarsId(1)]!!
@@ -148,7 +148,7 @@ class BrawlerTierScoreTest {
                     ),
                 )
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
             val weakBrawler = result[BrawlStarsId(1)]!!
@@ -172,7 +172,7 @@ class BrawlerTierScoreTest {
                     ),
                 )
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
             result.values.forEach { tierScore ->
@@ -192,10 +192,36 @@ class BrawlerTierScoreTest {
                     ),
                 )
             // when
-            val result = BrawlerTierScore.create(counts)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
 
             // then
             assertThat(result[BrawlStarsId(1)]!!.value).isEqualTo(50)
+        }
+
+        @Test
+        fun `가중을 끄면 점수는 수축 승률만으로 정해진다`() {
+            // avg = 1160/2100 = 0.55238. few: adj = (100·0.6 + 300·avg)/400 = 0.56429 → 50 + 0.01190·200 = 52.38 → 52
+            // many: adj = (1000·0.6 + 300·avg)/1300 = 0.58901 → 57.33 → 57. 가중 on 이면 few 의 픽률 가중 0.506 으로 51.
+            val counts =
+                mapOf(
+                    "many" to ResultCount(victoryCount = 600, defeatCount = 400, drawCount = 0),
+                    "few" to ResultCount(victoryCount = 60, defeatCount = 40, drawCount = 0),
+                    "avg" to ResultCount(victoryCount = 500, defeatCount = 500, drawCount = 0),
+                )
+
+            val off = TierScore.create(counts, pickRateWeight = false)
+            val on = TierScore.create(counts, pickRateWeight = true)
+
+            assertThat(off["few"]).isEqualTo(TierScore(52))
+            assertThat(off["many"]).isEqualTo(TierScore(57))
+            assertThat(on["few"]!!.value).isLessThan(off["few"]!!.value)
+        }
+
+        @Test
+        fun `가중을 꺼도 n 이 0 인 키는 50 이다`() {
+            val result = TierScore.create(mapOf("x" to ResultCount(0, 0, 0)), pickRateWeight = false)
+
+            assertThat(result["x"]).isEqualTo(TierScore(50))
         }
     }
 }

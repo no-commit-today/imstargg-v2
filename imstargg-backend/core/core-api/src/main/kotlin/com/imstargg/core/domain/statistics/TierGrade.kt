@@ -1,6 +1,6 @@
 package com.imstargg.core.domain.statistics
 
-enum class BrawlerTier(
+enum class TierGrade(
     val value: Int,
 ) {
     S(1),
