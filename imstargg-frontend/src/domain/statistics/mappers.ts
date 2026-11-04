@@ -1,7 +1,6 @@
 import type {
   BrawlerEnemyResultStatisticsItemResponse,
   BrawlerItemOwnershipStatisticsResponse,
-  BrawlerPairRankStatisticsResponse,
   BrawlerPairResultStatisticsItemResponse,
   BrawlerRankStatisticsResponse,
   BrawlerResultDailyStatisticsResponse,
@@ -16,7 +15,6 @@ import type {
   DailyResultStat,
   EnemyResultStat,
   ItemOwnership,
-  PairRankStat,
   PairResultStat,
 } from "@/domain/statistics/types";
 import { parseTier } from "@/domain/statistics/tier";
@@ -59,17 +57,6 @@ export function toPairResultStat(
     battleCount: dto.battleCount,
     pickRate: dto.pickRate,
     winRate: dto.winRate,
-  };
-}
-
-export function toPairRankStat(
-  dto: BrawlerPairRankStatisticsResponse,
-): PairRankStat {
-  return {
-    brawler: dto.brawler ? toBrawler(dto.brawler) : null,
-    pairBrawler: dto.pairBrawler ? toBrawler(dto.pairBrawler) : null,
-    totalBattleCount: dto.totalBattleCount,
-    averageRank: dto.averageRank,
   };
 }
 

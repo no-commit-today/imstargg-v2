@@ -261,13 +261,6 @@ export interface BrawlerPairResultStatisticsItemResponse {
   winRate: number;
 }
 
-export interface BrawlerPairRankStatisticsResponse {
-  brawler: BrawlerResponse | null;
-  pairBrawler: BrawlerResponse | null;
-  totalBattleCount: number;
-  averageRank: number;
-}
-
 export interface BrawlerEnemyResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
   enemyBrawler: BrawlerResponse | null;

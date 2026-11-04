@@ -3,7 +3,6 @@ import {
   toBrawlerResultStatistics,
   toBrawlerRankStat,
   toPairResultStat,
-  toPairRankStat,
   toEnemyResultStat,
   toDailyResultStat,
   toItemOwnership,
@@ -105,18 +104,6 @@ describe("toPairResultStat", () => {
     });
     expect(result.brawler?.id).toBe(1);
     expect(result.pairBrawler?.id).toBe(2);
-  });
-});
-
-describe("toPairRankStat", () => {
-  it("매핑한다", () => {
-    const result = toPairRankStat({
-      brawler: fakeBrawler(1),
-      pairBrawler: fakeBrawler(2),
-      totalBattleCount: 50,
-      averageRank: 3.0,
-    });
-    expect(result.averageRank).toBe(3.0);
   });
 });
 

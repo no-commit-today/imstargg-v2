@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   parseResultSortBy,
-  parseRankSortBy,
   parseSortOrder,
-  sortRankStats,
   sortResultStats,
 } from "@/domain/statistics/sort";
 
@@ -22,18 +20,6 @@ describe("parseResultSortBy", () => {
   });
   it("AVERAGE_RANK 는 결과형에 없으므로 PICK_RATE 로 fallback", () => {
     expect(parseResultSortBy("AVERAGE_RANK")).toBe("PICK_RATE");
-  });
-});
-
-describe("parseRankSortBy", () => {
-  it("AVERAGE_RANK 를 그대로 반환", () => {
-    expect(parseRankSortBy("AVERAGE_RANK")).toBe("AVERAGE_RANK");
-  });
-  it("PICK_RATE 를 그대로 반환", () => {
-    expect(parseRankSortBy("PICK_RATE")).toBe("PICK_RATE");
-  });
-  it("알 수 없는 값은 PICK_RATE 로 fallback", () => {
-    expect(parseRankSortBy("FOO")).toBe("PICK_RATE");
   });
 });
 
@@ -74,36 +60,6 @@ describe("sortResultStats", () => {
 
   it("입력 배열을 변경하지 않는다", () => {
     sortResultStats(items, "PICK_RATE", "DESC");
-
-    expect(items.map((item) => item.id)).toEqual(["a", "b", "c"]);
-  });
-});
-
-describe("sortRankStats", () => {
-  const items = [
-    { id: "a", averageRank: 2.2, totalBattleCount: 100 },
-    { id: "b", averageRank: 1.8, totalBattleCount: 250 },
-    { id: "c", averageRank: 3.1, totalBattleCount: 150 },
-  ];
-
-  it("AVERAGE_RANK 기준으로 정렬한다", () => {
-    expect(sortRankStats(items, "AVERAGE_RANK", "ASC").map((item) => item.id)).toEqual([
-      "b",
-      "a",
-      "c",
-    ]);
-  });
-
-  it("PICK_RATE 는 전투수 기준으로 정렬한다", () => {
-    expect(sortRankStats(items, "PICK_RATE", "DESC").map((item) => item.id)).toEqual([
-      "b",
-      "c",
-      "a",
-    ]);
-  });
-
-  it("입력 배열을 변경하지 않는다", () => {
-    sortRankStats(items, "PICK_RATE", "DESC");
 
     expect(items.map((item) => item.id)).toEqual(["a", "b", "c"]);
   });

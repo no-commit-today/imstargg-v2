@@ -2,7 +2,6 @@ import { apiFetch, type FetchOpts } from "@/api/client";
 import type {
   BrawlerEnemyResultStatisticsItemResponse,
   BrawlerItemOwnershipStatisticsResponse,
-  BrawlerPairRankStatisticsResponse,
   BrawlerPairResultStatisticsItemResponse,
   BrawlerRankStatisticsResponse,
   BrawlerResultDailyStatisticsResponse,
@@ -42,13 +41,6 @@ export interface PairResultParams {
   eventId?: number;
 }
 
-export interface PairRankParams {
-  eventId: number;
-  brawlerId: number;
-  tierRange: StatsTierRangeDto;
-  dateRange: StatsDateRangeDto;
-}
-
 export interface EnemyResultParams {
   brawlerId: number;
   tierRange: StatsTierRangeDto;
@@ -83,12 +75,6 @@ export const statisticsApi = {
   pairResult: (p: PairResultParams, opts?: FetchOpts) =>
     apiFetch<ListResponse<BrawlerPairResultStatisticsItemResponse>>(
       `/v1/statistics/brawler/pair/result${buildQuery(p)}`,
-      opts,
-    ),
-
-  pairRank: (p: PairRankParams, opts?: FetchOpts) =>
-    apiFetch<ListResponse<BrawlerPairRankStatisticsResponse>>(
-      `/v1/statistics/brawler/pair/rank${buildQuery(p)}`,
       opts,
     ),
 

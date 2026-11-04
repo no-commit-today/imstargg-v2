@@ -30,13 +30,6 @@ export interface PairResultStat {
   winRate: number;
 }
 
-export interface PairRankStat {
-  brawler: Brawler | null;
-  pairBrawler: Brawler | null;
-  totalBattleCount: number;
-  averageRank: number;
-}
-
 export interface EnemyResultStat {
   brawler: Brawler | null;
   enemyBrawler: Brawler | null;
