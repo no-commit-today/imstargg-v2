@@ -47,7 +47,7 @@ class StatisticsCacheKeyTest {
         assertThat(keys).isEqualTo(
             mapOf(
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerResultStatistics" to
-                    "'v2:brawlerResultStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+                    "'v3:brawlerResultStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerPairResultStatistics" to
                     "'v2:brawlerPairResultStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
                     " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",

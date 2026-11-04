@@ -4,8 +4,10 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerResultStatisticsItem
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.domain.statistics.ResultCount
+import com.imstargg.core.domain.statistics.TierScore
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer
@@ -79,6 +81,33 @@ class CacheConfigSerializerTest {
     fun `빈 items 리스트를 가진 통계 객체 직렬화 라운드트립`() {
         // given
         val original = BrawlerResultStatistics(totalBattleCount = 0L, items = emptyList())
+
+        // when
+        val bytes = sut.serialize(original)
+        val deserialized = sut.deserialize(bytes)
+
+        // then
+        assertThat(deserialized).isEqualTo(original)
+    }
+
+    @Test
+    fun `BrawlerResultStatistics 직렬화 라운드트립 - tierScore 포함`() {
+        // given
+        val original =
+            BrawlerResultStatistics(
+                totalBattleCount = 1_200L,
+                items =
+                    listOf(
+                        BrawlerResultStatisticsItem(
+                            brawlerId = BrawlStarsId(16_000_000L),
+                            battleCount = 480L,
+                            pickRate = 0.4,
+                            winRate = 0.55,
+                            starPlayerRate = 0.18,
+                            tierScore = TierScore(52),
+                        ),
+                    ),
+            )
 
         // when
         val bytes = sut.serialize(original)
