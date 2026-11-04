@@ -2,6 +2,7 @@ package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerPairBattleResultStatsEntity.Companion.brawlerPairBattleResultStatsEntity
+import com.querydsl.core.Tuple
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import java.time.LocalDate
@@ -11,61 +12,68 @@ internal class BrawlerPairBattleResultStatsJpaRepositoryCustomImpl(
 ) : BrawlerPairBattleResultStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findAllByConditions(
-        eventBrawlStarsId: Long?,
+    private val brawler1Id = brawlerPairBattleResultStatsEntity.brawler1BrawlStarsId
+    private val brawler2Id = brawlerPairBattleResultStatsEntity.brawler2BrawlStarsId
+    private val victorySum = brawlerPairBattleResultStatsEntity.resultCount.victoryCount.sumLong()
+    private val defeatSum = brawlerPairBattleResultStatsEntity.resultCount.defeatCount.sumLong()
+    private val drawSum = brawlerPairBattleResultStatsEntity.resultCount.drawCount.sumLong()
+    private val totalSum = brawlerPairBattleResultStatsEntity.resultCount.totalCount.sumLong()
+
+    override fun findAllByBrawler(
         brawlerBrawlStarsId: Long,
-        pairBrawlerBrawlStarsId: Long?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
-    ): List<BrawlerPairResultProjection> {
-        val brawlerId = brawlerPairBattleResultStatsEntity.brawlerBrawlStarsId
-        val pairBrawlerId = brawlerPairBattleResultStatsEntity.pairBrawlerBrawlStarsId
-        val victorySum = brawlerPairBattleResultStatsEntity.resultCount.victoryCount.sumLong()
-        val defeatSum = brawlerPairBattleResultStatsEntity.resultCount.defeatCount.sumLong()
-        val drawSum = brawlerPairBattleResultStatsEntity.resultCount.drawCount.sumLong()
-
-        return queryFactory
-            .select(brawlerId, pairBrawlerId, victorySum, defeatSum, drawSum)
+    ): List<BrawlerPairResultProjection> =
+        queryFactory
+            .select(brawler1Id, brawler2Id, victorySum, defeatSum, drawSum)
             .from(brawlerPairBattleResultStatsEntity)
             .where(
-                eventBrawlStarsId?.let { brawlerPairBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerPairBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
-                pairBrawlerBrawlStarsId?.let { brawlerPairBattleResultStatsEntity.pairBrawlerBrawlStarsId.eq(it) },
+                brawler1Id.eq(brawlerBrawlStarsId).or(brawler2Id.eq(brawlerBrawlStarsId)),
                 brawlerPairBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerPairBattleResultStatsEntity.startBattleDate.goe(startDate),
-                brawlerPairBattleResultStatsEntity.endBattleDate.loe(endDate),
-            ).groupBy(brawlerId, pairBrawlerId)
-            .orderBy(pairBrawlerId.asc())
+                brawlerPairBattleResultStatsEntity.startBattleDate.between(startDate, endDate),
+            ).groupBy(brawler1Id, brawler2Id)
+            .orderBy(brawler1Id.asc(), brawler2Id.asc())
             .fetch()
-            .map { tuple ->
-                BrawlerPairResultProjection(
-                    brawlerBrawlStarsId = tuple[brawlerId]!!,
-                    pairBrawlerBrawlStarsId = tuple[pairBrawlerId]!!,
-                    victoryCount = tuple[victorySum]!!,
-                    defeatCount = tuple[defeatSum]!!,
-                    drawCount = tuple[drawSum]!!,
-                )
-            }
-    }
+            .map { it.toProjection() }
 
-    override fun countDistinctPairBrawlers(
-        eventBrawlStarsId: Long?,
-        brawlerBrawlStarsId: Long,
-        pairBrawlerBrawlStarsId: Long?,
+    override fun findAllHavingTotalCountAtLeast(
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        minTotalCount: Long,
+    ): List<BrawlerPairResultProjection> =
+        queryFactory
+            .select(brawler1Id, brawler2Id, victorySum, defeatSum, drawSum)
+            .from(brawlerPairBattleResultStatsEntity)
+            .where(
+                brawlerPairBattleResultStatsEntity.tierRange.eq(tierRange),
+                brawlerPairBattleResultStatsEntity.startBattleDate.between(startDate, endDate),
+            ).groupBy(brawler1Id, brawler2Id)
+            .having(totalSum.goe(minTotalCount))
+            .orderBy(brawler1Id.asc(), brawler2Id.asc())
+            .fetch()
+            .map { it.toProjection() }
+
+    override fun sumTotalCount(
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
     ): Long =
         queryFactory
-            .select(brawlerPairBattleResultStatsEntity.pairBrawlerBrawlStarsId.countDistinct())
+            .select(totalSum)
             .from(brawlerPairBattleResultStatsEntity)
             .where(
-                eventBrawlStarsId?.let { brawlerPairBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerPairBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
-                pairBrawlerBrawlStarsId?.let { brawlerPairBattleResultStatsEntity.pairBrawlerBrawlStarsId.eq(it) },
                 brawlerPairBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerPairBattleResultStatsEntity.startBattleDate.goe(startDate),
-                brawlerPairBattleResultStatsEntity.endBattleDate.loe(endDate),
+                brawlerPairBattleResultStatsEntity.startBattleDate.between(startDate, endDate),
             ).fetchOne() ?: 0L
+
+    private fun Tuple.toProjection() =
+        BrawlerPairResultProjection(
+            brawler1BrawlStarsId = this[brawler1Id]!!,
+            brawler2BrawlStarsId = this[brawler2Id]!!,
+            victoryCount = this[victorySum]!!,
+            defeatCount = this[defeatSum]!!,
+            drawCount = this[drawSum]!!,
+        )
 }

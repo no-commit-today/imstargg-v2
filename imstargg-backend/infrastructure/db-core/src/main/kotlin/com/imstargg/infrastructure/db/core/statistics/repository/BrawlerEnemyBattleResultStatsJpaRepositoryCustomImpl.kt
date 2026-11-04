@@ -11,8 +11,7 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
 ) : BrawlerEnemyBattleResultStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findAllByConditions(
-        eventBrawlStarsId: Long?,
+    override fun findAllByBrawler(
         brawlerBrawlStarsId: Long,
         tierRange: StatsTierRange,
         startDate: LocalDate,
@@ -28,11 +27,9 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
             .select(brawlerId, enemyBrawlerId, victorySum, defeatSum, drawSum)
             .from(brawlerEnemyBattleResultStatsEntity)
             .where(
-                eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
+                brawlerId.eq(brawlerBrawlStarsId),
                 brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
-                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
+                brawlerEnemyBattleResultStatsEntity.startBattleDate.between(startDate, endDate),
             ).groupBy(brawlerId, enemyBrawlerId)
             .orderBy(enemyBrawlerId.asc())
             .fetch()
@@ -46,22 +43,4 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
                 )
             }
     }
-
-    override fun countDistinctEnemyBrawlers(
-        eventBrawlStarsId: Long?,
-        brawlerBrawlStarsId: Long,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long =
-        queryFactory
-            .select(brawlerEnemyBattleResultStatsEntity.enemyBrawlerBrawlStarsId.countDistinct())
-            .from(brawlerEnemyBattleResultStatsEntity)
-            .where(
-                eventBrawlStarsId?.let { brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId.eq(brawlerBrawlStarsId),
-                brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.startBattleDate.goe(startDate),
-                brawlerEnemyBattleResultStatsEntity.endBattleDate.loe(endDate),
-            ).fetchOne() ?: 0L
 }
