@@ -28,6 +28,28 @@ export interface PairResultStat {
   battleCount: number;
   pickRate: number;
   winRate: number;
+  tierScore: number;
+  tier: StatTier;
+}
+
+export interface TrioResultStat {
+  brawler: Brawler | null;
+  pairBrawlers: Brawler[];
+  battleCount: number;
+  pickRate: number;
+  winRate: number;
+  tierScore: number;
+  tier: StatTier;
+}
+
+/** 전체 2인·3인 조합 정렬의 한 행. `brawlers` 길이는 2 또는 3. */
+export interface ComboRankingStat {
+  brawlers: Brawler[];
+  battleCount: number;
+  pickRate: number;
+  winRate: number;
+  tierScore: number;
+  tier: StatTier;
 }
 
 export interface EnemyResultStat {

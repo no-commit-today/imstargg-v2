@@ -6,6 +6,10 @@ import {
   TIER_RANGE_LABELS,
   DATE_RANGE_LABELS,
   TROPHY_RANGE_LABELS,
+  BRAWLER_META_VIEWS,
+  BRAWLER_META_VIEW_LABELS,
+  DEFAULT_BRAWLER_META_VIEW,
+  parseBrawlerMetaView,
   parseTierRange,
   parseDateRange,
   parseTrophyRange,
@@ -86,5 +90,34 @@ describe("parseTrophyRange", () => {
   });
   it("알 수 없는 값은 TROPHY_1000_PLUS 로 fallback", () => {
     expect(parseTrophyRange("FOO")).toBe("TROPHY_1000_PLUS");
+  });
+});
+
+describe("BRAWLER_META_VIEWS", () => {
+  it("브롤러·2인 조합·3인 조합 3개 보기를 가진다", () => {
+    expect(BRAWLER_META_VIEWS).toEqual(["brawler", "pair", "trio"]);
+    expect(DEFAULT_BRAWLER_META_VIEW).toBe("brawler");
+  });
+  it("모든 보기에 한글 라벨이 있다", () => {
+    expect(BRAWLER_META_VIEW_LABELS).toEqual({
+      brawler: "브롤러",
+      pair: "2인 조합",
+      trio: "3인 조합",
+    });
+  });
+});
+
+describe("parseBrawlerMetaView", () => {
+  it("정상 값을 그대로 반환한다", () => {
+    expect(parseBrawlerMetaView("pair")).toBe("pair");
+  });
+  it("parseBrawlerMetaView(\"TRIO\") 는 대소문자를 정규화해 trio 를 반환한다", () => {
+    expect(parseBrawlerMetaView("TRIO")).toBe("trio");
+  });
+  it("알 수 없는 값은 brawler 로 fallback", () => {
+    expect(parseBrawlerMetaView("x")).toBe("brawler");
+  });
+  it("undefined 는 brawler 로 fallback", () => {
+    expect(parseBrawlerMetaView(undefined)).toBe("brawler");
   });
 });

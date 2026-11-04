@@ -6,7 +6,9 @@ import type {
   BrawlerRankStatisticsResponse,
   BrawlerResultDailyStatisticsResponse,
   BrawlerResultStatisticsResponse,
+  BrawlerTrioResultStatisticsItemResponse,
   BrawlerTrophyRangeDto,
+  ComboResultRankingItemResponse,
   ListResponse,
   StatsDateRangeDto,
   StatsTierRangeDto,
@@ -38,14 +40,23 @@ export interface PairResultParams {
   brawlerId: number;
   tierRange: StatsTierRangeDto;
   dateRange: StatsDateRangeDto;
-  eventId?: number;
+}
+
+export interface TrioResultParams {
+  brawlerId: number;
+  tierRange: StatsTierRangeDto;
+  dateRange: StatsDateRangeDto;
 }
 
 export interface EnemyResultParams {
   brawlerId: number;
   tierRange: StatsTierRangeDto;
   dateRange: StatsDateRangeDto;
-  eventId?: number;
+}
+
+export interface ComboRankingParams {
+  tierRange: StatsTierRangeDto;
+  dateRange: StatsDateRangeDto;
 }
 
 export interface DailyParams {
@@ -78,9 +89,27 @@ export const statisticsApi = {
       opts,
     ),
 
+  trioResult: (p: TrioResultParams, opts?: FetchOpts) =>
+    apiFetch<ListResponse<BrawlerTrioResultStatisticsItemResponse>>(
+      `/v1/statistics/brawler/trio/result${buildQuery(p)}`,
+      opts,
+    ),
+
   enemyResult: (p: EnemyResultParams, opts?: FetchOpts) =>
     apiFetch<ListResponse<BrawlerEnemyResultStatisticsItemResponse>>(
       `/v1/statistics/brawler/enemy/result${buildQuery(p)}`,
+      opts,
+    ),
+
+  pairRanking: (p: ComboRankingParams, opts?: FetchOpts) =>
+    apiFetch<ListResponse<ComboResultRankingItemResponse>>(
+      `/v1/statistics/pair/result${buildQuery(p)}`,
+      opts,
+    ),
+
+  trioRanking: (p: ComboRankingParams, opts?: FetchOpts) =>
+    apiFetch<ListResponse<ComboResultRankingItemResponse>>(
+      `/v1/statistics/trio/result${buildQuery(p)}`,
       opts,
     ),
 

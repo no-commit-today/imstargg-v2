@@ -68,8 +68,14 @@ export const queryKeys = {
       [...queryKeys.statistics.all, "brawler-rank", params] as const,
     pairResult: (params: Record<string, unknown>) =>
       [...queryKeys.statistics.all, "pair-result", params] as const,
+    trioResult: (params: Record<string, unknown>) =>
+      [...queryKeys.statistics.all, "trio-result", params] as const,
     enemyResult: (params: Record<string, unknown>) =>
       [...queryKeys.statistics.all, "enemy-result", params] as const,
+    pairRanking: (params: Record<string, unknown>) =>
+      [...queryKeys.statistics.all, "pair-ranking", params] as const,
+    trioRanking: (params: Record<string, unknown>) =>
+      [...queryKeys.statistics.all, "trio-ranking", params] as const,
     daily: (params: Record<string, unknown>) =>
       [...queryKeys.statistics.all, "daily", params] as const,
     itemOwnership: (params: Record<string, unknown>) =>
