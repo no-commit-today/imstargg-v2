@@ -19,6 +19,7 @@ import {
 import { StatRangeSelectorView } from "@app/_components/statistics/StatRangeSelector";
 import { PairStatsTable } from "./PairStatsTable";
 import { EnemyStatsTable } from "./EnemyStatsTable";
+import { TrioStatsTable } from "./TrioStatsTable";
 
 const DailyTrendChart = dynamic(
   () => import("./DailyTrendChart").then((m) => m.DailyTrendChart),
@@ -55,7 +56,7 @@ export function BrawlerStatsPanel({ brawlerId, initial }: Props) {
     return () => window.removeEventListener("popstate", sync);
   }, []);
 
-  const { daily, pair, enemy } = useBrawlerStats(brawlerId, filter, initial);
+  const { daily, pair, trio, enemy } = useBrawlerStats(brawlerId, filter, initial);
 
   function handleFilterChange(next: StatsFilter) {
     setFilter(next);
@@ -84,6 +85,7 @@ export function BrawlerStatsPanel({ brawlerId, initial }: Props) {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <PairStatsTable items={pair.data ?? []} />
         <EnemyStatsTable items={enemy.data ?? []} />
+        <TrioStatsTable items={trio.data ?? []} />
       </div>
     </section>
   );

@@ -58,6 +58,11 @@ describe("BrawlerStatsPanel", () => {
     expect(await screen.findByText("쉘리")).toBeInTheDocument();
   });
 
+  it("3인 조합 제목이 보인다", async () => {
+    renderWithProviders(<BrawlerStatsPanel brawlerId={16000000} initial={initial} />);
+    expect(await screen.findByRole("heading", { name: "3인 조합" })).toBeInTheDocument();
+  });
+
   it("티어 필터 변경 시 해당 필터로 통계를 다시 가져오고 URL 을 갱신한다", async () => {
     let requestedTier: string | null = null;
     server.use(

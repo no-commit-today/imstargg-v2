@@ -24,20 +24,26 @@ test("/brawlers/[id] 상세 통계가 모두 렌더된다", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "일별 트렌드" })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByRole("heading", { name: "조합" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "조합", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "3인 조합" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "카운터" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "아이템" })).toBeVisible();
 });
 
 test("조합 표 승률 헤더 클릭 시 정렬 방향이 토글된다", async ({ page }) => {
   // 정렬은 URL 동기화 없이 클라이언트 상태로만 동작한다 (커밋 6a74115e)
+  // 초기 정렬은 티어(TIER_SCORE DESC) 라 승률 헤더는 처음엔 비활성(화살표 없음)이고,
+  // 새 열을 처음 누르면 DESC(▼), 같은 열을 다시 누르면 ASC(▲) 가 된다.
   await page.goto("/brawlers/16000000");
   const pairTable = page
     .locator("div.data-table")
-    .filter({ has: page.getByRole("heading", { name: "조합" }) });
+    .filter({ has: page.getByRole("heading", { name: "조합", exact: true }) });
   const winRateHeader = pairTable.getByRole("button", { name: "승률" });
   await expect(winRateHeader).toBeVisible({ timeout: 15_000 });
-  await expect(winRateHeader).toContainText("▼"); // 초기 정렬: 승률 DESC
+  await expect(winRateHeader).not.toContainText("▼");
+  await expect(winRateHeader).not.toContainText("▲");
+  await winRateHeader.click();
+  await expect(winRateHeader).toContainText("▼");
   await winRateHeader.click();
   await expect(winRateHeader).toContainText("▲");
 });
