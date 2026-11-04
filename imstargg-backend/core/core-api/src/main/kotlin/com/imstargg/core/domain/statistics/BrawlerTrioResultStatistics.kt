@@ -34,11 +34,12 @@ data class BrawlerTrioResultStatistics(
             totalTeamCount: Long,
             counts: List<BrawlerTrioResultCount>,
         ): BrawlerTrioResultStatistics {
-            // 수축의 기준(평균 승률)이 X 의 모든 조합을 보도록 하한을 적용하기 전에 계산한다.
+            // 수축 기준은 X 자기 평균이 아니라 전역 기준 0.5 다(ComboStatsPolicy.COMBO_BASELINE_WIN_RATE).
             val tierScores =
                 TierScore.create(
                     counts.associate { Triple(it.brawler1Id, it.brawler2Id, it.brawler3Id) to it.resultCount },
                     pickRateWeight = false,
+                    baselineWinRate = ComboStatsPolicy.COMBO_BASELINE_WIN_RATE,
                 )
             val items =
                 counts

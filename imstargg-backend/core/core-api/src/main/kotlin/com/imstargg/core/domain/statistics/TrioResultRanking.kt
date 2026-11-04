@@ -5,7 +5,8 @@ package com.imstargg.core.domain.statistics
  * 분모·battleCount 의미는 [StatsRate.pickRate] 가 정본, 하한·상위 N 은 [ComboStatsPolicy].
  * [PairResultRanking] 과 규칙이 같고, 분모만 3인 조합 행 합 그대로다(÷3 하지 않는다).
  *
- * 정렬·상위 N 은 DB 가 아니라 도메인에서 한다 — 티어 스코어가 기간 전체 평균 승률을 필요로 한다(스펙 §3.5).
+ * 정렬·상위 N 은 DB 가 아니라 도메인에서 한다. 수축 기준 평균은 [ComboStatsPolicy.COMBO_BASELINE_WIN_RATE](0.5) 로
+ * 고정한다 — 하한(HAVING ≥ 100)을 DB 가 적용해 도메인이 전 조합을 보지 못하기 때문이다(스펙 §3.5).
  */
 data class TrioResultRanking(
     val items: List<ComboResultRankingItem>,
@@ -24,6 +25,7 @@ data class TrioResultRanking(
                 TierScore.create(
                     counts.associate { Triple(it.brawler1Id, it.brawler2Id, it.brawler3Id) to it.resultCount },
                     pickRateWeight = false,
+                    baselineWinRate = ComboStatsPolicy.COMBO_BASELINE_WIN_RATE,
                 )
             val items =
                 counts

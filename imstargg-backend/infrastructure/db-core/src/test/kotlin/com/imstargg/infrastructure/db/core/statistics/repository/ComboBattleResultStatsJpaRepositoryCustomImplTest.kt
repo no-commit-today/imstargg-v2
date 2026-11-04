@@ -93,6 +93,24 @@ class ComboBattleResultStatsJpaRepositoryCustomImplTest(
     }
 
     @Test
+    fun `trio findAllHavingTotalCountAtLeast - 하한 미만 조합은 빠지고 sumTotalCount 는 모두 더한다`() {
+        // given - (10,20,30) 은 두 버킷 합 3, (10,40,50) 은 1
+        saveTrio(10L, 20L, 30L, bucketAStart, bucketAEnd, victory = 2L)
+        saveTrio(10L, 20L, 30L, bucketBStart, bucketBEnd, defeat = 1L)
+        saveTrio(10L, 40L, 50L, bucketAStart, bucketAEnd, victory = 1L)
+
+        // when
+        val result = trioRepository.findAllHavingTotalCountAtLeast(tierRange, bucketAStart, bucketBEnd, 2L)
+        val totalCount = trioRepository.sumTotalCount(tierRange, bucketAStart, bucketBEnd)
+
+        // then
+        assertThat(result).containsExactly(
+            BrawlerTrioResultProjection(10L, 20L, 30L, 2L, 1L, 0L),
+        )
+        assertThat(totalCount).isEqualTo(4L)
+    }
+
+    @Test
     fun `enemy findAllByBrawler - X 기준 행만 돌려준다`() {
         // given
         saveEnemy(10L, 20L, bucketAStart, bucketAEnd, victory = 1L)

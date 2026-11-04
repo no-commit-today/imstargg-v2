@@ -4,7 +4,8 @@ import com.imstargg.core.enums.StatsEventMode
 
 object StatsRate {
     /**
-     * 3명 팀의 쌍 수(3C2). 2인 조합 테이블에서 팀 하나는 쌍 3개, 곧 `total_count` 3 으로 쌓인다.
+     * 3명 팀의 쌍 수(3C2). 기본 티어에서 2인 조합 테이블의 팀 하나는 쌍 3개, 곧 `total_count` 3 으로 쌓인다.
+     * 상위 티어는 쌍 단위로 티어를 판정(두 멤버 모두 그 티어 이상)하므로 팀당 0·1·3쌍이 쌓여 `÷ 3` 은 근사다.
      * 결과형 모드가 모두 2×3 이라는 전제([StatsEventMode.RESULT_SLOTS_PER_GAME])에서 나온다.
      */
     const val PAIRS_PER_TEAM = 3

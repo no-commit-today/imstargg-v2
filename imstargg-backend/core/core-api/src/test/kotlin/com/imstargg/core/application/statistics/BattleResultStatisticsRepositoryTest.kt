@@ -15,6 +15,7 @@ import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBatt
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -102,10 +103,12 @@ class BattleResultStatisticsRepositoryTest(
 
     @Test
     fun `findBrawlerTrioResultStatistics - X 가 b1·b2·b3 어느 위치든 조회된다`() {
-        // given - X(10) 가 각각 brawler1·brawler2·brawler3 인 조합 3개, 각 총 30 → Σ 90 → 팀 90 (3인은 ÷3 하지 않는다)
+        // given - X(10) 가 각각 brawler1·brawler2·brawler3 인 조합 3개와 X 가 없는 조합 1개, 각 총 30 → Σ 120 → 팀 120
+        // (3인은 ÷3 하지 않는다. ÷3 하면 팀 40 → 픽률 0.75, X 가 낀 행만 더하면 팀 90 → 1/3 이라 구별된다)
         saveTrio(10L, 20L, 30L, victoryCount = 15, defeatCount = 15)
         saveTrio(5L, 10L, 30L, victoryCount = 15, defeatCount = 15)
         saveTrio(1L, 2L, 10L, victoryCount = 15, defeatCount = 15)
+        saveTrio(40L, 50L, 60L, victoryCount = 15, defeatCount = 15)
 
         // when
         val result =
@@ -127,7 +130,7 @@ class BattleResultStatisticsRepositoryTest(
         assertThat(result.items).allSatisfy { item ->
             assertThat(item.brawlerId).isEqualTo(BrawlStarsId(10L))
             assertThat(item.battleCount).isEqualTo(30L)
-            assertThat(item.pickRate).isEqualTo(30.0 / 90)
+            assertThat(item.pickRate).isEqualTo(0.25)
         }
     }
 
@@ -156,6 +159,34 @@ class BattleResultStatisticsRepositoryTest(
         val item = result.items.single { it.brawlerIds == listOf(BrawlStarsId(10L), BrawlStarsId(20L)) }
         assertThat(item.battleCount).isEqualTo(100L)
         assertThat(item.pickRate).isEqualTo(1.0)
+    }
+
+    @Test
+    fun `findTrioResultRanking - 하한 미만 조합은 빠지지만 분모에는 들어간다`() {
+        // given - Σ 300 → 팀 300. HAVING 뒤 합(Σ 200)으로 나누면 (10,20,30) 픽률이 0.5 가 되어 구별된다.
+        saveTrio(10L, 20L, 30L, victoryCount = 50, defeatCount = 50)
+        saveTrio(40L, 50L, 60L, victoryCount = 2, defeatCount = 1)
+        saveTrio(70L, 80L, 90L, victoryCount = 49, defeatCount = 48)
+        saveTrio(1L, 2L, 3L, victoryCount = 50, defeatCount = 50)
+
+        // when
+        val result =
+            sut.findTrioResultRanking(
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.items.map { it.brawlerIds })
+            .containsExactlyInAnyOrder(
+                listOf(BrawlStarsId(10L), BrawlStarsId(20L), BrawlStarsId(30L)),
+                listOf(BrawlStarsId(1L), BrawlStarsId(2L), BrawlStarsId(3L)),
+            )
+        val item =
+            result.items.single { it.brawlerIds == listOf(BrawlStarsId(10L), BrawlStarsId(20L), BrawlStarsId(30L)) }
+        assertThat(item.battleCount).isEqualTo(100L)
+        assertThat(item.pickRate).isCloseTo(1.0 / 3, within(1e-9))
     }
 
     @Test

@@ -223,5 +223,39 @@ class TierScoreTest {
 
             assertThat(result["x"]).isEqualTo(TierScore(50))
         }
+
+        @Test
+        fun `baselineWinRate 를 주면 그 값으로 수축한다`() {
+            // a: adj = (60 + 300·0.5)/400 = 0.525 → 50 + 0.025·200 = 55. b: (40 + 150)/400 = 0.475 → 45
+            val counts =
+                mapOf(
+                    "a" to ResultCount(victoryCount = 60, defeatCount = 40, drawCount = 0),
+                    "b" to ResultCount(victoryCount = 40, defeatCount = 60, drawCount = 0),
+                )
+
+            val result = TierScore.create(counts, pickRateWeight = false, baselineWinRate = 0.5)
+
+            assertThat(result["a"]).isEqualTo(TierScore(55))
+            assertThat(result["b"]).isEqualTo(TierScore(45))
+        }
+
+        @Test
+        fun `baselineWinRate 가 없으면 입력 평균으로 수축한다`() {
+            // 입력 평균 = 140/200 = 0.7.
+            // 기준 없음 a: adj = (80 + 300·0.7)/400 = 0.725 → 50 + 0.025·200 = 55
+            // 기준 0.5 a: adj = (80 + 300·0.5)/400 = 0.575 → 50 + 0.075·200 = 65
+            val counts =
+                mapOf(
+                    "a" to ResultCount(victoryCount = 80, defeatCount = 20, drawCount = 0),
+                    "b" to ResultCount(victoryCount = 60, defeatCount = 40, drawCount = 0),
+                )
+
+            val withoutBaseline = TierScore.create(counts, pickRateWeight = false)
+            val withBaseline = TierScore.create(counts, pickRateWeight = false, baselineWinRate = 0.5)
+
+            assertThat(withoutBaseline["a"]).isEqualTo(TierScore(55))
+            assertThat(withBaseline["a"]).isEqualTo(TierScore(65))
+            assertThat(withoutBaseline["a"]).isNotEqualTo(withBaseline["a"])
+        }
     }
 }

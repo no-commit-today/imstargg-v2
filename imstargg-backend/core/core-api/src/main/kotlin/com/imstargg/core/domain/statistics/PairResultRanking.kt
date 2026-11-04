@@ -4,7 +4,8 @@ package com.imstargg.core.domain.statistics
  * 전체 2인 조합 정렬 — 조회 조건(티어, 기간)의 2인 조합을 티어 스코어 순으로 줄 세운 상위 목록.
  * 분모·battleCount 의미는 [StatsRate.pickRate] 가 정본, 하한·상위 N 은 [ComboStatsPolicy].
  *
- * 정렬·상위 N 은 DB 가 아니라 도메인에서 한다 — 티어 스코어가 기간 전체 평균 승률을 필요로 한다(스펙 §3.5).
+ * 정렬·상위 N 은 DB 가 아니라 도메인에서 한다. 수축 기준 평균은 [ComboStatsPolicy.COMBO_BASELINE_WIN_RATE](0.5) 로
+ * 고정한다 — 하한(HAVING ≥ 100)을 DB 가 적용해 도메인이 전 조합을 보지 못하기 때문이다(스펙 §3.5).
  */
 data class PairResultRanking(
     val items: List<ComboResultRankingItem>,
@@ -23,6 +24,7 @@ data class PairResultRanking(
                 TierScore.create(
                     counts.associate { (it.brawler1Id to it.brawler2Id) to it.resultCount },
                     pickRateWeight = false,
+                    baselineWinRate = ComboStatsPolicy.COMBO_BASELINE_WIN_RATE,
                 )
             val items =
                 counts

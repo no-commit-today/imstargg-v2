@@ -5,19 +5,21 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * 티어 점수. 50 이 같은 조회 기간 안의 평균이고, 클수록 평균보다 낫다. 등급은 [grade] 로 구한다.
+ * 티어 점수. 50 이 기준 평균 승률에 해당하고, 클수록 그보다 낫다. 등급은 [grade] 로 구한다.
  *
- * 점수 = `50 + (수축 승률 - 평균 승률) × SCALING_K × 가중`.
- * 수축 승률은 평균 승률 쪽으로 `BAYESIAN_C` 판만큼 당긴 승률이라 표본이 적은 키일수록 50 에 붙는다.
- * 가중은 [create] 의 `pickRateWeight` 가 켜져 있을 때만 `ln(1 + 100·픽률) / ln(1 + 100·최대 픽률)` 로
- * 정해지고(최소 `MIN_WEIGHT_BETA`), 꺼져 있으면 1.0 이다.
+ * 점수 = `50 + (수축 승률 - 기준 평균 승률) × SCALING_K × 가중`.
+ * 수축 승률은 기준 평균 승률 쪽으로 `BAYESIAN_C` 판만큼 당긴 승률이라 표본이 적은 키일수록 50 에 붙는다.
+ * 기준 평균 승률은 [create] 에 `baselineWinRate` 를 주면 그 값(조합은 [ComboStatsPolicy.COMBO_BASELINE_WIN_RATE]),
+ * 주지 않으면 입력 전체의 `Σ승 / Σ(승 + 패)` 다.
+ * 가중은 [create] 의 `pickRateWeight` 가 켜져 있을 때만
+ * `MIN_WEIGHT_BETA + (1 − MIN_WEIGHT_BETA)·ln(1 + LOG_ALPHA·픽률)/ln(1 + LOG_ALPHA·최대 픽률)` 로 정해지고,
+ * 꺼져 있으면 1.0 이다.
  *
  * ## 저장하지 않는 이유
- * 점수는 DB·캐시 어디에도 저장하지 않고 조회할 때마다 계산한다. 산식이 키 하나의 값이 아니라
- * **조회 기간 전체**에서 정해지기 때문이다. 수축의 기준인 평균 승률과 픽률 가중의 기준인 최대 픽률이
- * 모두 그 기간의 모든 키에 걸쳐 나온다. 기간이 달라지면 같은 키의 점수도 달라지므로 미리 계산해 둘 수 없다.
- * 프로젝트는 2026.05.3 에 사전집계 테이블을 없애고 즉석 계산 + 캐시로 옮겼고, 그래서 산식이 바뀌어도
- * 저장값을 다시 만들 필요 없이 캐시 키 버전만 올리면 된다.
+ * 사전 집계 컬럼·테이블이 없고 조회 시 계산하며, 결과는 Redis `statistics` 캐시에 30분 보관된다.
+ * 그래서 산식·클래스 변경은 캐시 키 버전 범프로 처리한다(2026.05.3 사전집계 → 즉석 계산 전환).
+ * 1인 통계의 산식은 키 하나의 값이 아니라 **조회 기간 전체**에서 정해진다. 수축의 기준인 평균 승률과
+ * 픽률 가중의 기준인 최대 픽률이 모두 그 기간의 모든 키에 걸쳐 나오므로, 기간이 달라지면 같은 키의 점수도 달라진다.
  *
  * ## 조합은 픽률 가중을 끈다
  * 1인 브롤러 통계는 `pickRateWeight = true`(기존 산식 그대로), 2인·3인 조합은 `false` 다.
@@ -46,18 +48,22 @@ data class TierScore(
         /**
          * @param counts 키(브롤러, 2인 쌍, 3인 셋 등)마다 조회 기간을 합산한 승·패·무
          * @param pickRateWeight 켜면 픽률 가중을 곱하고, 끄면 수축 승률만으로 점수를 정한다.
-         *   끄면 최대 픽률을 계산하지 않으므로 전체 표본이 0 이어도 모든 키가 50 이 된다.
+         *   끄면 전체 표본이 0 이어도 모든 키가 50 이 된다. n 이 0 인 키의 수축 승률은 기준 평균 승률과 같아
+         *   차이가 0 이기 때문이다.
+         * @param baselineWinRate 수축 기준 평균 승률. 주면 입력 평균 대신 이 값을 쓰고, 없으면
+         *   `Σ승 / Σ(승 + 패)` 를 쓴다. 조합(2인·3인)은 [ComboStatsPolicy.COMBO_BASELINE_WIN_RATE] 를 준다.
          */
         fun <K> create(
             counts: Map<K, ResultCount>,
             pickRateWeight: Boolean,
+            baselineWinRate: Double? = null,
         ): Map<K, TierScore> {
             if (counts.isEmpty()) return emptyMap()
 
             val totalBattleCount = counts.values.sumOf { it.totalCount }
             val totalWins = counts.values.sumOf { it.victoryCount }
             val totalLosses = counts.values.sumOf { it.defeatCount }
-            val avgWinRate = StatsRate.winRate(totalWins, totalLosses)
+            val avgWinRate = baselineWinRate ?: StatsRate.winRate(totalWins, totalLosses)
 
             val maxPickRate =
                 if (pickRateWeight) {

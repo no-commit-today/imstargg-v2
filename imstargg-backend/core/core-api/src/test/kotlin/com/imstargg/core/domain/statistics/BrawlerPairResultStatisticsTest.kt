@@ -122,6 +122,40 @@ class BrawlerPairResultStatisticsTest {
     }
 
     @Test
+    fun `등급은 X 자기 평균이 아니라 전역 기준 승률 50% 로 수축해 정한다`() {
+        // given - X(10) 의 조합 평균은 96/200 = 0.48 이다. 이 평균으로 수축하면 (10,20) 54·(10,30) 46 이지만 기준은 0.5 다.
+        // (55,45) 는 50 + 0.0125·200 = 52.5 로 반올림 경계에 걸려(부동소수로 52.4999…) 피했다.
+        val counts =
+            listOf(
+                BrawlerPairResultCount(
+                    brawler1Id = BrawlStarsId(10L),
+                    brawler2Id = BrawlStarsId(20L),
+                    resultCount = ResultCount(victoryCount = 56, defeatCount = 44, drawCount = 0),
+                ),
+                BrawlerPairResultCount(
+                    brawler1Id = BrawlStarsId(10L),
+                    brawler2Id = BrawlStarsId(30L),
+                    resultCount = ResultCount(victoryCount = 40, defeatCount = 60, drawCount = 0),
+                ),
+            )
+
+        // when
+        val sut =
+            BrawlerPairResultStatistics.create(
+                brawlerId = BrawlStarsId(10L),
+                totalTeamCount = 1_000L,
+                counts = counts,
+            )
+
+        // then - (10,20): adj = (56 + 150)/400 = 0.515 → 53(A). (10,30): (40 + 150)/400 = 0.475 → 45(C)
+        val byPair = sut.items.associateBy { it.pairBrawlerId }
+        assertThat(byPair.getValue(BrawlStarsId(20L)).tierScore).isEqualTo(TierScore(53))
+        assertThat(byPair.getValue(BrawlStarsId(20L)).tierScore.grade()).isEqualTo(TierGrade.A)
+        assertThat(byPair.getValue(BrawlStarsId(30L)).tierScore).isEqualTo(TierScore(45))
+        assertThat(byPair.getValue(BrawlStarsId(30L)).tierScore.grade()).isEqualTo(TierGrade.C)
+    }
+
+    @Test
     fun `totalTeamCount 0 이면 pickRate 0`() {
         // given
         val counts =
