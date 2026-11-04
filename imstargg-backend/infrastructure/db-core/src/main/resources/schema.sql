@@ -475,32 +475,6 @@ create unique index if not exists uk_brawler_pair_battle_result_stats__1
     );
 alter sequence brawler_pair_battle_result_stats_seq owned by brawler_pair_battle_result_stats.brawler_pair_battle_result_stats_id;
 
--- 브롤러 pair 전투 랭크 통계 (기준 브롤러 관점의 방향성 팀원 통계)
-create sequence if not exists brawler_pair_battle_rank_stats_seq increment by 100;
-create table if not exists brawler_pair_battle_rank_stats
-(
-    brawler_pair_battle_rank_stats_id bigint primary key default nextval('brawler_pair_battle_rank_stats_seq'),
-    event_brawlstars_id               bigint      not null,
-    tier_range                        varchar(45) not null,
-    start_battle_date                 date        not null,
-    end_battle_date                   date        not null,
-    brawler_brawlstars_id             bigint      not null,
-    pair_brawler_brawlstars_id        bigint      not null,
-    rank_counts                       jsonb       not null,
-    total_count                       bigint      not null,
-    weighted_rank_sum                 bigint      not null,
-    created_at                        timestamptz not null default now(),
-    updated_at                        timestamptz not null default now(),
-    constraint ck_brawler_pair_battle_rank_stats_distinct_brawler
-        check (brawler_brawlstars_id <> pair_brawler_brawlstars_id)
-);
-create unique index if not exists uk_brawler_pair_battle_rank_stats__1
-    on brawler_pair_battle_rank_stats (
-        event_brawlstars_id, start_battle_date, end_battle_date, tier_range,
-        brawler_brawlstars_id, pair_brawler_brawlstars_id
-    );
-alter sequence brawler_pair_battle_rank_stats_seq owned by brawler_pair_battle_rank_stats.brawler_pair_battle_rank_stats_id;
-
 create table if not exists battle_event_rotation
 (
     battle_event_rotation_id bigint generated always as identity primary key,

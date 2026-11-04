@@ -4,7 +4,6 @@ import com.imstargg.core.api.controller.v1.response.BrawlerBuffyOwnershipStatist
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerPairRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerPairResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
@@ -113,32 +112,6 @@ class StatisticsQueryComposer(
             .getBrawlerRankStatistics(eventId, tierRange, dateRange)
             .items
             .map { BrawlerRankStatisticsResponse.of(it, brawlers.toBrawlerResponse(it.brawlerId)) }
-    }
-
-    fun getBrawlerPairRankStatistics(
-        eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
-        tierRange: StatsTierRange,
-        dateRange: StatsDateRange,
-    ): List<BrawlerPairRankStatisticsResponse> {
-        val brawlers = brawlers()
-        val statistics =
-            battleRankStatisticsService.getBrawlerPairRankStatistics(
-                eventId = eventId,
-                brawlerId = brawlerId,
-                pairBrawlerId = pairBrawlerId,
-                tierRange = tierRange,
-                dateRange = dateRange,
-            )
-        return statistics.items.map { item ->
-            BrawlerPairRankStatisticsResponse(
-                brawler = brawlers.find(item.brawlerId)?.let { BrawlerResponse.of(it) },
-                pairBrawler = brawlers.find(item.pairBrawlerId)?.let { BrawlerResponse.of(it) },
-                totalBattleCount = item.totalBattleCount,
-                averageRank = item.averageRank,
-            )
-        }
     }
 
     fun getBrawlerItemOwnershipStatistics(

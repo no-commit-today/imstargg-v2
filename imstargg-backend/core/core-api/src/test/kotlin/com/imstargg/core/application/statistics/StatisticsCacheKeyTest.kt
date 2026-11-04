@@ -58,9 +58,6 @@ class StatisticsCacheKeyTest {
                     "'v1:brawlerDailyResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleRankStatisticsRepositoryWithCache.findBrawlerRankStatistics" to
                     "'v1:brawlerRankStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
-                "BattleRankStatisticsRepositoryWithCache.findBrawlerPairRankStatistics" to
-                    "'v1:brawlerPairRankStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                    " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
             ),
         )
     }

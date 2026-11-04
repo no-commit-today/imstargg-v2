@@ -32,18 +32,6 @@ class StatisticsControllerTest(
     }
 
     @Test
-    fun `pair rank 에 brawlerId 가 없으면 400`() {
-        mockMvc
-            .get("/v1/statistics/brawler/pair/rank") {
-                param("eventId", "60000001")
-                param("tierRange", "TROPHY_1000_PLUS")
-                param("dateRange", "THIS_WEEK")
-            }.andExpect {
-                status { isBadRequest() }
-            }
-    }
-
-    @Test
     fun `pair result 의 legacy sort 파라미터는 무시한다`() {
         mockMvc
             .get("/v1/statistics/brawler/pair/result") {
@@ -72,17 +60,15 @@ class StatisticsControllerTest(
     }
 
     @Test
-    fun `pair rank 의 legacy sort 파라미터는 무시한다`() {
+    fun `pair rank endpoint 는 삭제되어 404`() {
         mockMvc
             .get("/v1/statistics/brawler/pair/rank") {
                 param("eventId", "60000001")
                 param("brawlerId", "16000000")
                 param("tierRange", "TROPHY_1000_PLUS")
                 param("dateRange", "THIS_WEEK")
-                param("sortBy", "IGNORED")
-                param("sortOrder", "SIDEWAYS")
             }.andExpect {
-                status { isOk() }
+                status { isNotFound() }
             }
     }
 

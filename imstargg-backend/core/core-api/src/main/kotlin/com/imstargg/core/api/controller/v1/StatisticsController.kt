@@ -3,7 +3,6 @@ package com.imstargg.core.api.controller.v1
 import com.imstargg.core.api.controller.ListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerPairRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerPairResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
@@ -86,25 +85,6 @@ class StatisticsController(
                 BrawlStarsId(eventId),
                 tierRange,
                 dateRange,
-            )
-        return ResponseEntity.ok(ListResponse(responses))
-    }
-
-    @GetMapping("/v1/statistics/brawler/pair/rank")
-    fun getBrawlerPairRankStatistics(
-        @RequestParam eventId: Long,
-        @RequestParam brawlerId: Long,
-        @RequestParam(required = false) pairBrawlerId: Long?,
-        @RequestParam tierRange: StatsTierRange,
-        @RequestParam dateRange: StatsDateRange,
-    ): ResponseEntity<ListResponse<BrawlerPairRankStatisticsResponse>> {
-        val responses =
-            statisticsQueryComposer.getBrawlerPairRankStatistics(
-                eventId = BrawlStarsId(eventId),
-                brawlerId = BrawlStarsId(brawlerId),
-                pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
-                tierRange = tierRange,
-                dateRange = dateRange,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }
