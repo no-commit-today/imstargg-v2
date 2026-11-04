@@ -30,17 +30,13 @@ class BattleResultStatisticsService(
     }
 
     fun getBrawlerPairResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
     ): BrawlerPairResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerPairResultStatistics(
-            eventId = eventId,
             brawlerId = brawlerId,
-            pairBrawlerId = pairBrawlerId,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
@@ -48,14 +44,12 @@ class BattleResultStatisticsService(
     }
 
     fun getEnemyResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
     ): BrawlerEnemyResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerEnemyResultStatistics(
-            eventId = eventId,
             brawlerId = brawlerId,
             tierRange = tierRange,
             startDate = startDate,

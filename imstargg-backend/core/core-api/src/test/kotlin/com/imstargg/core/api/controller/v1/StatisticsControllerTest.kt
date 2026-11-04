@@ -32,9 +32,10 @@ class StatisticsControllerTest(
     }
 
     @Test
-    fun `pair result 의 legacy sort 파라미터는 무시한다`() {
+    fun `pair result 의 legacy sort 파라미터와 eventId 는 무시한다`() {
         mockMvc
             .get("/v1/statistics/brawler/pair/result") {
+                param("eventId", "1")
                 param("brawlerId", "16000000")
                 param("tierRange", "TROPHY_1000_PLUS")
                 param("dateRange", "THIS_WEEK")
@@ -46,9 +47,10 @@ class StatisticsControllerTest(
     }
 
     @Test
-    fun `enemy result 의 legacy sort 파라미터는 무시한다`() {
+    fun `enemy result 의 legacy sort 파라미터와 eventId 는 무시한다`() {
         mockMvc
             .get("/v1/statistics/brawler/enemy/result") {
+                param("eventId", "1")
                 param("brawlerId", "16000000")
                 param("tierRange", "TROPHY_1000_PLUS")
                 param("dateRange", "THIS_WEEK")

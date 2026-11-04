@@ -40,18 +40,14 @@ class StatisticsQueryComposer(
     }
 
     fun getBrawlerPairResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
     ): List<BrawlerPairResultStatisticsItemResponse> {
         val brawlers = brawlers()
         val statistics =
             battleResultStatisticsService.getBrawlerPairResultStatistics(
-                eventId = eventId,
                 brawlerId = brawlerId,
-                pairBrawlerId = pairBrawlerId,
                 tierRange = tierRange,
                 dateRange = dateRange,
             )
@@ -62,12 +58,13 @@ class StatisticsQueryComposer(
                 battleCount = item.battleCount,
                 pickRate = item.pickRate,
                 winRate = item.winRate,
+                tierScore = item.tierScore.value,
+                tier = item.tierScore.grade().name,
             )
         }
     }
 
     fun getEnemyResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
@@ -75,7 +72,6 @@ class StatisticsQueryComposer(
         val brawlers = brawlers()
         val statistics =
             battleResultStatisticsService.getEnemyResultStatistics(
-                eventId = eventId,
                 brawlerId = brawlerId,
                 tierRange = tierRange,
                 dateRange = dateRange,

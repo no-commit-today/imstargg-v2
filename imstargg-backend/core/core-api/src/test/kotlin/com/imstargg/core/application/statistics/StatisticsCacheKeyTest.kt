@@ -49,11 +49,9 @@ class StatisticsCacheKeyTest {
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerResultStatistics" to
                     "'v3:brawlerResultStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerPairResultStatistics" to
-                    "'v2:brawlerPairResultStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                    " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+                    "'v3:brawlerPairResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerEnemyResultStatistics" to
-                    "'v2:brawlerEnemyResultStats:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
-                    " + ':' + #startDate + ':' + #endDate",
+                    "'v3:brawlerEnemyResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerDailyResultStatistics" to
                     "'v1:brawlerDailyResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleRankStatisticsRepositoryWithCache.findBrawlerRankStatistics" to

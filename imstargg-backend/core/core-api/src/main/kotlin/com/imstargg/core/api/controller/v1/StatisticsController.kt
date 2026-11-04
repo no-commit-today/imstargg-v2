@@ -40,17 +40,13 @@ class StatisticsController(
 
     @GetMapping("/v1/statistics/brawler/pair/result")
     fun getBrawlerPairResultStatistics(
-        @RequestParam eventId: Long?,
         @RequestParam brawlerId: Long,
-        @RequestParam(required = false) pairBrawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<ListResponse<BrawlerPairResultStatisticsItemResponse>> {
         val responses =
             statisticsQueryComposer.getBrawlerPairResultStatistics(
-                eventId = eventId?.let { BrawlStarsId(it) },
                 brawlerId = BrawlStarsId(brawlerId),
-                pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
                 tierRange = tierRange,
                 dateRange = dateRange,
             )
@@ -59,14 +55,12 @@ class StatisticsController(
 
     @GetMapping("/v1/statistics/brawler/enemy/result")
     fun getEnemyResultStatistics(
-        @RequestParam eventId: Long?,
         @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<ListResponse<BrawlerEnemyResultStatisticsItemResponse>> {
         val responses =
             statisticsQueryComposer.getEnemyResultStatistics(
-                eventId = eventId?.let { BrawlStarsId(it) },
                 brawlerId = BrawlStarsId(brawlerId),
                 tierRange = tierRange,
                 dateRange = dateRange,

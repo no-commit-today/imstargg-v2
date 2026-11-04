@@ -54,171 +54,73 @@ class BattleResultStatisticsRepositoryTest(
     }
 
     @Test
-    fun `findBrawlerPairResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
-        val event = BrawlStarsId(101L)
-        resultStatsJpaRepository.save(
-            BrawlerBattleResultStatsEntity(
-                eventBrawlStarsId = event.value,
-                tierRange = tierRange,
-                battleDate = date,
-                brawlerBrawlStarsId = 10L,
-                resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
-                starPlayerCount = 0,
-            ),
-        )
-        pairStatsJpaRepository.save(
-            BrawlerPairBattleResultStatsEntity(
-                eventBrawlStarsId = event.value,
-                tierRange = tierRange,
-                startBattleDate = date,
-                endBattleDate = date,
-                brawlerBrawlStarsId = 10L,
-                pairBrawlerBrawlStarsId = 20L,
-                resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
-            ),
-        )
-
-        val result =
-            sut.findBrawlerPairResultStatistics(
-                eventId = event,
-                brawlerId = BrawlStarsId(10L),
-                pairBrawlerId = null,
-                tierRange = tierRange,
-                startDate = date,
-                endDate = date,
-            )
-
-        assertThat(result.totalBattleCount).isEqualTo(1)
-        assertThat(result.items).hasSize(1)
-        assertThat(result.items.first().pairBrawlerId).isEqualTo(BrawlStarsId(20L))
-    }
-
-    @Test
-    fun `findBrawlerPairResultStatistics - 다중 날짜에 걸친 분모는 Result 슬롯 합 전체 ÷ 6`() {
-        val event = BrawlStarsId(104L)
-        val day1 = date
-        val day2 = date.plusDays(1)
-        // Result 슬롯: day1 6 + day2 6 = 12 슬롯 → 12 ÷ 6 = 분모 2
-        listOf(day1, day2).forEach { d ->
-            resultStatsJpaRepository.save(
-                BrawlerBattleResultStatsEntity(
-                    eventBrawlStarsId = event.value,
-                    tierRange = tierRange,
-                    battleDate = d,
-                    brawlerBrawlStarsId = 10L,
-                    resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
-                    starPlayerCount = 0,
-                ),
-            )
-        }
-        pairStatsJpaRepository.save(
-            BrawlerPairBattleResultStatsEntity(
-                eventBrawlStarsId = event.value,
-                tierRange = tierRange,
-                startBattleDate = day1,
-                endBattleDate = day2,
-                brawlerBrawlStarsId = 10L,
-                pairBrawlerBrawlStarsId = 20L,
-                resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 1, drawCount = 0),
-            ),
-        )
-
-        val result =
-            sut.findBrawlerPairResultStatistics(
-                eventId = event,
-                brawlerId = BrawlStarsId(10L),
-                pairBrawlerId = null,
-                tierRange = tierRange,
-                startDate = day1,
-                endDate = day2,
-            )
-
-        assertThat(result.totalBattleCount).isEqualTo(2)
-        assertThat(result.items).hasSize(1)
-    }
-
-    @Test
-    fun `findBrawlerPairResultStatistics - 이벤트를 지정하지 않으면 이벤트별 슬롯을 합산한 뒤 한 번만 ÷6 한다`() {
-        // given
-        val eventA = BrawlStarsId(107L)
-        val eventB = BrawlStarsId(108L)
-        // Result 슬롯: 이벤트 A 4 + 이벤트 B 5 = 9 슬롯 → 9 ÷ 6 = 분모 1 (이벤트별로 나누면 4÷6 + 5÷6 = 0)
-        listOf(eventA to 2L, eventB to 3L).forEach { (event, victoryCount) ->
-            resultStatsJpaRepository.save(
-                BrawlerBattleResultStatsEntity(
-                    eventBrawlStarsId = event.value,
-                    tierRange = tierRange,
-                    battleDate = date,
-                    brawlerBrawlStarsId = 10L,
-                    resultCount = ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = 2, drawCount = 0),
-                    starPlayerCount = 0,
-                ),
-            )
-            pairStatsJpaRepository.save(
-                BrawlerPairBattleResultStatsEntity(
-                    eventBrawlStarsId = event.value,
-                    tierRange = tierRange,
-                    startBattleDate = date,
-                    endBattleDate = date,
-                    brawlerBrawlStarsId = 10L,
-                    pairBrawlerBrawlStarsId = 20L,
-                    resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
-                ),
-            )
+    fun `findBrawlerPairResultStatistics - 분모는 조합 테이블 전체 합 ÷ 3`() {
+        // given - 조합 4개 각 총 30 → Σ 120 → 팀 40 → 픽률 30/40. X 가 낀 행(총 30)만 분모로 쓰면 0.75 가 나오지 않는다.
+        listOf(10L to 20L, 30L to 40L, 50L to 60L, 70L to 80L).forEach { (brawler1, brawler2) ->
+            savePair(brawler1, brawler2, victoryCount = 15, defeatCount = 15)
         }
 
         // when
         val result =
             sut.findBrawlerPairResultStatistics(
-                eventId = null,
                 brawlerId = BrawlStarsId(10L),
-                pairBrawlerId = null,
                 tierRange = tierRange,
                 startDate = date,
                 endDate = date,
             )
 
         // then
-        assertThat(result.totalBattleCount).isEqualTo(1)
+        val item = result.items.single()
+        assertThat(item.brawlerId).isEqualTo(BrawlStarsId(10L))
+        assertThat(item.pairBrawlerId).isEqualTo(BrawlStarsId(20L))
+        assertThat(item.battleCount).isEqualTo(30L)
+        assertThat(item.pickRate).isEqualTo(0.75)
     }
 
     @Test
-    fun `findBrawlerEnemyResultStatistics - 분모는 Result 슬롯합 기반 게임 수`() {
-        val event = BrawlStarsId(102L)
-        resultStatsJpaRepository.save(
-            BrawlerBattleResultStatsEntity(
-                eventBrawlStarsId = event.value,
-                tierRange = tierRange,
-                battleDate = date,
-                brawlerBrawlStarsId = 10L,
-                resultCount = ResultCountEmbedded.create(victoryCount = 3, defeatCount = 3, drawCount = 0),
-                starPlayerCount = 0,
-            ),
-        )
-        enemyStatsJpaRepository.save(
-            BrawlerEnemyBattleResultStatsEntity(
-                eventBrawlStarsId = event.value,
-                tierRange = tierRange,
-                startBattleDate = date,
-                endBattleDate = date,
-                brawlerBrawlStarsId = 10L,
-                enemyBrawlerBrawlStarsId = 30L,
-                resultCount = ResultCountEmbedded.create(victoryCount = 1, defeatCount = 0, drawCount = 0),
-            ),
-        )
+    fun `findBrawlerPairResultStatistics - X 가 brawler2 인 조합도 돌려준다`() {
+        // given
+        savePair(5L, 10L, victoryCount = 20, defeatCount = 10)
 
+        // when
         val result =
-            sut.findBrawlerEnemyResultStatistics(
-                eventId = event,
+            sut.findBrawlerPairResultStatistics(
                 brawlerId = BrawlStarsId(10L),
                 tierRange = tierRange,
                 startDate = date,
                 endDate = date,
             )
 
-        assertThat(result.totalBattleCount).isEqualTo(1)
-        assertThat(result.items).hasSize(1)
-        assertThat(result.items.first().enemyBrawlerId).isEqualTo(BrawlStarsId(30L))
+        // then
+        val item = result.items.single()
+        assertThat(item.brawlerId).isEqualTo(BrawlStarsId(10L))
+        assertThat(item.pairBrawlerId).isEqualTo(BrawlStarsId(5L))
+    }
+
+    @Test
+    fun `findBrawlerEnemyResultStatistics - 분모는 X 행의 합 ÷ 3`() {
+        // given - X(10) 행 3개 각 총 30 → Σ 90 → X 게임 30. (20 → 10) 행은 X 기준 행이 아니라 분모에 넣지 않는다.
+        listOf(20L, 30L, 40L).forEach { enemy ->
+            saveEnemy(10L, enemy, victoryCount = 15, defeatCount = 15)
+        }
+        saveEnemy(20L, 10L, victoryCount = 15, defeatCount = 15)
+
+        // when
+        val result =
+            sut.findBrawlerEnemyResultStatistics(
+                brawlerId = BrawlStarsId(10L),
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.items.map { it.enemyBrawlerId })
+            .containsExactlyInAnyOrder(BrawlStarsId(20L), BrawlStarsId(30L), BrawlStarsId(40L))
+        assertThat(result.items).allSatisfy { item ->
+            assertThat(item.brawlerId).isEqualTo(BrawlStarsId(10L))
+            assertThat(item.pickRate).isEqualTo(1.0)
+        }
     }
 
     @Test
@@ -286,5 +188,43 @@ class BattleResultStatisticsRepositoryTest(
         assertThat(item.totalBattleCount).isEqualTo(12)
         assertThat(item.winRate).isEqualTo(StatsRate.winRate(victoryCount = 8, defeatCount = 3))
         assertThat(item.starPlayerRate).isEqualTo(0.25)
+    }
+
+    private fun savePair(
+        brawler1: Long,
+        brawler2: Long,
+        victoryCount: Long,
+        defeatCount: Long,
+    ) {
+        pairStatsJpaRepository.save(
+            BrawlerPairBattleResultStatsEntity(
+                tierRange = tierRange,
+                startBattleDate = date,
+                endBattleDate = date,
+                brawler1BrawlStarsId = brawler1,
+                brawler2BrawlStarsId = brawler2,
+                resultCount =
+                    ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = defeatCount, drawCount = 0),
+            ),
+        )
+    }
+
+    private fun saveEnemy(
+        brawler: Long,
+        enemy: Long,
+        victoryCount: Long,
+        defeatCount: Long,
+    ) {
+        enemyStatsJpaRepository.save(
+            BrawlerEnemyBattleResultStatsEntity(
+                tierRange = tierRange,
+                startBattleDate = date,
+                endBattleDate = date,
+                brawlerBrawlStarsId = brawler,
+                enemyBrawlerBrawlStarsId = enemy,
+                resultCount =
+                    ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = defeatCount, drawCount = 0),
+            ),
+        )
     }
 }

@@ -39,23 +39,17 @@ class BattleResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key =
-            "'v2:brawlerPairResultStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        key = "'v3:brawlerPairResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findBrawlerPairResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
     ): BrawlerPairResultStatistics =
         battleResultStatisticsRepository.findBrawlerPairResultStatistics(
-            eventId = eventId,
             brawlerId = brawlerId,
-            pairBrawlerId = pairBrawlerId,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
@@ -63,20 +57,16 @@ class BattleResultStatisticsRepositoryWithCache(
 
     @Cacheable(
         cacheNames = [CacheNames.STATISTICS],
-        key =
-            "'v2:brawlerEnemyResultStats:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
-                " + ':' + #startDate + ':' + #endDate",
+        key = "'v3:brawlerEnemyResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
         sync = true,
     )
     fun findBrawlerEnemyResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
     ): BrawlerEnemyResultStatistics =
         battleResultStatisticsRepository.findBrawlerEnemyResultStatistics(
-            eventId = eventId,
             brawlerId = brawlerId,
             tierRange = tierRange,
             startDate = startDate,

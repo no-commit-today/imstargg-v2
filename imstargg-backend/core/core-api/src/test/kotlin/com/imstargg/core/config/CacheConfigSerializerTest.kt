@@ -1,6 +1,10 @@
 package com.imstargg.core.config
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
+import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatisticsItem
+import com.imstargg.core.domain.statistics.BrawlerPairResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerPairResultStatisticsItem
 import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
@@ -105,6 +109,57 @@ class CacheConfigSerializerTest {
                             winRate = 0.55,
                             starPlayerRate = 0.18,
                             tierScore = TierScore(52),
+                        ),
+                    ),
+            )
+
+        // when
+        val bytes = sut.serialize(original)
+        val deserialized = sut.deserialize(bytes)
+
+        // then
+        assertThat(deserialized).isEqualTo(original)
+    }
+
+    @Test
+    fun `BrawlerPairResultStatistics 직렬화 라운드트립`() {
+        // given
+        val original =
+            BrawlerPairResultStatistics(
+                items =
+                    listOf(
+                        BrawlerPairResultStatisticsItem(
+                            brawlerId = BrawlStarsId(16_000_000L),
+                            pairBrawlerId = BrawlStarsId(16_000_001L),
+                            battleCount = 120L,
+                            pickRate = 0.03,
+                            winRate = 0.56,
+                            tierScore = TierScore(52),
+                        ),
+                    ),
+            )
+
+        // when
+        val bytes = sut.serialize(original)
+        val deserialized = sut.deserialize(bytes)
+
+        // then
+        assertThat(deserialized).isEqualTo(original)
+    }
+
+    @Test
+    fun `BrawlerEnemyResultStatistics 직렬화 라운드트립`() {
+        // given
+        val original =
+            BrawlerEnemyResultStatistics(
+                items =
+                    listOf(
+                        BrawlerEnemyResultStatisticsItem(
+                            brawlerId = BrawlStarsId(16_000_000L),
+                            enemyBrawlerId = BrawlStarsId(16_000_001L),
+                            battleCount = 90L,
+                            pickRate = 0.12,
+                            winRate = 0.44,
                         ),
                     ),
             )
