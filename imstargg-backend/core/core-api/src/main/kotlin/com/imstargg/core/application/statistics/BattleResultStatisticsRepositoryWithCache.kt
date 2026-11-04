@@ -6,6 +6,9 @@ import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerPairResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerTrioResultStatistics
+import com.imstargg.core.domain.statistics.PairResultRanking
+import com.imstargg.core.domain.statistics.TrioResultRanking
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
@@ -50,6 +53,56 @@ class BattleResultStatisticsRepositoryWithCache(
     ): BrawlerPairResultStatistics =
         battleResultStatisticsRepository.findBrawlerPairResultStatistics(
             brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key = "'v1:brawlerTrioResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
+    )
+    fun findBrawlerTrioResultStatistics(
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): BrawlerTrioResultStatistics =
+        battleResultStatisticsRepository.findBrawlerTrioResultStatistics(
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key = "'v1:pairResultRanking:' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
+    )
+    fun findPairResultRanking(
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): PairResultRanking =
+        battleResultStatisticsRepository.findPairResultRanking(
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+
+    @Cacheable(
+        cacheNames = [CacheNames.STATISTICS],
+        key = "'v1:trioResultRanking:' + #tierRange + ':' + #startDate + ':' + #endDate",
+        sync = true,
+    )
+    fun findTrioResultRanking(
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): TrioResultRanking =
+        battleResultStatisticsRepository.findTrioResultRanking(
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,

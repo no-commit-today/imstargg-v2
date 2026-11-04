@@ -7,10 +7,12 @@ import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsEntity
 import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -22,6 +24,7 @@ class BattleResultStatisticsRepositoryTest(
     private val resultStatsJpaRepository: BrawlerBattleResultStatsJpaRepository,
     private val pairStatsJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
     private val enemyStatsJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
+    private val trioStatsJpaRepository: BrawlerTrioBattleResultStatsJpaRepository,
     private val cleanUp: CleanUp,
 ) : CoreApiContextTest() {
     private val tierRange = StatsTierRange.TROPHY_1000_PLUS
@@ -95,6 +98,78 @@ class BattleResultStatisticsRepositoryTest(
         val item = result.items.single()
         assertThat(item.brawlerId).isEqualTo(BrawlStarsId(10L))
         assertThat(item.pairBrawlerId).isEqualTo(BrawlStarsId(5L))
+    }
+
+    @Test
+    fun `findBrawlerTrioResultStatistics - X 가 b1·b2·b3 어느 위치든 조회된다`() {
+        // given - X(10) 가 각각 brawler1·brawler2·brawler3 인 조합 3개, 각 총 30 → Σ 90 → 팀 90 (3인은 ÷3 하지 않는다)
+        saveTrio(10L, 20L, 30L, victoryCount = 15, defeatCount = 15)
+        saveTrio(5L, 10L, 30L, victoryCount = 15, defeatCount = 15)
+        saveTrio(1L, 2L, 10L, victoryCount = 15, defeatCount = 15)
+
+        // when
+        val result =
+            sut.findBrawlerTrioResultStatistics(
+                brawlerId = BrawlStarsId(10L),
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.items).hasSize(3)
+        assertThat(result.items.map { it.pairBrawlerIds })
+            .containsExactlyInAnyOrder(
+                listOf(BrawlStarsId(20L), BrawlStarsId(30L)),
+                listOf(BrawlStarsId(5L), BrawlStarsId(30L)),
+                listOf(BrawlStarsId(1L), BrawlStarsId(2L)),
+            )
+        assertThat(result.items).allSatisfy { item ->
+            assertThat(item.brawlerId).isEqualTo(BrawlStarsId(10L))
+            assertThat(item.battleCount).isEqualTo(30L)
+            assertThat(item.pickRate).isEqualTo(30.0 / 90)
+        }
+    }
+
+    @Test
+    fun `findPairResultRanking - 하한 미만 조합은 빠지지만 분모에는 들어간다`() {
+        // given - Σ 300 → 팀 100. HAVING 뒤 합(Σ 200 → 팀 66)으로 나누면 (10,20) 픽률이 1.5 가 되어 구별된다.
+        savePair(10L, 20L, victoryCount = 50, defeatCount = 50)
+        savePair(30L, 40L, victoryCount = 2, defeatCount = 1)
+        savePair(50L, 60L, victoryCount = 49, defeatCount = 48)
+        savePair(70L, 80L, victoryCount = 50, defeatCount = 50)
+
+        // when
+        val result =
+            sut.findPairResultRanking(
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.items.map { it.brawlerIds })
+            .containsExactlyInAnyOrder(
+                listOf(BrawlStarsId(10L), BrawlStarsId(20L)),
+                listOf(BrawlStarsId(70L), BrawlStarsId(80L)),
+            )
+        val item = result.items.single { it.brawlerIds == listOf(BrawlStarsId(10L), BrawlStarsId(20L)) }
+        assertThat(item.battleCount).isEqualTo(100L)
+        assertThat(item.pickRate).isEqualTo(1.0)
+    }
+
+    @Test
+    fun `findTrioResultRanking - 데이터가 없으면 빈 목록`() {
+        // when
+        val result =
+            sut.findTrioResultRanking(
+                tierRange = tierRange,
+                startDate = date,
+                endDate = date,
+            )
+
+        // then
+        assertThat(result.items).isEmpty()
     }
 
     @Test
@@ -203,6 +278,27 @@ class BattleResultStatisticsRepositoryTest(
                 endBattleDate = date,
                 brawler1BrawlStarsId = brawler1,
                 brawler2BrawlStarsId = brawler2,
+                resultCount =
+                    ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = defeatCount, drawCount = 0),
+            ),
+        )
+    }
+
+    private fun saveTrio(
+        brawler1: Long,
+        brawler2: Long,
+        brawler3: Long,
+        victoryCount: Long,
+        defeatCount: Long,
+    ) {
+        trioStatsJpaRepository.save(
+            BrawlerTrioBattleResultStatsEntity(
+                tierRange = tierRange,
+                startBattleDate = date,
+                endBattleDate = date,
+                brawler1BrawlStarsId = brawler1,
+                brawler2BrawlStarsId = brawler2,
+                brawler3BrawlStarsId = brawler3,
                 resultCount =
                     ResultCountEmbedded.create(victoryCount = victoryCount, defeatCount = defeatCount, drawCount = 0),
             ),

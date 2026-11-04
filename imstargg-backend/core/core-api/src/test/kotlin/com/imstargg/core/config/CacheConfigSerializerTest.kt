@@ -9,6 +9,10 @@ import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatisticsItem
+import com.imstargg.core.domain.statistics.BrawlerTrioResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerTrioResultStatisticsItem
+import com.imstargg.core.domain.statistics.ComboResultRankingItem
+import com.imstargg.core.domain.statistics.PairResultRanking
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.domain.statistics.ResultCount
 import com.imstargg.core.domain.statistics.TierScore
@@ -160,6 +164,57 @@ class CacheConfigSerializerTest {
                             battleCount = 90L,
                             pickRate = 0.12,
                             winRate = 0.44,
+                        ),
+                    ),
+            )
+
+        // when
+        val bytes = sut.serialize(original)
+        val deserialized = sut.deserialize(bytes)
+
+        // then
+        assertThat(deserialized).isEqualTo(original)
+    }
+
+    @Test
+    fun `PairResultRanking 직렬화 라운드트립`() {
+        // given - brawlerIds 는 value class(BrawlStarsId) 목록이다
+        val original =
+            PairResultRanking(
+                items =
+                    listOf(
+                        ComboResultRankingItem(
+                            brawlerIds = listOf(BrawlStarsId(16_000_000L), BrawlStarsId(16_000_001L)),
+                            battleCount = 450L,
+                            pickRate = 0.02,
+                            winRate = 0.57,
+                            tierScore = TierScore(55),
+                        ),
+                    ),
+            )
+
+        // when
+        val bytes = sut.serialize(original)
+        val deserialized = sut.deserialize(bytes)
+
+        // then
+        assertThat(deserialized).isEqualTo(original)
+    }
+
+    @Test
+    fun `BrawlerTrioResultStatistics 직렬화 라운드트립`() {
+        // given - pairBrawlerIds 는 value class(BrawlStarsId) 목록이다
+        val original =
+            BrawlerTrioResultStatistics(
+                items =
+                    listOf(
+                        BrawlerTrioResultStatisticsItem(
+                            brawlerId = BrawlStarsId(16_000_000L),
+                            pairBrawlerIds = listOf(BrawlStarsId(16_000_001L), BrawlStarsId(16_000_002L)),
+                            battleCount = 60L,
+                            pickRate = 0.001,
+                            winRate = 0.6,
+                            tierScore = TierScore(53),
                         ),
                     ),
             )

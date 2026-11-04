@@ -9,12 +9,15 @@ import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsRespons
 import com.imstargg.core.api.controller.v1.response.BrawlerResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTrioResultStatisticsItemResponse
+import com.imstargg.core.api.controller.v1.response.ComboResultRankingItemResponse
 import com.imstargg.core.application.brawlstars.BrawlerService
 import com.imstargg.core.application.statistics.BattleRankStatisticsService
 import com.imstargg.core.application.statistics.BattleResultStatisticsService
 import com.imstargg.core.application.statistics.BrawlerItemOwnershipStatisticsService
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.brawlstars.brawler.Brawlers
+import com.imstargg.core.domain.statistics.ComboResultRankingItem
 import com.imstargg.core.enums.BrawlerTrophyRange
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
@@ -62,6 +65,53 @@ class StatisticsQueryComposer(
                 tier = item.tierScore.grade().name,
             )
         }
+    }
+
+    fun getBrawlerTrioResultStatistics(
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        dateRange: StatsDateRange,
+    ): List<BrawlerTrioResultStatisticsItemResponse> {
+        val brawlers = brawlers()
+        val statistics =
+            battleResultStatisticsService.getBrawlerTrioResultStatistics(
+                brawlerId = brawlerId,
+                tierRange = tierRange,
+                dateRange = dateRange,
+            )
+        return statistics.items.map { item ->
+            BrawlerTrioResultStatisticsItemResponse(
+                brawler = brawlers.toBrawlerResponse(item.brawlerId),
+                pairBrawlers = item.pairBrawlerIds.map { pairBrawlerId -> brawlers.toBrawlerResponse(pairBrawlerId) },
+                battleCount = item.battleCount,
+                pickRate = item.pickRate,
+                winRate = item.winRate,
+                tierScore = item.tierScore.value,
+                tier = item.tierScore.grade().name,
+            )
+        }
+    }
+
+    fun getPairResultRanking(
+        tierRange: StatsTierRange,
+        dateRange: StatsDateRange,
+    ): List<ComboResultRankingItemResponse> {
+        val brawlers = brawlers()
+        return battleResultStatisticsService
+            .getPairResultRanking(tierRange = tierRange, dateRange = dateRange)
+            .items
+            .map { it.toResponse(brawlers) }
+    }
+
+    fun getTrioResultRanking(
+        tierRange: StatsTierRange,
+        dateRange: StatsDateRange,
+    ): List<ComboResultRankingItemResponse> {
+        val brawlers = brawlers()
+        return battleResultStatisticsService
+            .getTrioResultRanking(tierRange = tierRange, dateRange = dateRange)
+            .items
+            .map { it.toResponse(brawlers) }
     }
 
     fun getEnemyResultStatistics(
@@ -132,4 +182,14 @@ class StatisticsQueryComposer(
     private fun brawlers(): Brawlers = Brawlers(brawlerService.getAll())
 
     private fun Brawlers.toBrawlerResponse(id: BrawlStarsId): BrawlerResponse? = find(id)?.let { BrawlerResponse.of(it) }
+
+    private fun ComboResultRankingItem.toResponse(brawlers: Brawlers): ComboResultRankingItemResponse =
+        ComboResultRankingItemResponse(
+            brawlers = brawlerIds.map { brawlerId -> brawlers.toBrawlerResponse(brawlerId) },
+            battleCount = battleCount,
+            pickRate = pickRate,
+            winRate = winRate,
+            tierScore = tierScore.value,
+            tier = tierScore.grade().name,
+        )
 }
