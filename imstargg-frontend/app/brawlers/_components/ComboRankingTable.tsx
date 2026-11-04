@@ -69,6 +69,8 @@ export function ComboRankingTable({
       ),
     [items, sort, order],
   );
+  // 한 표의 행은 모두 같은 크기의 조합이다. 3인 픽률은 2인보다 훨씬 작아(0.001~0.02%) 소수 자리를 하나 더 둔다
+  const pickRateDigits = items[0]?.brawlers.length === 3 ? 3 : 2;
 
   return (
     <div className="data-table">
@@ -111,7 +113,7 @@ export function ComboRankingTable({
             </div>
             <TierBadge tier={it.tier} />
             <PercentCell value={it.winRate} />
-            <PercentCell value={it.pickRate} />
+            <PercentCell value={it.pickRate} fractionDigits={pickRateDigits} />
             <CountCell value={it.battleCount} />
           </div>
         ))

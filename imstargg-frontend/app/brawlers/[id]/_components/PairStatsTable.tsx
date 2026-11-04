@@ -93,7 +93,7 @@ export function PairStatsTable({
                 <span className="truncate font-bold">{it.pairBrawler.name}</span>
               </div>
               <TierBadge tier={it.tier} />
-              <PercentCell value={it.pickRate} />
+              <PercentCell value={it.pickRate} fractionDigits={2} />
               <PercentCell value={it.winRate} />
               <CountCell value={it.battleCount} />
             </Link>

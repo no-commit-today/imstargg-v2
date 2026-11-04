@@ -99,7 +99,8 @@ export function TrioStatsTable({
                 ))}
               </div>
               <TierBadge tier={it.tier} />
-              <PercentCell value={it.pickRate} />
+              {/* 3인 픽률은 0.001~0.02% 수준이라 소수 셋째 자리까지 보인다 */}
+              <PercentCell value={it.pickRate} fractionDigits={3} />
               <PercentCell value={it.winRate} />
               <CountCell value={it.battleCount} />
             </div>

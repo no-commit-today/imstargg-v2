@@ -20,6 +20,11 @@ describe("TrioStatsTable", () => {
     expect(screen.getByRole("link", { name: "콜트" })).toHaveAttribute("href", "/brawlers/16000002");
   });
 
+  it("픽률은 소수 셋째 자리까지 보인다", () => {
+    render(<TrioStatsTable items={[{ ...trio([shelly, colt]), pickRate: 0.00012 }]} />);
+    expect(screen.getByText("0.012%")).toBeInTheDocument();
+  });
+
   it("pairBrawlers 가 2명이 아닌 행은 그리지 않는다", () => {
     render(<TrioStatsTable items={[trio([shelly, colt]), trio([bull], 50)]} />);
     expect(screen.queryByRole("link", { name: "불" })).not.toBeInTheDocument();

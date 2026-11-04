@@ -18,6 +18,11 @@ describe("PairStatsTable", () => {
     expect(screen.getByLabelText("S 티어")).toBeInTheDocument();
   });
 
+  it("픽률은 소수 둘째 자리까지 보인다", () => {
+    render(<PairStatsTable items={[{ ...pair(shelly, 60, "S"), pickRate: 0.0034 }]} />);
+    expect(screen.getByText("0.34%")).toBeInTheDocument();
+  });
+
   it("기본 정렬은 tierScore 내림차순", () => {
     render(<PairStatsTable items={[pair(shelly, 40, "B"), pair(colt, 60, "S")]} />);
     const rows = screen.getAllByRole("link");
