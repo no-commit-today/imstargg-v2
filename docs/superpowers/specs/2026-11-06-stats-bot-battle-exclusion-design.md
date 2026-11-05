@@ -164,7 +164,7 @@
 
 **순서**
 
-1. **배포**: core-batch 를 배포하고 CronJob 이 새 이미지 태그로 바뀌었는지 확인한다. 이후 정기 실행은 새 규칙으로 집계한다.
+1. **배포**: core-batch 를 배포하고 CronJob 이 새 이미지 태그로 바뀌었는지 확인한다. 이후 정기 실행은 새 규칙으로 집계한다. 프론트(§3.5)도 배포한다. 프론트는 4번보다 먼저 배포돼 있으면 된다.
 2. **1인 재집계**: `date` = T − 10 ~ T − 1 의 열 날짜를 가장 오래된 날짜부터 `brawlerBattleResultStatsJob` 과 `brawlerBattleRankStatsJob` 으로 실행한다. 두 잡은 그 날짜의 집계 행을 전 티어 통째로 지우고 다시 쓴다.
    - 시작하기 전에 비교할 날짜 하루(T − 10 ~ T − 1 중 하나)의 `TROPHY_1000_PLUS` 를 브롤러별로 떠 둔다(읽기 전용. §5 배포 후 검증의 "재집계 전 값" 이다. 재집계하면 이전 값은 어디에도 남지 않는다): `select brawler_brawlstars_id, sum(victory_count), sum(defeat_count), sum(total_count) from brawler_battle_result_stats where tier_range = 'TROPHY_1000_PLUS' and battle_date = date '<날짜>' group by brawler_brawlstars_id;`
    - 원본이 없는 날짜로 실행하면 그 날짜의 집계가 전 티어에서 지워진다. 범위 밖 날짜를 넘기지 않는다.
