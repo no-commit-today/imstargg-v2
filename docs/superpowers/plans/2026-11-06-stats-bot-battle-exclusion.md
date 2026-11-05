@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 백엔드 명령은 `imstargg-backend/`, 프론트 명령은 `imstargg-frontend/` 에서 실행한다. 커밋 전 백엔드는 `./gradlew ktlintFormat` 을 돌린다. `pnpm` 이 "env: node: No such file" 로 죽으면 `/opt/homebrew/bin/pnpm` 을 쓴다.
-- **바꾸는 곳**: core-batch 의 `domain/statistics`, `job/statistics/battleresult`, `job/statistics/battlerank`(와 그 테스트), `imstargg-frontend/app/about/page.tsx`, `imstargg-backend/docs/stats-battle-data-strategy.md`, 스펙 §3.4 의 한 항목(Task 6).
+- **바꾸는 곳**: core-batch 의 `domain/statistics`, `job/statistics/battleresult`, `job/statistics/battlerank`(와 그 테스트), `job/statistics/triobattleresult`·`pairbattleresult` 의 테스트 픽스처(Task 2 Step 4. main 은 바꾸지 않는다), `imstargg-frontend/app/about/page.tsx`, `imstargg-backend/docs/stats-battle-data-strategy.md`, 스펙 §3.4 의 한 항목(Task 6).
 - **바꾸지 않는 곳**: core-worker, core-api, core-enum, db-core(엔티티·`schema.sql`·마이그레이션), 통계 캐시 키, 조합 Task 세 개(카운터·2인·3인)의 본문, 프론트의 다른 파일. `/brawlers` 브롤러 탭의 0건 표시는 그대로 둔다(결정 10).
 - **정책 상수**(스펙 §3.1): `BOT_TROPHY_LIMIT = 2000`, `TEAM_AVERAGE_WINDOW_LOWER = -75`(포함), `TEAM_AVERAGE_WINDOW_UPPER = 25`(제외), `CLUSTER_WIDTH = 75`, `SOLO_SHOWDOWN_CLUSTER_THRESHOLD = 5`, `DUO_SHOWDOWN_CLUSTER_THRESHOLD = 2`, `TRIO_SHOWDOWN_CLUSTER_THRESHOLD = 2`.
 - **판정 방식**: 모드는 `StatsEventMode.find(battle.eventModeBrawlStarsId)` 로 정한다(`mode` 문자열은 보지 않는다). 유형은 `EnumCodeType.findByCode<BattleType>(battle.type) == BattleType.RANKED` 로 보고 가장 먼저 본다. 트로피는 팀원의 `brawler.trophies` 다. 이름·태그·파워는 판정에 쓰지 않는다. 정책 함수와 누적기의 `record` 는 예외를 던지지 않고, 조건을 하나라도 만족하지 않으면 `false` 다.
@@ -23,7 +23,7 @@
 - **알림**: 제목 `[잡 이름] 봇 전투 규칙 이상 감지`, `AlertCommand.builder().warn()`, 실행당 한 번. 본문은 `date` 한 줄과 걸린 지표만 한 줄씩이다. 잡 이름은 Task 의 기존 `JOB_NAME` 상수다.
 - **요약 로그**: 잡마다 한 줄, `[잡 이름] 봇 감시 - date: …, …`. 3대3 의 "걸린 전투 수 ÷ 대상 전투 수" 는 비중으로 찍지 않는다(기준선과 분모가 다르다).
 - 누적기는 정책의 판정 함수와 단계 함수만 부른다. 범위·창 산식을 다시 쓰지 않는다.
-- 프로젝트 규칙: 파일당 클래스 하나, 인자 셋 이상이면 named arguments, 로깅은 kotlin-logging(`private val log = KotlinLogging.logger {}`), 주석·KDoc·테스트 이름은 한국어, 비자명한 결정은 KDoc 에 남긴다. 테스트 서브클래스에 `@Tag("context")` 를 달지 않는다. CI 는 H2 이고 Redis 가 없다.
+- 프로젝트 규칙: 파일당 클래스 하나, 인자 셋 이상이면 named arguments(운영 코드와 `sut` 생성은 모두 이름을 붙인다. 테스트 픽스처 `statsPlayer`·`statsResultBattle`·`statsRankBattle`·`threeVsThree`·`showdown` 호출은 기존 테스트 헬퍼처럼 앞쪽 필수 인자를 위치 인자로 두고 기본값을 덮는 인자만 이름을 붙인다), 로깅은 kotlin-logging(`private val log = KotlinLogging.logger {}`), 주석·KDoc·테스트 이름은 한국어, 비자명한 결정은 KDoc 에 남긴다. 테스트 서브클래스에 `@Tag("context")` 를 달지 않는다. CI 는 H2 이고 Redis 가 없다.
 - 커밋은 Conventional Commits 이고 끝에 `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` 트레일러를 붙인다. `git add` 는 경로를 적어서 한다(`.agents/skills/release-management/` 는 이 작업의 파일이 아니다). 푸시하지 않는다. 커밋 시각(09 ~ 18시 KST 밖)은 컨트롤러가 PR 전에 한꺼번에 옮기므로 구현자는 평소대로 커밋한다.
 - 운영 DB 와 `.secrets/` 에 접근하지 않는다.
 
@@ -201,7 +201,9 @@ fun `팀이 2×3 이 아니면 false 다`() {
     val twoByTwo = listOf(listOf(statsPlayer(1), statsPlayer(2)), listOf(statsPlayer(4, 1050), statsPlayer(5, 1050)))
     val threeTeams = listOf(1, 4, 7).map { first -> (first..first + 2).map { statsPlayer(it) } }
     val threeVsTwo = listOf((1..3).map { statsPlayer(it) }, listOf(statsPlayer(4), statsPlayer(5)))
-    listOf(twoByTwo, threeTeams, threeVsTwo).forEach {
+    // 수집자 팀만 2명이다. 합 3000 → 창 925 이상 1025 미만 안에 상대 세 명(1000)이 든다
+    val twoVsThree = listOf(listOf(statsPlayer(1, 1500), statsPlayer(2, 1500)), (4..6).map { statsPlayer(it) })
+    listOf(twoByTwo, threeTeams, threeVsTwo, twoVsThree).forEach {
         assertThat(P.appliesTo(statsResultBattle(it))).isFalse()
         assertThat(P.isBotBattle(statsResultBattle(it))).isFalse()
     }
@@ -312,6 +314,22 @@ fun `수집자 태그가 두 팀에 있으면 false 다`() {
     val lobby = statsRankBattle(teams, eventModeBrawlStarsId = StatsEventMode.DUO_SHOWDOWN.modeBrawlStarsId)
     assertThat(P.isBotLobby(lobby)).isFalse()
 }
+
+@Test
+fun `수집자 태그가 수집자 팀 안에 두 번 나오면 false 다`() {
+    // playerTeams() 는 한 팀이지만 수집자 슬롯이 둘이다. 상대의 몰린 팀 수는 2 다
+    val teams =
+        listOf(
+            listOf(statsPlayer(1, 1500), statsPlayer(2, 1500, tag = "#TAG1")),
+            listOf(statsPlayer(3, 1000), statsPlayer(4, 1010)),
+            listOf(statsPlayer(5, 1020), statsPlayer(6, 1030)),
+            listOf(statsPlayer(7, 1400), statsPlayer(8, 1410)),
+            listOf(statsPlayer(9, 1600), statsPlayer(10, 1610)),
+        )
+    val lobby = statsRankBattle(teams, eventModeBrawlStarsId = StatsEventMode.DUO_SHOWDOWN.modeBrawlStarsId)
+    assertThat(P.appliesTo(lobby)).isFalse()
+    assertThat(P.isBotLobby(lobby)).isFalse()
+}
 ```
 
 - [ ] **Step 7: 실패 확인** — 같은 명령 → `Showdown` 의 `isTrue()` 단언들이 FAIL 하거나 컴파일 실패.
@@ -407,7 +425,7 @@ fun `봇 로비는 건너뛰고 임계값 아래 로비는 집계한다`() {
 
 - [ ] **Step 2: 실패 확인** — `./gradlew :core:core-batch:test --tests "*StatsBotBattleExclusionTest" --tests "*BrawlerBattleRankStatsAggregatorTest"` → 봇 전투·봇 로비 단언이 FAIL(행이 생긴다).
 
-- [ ] **Step 3: 집계기에 건너뛰기를 넣는다** — 결과형 네 개는 `aggregate()` 의 첫 줄에 `if (StatsBotBattlePolicy.isBotBattle(battle)) return`, 순위형은 `if (StatsBotBattlePolicy.isBotLobby(battle)) return`. 각 집계기 KDoc 의 집계 규칙에 "봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다" 를 한 줄 더한다. `BattleStatsAggregator` KDoc 의 "공통 집계 규칙" 에도 같은 항목을 더하고, 호출 지점이 다섯 곳이며 `StatsBotBattleExclusionTest` 가 고정한다고 적는다.
+- [ ] **Step 3: 집계기에 건너뛰기를 넣는다** — 결과형 네 개는 `aggregate()` 의 첫 줄에 `if (StatsBotBattlePolicy.isBotBattle(battle)) return`, 순위형은 `if (StatsBotBattlePolicy.isBotLobby(battle)) return`. KDoc 에는 "봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다" 를 더한다. `## 집계 규칙` 절이 있는 두 집계기(`BrawlerBattleResultStatsAggregator`, `BrawlerBattleRankStatsAggregator`)는 그 절의 목록 끝에 항목 하나로, 그 절이 없는 세 집계기(카운터·2인·3인)는 KDoc 끝에 `## 봇 전투 제외` 절을 새로 달아 적는다. `BattleStatsAggregator` KDoc 의 "공통 집계 규칙" 에도 같은 항목을 더하고, 호출 지점이 다섯 곳이며 `StatsBotBattleExclusionTest` 가 고정한다고 적는다.
 
 - [ ] **Step 4: 깨지는 기존 테스트 둘의 픽스처를 고친다** — `./gradlew :core:core-batch:test` 를 돌리면 `BrawlerTrioBattleResultStatsTaskTest`(둘 다)와 `BrawlerPairBattleResultStatsWriterTest` 가 FAIL 한다. 여섯 명이 모두 1000 인 `ranked` 2×3 전투라 새 규칙에 걸린다. 단언은 그대로 두고 두 파일의 `player` 에 `trophies: Int = 1000` 인자를 더해 상대 세 명(인덱스 4 ~ 6)만 `1100` 으로 만든다. 수집자 팀 합 3000 의 창은 925 이상 1025 미만이라 1100 은 창 밖이고 티어는 여전히 `TROPHY_1000_PLUS` 하나다.
 
@@ -524,7 +542,7 @@ class StatsBotLobbyMonitor {
 | 2 | `{모드} 남은 전투 1위 비율` | `isBotLobby` 가 아니고 `battleRank == 1` | `isBotLobby` 가 아닌 전투 수 | `warnAbove` 0.125 / 0.24 / 0.31, `minSample` 3000 / 1000 / 1000 |
 | 3 | `{모드} 걸리는 비중` | `isBotLobby` 인 전투 수 | 대상 전투 수 | 없음 |
 
-`summary()` 는 `metrics()` 의 `describe()` 를 `, ` 로 이어 붙인 것이다(모드별 대상 수와 걸린 수는 3번 지표의 표본과 값에 들어 있다).
+`summary()` 는 `metrics()` 의 `describe()` 를 `, ` 로 이어 붙인 것이다(모드별 대상 수는 3번 지표의 표본, 걸린 수는 1번 지표의 표본, 비중은 3번 지표의 값으로 찍힌다).
 
 - [ ] **Step 1: `StatsBotMonitorMetricTest` 를 쓴다**
 
@@ -601,15 +619,24 @@ fun `걸린 전투 승률은 무승부를 빼고 센다`() {
 
 @Test
 fun `남은 전투 승률은 본인 1000~1999 이고 걸리지 않은 전투만 센다`() {
-    // 마지막 전투는 본인이 2100 이라 빠진다 (S = 4100 → 창 밖, 걸리지 않음)
-    record(real("victory"), real("defeat"), real("draw"), bot("victory"), threeVsThree(listOf(2100, 1000, 1000), listOf(1800, 1810, 1820)))
+    // 뒤의 두 전투는 본인이 2100, 2000 이라 빠진다 (S = 4100, 4000 → 상대 1800대는 창 밖이라 걸리지 않음)
+    record(
+        real("victory"), real("defeat"), real("draw"), bot("victory"),
+        threeVsThree(listOf(2100, 1000, 1000), listOf(1800, 1810, 1820)),
+        threeVsThree(listOf(2000, 1000, 1000), listOf(1800, 1810, 1820)),
+    )
 
     assertThat(metric("남은 전투 승률")).extracting("count", "total").containsExactly(1L, 2L)
+    assertThat(metric("걸리는 비중")).extracting("count", "total").containsExactly(1L, 4L)
 }
 
 @Test
 fun `2000 이상 구간 승률은 창을 만족하고 상대에 2000 이상이 있는 전투만 센다`() {
-    record(aboveLimit("victory"), aboveLimit("defeat"), aboveLimit("draw"), bot("victory"), real("victory"))
+    // 마지막 전투는 상대가 모두 2000 이상이지만 창(S = 5970 → 1915 이상 2015 미만) 밖이라 빠진다
+    record(
+        aboveLimit("victory"), aboveLimit("defeat"), aboveLimit("draw"), bot("victory"), real("victory"),
+        threeVsThree(listOf(2000, 2000, 1970), listOf(2100, 2150, 2200)),
+    )
 
     assertThat(metric("2000 이상 구간 승률")).extracting("count", "total").containsExactly(1L, 2L)
 }
@@ -750,7 +777,7 @@ fun `아무것도 기록하지 않아도 summary 와 metrics 가 예외 없이 �
 - Consumes: Task 3 의 `StatsBotBattleMonitor`, `StatsBotLobbyMonitor`(인자 없는 생성자, `record`, `metrics()`, `summary()`), `StatsBotMonitorMetric.isWarning`, `describe()`. `AlertManager.alert(AlertCommand)`, `AlertCommand.builder().warn().title(…).content(…).build()`(`…batch/support/alert`).
 - Produces: 두 Task 의 생성자가 `(reader, writer, alertManager: AlertManager)` 가 된다. `aggregate(date: LocalDate)` 의 시그니처와 기존 로그는 그대로다.
 
-- [ ] **Step 1: 실패 테스트를 쓴다** — `BrawlerBattleResultStatsTaskTest`. `alertManager = mockk<AlertManager>(relaxUnitFun = true)` 를 더해 `sut = BrawlerBattleResultStatsTask(reader, writer, alertManager)` 로 만든다. 기존 테스트에는 `verify(exactly = 0) { alertManager.alert(any()) }` 를 더한다. `givenBattles(battles)` 는 기존 테스트처럼 `reader.read` 가 `battles` 를 콜백으로 넘기고 `writer.write` 가 `1L` 을 돌려주게 하는 스텁이다. `date` 는 `LocalDate.of(2026, 5, 1)` 이다.
+- [ ] **Step 1: 실패 테스트를 쓴다** — `BrawlerBattleResultStatsTaskTest`. `alertManager = mockk<AlertManager>(relaxUnitFun = true)` 를 더해 `sut = BrawlerBattleResultStatsTask(reader = reader, writer = writer, alertManager = alertManager)` 로 만든다. 기존 테스트에는 `verify(exactly = 0) { alertManager.alert(any()) }` 를 더한다. `givenBattles(battles)` 는 기존 테스트처럼 `reader.read` 가 `battles` 를 콜백으로 넘기고 `writer.write` 가 `1L` 을 돌려주게 하는 스텁이다. `date` 는 `LocalDate.of(2026, 5, 1)` 이다.
 
 ```kotlin
 private fun aboveLimit(result: String = "victory") = threeVsThree(listOf(2000, 2000, 1970), listOf(1950, 1960, 2000), result = result)
@@ -801,7 +828,7 @@ fun `알림 전송에서 예외가 나도 정상 종료한다`() {
 }
 ```
 
-`BrawlerBattleRankStatsTaskTest` 에도 같은 네 테스트를 쓴다. 걸리는 전투는 `showdown(StatsEventMode.TRIO_SHOWDOWN, listOf(listOf(1500, 1500, 1500), listOf(1000, 1010, 1020), listOf(1030, 1040, 1050), listOf(1400, 1410, 1420)), battleRank = 2)` 300건이고 기대 줄은 `트리오 걸린 전투 1위 비율 0.0% (표본 300건, 문턱 70.0% 미만)`, 제목은 `[brawlerBattleRankStatsJob] 봇 전투 규칙 이상 감지` 다. "지표가 둘" 은 여기에 같은 구성의 듀오 봇 로비(`listOf(1500, 1500), listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600, 1610)`, `battleRank = 2`) 500건을 더해 `듀오 걸린 전투 1위 비율 0.0%` 까지 두 줄을 확인한다.
+`BrawlerBattleRankStatsTaskTest` 에도 같은 네 테스트를 쓴다. `sut` 는 `BrawlerBattleRankStatsTask(reader = reader, writer = writer, alertManager = alertManager)` 로 만든다. 걸리는 전투는 `showdown(StatsEventMode.TRIO_SHOWDOWN, listOf(listOf(1500, 1500, 1500), listOf(1000, 1010, 1020), listOf(1030, 1040, 1050), listOf(1400, 1410, 1420)), battleRank = 2)` 300건이고 기대 줄은 `트리오 걸린 전투 1위 비율 0.0% (표본 300건, 문턱 70.0% 미만)`, 제목은 `[brawlerBattleRankStatsJob] 봇 전투 규칙 이상 감지` 다. "지표가 둘" 은 여기에 같은 구성의 듀오 봇 로비(`listOf(1500, 1500), listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600, 1610)`, `battleRank = 2`) 500건을 더해 `듀오 걸린 전투 1위 비율 0.0%` 까지 두 줄을 확인한다.
 
 - [ ] **Step 2: 실패 확인** — `./gradlew :core:core-batch:test --tests "*BrawlerBattleResultStatsTaskTest" --tests "*BrawlerBattleRankStatsTaskTest"` → 컴파일 실패(생성자 인자).
 
@@ -839,7 +866,7 @@ fun `알림 전송에서 예외가 나도 정상 종료한다`() {
     > - **덮어쓰기 주의**: 조합·카운터·3인 잡은 `currentAndPrevious(date)` 버킷을 통째로 지우고 다시 쓴다. 다시 쓰는 버킷의 시작일이 실행일 − 10 보다 이르면 원본이 모자라 남은 원본만으로 덮어써 부분 데이터가 된다. `date` 가 버킷의 첫날(월요일 또는 1일)이면 직전 버킷도 다시 쓰므로 직전 버킷의 시작일도 같은 기준으로 본다. 1인 잡은 원본이 없는 날짜로 실행하면 그 날짜의 집계가 전 티어에서 지워진다.
 
   - **10장** 끝에 `### 봇 판정 규칙을 고친 뒤의 재집계` 를 더한다. 스펙 §3.4 의 전제와 2번·3번에서 일반 절차만 옮긴다: 실행일 T 에 다시 집계할 수 있는 날짜는 T − 10 ~ T − 1 이고 T + 1 의 02:00 전에 끝낸다, 통계 배치 시간대(02:00 ~ 09:00 KST) 밖에서 한다, 1인 잡은 가장 오래된 날짜부터, 조합 잡의 `date` 고르는 법(묶음 하나는 그 묶음의 마지막 날, 하루짜리 묶음은 다음 묶음의 첫날, 첫날을 넘기면 직전 묶음까지 다시 쓴다), 수동 재집계에서도 감시가 돈다, 화면은 캐시 TTL 30분 뒤에 본다. 이번 전환에만 쓰는 백업 후 삭제(4번)는 옮기지 않고 스펙을 가리킨다.
-  - **10장** 끝에 `### 봇 감시 경고를 받았을 때` 를 더한다. 순서는 (1) 그날과 직전 며칠의 `봇 감시 -` 요약 로그에서 걸린 지표, 값, 표본 수를 본다, (2) 지표의 뜻으로 방향을 정한다(걸린 전투의 승률·1위 비율이 내려감 = 실제 전투를 지우고 있다, 남은 전투의 승률·1위 비율이 올라감 = 봇을 놓치고 있다, 2000 이상 구간 승률이 올라감 = 봇 매치 상한이 바뀌었다, 기본 이름 비율이 내려감 = 표기만 바뀌었다), (3) 공식 릴리스 노트의 매치메이킹 변경과 시즌 전환·트로피 초기화 직후인지를 확인한다, (4) 규칙을 고쳐야 하면 `StatsBotBattlePolicy` 의 상수나 판정을 테스트와 함께 고쳐 배포하고 위 절차로 원본이 남은 10일 안에서 다시 집계한다, (5) 일시적인 현상이면 조치 없이 요약 로그를 며칠 더 본다.
+  - **10장** 끝에 `### 봇 감시 경고를 받았을 때` 를 더한다. 순서는 (1) 그날과 직전 며칠의 `봇 감시 -` 요약 로그에서 걸린 지표, 값, 표본 수를 본다, (2) 지표의 뜻으로 방향을 정한다(걸린 전투의 승률·1위 비율이 내려감 = 실제 전투를 지우고 있다, 남은 전투의 승률·1위 비율이 올라감 = 봇을 놓치고 있다, 2000 이상 구간 승률이 올라감 = 봇 매치 상한이 바뀌었다, 기본 이름 비율이 내려감 = 봇 표기가 바뀌었다. 이 지표만 내려갔으면 규칙은 이름을 쓰지 않으므로 그대로 두고, 걸린 전투의 승률과 함께 내려갔으면 실제 전투를 지우고 있는 쪽을 먼저 본다), (3) 공식 릴리스 노트의 매치메이킹 변경과 시즌 전환·트로피 초기화 직후인지를 확인한다, (4) 규칙을 고쳐야 하면 `StatsBotBattlePolicy` 의 상수나 판정을 테스트와 함께 고쳐 배포하고 위 절차로 원본이 남은 10일 안에서 다시 집계한다, (5) 일시적인 현상이면 조치 없이 요약 로그를 며칠 더 본다.
 
 - [ ] **Step 5: 문서 확인** — `grep -n '5.5 봇 전투 제외\|수집 필터와 집계 제외\|봇 판정 규칙을 고친 뒤의 재집계\|봇 감시 경고를 받았을 때\|실행일 − 10' docs/stats-battle-data-strategy.md` → 다섯 표현이 모두 나온다. `grep -n '배포일 − 7일' docs/stats-battle-data-strategy.md` → 결과 없음.
 
@@ -887,5 +914,6 @@ fun `알림 전송에서 예외가 나도 정상 종료한다`() {
 
 - [ ] **Step 1: 백엔드** — `imstargg-backend` 에서 `./gradlew ktlintCheck test` → BUILD SUCCESSFUL(컨텍스트 테스트 포함, 전 모듈).
 - [ ] **Step 2: 프론트** — `imstargg-frontend` 에서 `pnpm typecheck && pnpm lint && pnpm test:run` → 모두 통과.
-- [ ] **Step 3: 범위 확인** — 저장소 루트에서 `git diff --stat origin/develop...HEAD` 에 core-worker, core-api, core-enum, db-core 의 파일과 `imstargg-frontend` 의 `app/about/page.tsx` 밖 파일이 없다. `grep -rl "if (StatsBotBattlePolicy.isBot" imstargg-backend/core/core-batch/src/main | wc -l` → 5(집계기 다섯 개).
+- [ ] **Step 3: 범위 확인** — 저장소 루트에서 `git diff --stat origin/develop...HEAD` 에 core-worker, core-api, core-enum, db-core 의 파일과 `imstargg-frontend` 의 `app/about/page.tsx` 밖 파일이 없다. `grep -l "if (StatsBotBattlePolicy.isBot" imstargg-backend/core/core-batch/src/main/kotlin/com/imstargg/core/batch/domain/statistics/*Aggregator.kt | wc -l` → 5(집계기 다섯 개. `BattleStatsAggregator.kt` 는 KDoc 만 바뀌어 걸리지 않는다).
 - [ ] **Step 4: 버전** — core-batch 와 frontend 는 이미 minor SNAPSHOT 이다. PR 단계에서 `/release` 로 확인한다(이 계획에서는 바꾸지 않는다).
+- [ ] **Step 5: PR 본문 메모** — PR 을 만들 때 본문에 스펙 §6 의 릴리즈 노트 네 항목을 그대로 적는다: `TROPHY_1000_PLUS` 표본 감소와 순위 변화, 트로피 티어 세 개의 전환 이전 기간이 비는 것과 그 기간의 `/brawlers` 브롤러 탭 표시(전 브롤러 티어 D·승률 0.0%), 마이그레이션 필요 사항, 롤백 시 주의 사항. §3.4 는 전제(스펙 A·B 적용)와 순서 1 ~ 5(배포, 1인 재집계, 조합 재집계, 백업 후 삭제, 확인)를 적고 SQL 은 옮기지 않고 스펙을 링크한다. 릴리즈 노트 파일은 `/release prepare` 때 만든다(이 계획에서는 만들지 않는다).
