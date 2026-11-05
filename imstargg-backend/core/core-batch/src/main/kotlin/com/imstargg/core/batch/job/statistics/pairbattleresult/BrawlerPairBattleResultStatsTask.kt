@@ -21,23 +21,16 @@ class BrawlerPairBattleResultStatsTask(
     }
 
     private fun processWeekRange(weekRange: WeekRange) {
-        val eventIds = reader.readDistinctEventIds(weekRange)
-        log.info { "[$JOB_NAME] 이벤트 ${eventIds.size}개 처리 시작 - weekRange: ${weekRange.start} ~ ${weekRange.end}" }
-
-        var totalRead = 0L
-        var totalEntities = 0L
-        for (eventId in eventIds) {
-            val aggregator =
-                BrawlerPairBattleResultStatsAggregator(
-                    startBattleDate = weekRange.start,
-                    endBattleDate = weekRange.end,
-                )
-            totalRead +=
-                reader.read(weekRange, eventId) { battles ->
-                    battles.forEach { aggregator.aggregate(it) }
-                }
-            totalEntities += writer.write(weekRange, eventId, aggregator)
-        }
+        val aggregator =
+            BrawlerPairBattleResultStatsAggregator(
+                startBattleDate = weekRange.start,
+                endBattleDate = weekRange.end,
+            )
+        val totalRead =
+            reader.read(weekRange) { battles ->
+                battles.forEach { aggregator.aggregate(it) }
+            }
+        val totalEntities = writer.write(weekRange, aggregator)
 
         log.info {
             "[$JOB_NAME] 주간 범위 완료 - weekRange: ${weekRange.start} ~ ${weekRange.end}, 전투: ${totalRead}건, 집계: ${totalEntities}건"

@@ -1,8 +1,8 @@
 export const RESULT_SORT_BYS = ["PICK_RATE", "WIN_RATE"] as const;
 export type ResultStatsSortBy = (typeof RESULT_SORT_BYS)[number];
 
-export const RANK_SORT_BYS = ["PICK_RATE", "AVERAGE_RANK"] as const;
-export type RankStatsSortBy = (typeof RANK_SORT_BYS)[number];
+export const COMBO_SORT_BYS = ["TIER_SCORE", "WIN_RATE", "PICK_RATE", "BATTLE_COUNT"] as const;
+export type ComboStatsSortBy = (typeof COMBO_SORT_BYS)[number];
 
 export const SORT_ORDERS = ["ASC", "DESC"] as const;
 export type SortOrder = (typeof SORT_ORDERS)[number];
@@ -12,9 +12,11 @@ export const RESULT_SORT_LABELS: Record<ResultStatsSortBy, string> = {
   WIN_RATE: "승률",
 };
 
-export const RANK_SORT_LABELS: Record<RankStatsSortBy, string> = {
+export const COMBO_SORT_LABELS: Record<ComboStatsSortBy, string> = {
+  TIER_SCORE: "티어",
+  WIN_RATE: "승률",
   PICK_RATE: "픽률",
-  AVERAGE_RANK: "평균 순위",
+  BATTLE_COUNT: "전투수",
 };
 
 function parseEnum<T extends string>(
@@ -29,10 +31,6 @@ function parseEnum<T extends string>(
 
 export function parseResultSortBy(value: unknown): ResultStatsSortBy {
   return parseEnum(value, RESULT_SORT_BYS, "PICK_RATE");
-}
-
-export function parseRankSortBy(value: unknown): RankStatsSortBy {
-  return parseEnum(value, RANK_SORT_BYS, "PICK_RATE");
 }
 
 export function parseSortOrder(value: unknown): SortOrder {
@@ -64,21 +62,21 @@ export function sortResultStats<T extends { pickRate: number; winRate: number }>
   });
 }
 
-export function sortRankStats<
-  T extends { averageRank: number; totalBattleCount: number },
->(
-  items: T[],
-  sortBy: RankStatsSortBy,
-  order: SortOrder,
-): T[] {
+export function sortComboStats<
+  T extends { tierScore: number; winRate: number; pickRate: number; battleCount: number },
+>(items: T[], sortBy: ComboStatsSortBy, order: SortOrder): T[] {
   const sign = sortSign(order);
   return [...items].sort((a, b) => {
     switch (sortBy) {
-      case "AVERAGE_RANK":
-        return (a.averageRank - b.averageRank) * sign;
+      case "WIN_RATE":
+        return (a.winRate - b.winRate) * sign;
       case "PICK_RATE":
+        return (a.pickRate - b.pickRate) * sign;
+      case "BATTLE_COUNT":
+        return (a.battleCount - b.battleCount) * sign;
+      case "TIER_SCORE":
       default:
-        return (a.totalBattleCount - b.totalBattleCount) * sign;
+        return (a.tierScore - b.tierScore) * sign;
     }
   });
 }

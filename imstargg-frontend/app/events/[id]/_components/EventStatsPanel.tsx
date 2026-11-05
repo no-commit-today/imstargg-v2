@@ -25,7 +25,6 @@ import { applySearchShallow } from "@/lib/shallowSearch";
 import { StatRangeSelectorView } from "@app/_components/statistics/StatRangeSelector";
 import { EventResultStatsTable } from "./EventResultStatsTable";
 import { EventRankStatsTable } from "./EventRankStatsTable";
-import { EventSelectedBrawlerPanel } from "./EventSelectedBrawlerPanel";
 
 type Props = {
   eventId: number;
@@ -34,10 +33,6 @@ type Props = {
   initialRank: BrawlerRankStat[] | null;
 };
 
-function parseBrawlerId(raw: string | null): number | null {
-  return raw && /^\d+$/.test(raw) ? Number(raw) : null;
-}
-
 export function EventStatsPanel({
   eventId,
   resultType,
@@ -45,7 +40,6 @@ export function EventStatsPanel({
   initialRank,
 }: Props) {
   const [filter, setFilter] = useState<StatsFilter>(DEFAULT_STATS_FILTER);
-  const [selectedBrawlerId, setSelectedBrawlerId] = useState<number | null>(null);
 
   useEffect(() => {
     const sync = () => {
@@ -54,7 +48,6 @@ export function EventStatsPanel({
         tier: parseTierRange(sp.get("tier") ?? undefined),
         date: parseDateRange(sp.get("date") ?? undefined),
       });
-      setSelectedBrawlerId(parseBrawlerId(sp.get("brawlerId")));
     };
     sync();
     window.addEventListener("popstate", sync);
@@ -83,12 +76,6 @@ export function EventStatsPanel({
     });
   }
 
-  function handleToggleBrawler(id: number) {
-    const next = selectedBrawlerId === id ? null : id;
-    setSelectedBrawlerId(next);
-    applySearchShallow({ brawlerId: next === null ? null : String(next) });
-  }
-
   return (
     <section className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -105,26 +92,9 @@ export function EventStatsPanel({
         />
       </div>
       {isRank ? (
-        <EventRankStatsTable
-          items={rankStats.data ?? []}
-          selectedBrawlerId={selectedBrawlerId}
-          onToggleBrawler={handleToggleBrawler}
-        />
+        <EventRankStatsTable items={rankStats.data ?? []} />
       ) : (
-        <EventResultStatsTable
-          items={resultStats.data?.items ?? []}
-          selectedBrawlerId={selectedBrawlerId}
-          onToggleBrawler={handleToggleBrawler}
-        />
-      )}
-      {selectedBrawlerId !== null && (
-        <EventSelectedBrawlerPanel
-          eventId={eventId}
-          brawlerId={selectedBrawlerId}
-          resultType={resultType}
-          filter={filter}
-          onClose={() => handleToggleBrawler(selectedBrawlerId)}
-        />
+        <EventResultStatsTable items={resultStats.data?.items ?? []} />
       )}
     </section>
   );

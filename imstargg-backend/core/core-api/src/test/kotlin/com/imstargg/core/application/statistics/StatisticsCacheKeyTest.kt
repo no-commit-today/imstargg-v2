@@ -47,20 +47,21 @@ class StatisticsCacheKeyTest {
         assertThat(keys).isEqualTo(
             mapOf(
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerResultStatistics" to
-                    "'v2:brawlerResultStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+                    "'v3:brawlerResultStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerPairResultStatistics" to
-                    "'v2:brawlerPairResultStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                    " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+                    "'v3:brawlerPairResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerEnemyResultStatistics" to
-                    "'v2:brawlerEnemyResultStats:' + #eventId + ':' + #brawlerId + ':' + #tierRange" +
-                    " + ':' + #startDate + ':' + #endDate",
+                    "'v3:brawlerEnemyResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleResultStatisticsRepositoryWithCache.findBrawlerDailyResultStatistics" to
                     "'v1:brawlerDailyResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+                "BattleResultStatisticsRepositoryWithCache.findBrawlerTrioResultStatistics" to
+                    "'v1:brawlerTrioResultStats:' + #brawlerId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
+                "BattleResultStatisticsRepositoryWithCache.findPairResultRanking" to
+                    "'v1:pairResultRanking:' + #tierRange + ':' + #startDate + ':' + #endDate",
+                "BattleResultStatisticsRepositoryWithCache.findTrioResultRanking" to
+                    "'v1:trioResultRanking:' + #tierRange + ':' + #startDate + ':' + #endDate",
                 "BattleRankStatisticsRepositoryWithCache.findBrawlerRankStatistics" to
                     "'v1:brawlerRankStats:' + #eventId + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
-                "BattleRankStatisticsRepositoryWithCache.findBrawlerPairRankStatistics" to
-                    "'v1:brawlerPairRankStats:' + #eventId + ':' + #brawlerId + ':' + #pairBrawlerId" +
-                    " + ':' + #tierRange + ':' + #startDate + ':' + #endDate",
             ),
         )
     }

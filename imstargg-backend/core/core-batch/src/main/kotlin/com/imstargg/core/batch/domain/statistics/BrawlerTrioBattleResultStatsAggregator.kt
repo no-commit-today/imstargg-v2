@@ -1,0 +1,96 @@
+package com.imstargg.core.batch.domain.statistics
+
+import com.imstargg.core.enums.BattleResult
+import com.imstargg.core.enums.BattleType
+import com.imstargg.core.enums.EnumCodeType
+import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
+import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import java.time.LocalDate
+
+/**
+ * 같은 팀 브롤러 3인 조합(3v3 한 팀 전체)의 승/패/무 결과 통계를 집계한다.
+ *
+ * ## 집계 키
+ * (브롤러1 < 브롤러2 < 브롤러3) × 티어 구간. 조합은 순서가 없으므로 팀의 세 브롤러를 id 오름차순 키 1개로 센다.
+ * 이벤트는 키에 없다 — 2026-11 스펙 B 에서 이벤트별 값은 표본만 얇게 흩어 예측에 보탬이 없다고 보고 뺐다.
+ *
+ * ## 팀 인원
+ * 팀 인원이 정확히 3명인 팀만 센다. 3명이 아닌 팀(스펙 A 허용 목록 이전에 수집된 행 등)은 조용히 건너뛴다.
+ *
+ * ## 티어 규칙
+ * 세 멤버 trophies 의 최솟값으로 [StatsTierRange.resolveAll] 한다(조합 전원이 그 티어 이상이어야 그 티어에 집계).
+ *
+ * ## 결과 방향
+ * 아군 팀은 전투 결과 그대로, 적 팀은 [BattleResult.opposite] 로 집계한다.
+ */
+class BrawlerTrioBattleResultStatsAggregator(
+    private val startBattleDate: LocalDate,
+    private val endBattleDate: LocalDate,
+) : BattleStatsAggregator<StatsResultBattleEntity, BrawlerTrioBattleResultStatsEntity> {
+    private val resultCounts = ResultCountAccumulator<BrawlerTrioBattleStatsKey>()
+
+    override fun aggregate(battle: StatsResultBattleEntity) {
+        val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
+        val battleResult = EnumCodeType.findByCode<BattleResult>(battle.result) ?: return
+
+        for (team in battle.playerTeams()) {
+            doAggregate(team, battleType, battleResult)
+        }
+        for (team in battle.enemyTeams()) {
+            doAggregate(team, battleType, battleResult.opposite())
+        }
+    }
+
+    private fun doAggregate(
+        team: List<StatsBattleEntityTeamPlayer>,
+        battleType: BattleType,
+        battleResult: BattleResult,
+    ) {
+        if (team.size != TRIO_TEAM_SIZE) return
+
+        val brawlers = team.map { it.brawler }
+        val sortedIds = brawlers.map { it.brawlStarsId }.sorted()
+        require(sortedIds.distinct().size == TRIO_TEAM_SIZE) {
+            "같은 팀에 중복된 브롤러가 있습니다. brawlStarsIds=$sortedIds"
+        }
+
+        val tierRanges = StatsTierRange.resolveAll(battleType, brawlers.minOf { it.trophies })
+        for (tierRange in tierRanges) {
+            val key =
+                BrawlerTrioBattleStatsKey(
+                    brawler1BrawlStarsId = sortedIds[0],
+                    brawler2BrawlStarsId = sortedIds[1],
+                    brawler3BrawlStarsId = sortedIds[2],
+                    tierRange = tierRange,
+                )
+            resultCounts.add(key, battleResult)
+        }
+    }
+
+    override fun forEachEntity(consumer: (BrawlerTrioBattleResultStatsEntity) -> Unit) {
+        resultCounts.forEach { key, resultCount ->
+            consumer(
+                BrawlerTrioBattleResultStatsEntity(
+                    tierRange = key.tierRange,
+                    startBattleDate = startBattleDate,
+                    endBattleDate = endBattleDate,
+                    brawler1BrawlStarsId = key.brawler1BrawlStarsId,
+                    brawler2BrawlStarsId = key.brawler2BrawlStarsId,
+                    brawler3BrawlStarsId = key.brawler3BrawlStarsId,
+                    resultCount = resultCount,
+                ),
+            )
+        }
+    }
+
+    override fun toEntities(): List<BrawlerTrioBattleResultStatsEntity> =
+        buildList {
+            forEachEntity { add(it) }
+        }
+
+    companion object {
+        private const val TRIO_TEAM_SIZE = 3
+    }
+}
