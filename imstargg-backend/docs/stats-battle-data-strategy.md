@@ -269,7 +269,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 | Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 10일 (`RETENTION_DAYS`) | `date - 10일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
 | 조합 통계 (`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`) |
 
-- 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 최대 룩백을 덮고 여유를 두어 10일 보관한다.
+- 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 최대 룩백을 덮고 여유를 두어 10일 보관한다.
 - 조합 통계의 삭제 경계는 API 가 읽는 가장 오래된 날짜(`StatsDateRange.SINCE_LAST_MONTH`, 지난달 1일)와 같다. `date` 가 속한 달의 1일에서 한 달을 뺀 날짜가 속한 달보다 이른 파티션이 지워진다. 예) 2026-11-01 실행이면 2026-09 까지 삭제하고 2026-10 은 남는다. 월 단위 DROP 은 블로트를 남기지 않는다.
 - 매일 다시 쓰는 버킷의 삭제 흔적은 그 달 파티션 안에서 autovacuum 이 정리한다.
 
@@ -400,6 +400,8 @@ java -jar core-batch.jar \
   - 묶음 하나만 다시 쓰려면 `date` 로 그 묶음의 마지막 날을 넘긴다.
   - 하루짜리 묶음(달 경계)은 다음 묶음의 첫날을 넘겨 두 묶음을 함께 다시 쓴다.
   - 묶음의 첫날을 넘기면 직전 묶음까지 다시 쓰므로, 직전 묶음의 시작일이 T − 10 보다 이르면 넘기지 않는다.
+  - 다시 쓰는 범위는 시작일이 T − 10 이상인 묶음부터 T − 1 이 속한 묶음까지 전부다.
+  - 배포가 T 의 새벽 정기 실행(카운터 04:00, 3인 05:00, 2인 07:00 KST)보다 늦었으면 T − 1 이 속한 묶음은 구 이미지가 쓴 값이라 세 잡을 `date` = T − 1 로도 실행한다. 예는 설계 문서 §3.4 의 3번.
 - **감시**: 수동 재집계에서도 감시가 돈다. 요약 로그와 경고를 같은 기준으로 본다.
 - **화면**: 통계 캐시 TTL 30분이 지난 뒤에 본다.
 
