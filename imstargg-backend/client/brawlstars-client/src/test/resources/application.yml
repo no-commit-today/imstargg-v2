@@ -1,13 +1,15 @@
-spring.cloud.openfeign:
-  client:
-    config:
-      brawlstars:
-        connect-timeout: 5000
-        read-timeout: 10000
+spring:
+  config:
+    import:
+      - http-client.yml
+      - brawlstars-client.yml
 
+---
+# import 한 파일은 import 한 문서 바로 아래에 끼워 넣은 문서로 취급돼 이 파일의 첫 문서 값보다 우선한다.
+# 제한기 테스트 값이 brawlstars-client.yml 의 기본값(1회/1s·대기 600s)에 덮이지 않도록 뒤 문서에 둔다.
 resilience4j.ratelimiter:
   instances:
-    brawlstars-api:
+    brawlstars:
       limit-for-period: 10
       limit-refresh-period: 1s
       timeout-duration: 60s

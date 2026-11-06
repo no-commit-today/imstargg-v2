@@ -69,10 +69,10 @@ jobs:
     schedule: "0 19 * * *" # 04:00 KST
     args:
       - "java -jar /app/application.jar --job.name=brawlerEnemyBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
-  - name: pair-battle-rank-stats
-    schedule: "0 21 * * *" # 06:00 KST
+  - name: trio-battle-result-stats
+    schedule: "0 20 * * *" # 05:00 KST
     args:
-      - "java -jar /app/application.jar --job.name=brawlerPairBattleRankStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
+      - "java -jar /app/application.jar --job.name=brawlerTrioBattleResultStatsJob date=$(date -u -d '15 hours ago' +%Y-%m-%d)"
   - name: pair-battle-result-stats
     schedule: "0 22 * * *" # 07:00 KST
     args:

@@ -20,10 +20,9 @@ class BrawlerResultStatisticsTest {
                     BrawlerEventResultCount(eventId, brawlerB, ResultCount(150, 150, 0), 30),
                     BrawlerEventResultCount(eventId, BrawlStarsId(12L), ResultCount(150, 150, 0), 60),
                 )
-            val gameSlots = GameSlots(mapOf(eventId to GameSlot(listOf(3, 3))))
 
             // when
-            val sut = BrawlerResultStatistics.create(rows, gameSlots)
+            val sut = BrawlerResultStatistics.create(rows)
 
             // then: totalBattleCount = 900/6 = 150, 브롤러 A 의 battleCount 는 자신의 슬롯 수
             assertThat(sut.totalBattleCount).isEqualTo(150)
@@ -33,57 +32,45 @@ class BrawlerResultStatisticsTest {
         }
 
         @Test
-        fun `다중 이벤트 mix 시 게임수 분모는 이벤트별 환산 합`() {
-            // given: 3v3 이벤트(slots=6) 60게임 = 360 슬롯, Solo SD(slots=10) 50게임 = 500 슬롯
-            val event3v3 = BrawlStarsId(1L)
-            val eventSolo = BrawlStarsId(2L)
+        fun `여러 이벤트의 슬롯 합을 6 으로 나눈 값이 게임 수다`() {
+            // given: 이벤트 A 600 슬롯 + 이벤트 B 300 슬롯
+            val eventA = BrawlStarsId(1L)
+            val eventB = BrawlStarsId(2L)
             val brawler = BrawlStarsId(10L)
             val rows =
                 listOf(
-                    BrawlerEventResultCount(event3v3, brawler, ResultCount(60, 0, 0), 0),
-                    BrawlerEventResultCount(event3v3, BrawlStarsId(99L), ResultCount(150, 150, 0), 0),
-                    BrawlerEventResultCount(eventSolo, brawler, ResultCount(50, 0, 0), 0),
-                    BrawlerEventResultCount(eventSolo, BrawlStarsId(99L), ResultCount(225, 225, 0), 0),
-                )
-            val gameSlots =
-                GameSlots(
-                    mapOf(
-                        event3v3 to GameSlot(listOf(3, 3)),
-                        eventSolo to GameSlot(List(10) { 1 }),
-                    ),
+                    BrawlerEventResultCount(eventA, brawler, ResultCount(300, 300, 0), 0),
+                    BrawlerEventResultCount(eventB, brawler, ResultCount(150, 150, 0), 0),
                 )
 
             // when
-            val sut = BrawlerResultStatistics.create(rows, gameSlots)
+            val sut = BrawlerResultStatistics.create(rows)
 
-            // then: totalBattleCount = 360/6 + 500/10 = 60 + 50 = 110
-            assertThat(sut.totalBattleCount).isEqualTo(110)
-            val item = sut.items.first { it.brawlerId == brawler }
-            assertThat(item.pickRate).isEqualTo(1.0)
-            assertThat(item.battleCount).isEqualTo(110)
+            // then: totalBattleCount = (600 + 300) / 6 = 150
+            assertThat(sut.totalBattleCount).isEqualTo(150)
         }
 
         @Test
-        fun `GameSlots 에 누락된 이벤트는 default 로 폴백`() {
-            // given: 3v3 default(=BattleEventMode.DEFAULT_PLAYER_COUNTS = listOf(3,3)) → slots=6
-            val eventId = BrawlStarsId(1L)
+        fun `이벤트별로 내림하지 않고 슬롯 합을 합산한 뒤 한 번만 내린다`() {
+            // given: 이벤트 A 4 슬롯 + 이벤트 B 5 슬롯 (이벤트별로 내리면 각각 0 게임)
+            val brawler = BrawlStarsId(10L)
             val rows =
                 listOf(
-                    BrawlerEventResultCount(eventId, BrawlStarsId(10L), ResultCount(6, 0, 0), 0),
+                    BrawlerEventResultCount(BrawlStarsId(1L), brawler, ResultCount(2, 2, 0), 0),
+                    BrawlerEventResultCount(BrawlStarsId(2L), brawler, ResultCount(3, 1, 1), 0),
                 )
-            val gameSlots = GameSlots(emptyMap())
 
             // when
-            val sut = BrawlerResultStatistics.create(rows, gameSlots)
+            val sut = BrawlerResultStatistics.create(rows)
 
-            // then: totalBattleCount = 6 / 6 = 1
+            // then: totalBattleCount = (4 + 5) / 6 = 1
             assertThat(sut.totalBattleCount).isEqualTo(1)
         }
 
         @Test
         fun `빈 입력은 totalBattleCount 0`() {
             // given / when
-            val sut = BrawlerResultStatistics.create(emptyList(), GameSlots(emptyMap()))
+            val sut = BrawlerResultStatistics.create(emptyList())
 
             // then
             assertThat(sut.totalBattleCount).isEqualTo(0)

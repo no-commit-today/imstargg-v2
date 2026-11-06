@@ -1,8 +1,11 @@
 package com.imstargg.infrastructure.db.core.statistics.battle
 
+import com.imstargg.core.enums.StatsPlayerStatus
 import com.imstargg.infrastructure.db.core.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -24,6 +27,15 @@ class StatsPlayerEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stats_player_id", nullable = false)
     val id: Long? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 25, nullable = false)
+    var status: StatsPlayerStatus = StatsPlayerStatus.ACTIVE
+        protected set
+
+    fun markBattleLogUnavailable() {
+        status = StatsPlayerStatus.BATTLE_LOG_UNAVAILABLE
+    }
 
     companion object {
         fun from(teamPlayer: StatsBattleEntityTeamPlayer) =

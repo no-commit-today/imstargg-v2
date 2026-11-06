@@ -5,7 +5,7 @@ import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.core.enums.operation.FeedbackRating
 import com.imstargg.infrastructure.db.core.operation.FeedbackJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
@@ -17,6 +17,8 @@ import org.springframework.context.annotation.Configuration
 import java.time.Clock
 import java.time.Duration
 
+private val log = KotlinLogging.logger {}
+
 @Configuration
 class FeedbackDailyDigestJobConfig(
     private val jobRepository: JobRepository,
@@ -24,8 +26,6 @@ class FeedbackDailyDigestJobConfig(
     private val alertManager: AlertManager,
     private val clock: Clock,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     companion object {
         const val JOB_NAME = "feedbackDailyDigestJob"
         const val STEP_NAME = "feedbackDailyDigestStep"
@@ -47,7 +47,7 @@ class FeedbackDailyDigestJobConfig(
                     feedbackJpaRepository.findAllBySubmittedAtGreaterThanEqualAndSubmittedAtLessThan(from = from, to = now)
 
                 if (recent.isEmpty()) {
-                    log.info("피드백 24시간 다이제스트: 0건 — 알림 미발송")
+                    log.info { "피드백 24시간 다이제스트: 0건 — 알림 미발송" }
                     return@tasklet RepeatStatus.FINISHED
                 }
 
@@ -57,7 +57,7 @@ class FeedbackDailyDigestJobConfig(
                 val digest = FeedbackDigestMessage.build(countByRating = counts)
                 if (digest != null) {
                     alertManager.alert(AlertCommand(title = digest.title, content = digest.content, ex = null))
-                    log.info("피드백 24시간 다이제스트: 총 {}건 알림 발송", recent.size)
+                    log.info { "피드백 24시간 다이제스트: 총 ${recent.size}건 알림 발송" }
                 }
 
                 RepeatStatus.FINISHED

@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import { brawlerApi } from "@/api/endpoints/brawler";
-import { statisticsApi } from "@/api/endpoints/statistics";
-import { CACHE_SECONDS } from "@/config/cache";
-import { toBrawler } from "@/domain/brawler/mappers";
-import { toBrawlerResultStatistics } from "@/domain/statistics/mappers";
 import {
+  parseBrawlerMetaView,
   parseDateRange,
   parseTierRange,
   TIER_RANGE_LABELS,
 } from "@/domain/statistics/enums";
-import { sortByName } from "@/domain/brawler/filters";
 import { buildMetadata } from "@/lib/seo";
 import { StatRangeSelector } from "@app/_components/statistics/StatRangeSelector";
+import { BrawlerMetaViewTabs } from "./_components/BrawlerMetaViewTabs";
 import { BrawlerStatTable } from "./_components/BrawlerStatTable";
+import { ComboRankingTable } from "./_components/ComboRankingTable";
+import { loadBrawlerMetaView, type BrawlerMetaViewData } from "./_lib/loadBrawlerMetaView";
 import { AdUnit } from "@/components/ads/AdUnit";
 import { AD_SLOTS } from "@/components/ads/slots";
 
@@ -22,25 +20,22 @@ export const metadata: Metadata = buildMetadata({
   path: "/brawlers",
 });
 
+type BrawlerViewData = Extract<BrawlerMetaViewData, { view: "brawler" }>;
+
+function toBrawlerRows({ brawlers, stats }: BrawlerViewData) {
+  const statById = new Map(stats.items.filter((s) => s.brawler).map((s) => [s.brawler!.id, s]));
+  return brawlers.map((b) => ({ brawler: b, stat: statById.get(b.id) ?? null }));
+}
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const tierRange = parseTierRange(sp.tier);
   const dateRange = parseDateRange(sp.date);
+  const view = parseBrawlerMetaView(sp.view);
 
-  const [brawlersList, statsDto] = await Promise.all([
-    brawlerApi.list({ next: { revalidate: CACHE_SECONDS.BRAWLER_REFERENCE } }),
-    statisticsApi.brawlerResult(
-      { tierRange, dateRange },
-      { next: { revalidate: CACHE_SECONDS.SHORT } },
-    ),
-  ]);
-
-  const stats = toBrawlerResultStatistics(statsDto);
-  const brawlers = sortByName(brawlersList.content.map(toBrawler));
-  const statById = new Map(stats.items.filter((s) => s.brawler).map((s) => [s.brawler!.id, s]));
-  const rows = brawlers.map((b) => ({ brawler: b, stat: statById.get(b.id) ?? null }));
+  const data = await loadBrawlerMetaView(view, tierRange, dateRange);
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6 space-y-5">
@@ -53,7 +48,15 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
         </div>
         <StatRangeSelector tier={tierRange} date={dateRange} />
       </header>
-      <BrawlerStatTable rows={rows} totalBattleCount={stats.totalBattleCount} />
+      <BrawlerMetaViewTabs view={view} />
+      {data.view === "brawler" ? (
+        <BrawlerStatTable
+          rows={toBrawlerRows(data)}
+          totalBattleCount={data.stats.totalBattleCount}
+        />
+      ) : (
+        <ComboRankingTable items={data.items} />
+      )}
       <AdUnit slot={AD_SLOTS.brawlerMeta} className="mt-5" />
     </main>
   );

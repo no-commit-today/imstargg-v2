@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ── Builder: 네이티브 플랫폼에서 실행 (Kotlin 컴파일 에뮬레이션 회피) ──
-FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk-jammy AS builder
+FROM --platform=$BUILDPLATFORM eclipse-temurin:25-jdk-jammy AS builder
 ENV GRADLE_USER_HOME=/workspace/.gradle
 WORKDIR /workspace
 ARG GRADLE_MODULE
@@ -20,6 +20,7 @@ COPY infrastructure/redis-core/build.gradle.kts ./infrastructure/redis-core/
 COPY infrastructure/aws-sqs/build.gradle.kts    ./infrastructure/aws-sqs/
 COPY infrastructure/aws-s3/build.gradle.kts     ./infrastructure/aws-s3/
 COPY client/brawlstars-client/build.gradle.kts  ./client/brawlstars-client/
+COPY support/http-client/build.gradle.kts       ./support/http-client/
 COPY support/logging/build.gradle.kts           ./support/logging/
 COPY support/monitoring/build.gradle.kts        ./support/monitoring/
 RUN chmod +x gradlew && ./gradlew ${GRADLE_MODULE}:dependencies --no-daemon
@@ -35,7 +36,9 @@ RUN ./gradlew ${GRADLE_MODULE}:bootJar -x test --no-daemon --build-cache --paral
 # ── Runtime: 타깃 플랫폼(arm64). COPY 만(RUN 없음) → 외래 아치도 QEMU 불필요 ──
 # ⚠️ 이 스테이지에 RUN 을 추가하면 크로스/멀티 아치 빌드 시 QEMU 가 필요해짐
 #    → 그때는 워크플로에 docker/setup-qemu-action 단계를 추가할 것
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
+# kotlin-logging 이 기동 때 stdout 에 찍는 형식 없는 "kotlin-logging: initializing..." 줄을 끈다(KotlinLoggingConfiguration)
+ENV KOTLIN_LOGGING_STARTUP_MESSAGE=false
 WORKDIR /app
 COPY --from=builder --chown=1000:1000 /workspace/extracted/dependencies/ ./
 COPY --from=builder --chown=1000:1000 /workspace/extracted/spring-boot-loader/ ./

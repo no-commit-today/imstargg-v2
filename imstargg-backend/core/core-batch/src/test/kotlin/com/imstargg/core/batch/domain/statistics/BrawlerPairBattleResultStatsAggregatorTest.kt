@@ -17,56 +17,54 @@ class BrawlerPairBattleResultStatsAggregatorTest {
     @Nested
     inner class Aggregate {
         @Test
-        fun `2명 팀에서 ordered pair 2개를 생성한다`() {
-            val entities = aggregate(listOf(players(1), players(2)))
+        fun `2명 팀에서 정렬 쌍 1개를 생성한다`() {
+            val entities = aggregate(listOf(players(2), players(1)))
 
-            assertThat(entities).hasSize(2)
-            assertThat(entities.map { it.brawlerBrawlStarsId to it.pairBrawlerBrawlStarsId })
-                .containsExactlyInAnyOrder(1L to 2L, 2L to 1L)
+            assertThat(entities).hasSize(1)
+            assertThat(entities.single().brawler1BrawlStarsId).isEqualTo(1L)
+            assertThat(entities.single().brawler2BrawlStarsId).isEqualTo(2L)
         }
 
         @Test
-        fun `3명 팀에서 ordered pair 6개를 생성한다`() {
-            val entities = aggregate(listOf(players(1), players(2), players(3)))
+        fun `3명 팀은 정렬 쌍 3개를 만든다`() {
+            val entities = aggregate(listOf(players(3), players(1), players(2)))
 
-            assertThat(entities).hasSize(6)
-            assertThat(entities.map { it.brawlerBrawlStarsId to it.pairBrawlerBrawlStarsId })
-                .containsExactlyInAnyOrder(
-                    1L to 2L,
-                    1L to 3L,
-                    2L to 1L,
-                    2L to 3L,
-                    3L to 1L,
-                    3L to 2L,
-                )
+            assertThat(entities).hasSize(3)
+            assertThat(entities.map { it.brawler1BrawlStarsId to it.brawler2BrawlStarsId })
+                .containsExactlyInAnyOrder(1L to 2L, 1L to 3L, 2L to 3L)
         }
 
         @Test
-        fun `5명 팀에서 ordered pair 20개를 생성한다`() {
+        fun `5명 팀에서 정렬 쌍 10개를 생성한다`() {
             val entities = aggregate((1..5).map { players(it) })
 
-            assertThat(entities).hasSize(20)
-            assertThat(entities.map { it.brawlerBrawlStarsId to it.pairBrawlerBrawlStarsId }).doesNotHaveDuplicates()
+            assertThat(entities).hasSize(10)
+            assertThat(entities.map { it.brawler1BrawlStarsId to it.brawler2BrawlStarsId }).doesNotHaveDuplicates()
         }
 
         @Test
-        fun `티어 구간은 기준 브롤러 trophy 기준으로 계산한다`() {
+        fun `팀원이 1명이면 쌍을 만들지 않는다`() {
+            val entities = aggregate(listOf(players(1)))
+
+            assertThat(entities).isEmpty()
+        }
+
+        @Test
+        fun `티어는 두 멤버 trophies 의 최솟값으로 정한다`() {
             val entities =
                 aggregate(
                     listOf(
                         players(1, trophies = 3000),
                         players(2, trophies = 1000),
+                        players(3, trophies = 2500),
                     ),
                 )
 
             assertThat(entities).hasSize(4)
-            assertThat(entities.tierRangesOf(1, 2))
-                .containsExactlyInAnyOrder(
-                    StatsTierRange.TROPHY_1000_PLUS,
-                    StatsTierRange.TROPHY_2000_PLUS,
-                    StatsTierRange.TROPHY_3000_PLUS,
-                )
-            assertThat(entities.tierRangesOf(2, 1)).containsExactly(StatsTierRange.TROPHY_1000_PLUS)
+            assertThat(entities.tierRangesOf(1, 2)).containsExactly(StatsTierRange.TROPHY_1000_PLUS)
+            assertThat(entities.tierRangesOf(2, 3)).containsExactly(StatsTierRange.TROPHY_1000_PLUS)
+            assertThat(entities.tierRangesOf(1, 3))
+                .containsExactlyInAnyOrder(StatsTierRange.TROPHY_1000_PLUS, StatsTierRange.TROPHY_2000_PLUS)
         }
 
         @Test
@@ -75,13 +73,54 @@ class BrawlerPairBattleResultStatsAggregatorTest {
             val enemyTeam = listOf(players(11), players(12))
             val entities = aggregate(teams = listOf(playerTeam, enemyTeam), result = BattleResult.VICTORY)
 
-            assertThat(entities).hasSize(2)
-            assertThat(entities).allSatisfy { entity ->
-                assertThat(entity.brawlerBrawlStarsId).isIn(11L, 12L)
-                assertThat(entity.resultCount.victoryCount).isZero()
-                assertThat(entity.resultCount.defeatCount).isEqualTo(1)
-                assertThat(entity.resultCount.drawCount).isZero()
-            }
+            assertThat(entities).hasSize(1)
+            val entity = entities.single()
+            assertThat(entity.brawler1BrawlStarsId).isEqualTo(11L)
+            assertThat(entity.brawler2BrawlStarsId).isEqualTo(12L)
+            assertThat(entity.resultCount.victoryCount).isZero()
+            assertThat(entity.resultCount.defeatCount).isEqualTo(1)
+            assertThat(entity.resultCount.drawCount).isZero()
+        }
+
+        @Test
+        fun `아군 팀은 전투 결과 그대로 집계한다`() {
+            val entities = aggregate(listOf(players(1), players(2)))
+
+            val entity = entities.single()
+            assertThat(entity.resultCount.victoryCount).isEqualTo(1)
+            assertThat(entity.resultCount.defeatCount).isZero()
+            assertThat(entity.resultCount.drawCount).isZero()
+        }
+
+        @Test
+        fun `키에 이벤트가 없어 다른 이벤트 전투가 같은 행에 합산된다`() {
+            val aggregator = BrawlerPairBattleResultStatsAggregator(START_DATE, END_DATE)
+            aggregator.aggregate(
+                resultBattle(
+                    teams = listOf(listOf(players(1), players(2))),
+                    result = BattleResult.VICTORY,
+                    eventBrawlStarsId = 1,
+                ),
+            )
+            aggregator.aggregate(
+                resultBattle(
+                    teams = listOf(listOf(players(1), players(2))),
+                    result = BattleResult.DEFEAT,
+                    eventBrawlStarsId = 2,
+                ),
+            )
+
+            val entity = aggregator.toEntities().single()
+            assertThat(entity.resultCount.victoryCount).isEqualTo(1)
+            assertThat(entity.resultCount.defeatCount).isEqualTo(1)
+        }
+
+        @Test
+        fun `엔티티에 주 버킷 날짜를 담는다`() {
+            val entity = aggregate(listOf(players(1), players(2))).single()
+
+            assertThat(entity.startBattleDate).isEqualTo(START_DATE)
+            assertThat(entity.endBattleDate).isEqualTo(END_DATE)
         }
     }
 
@@ -100,11 +139,12 @@ class BrawlerPairBattleResultStatsAggregatorTest {
     private fun resultBattle(
         teams: List<List<StatsBattleEntityTeamPlayer>>,
         result: BattleResult,
+        eventBrawlStarsId: Long = 1,
     ): StatsResultBattleEntity =
         StatsResultBattleEntity(
-            battleKey = "battle-${teams.flatten().joinToString("-") { it.brawlStarsTag }}",
+            battleKey = "battle-${teams.flatten().joinToString("-") { it.brawlStarsTag }}-$eventBrawlStarsId",
             battleAt = OffsetDateTime.parse("2026-04-26T00:00:00+09:00").toInstant(),
-            eventBrawlStarsId = 1,
+            eventBrawlStarsId = eventBrawlStarsId,
             eventModeBrawlStarsId = 2,
             eventMap = "test-map",
             mode = "gemGrab",
@@ -132,12 +172,12 @@ class BrawlerPairBattleResultStatsAggregatorTest {
         )
 
     private fun List<BrawlerPairBattleResultStatsEntity>.tierRangesOf(
-        brawlerBrawlStarsId: Long,
-        pairBrawlerBrawlStarsId: Long,
+        brawler1BrawlStarsId: Long,
+        brawler2BrawlStarsId: Long,
     ): List<StatsTierRange> =
         filter {
-            it.brawlerBrawlStarsId == brawlerBrawlStarsId &&
-                it.pairBrawlerBrawlStarsId == pairBrawlerBrawlStarsId
+            it.brawler1BrawlStarsId == brawler1BrawlStarsId &&
+                it.brawler2BrawlStarsId == brawler2BrawlStarsId
         }.map { it.tierRange }
 
     companion object {

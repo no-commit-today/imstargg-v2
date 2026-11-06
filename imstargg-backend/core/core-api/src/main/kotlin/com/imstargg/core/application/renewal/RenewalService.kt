@@ -8,9 +8,11 @@ import com.imstargg.core.domain.renewal.Renewal
 import com.imstargg.core.enums.RenewalType
 import com.imstargg.core.error.CoreException
 import com.imstargg.core.error.ErrorType
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.time.Clock
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class RenewalService(
@@ -21,10 +23,6 @@ class RenewalService(
     private val clubRepository: ClubRepository,
     private val clock: Clock,
 ) {
-    companion object {
-        private val log = LoggerFactory.getLogger(RenewalService::class.java)
-    }
-
     fun getPlayerRenewal(tag: BrawlStarsTag): Renewal =
         renewalRepository.find(tag, RenewalType.PLAYER)
             ?: throw CoreException(ErrorType.NOT_FOUND, "tag=$tag")
@@ -69,7 +67,7 @@ class RenewalService(
 
         publishAction()
 
-        log.info("[갱신 요청] type={} tag={}", type, tag.value)
+        log.info { "[갱신 요청] type=$type tag=${tag.value}" }
         return pending
     }
 }

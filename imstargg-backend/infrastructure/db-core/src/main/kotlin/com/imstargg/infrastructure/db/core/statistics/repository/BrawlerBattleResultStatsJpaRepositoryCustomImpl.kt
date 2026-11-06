@@ -11,37 +11,6 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
 ) : BrawlerBattleResultStatsJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
-    override fun findEventTotalSlotSums(
-        eventBrawlStarsId: Long?,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): List<EventSlotSumProjection> {
-        val eventId = brawlerBattleResultStatsEntity.eventBrawlStarsId
-        val totalSlotSum =
-            brawlerBattleResultStatsEntity.resultCount.victoryCount
-                .sumLong()
-                .add(brawlerBattleResultStatsEntity.resultCount.defeatCount.sumLong())
-                .add(brawlerBattleResultStatsEntity.resultCount.drawCount.sumLong())
-
-        return queryFactory
-            .select(eventId, totalSlotSum)
-            .from(brawlerBattleResultStatsEntity)
-            .where(
-                eventBrawlStarsId?.let { brawlerBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerBattleResultStatsEntity.battleDate.goe(startDate),
-                brawlerBattleResultStatsEntity.battleDate.loe(endDate),
-            ).groupBy(eventId)
-            .fetch()
-            .map { tuple ->
-                EventSlotSumProjection(
-                    eventBrawlStarsId = tuple[eventId]!!,
-                    totalSlotCount = tuple[totalSlotSum] ?: 0L,
-                )
-            }
-    }
-
     override fun findGroupedByEventAndBrawler(
         eventBrawlStarsId: Long?,
         tierRange: StatsTierRange,

@@ -1,8 +1,5 @@
 package com.imstargg.core.batch.job.brawlstars
 
-import com.imstargg.client.brawlstars.BrawlStarsApiServerException
-import feign.FeignException
-import feign.Request
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.catchThrowableOfType
@@ -10,6 +7,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.StepContribution
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpServerErrorException
 
 class BrawlStarsApiTaskletTest {
     private val contribution = mockk<StepContribution>(relaxed = true)
@@ -66,21 +66,27 @@ class BrawlStarsApiTaskletTest {
         assertThat(ex.message).isEqualTo("boom")
     }
 
-    private fun serviceUnavailable(): BrawlStarsApiServerException.ServiceUnavailable {
-        val feignException =
-            FeignException.ServiceUnavailable(
-                "maintenance",
-                Request.create(
-                    Request.HttpMethod.GET,
-                    "https://api.brawlstars.com",
-                    emptyMap(),
-                    null,
-                    null,
-                    null,
-                ),
-                byteArrayOf(),
-                emptyMap(),
-            )
-        return BrawlStarsApiServerException.ServiceUnavailable("maintenance", feignException)
+    @Test
+    fun `503 이 아닌 HTTP 오류는 전파한다`() {
+        // given
+        val sut =
+            BrawlStarsApiTasklet("testJob") {
+                throw internalServerError()
+            }
+
+        // when
+        val ex =
+            catchThrowableOfType(HttpServerErrorException.InternalServerError::class.java) {
+                sut.execute(contribution, chunkContext)
+            }
+
+        // then
+        assertThat(ex).isNotNull()
     }
+
+    private fun serviceUnavailable(): HttpServerErrorException =
+        HttpServerErrorException.create(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders(), ByteArray(0), null)
+
+    private fun internalServerError(): HttpServerErrorException =
+        HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders(), ByteArray(0), null)
 }

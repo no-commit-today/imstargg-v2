@@ -8,7 +8,6 @@ data class BattleEventModeResponse(
     val brawlStarsName: String,
     val names: Map<Language, String>,
     val iconImageUrl: String?,
-    val resultType: BattleEventModeResultType,
-    val playerCounts: List<Int>,
-    val color: String,
+    /** 통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null. */
+    val resultType: BattleEventModeResultType?,
 )

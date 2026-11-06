@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { BrawlerRankStat } from "@/domain/statistics/types";
 import type { SortOrder } from "@/domain/statistics/sort";
 import { toggleSortOrder } from "@/domain/statistics/sort";
@@ -13,8 +14,6 @@ import {
 
 type Props = {
   items: BrawlerRankStat[];
-  selectedBrawlerId: number | null;
-  onToggleBrawler: (id: number) => void;
 };
 
 type SortKey = "averageRank" | "totalBattleCount";
@@ -40,7 +39,7 @@ function compareItems(a: BrawlerRankStat, b: BrawlerRankStat, sort: SortKey, ord
   }
 }
 
-export function EventRankStatsTable({ items, selectedBrawlerId, onToggleBrawler }: Props) {
+export function EventRankStatsTable({ items }: Props) {
   const [sort, setSort] = useState<SortKey>("averageRank");
   const [order, setOrder] = useState<SortOrder>("ASC");
 
@@ -72,18 +71,10 @@ export function EventRankStatsTable({ items, selectedBrawlerId, onToggleBrawler 
         </div>
       ) : (
         sorted.map((it, i) => {
-          const id = it.brawler?.id ?? -1;
-          const isActive = selectedBrawlerId === id;
-          return (
-            <button
-              key={`${id}-${i}`}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => id > 0 && onToggleBrawler(id)}
-              data-rail={rowRail(i + 1)}
-              data-selected={isActive ? "true" : undefined}
-              className={`data-row grid w-full items-center gap-1 text-left text-[13px] sm:gap-2 sm:text-sm ${rankGrid}`}
-            >
+          const rowClassName = `data-row grid items-center gap-1 text-[13px] sm:gap-2 sm:text-sm ${rankGrid}`;
+          const rail = rowRail(i + 1);
+          const cells = (
+            <>
               <span className="font-bold text-[#5C6271] tabular-nums">{i + 1}</span>
               <div className="flex min-w-0 items-center gap-1 overflow-hidden sm:gap-2">
                 {it.brawler && (
@@ -99,7 +90,21 @@ export function EventRankStatsTable({ items, selectedBrawlerId, onToggleBrawler 
               </div>
               <AverageRankCell value={it.averageRank} />
               <CountCell value={it.totalBattleCount} />
-            </button>
+            </>
+          );
+          return it.brawler ? (
+            <Link
+              key={`${it.brawler.id}-${i}`}
+              href={`/brawlers/${it.brawler.id}`}
+              data-rail={rail}
+              className={rowClassName}
+            >
+              {cells}
+            </Link>
+          ) : (
+            <div key={`-1-${i}`} data-rail={rail} className={rowClassName}>
+              {cells}
+            </div>
           );
         })
       )}

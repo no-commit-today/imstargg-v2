@@ -9,7 +9,7 @@ data class BrawlerResultStatisticsItem(
     val pickRate: Double,
     val winRate: Double,
     val starPlayerRate: Double,
-    val tierScore: BrawlerTierScore,
+    val tierScore: TierScore,
 )
 
 /**
@@ -20,20 +20,12 @@ data class BrawlerResultStatistics(
     val items: List<BrawlerResultStatisticsItem>,
 ) {
     companion object {
-        fun create(
-            rows: List<BrawlerEventResultCount>,
-            gameSlots: GameSlots,
-        ): BrawlerResultStatistics {
+        fun create(rows: List<BrawlerEventResultCount>): BrawlerResultStatistics {
             if (rows.isEmpty()) {
                 return BrawlerResultStatistics(totalBattleCount = 0L, items = emptyList())
             }
 
-            val totalBattleCount: Long =
-                gameSlots.totalGameCount(
-                    rows
-                        .groupBy { it.eventId }
-                        .mapValues { (_, eventRows) -> eventRows.sumOf { it.resultCount.totalCount } },
-                )
+            val totalBattleCount: Long = StatsRate.resultGameCount(rows.sumOf { it.resultCount.totalCount })
 
             val brawlerAggregates =
                 rows
@@ -45,7 +37,11 @@ data class BrawlerResultStatistics(
                             starPlayerCount = brawlerRows.sumOf { it.starPlayerCount },
                         )
                     }
-            val tierScores = BrawlerTierScore.create(brawlerAggregates)
+            val tierScores =
+                TierScore.create(
+                    brawlerAggregates.associate { it.brawlerId to it.resultCount },
+                    pickRateWeight = true,
+                )
 
             val items =
                 brawlerAggregates.map { agg ->
@@ -60,7 +56,7 @@ data class BrawlerResultStatistics(
                                 agg.starPlayerCount,
                                 agg.resultCount.totalCount,
                             ),
-                        tierScore = tierScores[agg.brawlerId] ?: BrawlerTierScore(50),
+                        tierScore = tierScores[agg.brawlerId] ?: TierScore(50),
                     )
                 }
             return BrawlerResultStatistics(
