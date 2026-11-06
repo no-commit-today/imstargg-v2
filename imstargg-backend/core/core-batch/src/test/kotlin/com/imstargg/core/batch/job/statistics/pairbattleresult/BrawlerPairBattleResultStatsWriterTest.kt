@@ -41,7 +41,7 @@ class BrawlerPairBattleResultStatsWriterTest(
                 teams =
                     listOf(
                         listOf(player(1), player(2), player(3)),
-                        listOf(player(4), player(5), player(6)),
+                        listOf(player(4, 1100), player(5, 1100), player(6, 1100)),
                     ),
             ),
         )
@@ -88,7 +88,10 @@ class BrawlerPairBattleResultStatsWriterTest(
             result = BattleResult.VICTORY.code,
         )
 
-    private fun player(index: Int): StatsBattleEntityTeamPlayer =
+    private fun player(
+        index: Int,
+        trophies: Int = 1000,
+    ): StatsBattleEntityTeamPlayer =
         StatsBattleEntityTeamPlayer(
             brawlStarsTag = "#TAG$index",
             name = "Player$index",
@@ -97,7 +100,7 @@ class BrawlerPairBattleResultStatsWriterTest(
                     brawlStarsId = index.toLong(),
                     name = "Brawler$index",
                     power = 11,
-                    trophies = 1000,
+                    trophies = trophies,
                 ),
         )
 }

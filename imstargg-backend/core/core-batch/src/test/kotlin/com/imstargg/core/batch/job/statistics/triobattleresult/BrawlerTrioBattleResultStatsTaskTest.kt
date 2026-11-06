@@ -95,7 +95,7 @@ class BrawlerTrioBattleResultStatsTaskTest {
         val teams =
             listOf(
                 listOf(player(index = 1), player(index = 2), player(index = 3)),
-                listOf(player(index = 4), player(index = 5), player(index = 6)),
+                listOf(player(index = 4, trophies = 1100), player(index = 5, trophies = 1100), player(index = 6, trophies = 1100)),
             )
         return StatsResultBattleEntity(
             battleKey = battleKey,
@@ -112,7 +112,10 @@ class BrawlerTrioBattleResultStatsTaskTest {
         )
     }
 
-    private fun player(index: Int): StatsBattleEntityTeamPlayer =
+    private fun player(
+        index: Int,
+        trophies: Int = 1000,
+    ): StatsBattleEntityTeamPlayer =
         StatsBattleEntityTeamPlayer(
             brawlStarsTag = "#TAG$index",
             name = "Player$index",
@@ -121,7 +124,7 @@ class BrawlerTrioBattleResultStatsTaskTest {
                     brawlStarsId = index.toLong(),
                     name = "Brawler$index",
                     power = 11,
-                    trophies = 1000,
+                    trophies = trophies,
                 ),
         )
 }
