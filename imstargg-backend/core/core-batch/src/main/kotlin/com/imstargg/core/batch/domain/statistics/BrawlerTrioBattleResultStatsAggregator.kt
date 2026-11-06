@@ -24,6 +24,9 @@ import java.time.LocalDate
  *
  * ## 결과 방향
  * 아군 팀은 전투 결과 그대로, 적 팀은 [BattleResult.opposite] 로 집계한다.
+ *
+ * ## 봇 전투 제외
+ * 봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다.
  */
 class BrawlerTrioBattleResultStatsAggregator(
     private val startBattleDate: LocalDate,
@@ -32,6 +35,7 @@ class BrawlerTrioBattleResultStatsAggregator(
     private val resultCounts = ResultCountAccumulator<BrawlerTrioBattleStatsKey>()
 
     override fun aggregate(battle: StatsResultBattleEntity) {
+        if (StatsBotBattlePolicy.isBotBattle(battle)) return
         val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
         val battleResult = EnumCodeType.findByCode<BattleResult>(battle.result) ?: return
 
