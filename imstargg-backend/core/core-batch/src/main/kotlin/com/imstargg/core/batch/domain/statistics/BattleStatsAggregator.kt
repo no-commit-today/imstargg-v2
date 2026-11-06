@@ -13,6 +13,7 @@ package com.imstargg.core.batch.domain.statistics
  * - **티어 구간(TierRange)**: [StatsTierRange.resolveAll]로 결정. 배틀 타입과 트로피 수에 따라
  *   해당하는 모든 누적 티어 구간을 반환하므로, 하나의 배틀이 여러 티어 구간에 동시에 집계될 수 있음
  * - **알 수 없는 배틀 타입/결과**: 파싱 불가능한 경우 해당 배틀을 건너뜀
+ * - **봇 전투**: 봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다. 호출 지점은 집계기 다섯 곳이다. 결과형 네 곳은 `StatsBotBattleExclusionTest`, 순위형은 `BrawlerBattleRankStatsAggregatorTest` 가 고정한다
  */
 interface BattleStatsAggregator<TBattle, TEntity> {
     fun aggregate(battle: TBattle)

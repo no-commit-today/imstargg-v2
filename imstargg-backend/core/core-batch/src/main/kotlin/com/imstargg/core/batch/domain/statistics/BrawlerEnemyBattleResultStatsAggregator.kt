@@ -16,6 +16,9 @@ import java.time.LocalDate
  * 내 브롤러 × 적 브롤러 × 티어 구간. 방향이 있다 — (X, Y) 와 (Y, X) 는 별개 행이다.
  * 티어는 기준 플레이어(내 브롤러)의 trophies 로 정한다.
  * 이벤트는 키에 없다 — 2026-11 스펙 B 에서 이벤트별 값은 표본만 얇게 흩어 예측에 보탬이 없다고 보고 뺐다.
+ *
+ * ## 봇 전투 제외
+ * 봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다.
  */
 class BrawlerEnemyBattleResultStatsAggregator(
     private val startBattleDate: LocalDate,
@@ -24,6 +27,7 @@ class BrawlerEnemyBattleResultStatsAggregator(
     private val resultCounts = ResultCountAccumulator<BrawlerEnemyBattleStatsKey>()
 
     override fun aggregate(battle: StatsResultBattleEntity) {
+        if (StatsBotBattlePolicy.isBotBattle(battle)) return
         val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
         val battleResult = EnumCodeType.findByCode<BattleResult>(battle.result) ?: return
 

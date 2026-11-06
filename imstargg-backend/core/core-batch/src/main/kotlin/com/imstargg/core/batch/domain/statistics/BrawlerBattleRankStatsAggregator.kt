@@ -16,11 +16,13 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEnti
  * - **아군 팀(playerTeam)만** 집계 (순위형 배틀에는 적군 개념이 없음)
  * - 각 배틀의 순위(1위~N위)를 분포로 누적 (예: 1위 5회, 2위 3회, ...)
  * - **티어 구간**: 각 플레이어 본인의 트로피 기준으로 결정
+ * - **봇 로비**: 봇 로비 판정에 걸린 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다
  */
 class BrawlerBattleRankStatsAggregator : BattleStatsAggregator<StatsRankBattleEntity, BrawlerBattleRankStatsEntity> {
     private val rankCounts = RankCountAccumulator<BrawlerBattleStatsKey>()
 
     override fun aggregate(battle: StatsRankBattleEntity) {
+        if (StatsBotBattlePolicy.isBotLobby(battle)) return
         val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
 
         for (team in battle.playerTeams()) {
