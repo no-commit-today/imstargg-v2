@@ -7,22 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  getEventModes,
-  updateEventMode,
-  updateEventModeColor,
-  updateEventModeMessages,
-  uploadEventModeImage,
-} from "@/lib/api";
-import type { BattleEventMode, BattleEventModeResultType } from "@/lib/types";
-import { BATTLE_EVENT_MODE_RESULT_TYPES } from "@/lib/types";
+import { getEventModes, updateEventModeMessages, uploadEventModeImage } from "@/lib/api";
+import type { BattleEventMode } from "@/lib/types";
 import { toast } from "sonner";
 import { ImageUploadField } from "@/components/image-upload-field";
 
@@ -32,9 +18,6 @@ export default function EventModeEditPage() {
   const [eventMode, setEventMode] = useState<BattleEventMode | null>(null);
   const [ko, setKo] = useState("");
   const [en, setEn] = useState("");
-  const [resultType, setResultType] = useState<BattleEventModeResultType>("RESULT");
-  const [playerCounts, setPlayerCounts] = useState<string>("");
-  const [color, setColor] = useState("#2A2E38");
 
   const loadEventMode = useCallback(() => {
     getEventModes().then((modes) => {
@@ -43,9 +26,6 @@ export default function EventModeEditPage() {
         setEventMode(found);
         setKo(found.names.KOREAN || "");
         setEn(found.names.ENGLISH || "");
-        setResultType(found.resultType);
-        setPlayerCounts(found.playerCounts.join(","));
-        setColor(found.color);
       }
     });
   }, [brawlStarsId]);
@@ -58,54 +38,6 @@ export default function EventModeEditPage() {
     try {
       await updateEventModeMessages(brawlStarsId, { KOREAN: ko, ENGLISH: en });
       toast.success("이름이 저장되었습니다.");
-      loadEventMode();
-    } catch {
-      toast.error("저장에 실패했습니다.");
-    }
-  };
-
-  const parsePlayerCounts = (): number[] | null => {
-    const parsed = playerCounts
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .map((s) => Number(s));
-    if (parsed.length === 0 || parsed.some((n) => !Number.isInteger(n) || n < 1)) {
-      return null;
-    }
-    return parsed;
-  };
-
-  const handleSaveResultType = async () => {
-    if (!eventMode) return;
-    try {
-      await updateEventMode(brawlStarsId, { resultType, playerCounts: eventMode.playerCounts });
-      toast.success("결과 타입이 저장되었습니다.");
-      loadEventMode();
-    } catch {
-      toast.error("저장에 실패했습니다.");
-    }
-  };
-
-  const handleSavePlayerCounts = async () => {
-    const parsed = parsePlayerCounts();
-    if (parsed === null) {
-      toast.error("팀 인원수는 1 이상의 정수 리스트여야 합니다.");
-      return;
-    }
-    try {
-      await updateEventMode(brawlStarsId, { resultType, playerCounts: parsed });
-      toast.success("플레이어 인원수가 저장되었습니다.");
-      loadEventMode();
-    } catch {
-      toast.error("저장에 실패했습니다.");
-    }
-  };
-
-  const handleSaveColor = async () => {
-    try {
-      await updateEventModeColor(brawlStarsId, color);
-      toast.success("색상이 저장되었습니다.");
       loadEventMode();
     } catch {
       toast.error("저장에 실패했습니다.");
@@ -139,70 +71,6 @@ export default function EventModeEditPage() {
               <Input value={en} onChange={(e) => setEn(e.target.value)} />
             </div>
             <Button onClick={handleSaveMessages}>이름 저장</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>결과 타입</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <Label>Result Type</Label>
-              <Select
-                value={resultType}
-                onValueChange={(v) => setResultType((v ?? "RESULT") as BattleEventModeResultType)}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {BATTLE_EVENT_MODE_RESULT_TYPES.map((r) => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleSaveResultType}>결과 타입 저장</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>플레이어 인원수</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <Label>Player Counts</Label>
-              <Input
-                value={playerCounts}
-                onChange={(e) => setPlayerCounts(e.target.value)}
-                placeholder="3,3"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                각 팀의 인원 수를 쉼표로 구분. 예: 3v3 → 3,3 / Solo Showdown → 1,1,1,1,1,1,1,1,1,1
-              </p>
-            </div>
-            <Button onClick={handleSavePlayerCounts}>플레이어 인원수 저장</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>색상</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={/^#[0-9a-fA-F]{6}$/.test(color) ? color : "#2A2E38"}
-                onChange={(e) => setColor(e.target.value)}
-                aria-label="색상 선택"
-                className="h-9 w-12 cursor-pointer rounded border"
-              />
-              <Input
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                placeholder="#RRGGBB"
-                maxLength={7}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              이벤트 카드 배경색. 비우면 기본 회색(#2A2E38)으로 저장됩니다.
-            </p>
-            <Button onClick={handleSaveColor}>색상 저장</Button>
           </CardContent>
         </Card>
 

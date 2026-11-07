@@ -15,6 +15,7 @@ import {
   toEnemyResultStat,
   toItemOwnership,
   toPairResultStat,
+  toTrioResultStat,
 } from "@/domain/statistics/mappers";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
@@ -76,13 +77,14 @@ export default async function BrawlerPage({ params }: Params) {
     dateRange: DEFAULT_DATE_RANGE,
   };
   const opts = { next: { revalidate: CACHE_SECONDS.SHORT } };
-  const [ownershipDto, dailyDto, pairDto, enemyDto] = await Promise.all([
+  const [ownershipDto, dailyDto, pairDto, trioDto, enemyDto] = await Promise.all([
     statisticsApi.itemOwnership(
       { brawlerId: detail.brawler.id, trophyRange: DEFAULT_TROPHY_RANGE },
       opts,
     ),
     statisticsApi.daily(statsParams, opts),
     statisticsApi.pairResult(statsParams, opts),
+    statisticsApi.trioResult(statsParams, opts),
     statisticsApi.enemyResult(statsParams, opts),
   ]);
 
@@ -97,6 +99,7 @@ export default async function BrawlerPage({ params }: Params) {
         initial={{
           daily: dailyDto.content.map(toDailyResultStat),
           pair: pairDto.content.map(toPairResultStat),
+          trio: trioDto.content.map(toTrioResultStat),
           enemy: enemyDto.content.map(toEnemyResultStat),
         }}
       />

@@ -5,6 +5,9 @@ import com.imstargg.core.domain.statistics.BrawlerEnemyResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerPairResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerTrioResultStatistics
+import com.imstargg.core.domain.statistics.PairResultRanking
+import com.imstargg.core.domain.statistics.TrioResultRanking
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
 import org.springframework.stereotype.Service
@@ -30,17 +33,51 @@ class BattleResultStatisticsService(
     }
 
     fun getBrawlerPairResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
     ): BrawlerPairResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerPairResultStatistics(
-            eventId = eventId,
             brawlerId = brawlerId,
-            pairBrawlerId = pairBrawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+    }
+
+    fun getBrawlerTrioResultStatistics(
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        dateRange: StatsDateRange,
+    ): BrawlerTrioResultStatistics {
+        val (startDate, endDate) = dateRange.dateRange(clock)
+        return resultRepository.findBrawlerTrioResultStatistics(
+            brawlerId = brawlerId,
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+    }
+
+    fun getPairResultRanking(
+        tierRange: StatsTierRange,
+        dateRange: StatsDateRange,
+    ): PairResultRanking {
+        val (startDate, endDate) = dateRange.dateRange(clock)
+        return resultRepository.findPairResultRanking(
+            tierRange = tierRange,
+            startDate = startDate,
+            endDate = endDate,
+        )
+    }
+
+    fun getTrioResultRanking(
+        tierRange: StatsTierRange,
+        dateRange: StatsDateRange,
+    ): TrioResultRanking {
+        val (startDate, endDate) = dateRange.dateRange(clock)
+        return resultRepository.findTrioResultRanking(
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,
@@ -48,14 +85,12 @@ class BattleResultStatisticsService(
     }
 
     fun getEnemyResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         dateRange: StatsDateRange,
     ): BrawlerEnemyResultStatistics {
         val (startDate, endDate) = dateRange.dateRange(clock)
         return resultRepository.findBrawlerEnemyResultStatistics(
-            eventId = eventId,
             brawlerId = brawlerId,
             tierRange = tierRange,
             startDate = startDate,

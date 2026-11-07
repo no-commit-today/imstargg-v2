@@ -168,6 +168,45 @@ class PlayerUpdaterUpdateBattlesTest(
         assertThat(teamPlayers.first { it.brawlStarsTag == "#TEAM11" }.brawler.trophyChange).isEqualTo(8)
     }
 
+    @Test
+    fun `브롤러_이름이_null이면_battle_team_player에_null로_저장한다`() {
+        // given
+        val tag = "#PLAYER6"
+        playerRepository.save(aPlayerEntity().withBrawlStarsTag(tag).build())
+
+        val teams =
+            createTeams().map { team ->
+                team.map { player ->
+                    if (player.brawlStarsTag == "#TEAM00") {
+                        BattleTeamPlayer(
+                            brawlStarsTag = player.brawlStarsTag,
+                            name = player.name,
+                            brawler =
+                                BattleTeamPlayerBrawler(
+                                    brawlStarsId = player.brawler.brawlStarsId,
+                                    name = null,
+                                    power = player.brawler.power,
+                                    trophies = player.brawler.trophies,
+                                    trophyChange = player.brawler.trophyChange,
+                                ),
+                        )
+                    } else {
+                        player
+                    }
+                }
+            }
+        val battles = listOf(createBattle(tag, Instant.parse("2024-01-01T10:00:00Z"), teams = teams))
+
+        // when
+        sut.update(createPlayerResponse(tag), battles)
+
+        // then
+        val teamPlayers = battleTeamPlayerRepository.findAll()
+        assertThat(teamPlayers).hasSize(6)
+        assertThat(teamPlayers.first { it.brawlStarsTag == "#TEAM00" }.brawler.name).isNull()
+        assertThat(teamPlayers.first { it.brawlStarsTag == "#TEAM01" }.brawler.name).isEqualTo("Brawler01")
+    }
+
     private fun createTeams() =
         (0..1).map { teamIdx ->
             (0..2).map { playerIdx ->

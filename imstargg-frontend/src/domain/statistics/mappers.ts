@@ -1,23 +1,26 @@
 import type {
   BrawlerEnemyResultStatisticsItemResponse,
   BrawlerItemOwnershipStatisticsResponse,
-  BrawlerPairRankStatisticsResponse,
   BrawlerPairResultStatisticsItemResponse,
   BrawlerRankStatisticsResponse,
   BrawlerResultDailyStatisticsResponse,
   BrawlerResultStatisticsItemResponse,
   BrawlerResultStatisticsResponse,
+  BrawlerResponse,
+  BrawlerTrioResultStatisticsItemResponse,
+  ComboResultRankingItemResponse,
 } from "@/api/types";
 import { toBrawler } from "@/domain/brawler/mappers";
 import type {
   BrawlerRankStat,
   BrawlerResultStat,
   BrawlerResultStatistics,
+  ComboRankingStat,
   DailyResultStat,
   EnemyResultStat,
   ItemOwnership,
-  PairRankStat,
   PairResultStat,
+  TrioResultStat,
 } from "@/domain/statistics/types";
 import { parseTier } from "@/domain/statistics/tier";
 
@@ -59,17 +62,37 @@ export function toPairResultStat(
     battleCount: dto.battleCount,
     pickRate: dto.pickRate,
     winRate: dto.winRate,
+    tierScore: dto.tierScore,
+    tier: parseTier(dto.tier),
   };
 }
 
-export function toPairRankStat(
-  dto: BrawlerPairRankStatisticsResponse,
-): PairRankStat {
+function toBrawlers(dtos: (BrawlerResponse | null)[]) {
+  return dtos.filter((b): b is BrawlerResponse => b !== null).map(toBrawler);
+}
+
+export function toTrioResultStat(
+  dto: BrawlerTrioResultStatisticsItemResponse,
+): TrioResultStat {
   return {
     brawler: dto.brawler ? toBrawler(dto.brawler) : null,
-    pairBrawler: dto.pairBrawler ? toBrawler(dto.pairBrawler) : null,
-    totalBattleCount: dto.totalBattleCount,
-    averageRank: dto.averageRank,
+    pairBrawlers: toBrawlers(dto.pairBrawlers),
+    battleCount: dto.battleCount,
+    pickRate: dto.pickRate,
+    winRate: dto.winRate,
+    tierScore: dto.tierScore,
+    tier: parseTier(dto.tier),
+  };
+}
+
+export function toComboRankingStat(dto: ComboResultRankingItemResponse): ComboRankingStat {
+  return {
+    brawlers: toBrawlers(dto.brawlers),
+    battleCount: dto.battleCount,
+    pickRate: dto.pickRate,
+    winRate: dto.winRate,
+    tierScore: dto.tierScore,
+    tier: parseTier(dto.tier),
   };
 }
 

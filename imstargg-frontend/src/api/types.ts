@@ -166,8 +166,8 @@ export interface BattleEventModeResponse {
   id: number;
   name: MessagesResponse;
   iconImageUrl: string | null;
-  resultType: BattleEventModeResultType;
-  color: string;
+  /** 통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null. */
+  resultType: BattleEventModeResultType | null;
 }
 
 export interface BattleEventResponse {
@@ -259,13 +259,28 @@ export interface BrawlerPairResultStatisticsItemResponse {
   battleCount: number;
   pickRate: number;
   winRate: number;
+  tierScore: number;
+  tier: string; // "S" | "A" | "B" | "C" | "D"
 }
 
-export interface BrawlerPairRankStatisticsResponse {
+export interface BrawlerTrioResultStatisticsItemResponse {
   brawler: BrawlerResponse | null;
-  pairBrawler: BrawlerResponse | null;
-  totalBattleCount: number;
-  averageRank: number;
+  pairBrawlers: (BrawlerResponse | null)[];
+  battleCount: number;
+  pickRate: number;
+  winRate: number;
+  tierScore: number;
+  tier: string; // "S" | "A" | "B" | "C" | "D"
+}
+
+/** 전체 2인·3인 조합 정렬(`/v1/statistics/pair|trio/result`)의 한 행. */
+export interface ComboResultRankingItemResponse {
+  brawlers: (BrawlerResponse | null)[];
+  battleCount: number;
+  pickRate: number;
+  winRate: number;
+  tierScore: number;
+  tier: string; // "S" | "A" | "B" | "C" | "D"
 }
 
 export interface BrawlerEnemyResultStatisticsItemResponse {

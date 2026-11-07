@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.job
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
@@ -12,13 +12,13 @@ import org.springframework.context.annotation.Configuration
 import java.time.Clock
 import java.time.LocalDate
 
+private val log = KotlinLogging.logger {}
+
 @Configuration
 class HealthCheckJobConfig(
     private val clock: Clock,
     private val jobRepository: JobRepository,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     companion object {
         const val JOB_NAME = "healthCheckJob"
         const val STEP_NAME = "healthCheckStep"
@@ -34,10 +34,10 @@ class HealthCheckJobConfig(
     fun step(): Step =
         StepBuilder(STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
-                log.info("<<<<<<<<<<<< 헬스체크 >>>>>>>>>>>>")
-                log.info("timezone: {}", clock.zone)
-                log.info("date: {}", LocalDate.now(clock))
-                log.info("time: {}", clock.instant())
+                log.info { "<<<<<<<<<<<< 헬스체크 >>>>>>>>>>>>" }
+                log.info { "timezone: ${clock.zone}" }
+                log.info { "date: ${LocalDate.now(clock)}" }
+                log.info { "time: ${clock.instant()}" }
                 RepeatStatus.FINISHED
             })
             .build()

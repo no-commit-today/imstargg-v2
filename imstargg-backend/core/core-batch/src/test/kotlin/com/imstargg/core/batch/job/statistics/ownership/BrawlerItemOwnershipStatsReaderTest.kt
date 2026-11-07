@@ -3,6 +3,7 @@ package com.imstargg.core.batch.job.statistics.ownership
 import com.imstargg.CoreBatchContextTest
 import com.imstargg.core.batch.domain.statistics.ownership.PlayerBrawlerOwnershipSnapshot
 import com.imstargg.core.enums.BuffyType
+import com.imstargg.core.enums.PlayerStatus
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerBuffyJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerGadgetJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.PlayerBrawlerGearJpaRepository
@@ -105,5 +106,35 @@ class BrawlerItemOwnershipStatsReaderTest(
         val snapshotB = snapshots.first { it.brawlerBrawlStarsId == 16000002L }
         assertThat(snapshotB.gearBrawlStarsIds).isEmpty()
         assertThat(snapshotB.buffyTypes).isEmpty()
+    }
+
+    @Test
+    fun `stats_player 에 있어도 삭제된 플레이어의 브롤러는 읽지 않는다`() {
+        // given - 같은 페이지에 ACTIVE P1 과 DELETED P2 (/players 404 로 삭제돼도 stats_player 행은 남는다)
+        statsPlayerJpaRepository.save(StatsPlayerEntity(brawlStarsTag = "#P1"))
+        statsPlayerJpaRepository.save(StatsPlayerEntity(brawlStarsTag = "#P2"))
+        val activePlayer = playerJpaRepository.save(aPlayerEntity().withBrawlStarsTag("#P1").build())
+        val deletedPlayer =
+            playerJpaRepository.save(
+                aPlayerEntity().withBrawlStarsTag("#P2").withStatus(PlayerStatus.DELETED).build(),
+            )
+        playerBrawlerJpaRepository.save(
+            aPlayerBrawlerEntity().withPlayer(activePlayer).withBrawlerBrawlStarsId(16000001L).build(),
+        )
+        val deletedBrawler =
+            playerBrawlerJpaRepository.save(
+                aPlayerBrawlerEntity().withPlayer(deletedPlayer).withBrawlerBrawlStarsId(16000002L).build(),
+            )
+        playerBrawlerGearJpaRepository.save(
+            aPlayerBrawlerGearEntity().withPlayerBrawler(deletedBrawler).withGearBrawlStarsId(62000001L).build(),
+        )
+
+        // when
+        val snapshots = mutableListOf<PlayerBrawlerOwnershipSnapshot>()
+        val totalRead = sut.read { snapshots += it }
+
+        // then - totalRead 는 그대로 stats_player 수, 스냅샷은 ACTIVE 플레이어 것만
+        assertThat(totalRead).isEqualTo(2L)
+        assertThat(snapshots.map { it.brawlerBrawlStarsId }).containsExactly(16000001L)
     }
 }

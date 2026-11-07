@@ -1,10 +1,10 @@
 package com.imstargg.core.api.error
 
-import com.example.template.core.error.ErrorLogger
 import com.imstargg.core.error.CoreException
+import com.imstargg.core.error.ErrorLogger
 import com.imstargg.core.error.ErrorType
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.ConstraintViolationException
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ProblemDetail
@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.time.Clock
 import java.time.LocalDateTime
 
+private val log = KotlinLogging.logger {}
+
 @RestControllerAdvice
 class ApiExceptionHandler(
     private val clock: Clock,
@@ -25,7 +27,7 @@ class ApiExceptionHandler(
     private val errorTypeKey = "errorType"
     private val timeStampKey: String = "timestamp"
     private val fieldsKey: String = "fields"
-    private val errorLogger = ErrorLogger.of(LoggerFactory.getLogger(javaClass))
+    private val errorLogger = ErrorLogger.of(log)
 
     @ExceptionHandler(CoreException::class)
     fun handleCoreException(ex: CoreException): ResponseEntity<ProblemDetail> {

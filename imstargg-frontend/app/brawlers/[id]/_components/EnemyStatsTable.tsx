@@ -24,21 +24,21 @@ type Props = {
 };
 
 /**
- * 카운터 표는 행의 의미가 반전된다.
- * - 적의 승률 ≥55%: 나에게 "위협(loss)" — 빨간 rail
- * - 적의 승률 ≤45%: 나에게 "좋음(win)"  — 초록 rail
+ * 카운터 표의 승률은 "이 상대를 만났을 때 내 승률" 이다.
+ * - 내 승률 ≥55%: 내가 유리(win)   — 초록 rail
+ * - 내 승률 ≤45%: 내가 불리(loss)  — 빨간 rail
  * - 그 외: neutral
  */
-function enemyRail(enemyWinRate: number): "win" | "neutral" | "loss" {
-  if (enemyWinRate >= 0.55) return "loss";
-  if (enemyWinRate <= 0.45) return "win";
+function enemyRail(winRate: number): "win" | "neutral" | "loss" {
+  if (winRate >= 0.55) return "win";
+  if (winRate <= 0.45) return "loss";
   return "neutral";
 }
 
 export function EnemyStatsTable({
   items,
   initialSort = "WIN_RATE",
-  initialOrder = "DESC",
+  initialOrder = "ASC",
 }: Props) {
   const [sort, setSort] = useState<ResultStatsSortBy>(initialSort);
   const [order, setOrder] = useState<SortOrder>(initialOrder);
@@ -64,7 +64,7 @@ export function EnemyStatsTable({
           <Swords size={16} aria-hidden className="text-[#FF3A3A]" />
           카운터
         </h3>
-        <span className="text-[11px] text-[#5C6271]">적 픽일 때의 적 승률</span>
+        <span className="text-[11px] text-[#5C6271]">이 상대를 만났을 때 내 승률 · 전투 30회 이상 상대만 보입니다</span>
       </div>
       <div className="data-table-head grid grid-cols-[28px_minmax(0,1fr)_44px_56px_56px] items-center gap-1 sm:grid-cols-[48px_minmax(0,1fr)_72px_88px_96px] sm:gap-2">
         <span>순위</span>

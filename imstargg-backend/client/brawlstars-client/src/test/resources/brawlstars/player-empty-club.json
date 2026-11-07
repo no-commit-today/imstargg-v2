@@ -1,0 +1,21 @@
+{
+  "tag": "#88J8Q9RPV",
+  "name": "Player",
+  "nameColor": "0xffffffff",
+  "icon": {
+    "id": 28000000
+  },
+  "trophies": 30000,
+  "highestTrophies": 31000,
+  "expLevel": 200,
+  "expPoints": 400000,
+  "isQualifiedFromChampionshipChallenge": false,
+  "3vs3Victories": 7000,
+  "soloVictories": 800,
+  "duoVictories": 900,
+  "bestRoboRumbleTime": 10,
+  "bestTimeAsBigBrawler": 0,
+  "totalPrestigeLevel": 3,
+  "club": {},
+  "brawlers": []
+}

@@ -22,6 +22,6 @@ dependencies {
     implementation("org.springframework.retry:spring-retry")
 
     // Test
-    testImplementation("io.github.openfeign:feign-core")
+    testImplementation("io.github.resilience4j:resilience4j-ratelimiter:${property("resilience4jVersion")}")
     testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

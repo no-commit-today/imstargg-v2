@@ -7,13 +7,16 @@ import com.imstargg.core.enums.WeekRange
 import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
 import org.springframework.stereotype.Component
 
+/**
+ * 주 버킷 하나를 한 트랜잭션(REQUIRES_NEW)에서 통째로 교체한다 — 버킷의 기존 행을 지우고 집계 결과를 chunk 단위로 넣는다.
+ * 다른 버킷의 행은 건드리지 않는다.
+ */
 @Component
 class BrawlerEnemyBattleResultStatsWriter(
     private val transactionRunner: JpaBatchTransactionRunner,
 ) {
     fun write(
         weekRange: WeekRange,
-        eventBrawlStarsId: Long,
         aggregator: BrawlerEnemyBattleResultStatsAggregator,
     ): Long {
         var totalEntities = 0L
@@ -23,7 +26,6 @@ class BrawlerEnemyBattleResultStatsWriter(
                 .where(
                     brawlerEnemyBattleResultStatsEntity.startBattleDate.eq(weekRange.start),
                     brawlerEnemyBattleResultStatsEntity.endBattleDate.eq(weekRange.end),
-                    brawlerEnemyBattleResultStatsEntity.eventBrawlStarsId.eq(eventBrawlStarsId),
                 ).execute()
 
             aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->

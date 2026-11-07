@@ -11,16 +11,17 @@ include(
     "infrastructure:aws-sqs",
     "infrastructure:aws-s3",
     "client:brawlstars-client",
+    "support:http-client",
     "support:logging",
     "support:monitoring"
 )
 
 pluginManagement {
-    val kotlinVersion: String by settings
-    val springBootVersion: String by settings
-    val springDependencyManagementVersion: String by settings
-    val ktlintVersion: String by settings
-    val kspVersion: String by settings
+    val kotlinVersion = providers.gradleProperty("kotlinVersion").get()
+    val springBootVersion = providers.gradleProperty("springBootVersion").get()
+    val springDependencyManagementVersion = providers.gradleProperty("springDependencyManagementVersion").get()
+    val ktlintVersion = providers.gradleProperty("ktlintVersion").get()
+    val kspVersion = providers.gradleProperty("kspVersion").get()
 
     plugins {
         kotlin("jvm") version kotlinVersion

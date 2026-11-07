@@ -1,19 +1,13 @@
-package com.example.template.core.error
+package com.imstargg.core.error
 
-import com.imstargg.core.error.CoreException
-import com.imstargg.core.error.ErrorType
-import org.slf4j.Logger
+import io.github.oshai.kotlinlogging.KLogger
 import org.springframework.boot.logging.LogLevel
-import kotlin.jvm.javaClass
 
 class ErrorLogger private constructor(
-    private val log: Logger,
+    private val log: KLogger,
 ) {
     companion object {
-        private const val EXCEPTION_LOG_MESSAGE_TEMPLATE = "[{}]: {}"
-        private const val EXCEPTION_LOG_MESSAGE_WITH_TYPE_TEMPLATE = "[{}] [{}]: {} >>> {}"
-
-        fun of(log: Logger): ErrorLogger = ErrorLogger(log)
+        fun of(log: KLogger): ErrorLogger = ErrorLogger(log)
     }
 
     fun log(ex: Throwable) {
@@ -27,45 +21,24 @@ class ErrorLogger private constructor(
         ex: Exception,
         errorType: ErrorType,
     ) {
+        val message = { "[${ex.javaClass.simpleName}] [$errorType]: ${errorType.message} >>> ${ex.message}" }
         when (errorType.logLevel) {
-            LogLevel.ERROR ->
-                log.error(
-                    EXCEPTION_LOG_MESSAGE_WITH_TYPE_TEMPLATE,
-                    ex.javaClass.simpleName,
-                    errorType,
-                    errorType.message,
-                    ex.message,
-                    ex,
-                )
-            LogLevel.WARN ->
-                log.warn(
-                    EXCEPTION_LOG_MESSAGE_WITH_TYPE_TEMPLATE,
-                    ex.javaClass.simpleName,
-                    errorType,
-                    errorType.message,
-                    ex.message,
-                    ex,
-                )
-            else ->
-                log.info(
-                    EXCEPTION_LOG_MESSAGE_WITH_TYPE_TEMPLATE,
-                    ex.javaClass.simpleName,
-                    errorType,
-                    errorType.message,
-                    ex.message,
-                )
+            LogLevel.ERROR -> log.error(ex, message)
+            LogLevel.WARN -> log.warn(ex, message)
+            else -> log.info(message)
         }
     }
 
     private fun logCoreException(ex: CoreException) {
+        val message = { "[${ex.javaClass.simpleName}]: ${ex.message}" }
         when (ex.errorType.logLevel) {
-            LogLevel.ERROR -> log.error(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message, ex)
-            LogLevel.WARN -> log.warn(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message, ex)
-            else -> log.info(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message)
+            LogLevel.ERROR -> log.error(ex, message)
+            LogLevel.WARN -> log.warn(ex, message)
+            else -> log.info(message)
         }
     }
 
     private fun logException(ex: Throwable) {
-        log.error(EXCEPTION_LOG_MESSAGE_TEMPLATE, ex.javaClass.simpleName, ex.message, ex)
+        log.error(ex) { "[${ex.javaClass.simpleName}]: ${ex.message}" }
     }
 }

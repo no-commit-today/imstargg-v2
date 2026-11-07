@@ -1,0 +1,21 @@
+{
+  "tag": "#2U8CVLQQ9",
+  "name": "Club",
+  "description": "Club description",
+  "type": "inviteOnly",
+  "badgeId": 8000000,
+  "requiredTrophies": 1000,
+  "trophies": 300000,
+  "members": [
+    {
+      "tag": "#88J8Q9RPV",
+      "name": "Player",
+      "nameColor": null,
+      "role": "president",
+      "trophies": 30000,
+      "icon": {
+        "id": 28000000
+      }
+    }
+  ]
+}

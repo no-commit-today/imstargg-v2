@@ -1,13 +1,14 @@
 package com.imstargg.core.batch.support.alert
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.web.client.RestClient
+
+private val log = KotlinLogging.logger {}
 
 internal class DiscordAlertManager(
     restClientBuilder: RestClient.Builder,
     private val webhookUrl: String,
 ) : AlertManager {
-    private val log = LoggerFactory.getLogger(javaClass)
     private val restClient: RestClient = restClientBuilder.build()
 
     override fun alert(alertCommand: AlertCommand) {
@@ -19,7 +20,7 @@ internal class DiscordAlertManager(
                 .retrieve()
                 .body(Void::class.java)
         } catch (ex: Exception) {
-            log.error("Discord 알람 전송 실패", ex)
+            log.error(ex) { "Discord 알람 전송 실패" }
         }
     }
 }

@@ -1,11 +1,13 @@
 package com.imstargg.infrastructure.redis.core.statistics.player
 
 import com.imstargg.core.enums.BattleType
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.LocalDate
+
+private val log = KotlinLogging.logger {}
 
 /**
  * 플레이어 브롤러 통계 캐시. 플레이어별 Redis Hash 로 보관한다.
@@ -27,8 +29,6 @@ class PlayerBrawlerStatsCacheStore(
     private val redisTemplate: StringRedisTemplate,
     private val codec: PlayerBrawlerStatsCacheCodec,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     fun find(
         playerTag: String,
         battleType: BattleType,
@@ -46,7 +46,7 @@ class PlayerBrawlerStatsCacheStore(
                 .opsForHash<String, String>()
                 .get(key(playerTag), field)
                 ?.let { codec.decode(it) }
-        }.onFailure { log.warn("[PlayerBrawlerStatsCache] find 실패 tag={}", playerTag, it) }
+        }.onFailure { log.warn(it) { "[PlayerBrawlerStatsCache] find 실패 tag=$playerTag" } }
             .getOrNull()
 
     fun put(
@@ -66,13 +66,13 @@ class PlayerBrawlerStatsCacheStore(
                 )
             redisTemplate.opsForHash<String, String>().put(key, field, codec.encode(value))
             redisTemplate.expire(key, TTL)
-        }.onFailure { log.warn("[PlayerBrawlerStatsCache] put 실패 tag={}", playerTag, it) }
+        }.onFailure { log.warn(it) { "[PlayerBrawlerStatsCache] put 실패 tag=$playerTag" } }
     }
 
     fun evict(playerTag: String) {
         runCatching {
             redisTemplate.delete(key(playerTag))
-        }.onFailure { log.warn("[PlayerBrawlerStatsCache] evict 실패 tag={}", playerTag, it) }
+        }.onFailure { log.warn(it) { "[PlayerBrawlerStatsCache] evict 실패 tag=$playerTag" } }
     }
 
     private fun key(playerTag: String): String = "$KEY_PREFIX$playerTag"

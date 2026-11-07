@@ -36,7 +36,6 @@ function toBattleEvent(dto: BattleEventResponse): BattleEvent {
     id: dto.id,
     modeName: dto.mode ? pickName(dto.mode.name) : null,
     modeIconUrl: dto.mode ? dto.mode.iconImageUrl : null,
-    modeResultType: dto.mode ? dto.mode.resultType : null,
     mapName: pickName(dto.mapName),
   };
 }
