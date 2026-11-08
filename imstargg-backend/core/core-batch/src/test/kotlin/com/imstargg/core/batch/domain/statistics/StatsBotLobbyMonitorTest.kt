@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.domain.statistics
 
+import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.StatsEventMode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -75,6 +76,22 @@ class StatsBotLobbyMonitorTest {
         assertThat(metric("듀오 남은 전투 1위 비율")).extracting("warnAbove", "minSample").containsExactly(0.24, 1000L)
         assertThat(metric("트리오 남은 전투 1위 비율")).extracting("warnAbove", "minSample").containsExactly(0.31, 1000L)
         assertThat(metric("솔로 걸리는 비중")).extracting("warnBelow", "warnAbove").containsExactly(null, null)
+    }
+
+    @Test
+    fun `순위형 허용 모드는 모두 지표에 세진다`() {
+        // 새 순위형 모드를 SPECS 에 넣지 않거나 다른 모드로 잘못 넣으면 그 모드의 전투는 record 에서 조용히 버려진다.
+        // 정책의 판정 범위에서 빠진 모드도 여기서 함께 걸린다
+        val uncounted =
+            StatsEventMode.entries
+                .filter { it.resultType == BattleEventModeResultType.RANK }
+                .filter { mode ->
+                    val sut = StatsBotLobbyMonitor()
+                    sut.record(showdown(mode, List(mode.teamCount) { List(mode.teamSize) { 1000 } }))
+                    sut.metrics().none { it.total > 0 }
+                }
+
+        assertThat(uncounted).describedAs("감시 지표에 세지지 않는 순위형 모드").isEmpty()
     }
 
     @Test

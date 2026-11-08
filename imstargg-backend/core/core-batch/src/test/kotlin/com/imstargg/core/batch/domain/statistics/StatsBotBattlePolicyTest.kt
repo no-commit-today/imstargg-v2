@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.domain.statistics
 
+import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.StatsEventMode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -110,6 +111,18 @@ class StatsBotBattlePolicyTest {
         private fun trio(vararg others: List<Int>) = showdown(StatsEventMode.TRIO_SHOWDOWN, listOf(listOf(1500, 1500, 1500)) + others)
 
         private val farDuos = arrayOf(listOf(1700, 1710), listOf(1900, 1910))
+
+        @Test
+        fun `순위형 허용 모드는 모두 판정 범위에 들고 상대 전원이 한 창에 몰리면 봇 로비다`() {
+            // 새 순위형 모드를 쇼다운 임계값 when 에 넣지 않으면 그 모드의 봇 로비가 조용히 집계에 남는다
+            val lobbies =
+                StatsEventMode.entries
+                    .filter { it.resultType == BattleEventModeResultType.RANK }
+                    .associateWith { mode -> showdown(mode, List(mode.teamCount) { List(mode.teamSize) { 1000 } }) }
+
+            assertThat(lobbies.filterValues { !P.appliesTo(it) }.keys).describedAs("판정 범위에서 빠진 순위형 모드").isEmpty()
+            assertThat(lobbies.filterValues { !P.isBotLobby(it) }.keys).describedAs("몰린 로비를 봇 로비로 보지 않는 순위형 모드").isEmpty()
+        }
 
         @Test
         fun `솔로는 몰린 팀이 5 이상이면 봇 로비다`() {

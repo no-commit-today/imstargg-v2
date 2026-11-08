@@ -21,6 +21,9 @@ package com.imstargg.core.enums
  * 4. 프론트 `MODE_COLORS`(`imstargg-frontend/app/events/_components/modeStyles.ts`)에 모드 색을 추가한다.
  *    색을 정하지 않은 모드(아레나 48)는 기본 회색으로 보인다.
  * 5. 결과형이면 반드시 2×3 이어야 한다. [RESULT_SLOTS_PER_GAME] 의 전제다.
+ * 6. 순위형이면 core-batch 의 봇 로비 판정(`StatsBotBattlePolicy` 의 쇼다운 임계값)과 감시(`StatsBotLobbyMonitor` 의 `SPECS`)에도
+ *    모드를 더한다. 빠뜨리면 그 모드의 봇 로비가 판정과 감시에서 조용히 빠지고, `StatsBotBattlePolicyTest`·`StatsBotLobbyMonitorTest` 의
+ *    순위형 허용 모드 테스트가 실패한다. 결과형 봇 판정은 2×3 이면 따로 고칠 것이 없다.
  *
  * @property modeBrawlStarsId 브롤스타즈가 부여한 모드 ID
  * @property resultType 통계 수집 유형. 결과(승/패/무)를 모으는지, 순위를 모으는지 나타낸다
