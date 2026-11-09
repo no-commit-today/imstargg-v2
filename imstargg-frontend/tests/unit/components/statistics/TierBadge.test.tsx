@@ -17,4 +17,11 @@ describe("TierBadge", () => {
     render(<TierBadge tier="A" />);
     expect(screen.getByLabelText(/A 티어/)).toBeInTheDocument();
   });
+
+  it("등급이 없으면 – 와 표본 부족 라벨을 그린다", () => {
+    render(<TierBadge tier={null} />);
+    const badge = screen.getByLabelText("표본 부족");
+    expect(badge).toHaveTextContent("–");
+    expect(badge).toHaveAttribute("title", "표본 부족");
+  });
 });

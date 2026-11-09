@@ -1,3 +1,5 @@
+import type { StatTier } from "@/domain/statistics/tier";
+
 export const RESULT_SORT_BYS = ["PICK_RATE", "WIN_RATE"] as const;
 export type ResultStatsSortBy = (typeof RESULT_SORT_BYS)[number];
 
@@ -43,6 +45,20 @@ export function toggleSortOrder(order: SortOrder): SortOrder {
 
 function sortSign(order: SortOrder): number {
   return order === "DESC" ? -1 : 1;
+}
+
+type BrawlerTierKey = { tier: StatTier | null; tierScore: number };
+
+/** 등급 있는 행이 order 와 관계없이 먼저 오고, 같은 쪽끼리는 tierScore 로 order 순서를 따른다. null 은 등급 없음, 점수 0 이다. */
+export function compareBrawlerTier(
+  a: BrawlerTierKey | null,
+  b: BrawlerTierKey | null,
+  order: SortOrder,
+): number {
+  const aGraded = a?.tier != null;
+  const bGraded = b?.tier != null;
+  if (aGraded !== bGraded) return aGraded ? -1 : 1;
+  return ((a?.tierScore ?? 0) - (b?.tierScore ?? 0)) * sortSign(order);
 }
 
 export function sortResultStats<T extends { pickRate: number; winRate: number }>(
