@@ -10,6 +10,13 @@
 
 **Spec:** [docs/superpowers/specs/2026-11-10-brawler-tier-score-design.md](../specs/2026-11-10-brawler-tier-score-design.md). 결정 1 ~ 8, §3 설계, §5 테스트가 근거다. 이 계획이 스펙과 어긋나면 스펙이 이긴다.
 
+**개정(2026-11-10, 실행 뒤):** 최종 검토 뒤 스펙이 결정 9 를 더했다. 인기 가산의 중앙값을 전투 수가 300 이상인 브롤러만으로 낸다. 아래 본문은 실행 당시 그대로 두었다. 개정으로 달라진 곳은 이렇다.
+
+- Global Constraints 의 산식과 경계 처리: m 은 n 이 300 이상인 브롤러들의 n 의 중앙값이다. 그런 브롤러가 없으면 모든 가산이 0 이고, 있는데 n 이 0 이면 −4 다.
+- Task 1 의 `median`: 전투 수가 300 이상인 것만 걸러서 넘긴다. 빈 목록이면 `null` 을 돌려주고, `median == 0.0` 분기는 `median == null` 이 됐다.
+- Task 1 의 테스트: `중앙값이 0 이면 가산은 0 이다` 를 지우고 스펙 §5 의 사례 넷(표본 부족이 과반, 중앙값 경계 둘, 등급 받는 브롤러 없음)을 테스트 셋으로 더했다.
+- Task 2 의 순서 테스트: a 의 점수가 58 에서 57 이 됐다. 등급 A 와 항목 순서는 같다.
+
 ## Global Constraints
 
 - `./gradlew` 명령은 `imstargg-backend/`, `pnpm` 명령은 `imstargg-frontend/` 에서 실행한다. **`git` 명령(`git add`, `git commit`, `git grep`)은 저장소 루트에서 실행한다.** 경로를 저장소 루트 기준으로 적었기 때문이다. 백엔드를 고친 Task 는 커밋 전에 `imstargg-backend/` 에서 `./gradlew ktlintFormat` 을 돌린다. `pnpm` 이 "env: node: No such file" 로 죽으면 `/opt/homebrew/bin/pnpm` 을 쓴다.
