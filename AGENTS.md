@@ -59,3 +59,9 @@ imstargg-v2/
 - `imstargg-frontend/AGENTS.md` - 사용자 프론트엔드 개발 가이드
 - `imstargg-admin-frontend/AGENTS.md` - 관리자 프론트엔드 개발 가이드
 - `imstargg-tools/AGENTS.md` - 에이전트용 도구 사용 지침
+
+## 용어 사전·도메인 정의
+
+- 용어 사전: docs/superglossary/glossary.md (이름을 짓기 전에 읽는다. 없는 단어는 /superglossary:glossary로 추가한다)
+- 도메인 정의: docs/superdomain/DOMAIN.md (도메인의 역할·관계를 바꾸는 작업 전에 읽는다)
+- 결정 기록: docs/superdomain/adr/ (비싸거나 중요한 결정을 내린 작업을 마치면 /superdomain:adr로 기록할지 제안한다)
