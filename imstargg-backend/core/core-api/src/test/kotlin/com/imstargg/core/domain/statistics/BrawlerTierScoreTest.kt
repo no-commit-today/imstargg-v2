@@ -104,9 +104,32 @@ class BrawlerTierScoreTest {
         }
 
         @Test
-        fun `중앙값이 0 이면 가산은 0 이다`() {
-            assertThat(create(count(0, 0), count(0, 0), count(500, 500)))
-                .containsExactly(score(50, null), score(50, null), b50)
+        fun `중앙값은 전투 수가 300 이상인 브롤러만으로 낸다`() {
+            // 표본이 적은 셋까지 넣은 중앙값(100)으로 가산을 내면 앞의 둘이 모두 54점이 된다
+            val short = count(50, 50)
+            assertThat(create(count(500, 500), count(1500, 1500), short, short, short))
+                .containsExactly(
+                    score(48, TierGrade.B),
+                    score(51, TierGrade.B),
+                    score(46, null),
+                    score(46, null),
+                    score(46, null),
+                )
+        }
+
+        @Test
+        fun `전투 수가 300 이면 중앙값에 들어가고 299 면 빠진다`() {
+            assertThat(create(count(150, 150), count(450, 450)))
+                .containsExactly(score(48, TierGrade.B), score(51, TierGrade.B))
+            assertThat(create(count(150, 149), count(450, 450)))
+                .containsExactly(score(47, null), b50)
+        }
+
+        @Test
+        fun `전투 수가 300 이상인 브롤러가 없으면 가산은 0 이다`() {
+            // 전투 수가 0 인 항목도 -4 가 아니라 0 이다
+            assertThat(create(count(100, 100), count(100, 100), count(25, 25), count(0, 0)))
+                .containsExactly(score(50, null), score(50, null), score(50, null), score(50, null))
         }
 
         @Test

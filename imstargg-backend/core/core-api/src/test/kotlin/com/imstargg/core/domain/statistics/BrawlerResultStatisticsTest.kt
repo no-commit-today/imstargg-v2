@@ -69,7 +69,7 @@ class BrawlerResultStatisticsTest {
 
         @Test
         fun `등급 있는 항목이 먼저 오고 그 안에서 점수와 전투 수 내림차순이다`() {
-            // given: a 58/A, b 46/B(1만 판), c 46/B(9500판), d 65/없음(100판), e 44/없음(200판). 입력 순서는 섞는다
+            // given: a 57/A, b 46/B(1만 판), c 46/B(9500판), d 65/없음(100판), e 44/없음(200판). 입력 순서는 섞는다
             val event = BrawlStarsId(1L)
             val (a, b, c, d, e) = (10L..14L).map { BrawlStarsId(it) }
             val rows =
@@ -87,7 +87,7 @@ class BrawlerResultStatisticsTest {
             // then
             assertThat(sut.items.map { it.brawlerId }).containsExactly(a, b, c, d, e)
             assertThat(sut.items.map { it.tierScore }).containsExactly(
-                BrawlerTierScore(value = 58, grade = TierGrade.A),
+                BrawlerTierScore(value = 57, grade = TierGrade.A),
                 BrawlerTierScore(value = 46, grade = TierGrade.B),
                 BrawlerTierScore(value = 46, grade = TierGrade.B),
                 BrawlerTierScore(value = 65, grade = null),

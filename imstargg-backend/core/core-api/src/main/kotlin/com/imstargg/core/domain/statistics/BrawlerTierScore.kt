@@ -16,14 +16,20 @@ import kotlin.math.tanh
  * - 평균 승률(μ) = 입력 전체의 `Σ승 / Σ(승 + 패)`.
  * - 가산 = `PICK_RATE_BONUS_CAP × tanh(ln(n / 중앙값) / ln(PICK_RATE_BONUS_SATURATION))`.
  *   픽률 ÷ 픽률 중앙값의 로그를 tanh 로 ±4점에 묶은 값이며, 전투 수 ÷ 전투 수 중앙값과 같다.
- *   중앙값이 0 이면 0, 중앙값이 0 보다 큰데 n 이 0 이면 −4 다.
+ *   중앙값은 등급을 받는(전투 수가 [GRADE_MIN_BATTLE_COUNT] 이상인) 브롤러만으로 낸다.
+ *   그런 브롤러가 없으면 모든 가산이 0 이고, 있는데 n 이 0 이면 −4 다.
  *
  * ## 상수를 이렇게 둔 이유
  * 가산 상한 4 는 A 경계까지의 거리(5)보다 작아, 인기만으로는 등급이 바뀌지 않는다.
  * 표본 하한 300 은 수축 승률이 자기 승률과 평균 승률의 중간이 되는 판수(`BAYESIAN_C`)다.
  *
+ * ## 중앙값을 등급 받는 브롤러만으로 내는 이유
+ * 표본이 적은 브롤러가 과반인 맥락(맵 하나, 상위 티어 구간)에서 모든 브롤러로 중앙값을 내면
+ * 중앙값이 표본 하한 아래로 내려간다. 그러면 등급을 받는 브롤러가 모두 상한에 가까운 가산을 받아,
+ * 가산이 브롤러를 가르지 못하고 그 맥락의 등급만 위로 민다.
+ *
  * ## 맥락에 따라 점수가 바뀐다
- * μ 와 중앙값이 조회 맥락(이벤트, 티어 구간, 기간)의 모든 브롤러에서 나오므로,
+ * μ 는 조회 맥락(이벤트, 티어 구간, 기간)의 모든 브롤러에서, 중앙값은 그중 등급을 받는 브롤러에서 나오므로,
  * 맥락이 바뀌면 같은 브롤러의 점수도 바뀐다.
  *
  * ## 저장하지 않는다
@@ -33,6 +39,7 @@ import kotlin.math.tanh
  * ## 결정 이력
  * 2026-11 스펙 C2 가 픽률을 곱하던 가중을 버리고 가산으로 바꿨고,
  * 등급 경계를 55/52/48/45 에서 60/55/45/40 으로 넓혔고, 표본 하한을 새로 뒀다. 근거 수치는 스펙 부록 C2.
+ * 같은 스펙의 2026-11-10 개정이 중앙값을 내는 대상을 등급 받는 브롤러로 좁혔다(부록 C2.12).
  */
 data class BrawlerTierScore(
     val value: Int,
@@ -53,14 +60,14 @@ data class BrawlerTierScore(
                     victoryCount = counts.values.sumOf { it.victoryCount },
                     defeatCount = counts.values.sumOf { it.defeatCount },
                 )
-            val median = median(counts.values.map { it.totalCount })
+            val median = median(counts.values.map { it.totalCount }.filter { it >= GRADE_MIN_BATTLE_COUNT })
 
             return counts.mapValues { (_, resultCount) ->
                 val n = resultCount.totalCount.toDouble()
                 val adjustedWinRate = (n * resultCount.winRate + BAYESIAN_C * averageWinRate) / (n + BAYESIAN_C)
                 val bonus =
                     when {
-                        median == 0.0 -> 0.0
+                        median == null -> 0.0
                         n == 0.0 -> -PICK_RATE_BONUS_CAP
                         else -> PICK_RATE_BONUS_CAP * tanh(ln(n / median) / ln(PICK_RATE_BONUS_SATURATION))
                     }
@@ -82,7 +89,8 @@ data class BrawlerTierScore(
                 else -> TierGrade.D
             }
 
-        private fun median(values: List<Long>): Double {
+        private fun median(values: List<Long>): Double? {
+            if (values.isEmpty()) return null
             val sorted = values.sorted()
             val middle = sorted.size / 2
             return if (sorted.size % 2 == 1) {
