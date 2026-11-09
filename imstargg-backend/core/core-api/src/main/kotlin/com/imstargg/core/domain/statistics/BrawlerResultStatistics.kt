@@ -9,7 +9,7 @@ data class BrawlerResultStatisticsItem(
     val pickRate: Double,
     val winRate: Double,
     val starPlayerRate: Double,
-    val tierScore: TierScore,
+    val tierScore: BrawlerTierScore,
 )
 
 /**
@@ -38,9 +38,8 @@ data class BrawlerResultStatistics(
                         )
                     }
             val tierScores =
-                TierScore.create(
+                BrawlerTierScore.create(
                     brawlerAggregates.associate { it.brawlerId to it.resultCount },
-                    pickRateWeight = true,
                 )
 
             val items =
@@ -56,12 +55,17 @@ data class BrawlerResultStatistics(
                                 agg.starPlayerCount,
                                 agg.resultCount.totalCount,
                             ),
-                        tierScore = tierScores[agg.brawlerId] ?: TierScore(50),
+                        tierScore = tierScores.getValue(agg.brawlerId),
                     )
                 }
             return BrawlerResultStatistics(
                 totalBattleCount = totalBattleCount,
-                items = items.sortedByDescending { it.tierScore.value },
+                items =
+                    items.sortedWith(
+                        compareByDescending<BrawlerResultStatisticsItem> { it.tierScore.grade != null }
+                            .thenByDescending { it.tierScore.value }
+                            .thenByDescending { it.battleCount },
+                    ),
             )
         }
     }
