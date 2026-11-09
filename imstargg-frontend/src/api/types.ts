@@ -239,7 +239,7 @@ export interface BrawlerResultStatisticsItemResponse {
   winRate: number;
   starPlayerRate: number;
   tierScore: number;
-  tier: string; // "S" | "A" | "B" | "C" | "D"
+  tier: string | null; // "S" | "A" | "B" | "C" | "D", 표본 부족이면 null
 }
 
 export interface BrawlerResultStatisticsResponse {

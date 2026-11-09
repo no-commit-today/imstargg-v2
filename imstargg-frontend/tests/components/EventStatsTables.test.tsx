@@ -79,4 +79,32 @@ describe("EventStatsTables", () => {
     expect(screen.queryByRole("link")).toBeNull();
     expect(screen.getAllByText("-")).toHaveLength(2);
   });
+
+  it("등급 없는 결과형 행은 표본 부족 배지와 neutral 레일이고 범례가 보인다", () => {
+    render(<EventResultStatsTable items={[{ brawler, ...resultItem, tier: null }]} />);
+
+    expect(screen.getByRole("link", { name: /데미안/ })).toHaveAttribute("data-rail", "neutral");
+    expect(screen.getByLabelText("표본 부족")).toBeInTheDocument();
+    expect(screen.getByText(/표본 부족: 전투 수가 적어 티어를 매기지 않습니다/)).toBeInTheDocument();
+  });
+
+  it("등급이 모두 있으면 범례가 없다", () => {
+    render(<EventResultStatsTable items={[{ brawler, ...resultItem }]} />);
+
+    expect(screen.queryByText(/표본 부족: 전투 수가 적어 티어를 매기지 않습니다/)).toBeNull();
+  });
+
+  it("결과형 표의 티어 정렬에서 등급 없는 행은 아래다", () => {
+    const other: Brawler = { ...brawler, id: 16000105, name: "쉘리" };
+    render(
+      <EventResultStatsTable
+        items={[
+          { brawler, ...resultItem, tier: null, tierScore: 66 },
+          { brawler: other, ...resultItem, tier: "B" as const, tierScore: 50 },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole("link")[0]).toHaveAccessibleName(/쉘리/);
+  });
 });

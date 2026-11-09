@@ -64,7 +64,25 @@ describe("toBrawlerResultStatistics", () => {
     expect(result.items[0].brawler).toBeNull();
   });
 
-  it("알 수 없는 tier 는 D 로 fallback", () => {
+  it("tier 가 null 이면 등급 없음(null)으로 매핑한다", () => {
+    const result = toBrawlerResultStatistics({
+      totalBattleCount: 0,
+      items: [
+        {
+          brawler: null,
+          battleCount: 1,
+          pickRate: 0,
+          winRate: 0,
+          starPlayerRate: 0,
+          tierScore: 66,
+          tier: null,
+        },
+      ],
+    });
+    expect(result.items[0].tier).toBeNull();
+  });
+
+  it("알 수 없는 tier 는 등급 없음(null)으로 매핑한다", () => {
     const result = toBrawlerResultStatistics({
       totalBattleCount: 0,
       items: [
@@ -79,7 +97,7 @@ describe("toBrawlerResultStatistics", () => {
         },
       ],
     });
-    expect(result.items[0].tier).toBe("D");
+    expect(result.items[0].tier).toBeNull();
   });
 });
 

@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import type { Brawler } from "@/domain/brawler/types";
 import type { BrawlerResultStat } from "@/domain/statistics/types";
 import type { SortOrder } from "@/domain/statistics/sort";
-import { toggleSortOrder } from "@/domain/statistics/sort";
+import { compareBrawlerTier, toggleSortOrder } from "@/domain/statistics/sort";
 import { SortableHeader } from "@app/_components/statistics/SortableHeader";
+import { UngradedTierDescription } from "@app/_components/statistics/UngradedTierDescription";
 import { BrawlerStatRow } from "./BrawlerStatRow";
 import { BrawlerListHeader } from "./BrawlerListHeader";
 import StarIcon from "@/components/primitives/StarIcon";
@@ -42,7 +43,7 @@ function compareRows(a: Row, b: Row, sort: SortKey, order: SortOrder): number {
       return ((a.stat?.battleCount ?? 0) - (b.stat?.battleCount ?? 0)) * sign;
     case "tier":
     default:
-      return ((a.stat?.tierScore ?? 0) - (b.stat?.tierScore ?? 0)) * sign;
+      return compareBrawlerTier(a.stat, b.stat, order);
   }
 }
 
@@ -101,6 +102,7 @@ export function BrawlerStatTable({
           <BrawlerStatRow key={r.brawler.id} rank={i + 1} brawler={r.brawler} stat={r.stat} />
         ))
       )}
+      {sorted.some((r) => !r.stat?.tier) && <UngradedTierDescription />}
     </div>
   );
 }

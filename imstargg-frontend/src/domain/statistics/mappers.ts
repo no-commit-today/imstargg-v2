@@ -22,7 +22,7 @@ import type {
   PairResultStat,
   TrioResultStat,
 } from "@/domain/statistics/types";
-import { parseTier } from "@/domain/statistics/tier";
+import { parseBrawlerTier, parseTier } from "@/domain/statistics/tier";
 
 function toBrawlerResultStat(dto: BrawlerResultStatisticsItemResponse): BrawlerResultStat {
   return {
@@ -32,7 +32,7 @@ function toBrawlerResultStat(dto: BrawlerResultStatisticsItemResponse): BrawlerR
     winRate: dto.winRate,
     starPlayerRate: dto.starPlayerRate,
     tierScore: dto.tierScore,
-    tier: parseTier(dto.tier),
+    tier: parseBrawlerTier(dto.tier),
   };
 }
 

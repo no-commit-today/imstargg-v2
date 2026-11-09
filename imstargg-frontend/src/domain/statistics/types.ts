@@ -8,7 +8,7 @@ export interface BrawlerResultStat {
   winRate: number;
   starPlayerRate: number;
   tierScore: number;
-  tier: StatTier;
+  tier: StatTier | null;
 }
 
 export interface BrawlerResultStatistics {

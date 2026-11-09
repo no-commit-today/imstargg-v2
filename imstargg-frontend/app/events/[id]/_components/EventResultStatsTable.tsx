@@ -4,10 +4,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { BrawlerResultStat } from "@/domain/statistics/types";
 import type { SortOrder } from "@/domain/statistics/sort";
-import { toggleSortOrder } from "@/domain/statistics/sort";
+import { compareBrawlerTier, toggleSortOrder } from "@/domain/statistics/sort";
 import { BrawlerAvatar } from "@/components/primitives/BrawlerAvatar";
 import { TierBadge } from "@app/_components/statistics/TierBadge";
 import { SortableHeader } from "@app/_components/statistics/SortableHeader";
+import { UngradedTierDescription } from "@app/_components/statistics/UngradedTierDescription";
+import type { StatTier } from "@/domain/statistics/tier";
 import {
   CountCell,
   PercentCell,
@@ -28,7 +30,8 @@ type SortKey =
 const resultGrid =
   "grid-cols-[26px_minmax(0,1fr)_36px_42px_42px_42px_52px] sm:grid-cols-[48px_minmax(0,1fr)_56px_72px_72px_72px_96px]";
 
-function rowRail(rank: number, tier: string): "gold" | "silver" | "bronze" | "win" | "neutral" | "loss" {
+function rowRail(rank: number, tier: StatTier | null): "gold" | "silver" | "bronze" | "win" | "neutral" | "loss" {
+  if (tier === null) return "neutral";
   if (rank === 1) return "gold";
   if (rank === 2) return "silver";
   if (rank === 3) return "bronze";
@@ -45,7 +48,7 @@ function compareItems(a: BrawlerResultStat, b: BrawlerResultStat, sort: SortKey,
     case "starPlayerRate": return (a.starPlayerRate - b.starPlayerRate) * sign;
     case "battleCount": return (a.battleCount - b.battleCount) * sign;
     case "tier":
-    default: return (a.tierScore - b.tierScore) * sign;
+    default: return compareBrawlerTier(a, b, order);
   }
 }
 
@@ -124,6 +127,7 @@ export function EventResultStatsTable({ items }: Props) {
           );
         })
       )}
+      {sorted.some((it) => it.tier === null) && <UngradedTierDescription />}
     </div>
   );
 }
