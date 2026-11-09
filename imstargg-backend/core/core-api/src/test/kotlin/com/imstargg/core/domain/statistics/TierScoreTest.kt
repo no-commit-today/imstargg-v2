@@ -47,7 +47,7 @@ class TierScoreTest {
             val counts = emptyList<BrawlerResultCount>()
 
             // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount })
 
             // then
             assertThat(result).isEmpty()
@@ -70,7 +70,7 @@ class TierScoreTest {
                     ),
                 )
             // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount })
 
             // then
             assertThat(result[BrawlStarsId(1)]!!.grade()).isEqualTo(TierGrade.B)
@@ -93,42 +93,12 @@ class TierScoreTest {
                     ),
                 )
             // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount })
 
             // then
             val strongBrawler = result[BrawlStarsId(1)]!!
             val averageBrawler = result[BrawlStarsId(2)]!!
             assertThat(strongBrawler.value).isGreaterThan(averageBrawler.value)
-        }
-
-        @Test
-        fun `높은 승률이라도 매우 낮은 픽률이면 점수가 억제된다`() {
-            // given
-            val counts =
-                listOf(
-                    BrawlerResultCount(
-                        brawlerId = BrawlStarsId(1),
-                        resultCount = ResultCount(victoryCount = 55, defeatCount = 45, drawCount = 0),
-                        starPlayerCount = 10,
-                    ),
-                    BrawlerResultCount(
-                        brawlerId = BrawlStarsId(2),
-                        resultCount = ResultCount(victoryCount = 5500, defeatCount = 4500, drawCount = 0),
-                        starPlayerCount = 1000,
-                    ),
-                    BrawlerResultCount(
-                        brawlerId = BrawlStarsId(3),
-                        resultCount = ResultCount(victoryCount = 5000, defeatCount = 5000, drawCount = 0),
-                        starPlayerCount = 500,
-                    ),
-                )
-            // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
-
-            // then
-            val lowPickHighWinBrawler = result[BrawlStarsId(1)]!!
-            val highPickHighWinBrawler = result[BrawlStarsId(2)]!!
-            assertThat(lowPickHighWinBrawler.value).isLessThan(highPickHighWinBrawler.value)
         }
 
         @Test
@@ -148,7 +118,7 @@ class TierScoreTest {
                     ),
                 )
             // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount })
 
             // then
             val weakBrawler = result[BrawlStarsId(1)]!!
@@ -172,7 +142,7 @@ class TierScoreTest {
                     ),
                 )
             // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount })
 
             // then
             result.values.forEach { tierScore ->
@@ -192,16 +162,16 @@ class TierScoreTest {
                     ),
                 )
             // when
-            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount }, pickRateWeight = true)
+            val result = TierScore.create(counts.associate { it.brawlerId to it.resultCount })
 
             // then
             assertThat(result[BrawlStarsId(1)]!!.value).isEqualTo(50)
         }
 
         @Test
-        fun `가중을 끄면 점수는 수축 승률만으로 정해진다`() {
+        fun `점수는 수축 승률만으로 정해진다`() {
             // avg = 1160/2100 = 0.55238. few: adj = (100·0.6 + 300·avg)/400 = 0.56429 → 50 + 0.01190·200 = 52.38 → 52
-            // many: adj = (1000·0.6 + 300·avg)/1300 = 0.58901 → 57.33 → 57. 가중 on 이면 few 의 픽률 가중 0.506 으로 51.
+            // many: adj = (1000·0.6 + 300·avg)/1300 = 0.58901 → 57.33 → 57.
             val counts =
                 mapOf(
                     "many" to ResultCount(victoryCount = 600, defeatCount = 400, drawCount = 0),
@@ -209,17 +179,15 @@ class TierScoreTest {
                     "avg" to ResultCount(victoryCount = 500, defeatCount = 500, drawCount = 0),
                 )
 
-            val off = TierScore.create(counts, pickRateWeight = false)
-            val on = TierScore.create(counts, pickRateWeight = true)
+            val result = TierScore.create(counts)
 
-            assertThat(off["few"]).isEqualTo(TierScore(52))
-            assertThat(off["many"]).isEqualTo(TierScore(57))
-            assertThat(on["few"]!!.value).isLessThan(off["few"]!!.value)
+            assertThat(result["few"]).isEqualTo(TierScore(52))
+            assertThat(result["many"]).isEqualTo(TierScore(57))
         }
 
         @Test
-        fun `가중을 꺼도 n 이 0 인 키는 50 이다`() {
-            val result = TierScore.create(mapOf("x" to ResultCount(0, 0, 0)), pickRateWeight = false)
+        fun `n 이 0 인 키는 50 이다`() {
+            val result = TierScore.create(mapOf("x" to ResultCount(0, 0, 0)))
 
             assertThat(result["x"]).isEqualTo(TierScore(50))
         }
@@ -233,7 +201,7 @@ class TierScoreTest {
                     "b" to ResultCount(victoryCount = 40, defeatCount = 60, drawCount = 0),
                 )
 
-            val result = TierScore.create(counts, pickRateWeight = false, baselineWinRate = 0.5)
+            val result = TierScore.create(counts, baselineWinRate = 0.5)
 
             assertThat(result["a"]).isEqualTo(TierScore(55))
             assertThat(result["b"]).isEqualTo(TierScore(45))
@@ -250,8 +218,8 @@ class TierScoreTest {
                     "b" to ResultCount(victoryCount = 60, defeatCount = 40, drawCount = 0),
                 )
 
-            val withoutBaseline = TierScore.create(counts, pickRateWeight = false)
-            val withBaseline = TierScore.create(counts, pickRateWeight = false, baselineWinRate = 0.5)
+            val withoutBaseline = TierScore.create(counts)
+            val withBaseline = TierScore.create(counts, baselineWinRate = 0.5)
 
             assertThat(withoutBaseline["a"]).isEqualTo(TierScore(55))
             assertThat(withBaseline["a"]).isEqualTo(TierScore(65))

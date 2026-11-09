@@ -24,7 +24,6 @@ data class TrioResultRanking(
             val tierScores =
                 TierScore.create(
                     counts.associate { Triple(it.brawler1Id, it.brawler2Id, it.brawler3Id) to it.resultCount },
-                    pickRateWeight = false,
                     baselineWinRate = ComboStatsPolicy.COMBO_BASELINE_WIN_RATE,
                 )
             val items =

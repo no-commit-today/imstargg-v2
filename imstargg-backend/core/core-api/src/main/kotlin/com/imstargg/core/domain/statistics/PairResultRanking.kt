@@ -23,7 +23,6 @@ data class PairResultRanking(
             val tierScores =
                 TierScore.create(
                     counts.associate { (it.brawler1Id to it.brawler2Id) to it.resultCount },
-                    pickRateWeight = false,
                     baselineWinRate = ComboStatsPolicy.COMBO_BASELINE_WIN_RATE,
                 )
             val items =
