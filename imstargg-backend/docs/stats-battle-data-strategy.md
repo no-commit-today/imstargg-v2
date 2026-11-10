@@ -21,8 +21,8 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 
 | 테이블 | 역할 | 파티션 키 | 보관 기간 |
 |--------|------|----------|----------|
-| `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 7일 |
-| `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 7일 |
+| `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 45일 (임시, `RETENTION_DAYS`) |
+| `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 45일 (임시, `RETENTION_DAYS`) |
 
 ### 2.2 Stats Battle 테이블
 
@@ -76,8 +76,8 @@ partition by range (to_days(battle_date)) (
 ```
 
 - **파티션 키**: `battle_date` (배틀 일자, 한국 시간 기준)
-- **보관 기간**: 7일
-- **삭제 시점**: 통계 반영 완료 후 7일 경과 시 파티션 삭제
+- **보관 기간**: 45일 (`PartitionManageJobConfig.RETENTION_DAYS`). 패치 기준 통계 재설계(새 집계 구조) 가동 전까지 원본을 남기려는 임시값이며(기존 10일), 가동 뒤 다시 줄인다.
+- **삭제 시점**: `partitionManageJob`(매일 02:00 KST)이 실행일 − 45일보다 이른 파티션을 삭제
 
 ## 5. 통계 집계 배치 전략
 
@@ -111,11 +111,11 @@ partition by range (to_days(battle_date)) (
 
 | 테이블 유형 | 보관 기간 | 삭제 조건 |
 |-------------|----------|----------|
-| Stats Battle | 7일 | 통계 반영 완료 + 7일 경과 |
+| Stats Battle | 45일 (임시) | 실행일 − 45일보다 이른 파티션 삭제 |
 
 - 수집된 데이터는 최근 3일 롤링 배치로 통계 반영
 - 통계 반영 후에는 원본 데이터 불필요
-- 여유 기간 포함하여 7일 보관
+- 평소에는 주간 통계 최대 룩백을 덮는 10일을 보관한다. 지금은 패치 기준 통계 재설계가 가동될 때까지 원본을 남기려고 임시로 45일 보관한다.
 
 ## 7. 파티션 관리 가이드
 
@@ -136,7 +136,7 @@ ALTER TABLE stats_rank_battle ADD PARTITION (
 ### 7.2 파티션 삭제 (보관 기간 초과)
 
 ```sql
--- Stats Battle: 7일 초과 파티션 삭제
+-- Stats Battle: 보관 기간(RETENTION_DAYS) 초과 파티션 삭제
 ALTER TABLE stats_result_battle DROP PARTITION p_20250101;
 ALTER TABLE stats_rank_battle DROP PARTITION p_20250101;
 ```
