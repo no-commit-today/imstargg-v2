@@ -16,7 +16,6 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
-import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
@@ -60,6 +59,10 @@ class BattleEventSyncJobConfig(
     @JobScope
     fun dateJobParameter() = DateJobParameter()
 
+    /**
+     * incrementer 를 두지 않는다: 잡에 incrementer 가 있으면 `JobOperator.start` 가 실행 인자를 버리고
+     * run.id 만 넘겨, 필수 파라미터 `date` 검증에서 매번 실패한다.
+     */
     @Bean(JOB_NAME)
     fun battleEventSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
@@ -71,7 +74,6 @@ class BattleEventSyncJobConfig(
             ).start(battleEventSyncFromRankBattleStep())
             .next(battleEventSyncFromResultBattleStep())
             .next(battleEventSyncFromRotationStep())
-            .incrementer(RunIdIncrementer())
             .build()
 
     @Bean(STEP_1_NAME)
