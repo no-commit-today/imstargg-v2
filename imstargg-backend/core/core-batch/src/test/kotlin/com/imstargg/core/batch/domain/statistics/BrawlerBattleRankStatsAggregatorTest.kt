@@ -29,6 +29,28 @@ class BrawlerBattleRankStatsAggregatorTest {
         assertThat(aggregate(duo(listOf(1000, 1010), listOf(1200, 1210), listOf(1400, 1410), listOf(1600, 1610)))).isNotEmpty()
     }
 
+    @Test
+    fun `20인 솔로 쇼다운(모드 75)의 순위 19 전투는 건너뛰고 같은 날짜의 솔로 쇼다운 전투는 집계한다`() {
+        val sut = BrawlerBattleRankStatsAggregator()
+
+        sut.aggregate(statsRankBattle(teams = listOf(listOf(statsPlayer(1))), battleRank = 19, eventModeBrawlStarsId = 75))
+        sut.aggregate(
+            statsRankBattle(
+                teams = listOf(listOf(statsPlayer(2))),
+                eventModeBrawlStarsId = StatsEventMode.SOLO_SHOWDOWN.modeBrawlStarsId,
+            ),
+        )
+
+        assertThat(sut.toEntities().map { it.brawlerBrawlStarsId }).containsOnly(2L)
+    }
+
+    @Test
+    fun `10팀 듀오 쇼다운(모드 86) 전투는 집계하지 않는다`() {
+        assertThat(
+            aggregate(statsRankBattle(teams = listOf(listOf(statsPlayer(1), statsPlayer(2))), battleRank = 3, eventModeBrawlStarsId = 86)),
+        ).isEmpty()
+    }
+
     private fun aggregate(battle: StatsRankBattleEntity) = BrawlerBattleRankStatsAggregator().also { it.aggregate(battle) }.toEntities()
 
     private fun duo(
