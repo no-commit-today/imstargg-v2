@@ -35,8 +35,11 @@ class PartitionManageJobConfig(
          * 원본 배틀(stats_*_battle) 파티션 보존 일수.
          * 주간 통계 잡의 최대 룩백([com.imstargg.core.enums.StatsWeekRange.currentAndPrevious] 기준
          * 최대 7일 + 실행일 보정 1일)을 커버해야 한다 — 가드: PartitionRetentionLookbackTest
+         *
+         * 45 는 패치 기준 통계 재설계(새 집계 구조) 가동 전까지 원본을 보존하기 위한 임시값이다(기존 10).
+         * 새 집계 구조가 가동되면 다시 줄인다.
          */
-        const val RETENTION_DAYS = 10
+        const val RETENTION_DAYS = 45
     }
 
     @Bean(DATE_PARAMETER_NAME)
