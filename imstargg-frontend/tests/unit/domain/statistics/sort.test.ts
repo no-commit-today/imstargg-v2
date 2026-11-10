@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   COMBO_SORT_BYS,
   COMBO_SORT_LABELS,
+  compareBrawlerTier,
+  type SortOrder,
   parseResultSortBy,
   parseSortOrder,
   sortComboStats,
@@ -122,5 +124,23 @@ describe("COMBO_SORT_LABELS", () => {
       PICK_RATE: "픽률",
       BATTLE_COUNT: "전투수",
     });
+  });
+});
+
+describe("compareBrawlerTier", () => {
+  const s = { id: "s", tier: "S" as const, tierScore: 62 };
+  const b = { id: "b", tier: "B" as const, tierScore: 50 };
+  const high = { id: "high", tier: null, tierScore: 66 };
+  const low = { id: "low", tier: null, tierScore: 46 };
+  const sortedIds = (order: SortOrder) =>
+    [low, b, null, high, s]
+      .sort((x, y) => compareBrawlerTier(x, y, order))
+      .map((x) => x?.id ?? "none");
+
+  it("내림차순이면 등급 있는 행이 점수순으로 먼저 오고 등급 없는 행이 뒤에 온다", () => {
+    expect(sortedIds("DESC")).toEqual(["s", "b", "high", "low", "none"]);
+  });
+  it("오름차순에서도 등급 없는 행은 아래다", () => {
+    expect(sortedIds("ASC")).toEqual(["b", "s", "none", "low", "high"]);
   });
 });

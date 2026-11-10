@@ -16,7 +16,8 @@ type Props = {
   stat: BrawlerResultStat | null;
 };
 
-function railFor(rank: number, tier: StatTier | undefined): string {
+function railFor(rank: number, tier: StatTier | null): string {
+  if (tier === null) return "neutral";
   if (rank === 1) return "gold";
   if (rank === 2) return "silver";
   if (rank === 3) return "bronze";
@@ -31,7 +32,7 @@ function railFor(rank: number, tier: StatTier | undefined): string {
 }
 
 export function BrawlerStatRow({ rank, brawler, stat }: Props) {
-  const rail = railFor(rank, stat?.tier);
+  const rail = railFor(rank, stat?.tier ?? null);
   return (
     <Link
       href={`/brawlers/${brawler.id}`}
@@ -52,7 +53,7 @@ export function BrawlerStatRow({ rank, brawler, stat }: Props) {
         </span>
         <span className="truncate font-bold">{brawler.name}</span>
       </div>
-      <div>{stat ? <TierBadge tier={stat.tier} /> : <TierBadge tier="D" />}</div>
+      <div><TierBadge tier={stat?.tier ?? null} /></div>
       <PercentCell value={stat?.winRate ?? 0} />
       <PercentCell value={stat?.pickRate ?? 0} />
       <PercentCell value={stat?.starPlayerRate ?? 0} />

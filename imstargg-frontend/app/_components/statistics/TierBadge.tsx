@@ -1,6 +1,21 @@
 import { TIER_COLOR, type StatTier } from "@/domain/statistics/tier";
 
-export function TierBadge({ tier }: { tier: StatTier }) {
+const UNGRADED_LABEL = "표본 부족";
+const UNGRADED_COLOR = "#5C6271";
+
+export function TierBadge({ tier }: { tier: StatTier | null }) {
+  if (tier === null) {
+    return (
+      <span
+        aria-label={UNGRADED_LABEL}
+        title={UNGRADED_LABEL}
+        className="tier-badge inline-flex h-7 w-7 items-center justify-center rounded-full border text-xs font-extrabold tabular-nums"
+        style={{ borderColor: UNGRADED_COLOR, color: UNGRADED_COLOR }}
+      >
+        –
+      </span>
+    );
+  }
   const color = TIER_COLOR[tier];
   return (
     <span

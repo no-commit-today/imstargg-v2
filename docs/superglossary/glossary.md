@@ -12,6 +12,7 @@
 | 3대3 | 3vs3 |  |  | 3명 대 3명 전투(victories3vs3) |
 | API | application programming interface | api |  | 표준 약어 |
 | URL | uniform resource locator | url |  | 표준 약어 |
+| 가산 | bonus |  |  | 점수에 더하는 값(티어 점수의 인기 가산) |
 | 가젯 | gadget |  |  | 브롤러 아이템. 전투 중 쓰는 능력 |
 | 가중치 | weight |  |  | 점수 산정 가중치 |
 | 감시 | monitor |  |  | 지표를 지켜보고 이상을 알림(봇 전투 감시) |
@@ -75,6 +76,7 @@
 | 삭제 | delete |  |  | 삭제(soft delete 표시 포함) |
 | 상대 | enemy |  | opponent | 같은 전투의 상대 팀(카운터 통계) |
 | 상태 | status |  |  | 진행·활성 상태 값 |
+| 상한 | cap |  |  | 넘지 못하게 묶는 최댓값 |
 | 새로고침 | refresh |  |  | ACTIVE 플레이어 프로필을 주기적으로 다시 받는 일. 사용자 요청 갱신(renewal)과 다르다 |
 | 색상 | color |  |  | 이름·티어 색 |
 | 생성 | create |  |  | 행·리소스를 새로 만듦. 관리자 화면 문구는 '등록' |
@@ -137,6 +139,7 @@
 | 조합 | combo |  |  | 2인·3인 조합의 총칭 |
 | 종료 | end |  |  | 구간·기간 끝 |
 | 주 | week |  |  | 주 단위(월 경계에서 잘리는 주 버킷) |
+| 중앙값 | median |  |  | 크기순으로 가운데 값 |
 | 즐겨찾기 | favorite |  |  | 저장한 검색 대상 |
 | 지표 | metric |  |  | 감시 지표 |
 | 진행 | progress |  |  | 진행 중 여부(갱신 진행) |
@@ -149,6 +152,7 @@
 | 총 | total |  |  | 합계. 관리자 화면은 '전체' |
 | 최고 | highest |  |  | 최고 기록. API 필드의 best·max는 원문 유지 |
 | 최근 | recent |  |  | 최근 검색 목록 |
+| 최소 | minimum | min |  | 가장 작은 허용값(최소 전투 수) |
 | 축적 | accumulate |  |  | 전투를 반복 수집해 쌓음. 주석의 '누적'도 같은 단어 |
 | 친선 | friendly |  |  | 전투 유형 FRIENDLY(통계 제외) |
 | 컨트롤러 | controller |  |  | 브롤러 역할 값 CONTROLLER. Spring Controller와 같은 영문 |
@@ -168,6 +172,7 @@
 | 패배 | defeat |  | loss | 승/패/무의 패 |
 | 평균 | average |  | avg | 평균값 |
 | 포인트 | point |  |  | 경험치 포인트. 복수형 points |
+| 포화 | saturation |  |  | 커질수록 상한에 붙어 더 늘지 않음 |
 | 표본 | sample |  |  | 판정에 쓴 전투 수 |
 | 프레스티지 | prestige |  |  | 브롤러 트로피 누적 단계 |
 | 플레이어 | player |  |  | 게임 계정 |

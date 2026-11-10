@@ -9,12 +9,14 @@ import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatisticsItem
+import com.imstargg.core.domain.statistics.BrawlerTierScore
 import com.imstargg.core.domain.statistics.BrawlerTrioResultStatistics
 import com.imstargg.core.domain.statistics.BrawlerTrioResultStatisticsItem
 import com.imstargg.core.domain.statistics.ComboResultRankingItem
 import com.imstargg.core.domain.statistics.PairResultRanking
 import com.imstargg.core.domain.statistics.RankCount
 import com.imstargg.core.domain.statistics.ResultCount
+import com.imstargg.core.domain.statistics.TierGrade
 import com.imstargg.core.domain.statistics.TierScore
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -99,7 +101,7 @@ class CacheConfigSerializerTest {
     }
 
     @Test
-    fun `BrawlerResultStatistics 직렬화 라운드트립 - tierScore 포함`() {
+    fun `BrawlerResultStatistics 직렬화 라운드트립 - 등급이 있는 항목과 없는 항목`() {
         // given
         val original =
             BrawlerResultStatistics(
@@ -112,7 +114,15 @@ class CacheConfigSerializerTest {
                             pickRate = 0.4,
                             winRate = 0.55,
                             starPlayerRate = 0.18,
-                            tierScore = TierScore(52),
+                            tierScore = BrawlerTierScore(value = 56, grade = TierGrade.A),
+                        ),
+                        BrawlerResultStatisticsItem(
+                            brawlerId = BrawlStarsId(16_000_001L),
+                            battleCount = 90L,
+                            pickRate = 0.1,
+                            winRate = 0.7,
+                            starPlayerRate = 0.2,
+                            tierScore = BrawlerTierScore(value = 66, grade = null),
                         ),
                     ),
             )
