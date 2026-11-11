@@ -7,10 +7,11 @@ spring:
   profiles:
     active: local
     group:
-      local:     [db]
-      local-dev: [db]
-      dev:       [db]
-      prod:      [db]
+      # batch-db 는 db 뒤에 둔다. 뒤 프로필의 파일이 앞 프로필의 파일을 이긴다(application-batch-db.yml 참고).
+      local:     [db, batch-db]
+      local-dev: [db, batch-db]
+      dev:       [db, batch-db]
+      prod:      [db, batch-db]
 
   config:
     import:
@@ -70,8 +71,6 @@ storage:
     core:
       minimum-idle: 0
       maximum-pool-size: 5
-      data-source-properties:
-        socketTimeout: 0
 
 ---
 spring:
@@ -84,8 +83,6 @@ storage:
     core:
       minimum-idle: 0
       maximum-pool-size: 5
-      data-source-properties:
-        socketTimeout: 0
 
 ---
 spring:
@@ -98,8 +95,6 @@ storage:
     core:
       minimum-idle: 0
       maximum-pool-size: 5
-      data-source-properties:
-        socketTimeout: 0
 
 app:
   alert:
@@ -118,8 +113,6 @@ storage:
     core:
       minimum-idle: 0
       maximum-pool-size: 5
-      data-source-properties:
-        socketTimeout: 0
 
 app:
   alert:
