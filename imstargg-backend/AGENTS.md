@@ -32,9 +32,13 @@ This file provides guidance to coding agents working with code in this repositor
 ## Local Development
 
 ```bash
-# 로컬 인프라 실행 (PostgreSQL, Valkey(Redis 호환), floci(S3 에뮬레이터))
+# 로컬 인프라 실행 (PostgreSQL, Valkey(Redis 호환), AWS Emulator(S3·SQS 에뮬레이터))
 docker-compose up -d
 ```
+
+- AWS Emulator 는 공식 이미지가 없어 `local/aws-emulator/Dockerfile` 로 빌드한다. 버전은 Dockerfile 의 `AWS_EMULATOR_VERSION` 으로 고정하며, 올린 뒤에는 `docker-compose build aws-emulator` 로 다시 빌드한다
+- emulator 는 HTTPS 만 제공하므로 nginx 프록시(`aws-emulator-proxy`)가 평문 HTTP `localhost:4566` 으로 노출한다. 앱 설정의 S3·SQS endpoint 와 로컬 이미지 URL 이 이 주소를 쓴다
+- 상태는 메모리에만 둔다. emulator 를 재시작하면 버킷·큐·업로드한 이미지가 모두 사라지고, 버킷·큐는 앱을 다시 띄울 때 `Local*Initializer` 가 만든다
 
 ## Project Architecture
 
