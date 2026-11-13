@@ -13,7 +13,7 @@ object NewsArticleContentExtractor {
     private val jsonMapper = JsonMapper.builder().build()
 
     private val LINE_BREAK = Regex("""\r\n|\r|\n""")
-    private val SPECIAL_SPACE = Regex("""[   -​  　\t]""")
+    private val SPECIAL_SPACE = Regex("""[\u00a0\u1680\u2000-\u200b\u202f\u205f\u3000\ufeff\t]""")
     private val MULTIPLE_SPACES = Regex(" {2,}")
     private val HEADING_TYPES = (1..6).map { "heading-$it" }.toSet()
 

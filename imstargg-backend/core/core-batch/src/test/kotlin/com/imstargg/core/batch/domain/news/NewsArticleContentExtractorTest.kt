@@ -2,6 +2,8 @@ package com.imstargg.core.batch.domain.news
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.core.io.ClassPathResource
 import tools.jackson.databind.json.JsonMapper
 
@@ -99,13 +101,28 @@ class NewsArticleContentExtractorTest {
         val body =
             """
             [{"__typename":"TextBlock","title":"","text":{"json":{"nodeType":"document","data":{},"content":[
-              {"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"a  b 　c\td","marks":[],"data":{}}]},
+              {"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"a  b\u00a0\u3000c\td","marks":[],"data":{}}]},
               {"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"   ","marks":[],"data":{}}]},
-              {"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"끝 ","marks":[],"data":{}}]}
+              {"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"\ufeff끝 ","marks":[],"data":{}}]}
             ]}}}]
             """.trimIndent()
 
         assertThat(NewsArticleContentExtractor.extract(body)).isEqualTo("a b c d\n끝")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [0x00A0, 0x1680, 0x2000, 0x2005, 0x200B, 0x202F, 0x205F, 0x3000, 0xFEFF, 0x0009])
+    fun `목록의 특수 공백은 모두 공백으로 바뀐다`(codePoint: Int) {
+        // 제어 문자(탭)는 JSON 문자열에 그대로 넣을 수 없어 \uXXXX 이스케이프로 넣는다
+        val escaped = "\\u%04x".format(codePoint.toChar().code)
+        val body =
+            """
+            [{"__typename":"TextBlock","title":"","text":{"json":{"nodeType":"document","data":{},"content":[
+              {"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"a${escaped}b","marks":[],"data":{}}]}
+            ]}}}]
+            """.trimIndent()
+
+        assertThat(NewsArticleContentExtractor.extract(body)).isEqualTo("a b")
     }
 
     @Test
