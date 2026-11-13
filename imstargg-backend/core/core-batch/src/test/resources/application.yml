@@ -46,3 +46,6 @@ app:
     url: http://localhost:0
   player-ranking-renewal:
     request-interval-millis: 0
+  brawlstars-news:
+    request-interval-min-millis: 0
+    request-interval-max-millis: 0

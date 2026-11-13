@@ -17,5 +17,6 @@ dependencies {
 
     // Test
     testImplementation("org.springframework.batch:spring-batch-test")
+    testImplementation(project(":support:http-client"))
     testImplementation(testFixtures(project(":infrastructure:db-core")))
 }

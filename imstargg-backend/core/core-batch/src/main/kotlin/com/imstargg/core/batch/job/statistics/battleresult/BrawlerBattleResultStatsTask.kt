@@ -15,7 +15,8 @@ private val log = KotlinLogging.logger {}
  * 쓰기 뒤에 요약 로그를 남기고, 경고 지표가 있으면 알림을 실행당 한 번 보낸다.
  *
  * 감시 구간의 예외는 로그로만 남기고 집계 잡을 실패시키지 않는다.
- * `DiscordAlertManager` 는 전송 실패를 삼키지만 알림을 만드는 중의 예외는 스텝을 실패시키기 때문이다.
+ * `DiscordAlertManager` 는 전송 실패를 예외로 던지고 알림을 만드는 중의 예외도 스텝을 실패시키므로,
+ * 알림 호출을 try/catch 로 받아 로그만 남기고 계속한다.
  */
 @Component
 class BrawlerBattleResultStatsTask(

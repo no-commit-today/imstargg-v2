@@ -16,9 +16,12 @@
 | 가산 | bonus |  |  | 점수에 더하는 값(티어 점수의 인기 가산) |
 | 가젯 | gadget |  |  | 브롤러 아이템. 전투 중 쓰는 능력 |
 | 가중치 | weight |  |  | 점수 산정 가중치 |
+| 간격 | interval |  |  | 요청 사이에 쉬는 시간(request-interval-min-millis) |
 | 감시 | monitor |  |  | 지표를 지켜보고 이상을 알림(봇 전투 감시) |
+| 감지 | detect |  |  | 수집이 새 글이나 수정된 글을 알아챔(detectedAt) |
 | 갱신 | renewal |  |  | 사용자·배치가 요청해 플레이어·클럽 데이터를 다시 받아 오는 일. 수정(update)·새로고침(refresh)과 다르다 |
 | 검색 | search |  |  | 플레이어·클럽·맵 찾기 |
+| 게시 | publish |  |  | 글이 공개됨(publishedAt) |
 | 게임 | game |  |  | 한 판(매치). 플레이어별 전투 기록 battle과 구분한다 |
 | 결과 | result |  |  | 전투 결과(승·패·무). 결과형 모드(승/패/무로 끝나는 모드)도 result |
 | 경쟁전 | solo rank |  |  | 경쟁전 모드·시즌·티어. 전투 유형 값은 SOLO_RANKED |
@@ -26,12 +29,17 @@
 | 광고 | advertisement | ad |  | AdSense 광고 |
 | 구간 | range |  |  | 통계 필터 범위(티어·트로피·날짜·주 구간) |
 | 국가 | country |  |  | 랭킹을 모으는 국가(global 포함) |
+| 글 | article |  |  | 공식 블로그의 글 하나 |
 | 기록 | history |  |  | 검색 기록(최근 검색과 즐겨찾기 묶음) |
 | 기본 브롤러 | starting brawler |  |  | 희귀도 값 STARTING_BRAWLER. 화면은 '기본' |
 | 기어 | gear |  |  | 브롤러 장착 아이템(희귀도 있음) |
 | 기준 | baseline |  |  | 비교·수축의 기준값(예: 기준 승률 0.5) |
+| 기타 | other |  |  | 어느 유형에도 속하지 않음 |
+| 기한 | deadline |  |  | 정해진 날짜까지의 제한 |
 | 날짜 | date |  |  | 시각 없는 날. 일시(at)와 구분한다 |
 | 내용 | content |  |  | 본문 텍스트 |
+| 노트 | note |  |  | 릴리스 노트처럼 변경을 적은 글 |
+| 뉴스 | news |  |  | 공식 블로그의 소식 |
 | 다시 읽기 | reload |  |  | 메모리에 든 기준 데이터를 DB 에서 다시 읽음. 새로고침(refresh)과 다르다 |
 | 다이제스트 | digest |  |  | 기간별 묶음 알림(피드백 일일 다이제스트) |
 | 대미지 | damage |  |  | 대미지 딜러(DAMAGE_DEALER)의 대미지 |
@@ -41,6 +49,7 @@
 | 동기화 | synchronization | sync |  | 브롤스타즈 API의 자원·이벤트를 DB와 맞추는 일 |
 | 듀오 | duo |  |  | 2명 단위(듀오 쇼다운) |
 | 등급 | grade |  |  | 티어 점수 등급(S~D) |
+| 등록 | register |  |  | 운영자가 값을 새로 넣음(패치일 등록). registration·registrable 은 활용형 |
 | 딜러 | dealer |  |  | 대미지 딜러(DAMAGE_DEALER)의 딜러 |
 | 랭킹 | ranking |  |  | 국가별 순위표. 등수 하나는 순위(rank) |
 | 레벨 | level |  |  | 단계 값(경험치·프레스티지·파워 레벨) |
@@ -48,35 +57,46 @@
 | 로보 럼블 | robo rumble |  |  | 게임 모드(bestRoboRumbleTime) |
 | 로비 | lobby |  |  | 한 전투에 모인 참가자 묶음(봇 판정) |
 | 로테이션 | rotation |  |  | 지금 열려 있는 이벤트 목록 |
+| 릴리스 | release |  |  | 게임의 새 버전 배포 |
+| 링크 | link |  |  | 글의 주소와 주소 키 |
+| 마지막 | last |  |  | 가장 나중 것(last_battle_at). 목록의 최근은 recent |
 | 만족 | satisfied |  |  | 만족도 값(SATISFIED·VERY_SATISFIED) |
 | 만족도 | rating |  |  | 피드백 만족도 5단계 |
 | 매우 | very |  |  | 만족도 값 접두(VERY_) |
 | 맵 | map |  |  | 전투 맵 |
+| 메모 | memo |  |  | 운영자가 덧붙이는 설명 |
 | 메시지 | message |  | msgs | 다국어 문구(message 테이블)와 큐 메시지. 언어별 이름 묶음은 messages |
 | 메타 | meta |  |  | 강세 브롤러 화면(메타). 부가 정보 뜻도 있다 |
 | 멤버 | member |  |  | 클럽 구성원 |
 | 모드 | mode |  |  | 게임 모드(젬 그랩 등) |
 | 모디파이어 | modifier |  |  | 이벤트 특수 규칙 |
+| 목록 | list |  |  | 여러 건을 한 번에 주는 응답·화면 |
 | 몰림 | cluster |  |  | 봇 팀의 트로피 몰림(봇 판정) |
 | 무승부 | draw |  |  | 승/패/무의 무 |
 | 문턱 | threshold |  |  | 판정 경계값 |
 | 배지 | badge |  |  | 클럽 배지·프레스티지 배지 |
+| 버전 | version |  |  | 쓸 때마다 올리는 수정 번호, 글의 판(versions) |
 | 버피 | buffy |  | buffys | 가젯·스타파워·하이퍼차지 강화 아이템. 복수형 buffies |
 | 번호 | number |  |  | 회차·순번 값(시즌 번호 등) |
 | 변동 | change |  |  | 트로피·순위 증감 |
+| 보기 | see |  |  | 수집이 글의 판을 처음 본 것(seenAt). seen 은 활용형 |
 | 보유 | ownership |  |  | 아이템 보유. owned·owner는 활용형 |
 | 보통 | neutral |  |  | 만족도 값 NEUTRAL |
+| 본문 | body |  |  | 글의 본문 |
 | 봇 | bot |  |  | 매치메이킹 봇 |
 | 부 | vice |  |  | 부회장(VICE_PRESIDENT)의 부 |
+| 분류 | classify |  |  | 제목으로 글의 유형을 정함. classifier 는 활용형 |
 | 불만족 | dissatisfied |  |  | 만족도 값(DISSATISFIED·VERY_DISSATISFIED) |
 | 브롤러 | brawler |  |  | 플레이어블 캐릭터 |
 | 브롤스타즈 | brawl stars |  |  | 게임 이름. 게임 쪽 ID·태그의 한정어(brawlStarsId). snake_case·패키지는 brawlstars |
 | 브롤패스 | brawl pass |  |  | 시즌 패스(BrawlPassSeason) |
+| 블로그 | blog |  |  | 공식 블로그(Supercell) |
 | 비율 | rate |  |  | 픽률·승률·보유율의 률 |
 | 비활성화 | deactivate |  |  | 사라진 플레이어·클럽을 비활성으로 표시 |
 | 빅 브롤러 | big brawler |  |  | 빅 게임 모드의 역할(bestTimeAsBigBrawler) |
 | 삭제 | delete |  |  | 삭제(soft delete 표시 포함) |
 | 상대 | enemy |  | opponent | 같은 전투의 상대 팀(카운터 통계) |
+| 상세 | detail |  |  | 한 건의 전체 내용을 주는 응답·화면 |
 | 상태 | status |  |  | 진행·활성 상태 값 |
 | 상한 | cap |  |  | 넘지 못하게 묶는 최댓값 |
 | 새로고침 | refresh |  |  | ACTIVE 플레이어 프로필을 주기적으로 다시 받는 일. 사용자 요청 갱신(renewal)과 다르다 |
@@ -117,12 +137,15 @@
 | 연승 | win streak |  |  | 연속 승리(maxWinStreak) |
 | 영어 | english | en |  | 언어 값 ENGLISH |
 | 영웅 | epic |  |  | 희귀도 값 EPIC(hero 아님) |
+| 오늘 | today |  |  | KST 기준의 오늘 날짜 |
 | 완료 | complete |  |  | 처리 끝(갱신 완료) |
 | 요약 | summary |  |  | 대시보드·감시 요약 |
 | 요청 | request |  |  | 갱신 요청. HTTP 요청 DTO 접미 Request와 같은 영문 |
 | 울트라 | ultra |  |  | 울트라 전설(ULTRA_LEGENDARY)의 울트라 |
+| 원문 | raw |  |  | 가공 전에 받은 그대로의 값 |
 | 월 | month |  |  | 달 단위 |
 | 유형 | type |  | kind | 분류 값(판별자) |
+| 이른 | early |  |  | 날짜가 앞선 것. earliest 는 최상급(earliestRegistrableDate) |
 | 이름 | name |  |  | 대상을 지칭하는 명칭 |
 | 이미지 | image |  |  | 이미지 리소스(S3의 게임 리소스 포함) |
 | 이벤트 | event |  |  | 맵과 모드로 된 전투 단위 |
@@ -130,32 +153,41 @@
 | 일별 | daily |  |  | 하루 단위 집계 |
 | 일시 | datetime | at |  | 날짜와 시각. created_at처럼 _at 접미사로 쓴다. 기존 start_time·end_time 컬럼과 API 필드(battleTime)는 유지 |
 | 일치 | match |  |  | 팀 구성이 유형과 맞음 |
+| 읽기 | read |  |  | 원본을 읽어 온 위치(last_read_battle_id) |
 | 저격수 | marksman |  |  | 브롤러 역할 값 MARKSMAN |
 | 저장 | store |  |  | 저장소에 파일을 둠 |
+| 적용 | apply |  |  | 값을 만들 때 쓴 기준(applied_start_date). applied는 활용형 |
 | 전설 | legendary |  |  | 희귀도·경쟁전 티어 값 LEGENDARY |
 | 전투 | battle |  |  | 플레이어별 전투 기록. 주석의 '배틀'도 같은 단어 |
 | 전투 기록 | battle log |  |  | 플레이어의 최근 전투 목록(API 경로는 battlelog) |
 | 점검 | maintenance |  |  | 브롤스타즈 API 점검 시간대 |
 | 점수 | score |  |  | 티어 산정 점수 |
 | 정렬 | sort |  |  | 목록 순서 정하기 |
+| 정책 | policy |  |  | 허용 여부를 정하는 규칙(패치일 등록 기한) |
+| 제목 | title |  |  | 글의 제목 |
 | 제출 | submit |  |  | 피드백 제출 |
 | 조합 | combo |  |  | 2인·3인 조합의 총칭 |
 | 종료 | end |  |  | 구간·기간 끝 |
 | 주 | week |  |  | 주 단위(월 경계에서 잘리는 주 버킷) |
+| 줄 | line |  |  | 본문의 한 줄(addedLineCount) |
 | 중앙값 | median |  |  | 크기순으로 가운데 값 |
 | 즐겨찾기 | favorite |  |  | 저장한 검색 대상 |
 | 지표 | metric |  |  | 감시 지표 |
 | 진행 | progress |  |  | 진행 중 여부(갱신 진행) |
 | 집계 | aggregate |  |  | 전투를 통계로 모아 셈 |
+| 차이 | diff |  |  | 두 본문·스냅샷의 줄 단위 차이 |
 | 창 | window |  |  | 판정용 값 범위. 브라우저 window와 같은 영문 |
 | 챌린지 | challenge |  |  | 전투 유형 CHALLENGE |
 | 챔피언십 | championship |  |  | 챔피언십 챌린지의 챔피언십 |
+| 체크포인트 | checkpoint |  |  | 집계가 원본을 어디까지 읽었는지 적어 두는 자리 |
 | 초 | super |  |  | 초희귀(SUPER_RARE)의 초 |
 | 초상화 | portrait |  |  | 브롤러 대표 이미지 |
 | 총 | total |  |  | 합계. 관리자 화면은 '전체' |
 | 최고 | highest |  |  | 최고 기록. API 필드의 best·max는 원문 유지 |
 | 최근 | recent |  |  | 최근 검색 목록 |
 | 최소 | minimum | min |  | 가장 작은 허용값(최소 전투 수) |
+| 추가 | add |  |  | 새로 더함(추가된 줄). added 는 활용형 |
+| 추출 | extract |  |  | 글에서 필요한 부분을 뽑아냄 |
 | 축적 | accumulate |  |  | 전투를 반복 수집해 쌓음. 주석의 '누적'도 같은 단어 |
 | 친선 | friendly |  |  | 전투 유형 FRIENDLY(통계 제외) |
 | 컨트롤러 | controller |  |  | 브롤러 역할 값 CONTROLLER. Spring Controller와 같은 영문 |
@@ -173,6 +205,8 @@
 | 팀 | team |  |  | 같은 편 플레이어 묶음 |
 | 파워 | power |  |  | 브롤러 파워 레벨 |
 | 패배 | defeat |  | loss | 승/패/무의 패 |
+| 패치 | patch |  |  | 밸런스 패치. 패치일(patch_date)로 통계 구간을 나눈다 |
+| 페이지 | page |  |  | 웹 페이지 하나, 목록의 쪽(LIST_PAGE_COUNT) |
 | 펼침 | expand |  |  | 플레이어 한 명의 브롤러 여러 개를 같은 태그의 여러 슬롯으로 늘어놓음(듀얼). expanded 는 활용형 |
 | 평균 | average |  | avg | 평균값 |
 | 포인트 | point |  |  | 경험치 포인트. 복수형 points |
