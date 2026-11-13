@@ -52,7 +52,7 @@ git grep -n "PatchStatsJob\"" -- imstargg-backend/core/core-batch   # 새 잡 �
 1. **캐시에 넣은 패치 목록의 직렬화**: 값에 `LocalDate` 와 `Instant` 가 든다. Redis 오류는 폴백 핸들러가 삼켜 DB 조회로 넘어가므로, 직렬화가 깨져도 화면은 멀쩡하고 캐시만 조용히 죽는다. → Task 2 "패치 목록이 캐시 직렬화를 왕복한다".
 2. **`patchDate` 가 날짜 형식이 아니거나 옛 `dateRange` 만 옴**(`2026-11-1`, `LAST_WEEK`, 값 없음): 500 이 아니라 400 이다. → Task 3 "패치일이 날짜 형식이 아니면 400 이다", "패치일 없이 옛 기간만 보내면 400 이다".
 3. **패치 목록은 받았는데 통계 조회가 실패한 서버 렌더**(404·500·시간 초과): 페이지 오류나 빌드 실패가 아니라 준비 안내가 보인다. → Task 8, Task 9 "통계를 못 받으면 준비 안내를 보인다".
-4. **주소의 `patch` 가 목록에 없는 값·틀린 형식·옛 `date=LAST_WEEK`**: 가장 최근 패치의 통계를 보이고 그 패치일로 요청한다. → Task 5 "목록에 없는 값은 가장 최근 패치다", Task 8 "주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다".
+4. **주소의 `patch` 가 목록에 없는 값·틀린 형식·옛 `date=LAST_WEEK`**: 가장 최근 패치의 통계를 보이고 그 패치일로 요청한다. → Task 5 "목록에 없는 값은 가장 최근 패치다", Task 9 "주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다".
 5. **서버가 굳힌 HTML 속의 상대 시간**: ISR 로 60초 이상 묵은 "55분 전"이 그대로 보이거나 하이드레이션이 어긋나지 않는다. 상대 시간은 브라우저에서 그린다. → Task 6 "서버 렌더 결과에는 상대 시간이 없고 마운트 뒤에 나타난다".
 
 ## File Structure
@@ -70,7 +70,7 @@ git grep -n "PatchStatsJob\"" -- imstargg-backend/core/core-batch   # 새 잡 �
 | `fe/src/domain/statistics/patch.ts` | 패치 해석과 표시(순수 함수) |
 | `fe/src/api/endpoints/statistics.ts`, `fe/src/api/types.ts`, `fe/src/hooks/queries/queryKeys.ts`, `useBrawlerStats.ts`, `useEventStats.ts` | 클라이언트와 훅 |
 | `fe/app/_lib/loadStatsPatches.ts` | 서버에서 패치 목록을 받되 실패하면 빈 목록 |
-| `fe/app/_components/statistics/StatRangeSelector.tsx`, `StatsLastUpdated.tsx`, `StatsPreparing.tsx` | 티어·패치 선택, 최근 업데이트, 준비 안내 |
+| `fe/app/_components/statistics/StatsFilterSelector.tsx`, `StatsLastUpdated.tsx`, `StatsPreparing.tsx` | 티어·패치 선택, 최근 업데이트, 준비 안내(옛 `StatRangeSelector.tsx` 는 Task 10 이 지운다) |
 | `fe/app/brawlers/**`, `fe/app/events/[id]/**` | 세 화면 |
 
 ---
@@ -213,12 +213,14 @@ fun getPatch(patchDate: LocalDate): StatisticsPatch          // Task 3 이 쓴�
 - [ ] **Step 4: 확인한다.** `./gradlew test ktlintCheck` 전체 통과. `git grep -nE "Backup(Entity|JpaRepository)|StatsDateRange|StatsWeekRange|WeekRange|RankCountsEmbedded|_backup|month_partitions" -- imstargg-backend ':!imstargg-backend/infrastructure/db-core/src/main/resources/db/migration'` → 0건.
 - [ ] **Step 5: 커밋한다.** `refactor(backend)!: 옛 통계 잡과 엔티티, 기간 옵션을 지운다`
 
-### Task 5: 프론트의 패치 기반 (타입, 클라이언트, 순수 함수)
+### Task 5: 프론트의 패치 기반 (더하기만)
+
+Task 5 부터 Task 10 까지는 모든 태스크가 `pnpm typecheck && pnpm lint && pnpm test:run` 통과로 끝난다. 그래서 새 것을 먼저 옛 것 옆에 더하고(Task 5, 6), 화면을 하나씩 옮긴 뒤(Task 8, 9), 쓰는 곳이 없어진 옛 것을 마지막에 지운다(Task 10).
 
 **Files:**
 - Create: `fe/src/domain/statistics/patch.ts`, `fe/app/_lib/loadStatsPatches.ts`
-- Modify: `fe/src/api/types.ts`, `fe/src/api/endpoints/statistics.ts`, `fe/src/hooks/queries/queryKeys.ts`, `fe/src/domain/statistics/enums.ts`, `fe/src/domain/statistics/mappers.ts`, `fe/src/domain/statistics/types.ts`
-- Test: `fe/tests/unit/domain/statistics/patch.test.ts`, `fe/tests/unit/app/loadStatsPatches.test.ts`, 기존 `fe/tests/unit/domain/statistics/enums.test.ts`, `mappers.test.ts`
+- Modify: `fe/src/api/types.ts`, `fe/src/api/endpoints/statistics.ts`, `fe/src/hooks/queries/queryKeys.ts`, `docs/superglossary/glossary.md`
+- Test: `fe/tests/unit/domain/statistics/patch.test.ts`, `fe/tests/unit/app/loadStatsPatches.test.ts`
 
 **Interfaces:**
 - Produces:
@@ -235,37 +237,35 @@ export function formatPatchLabel(patchDate: string): string                     
 export function toStatsPatch(dto: StatisticsPatchResponse): StatsPatch
 // src/api/endpoints/statistics.ts
 statisticsApi.patches(opts?: FetchOpts): Promise<ListResponse<StatisticsPatchResponse>>   // GET /v1/statistics/patches
-// 파라미터 타입 7개: dateRange: StatsDateRangeDto → patchDate: string. daily 와 DailyParams 는 지운다.
+// 통계 파라미터 타입 7개: dateRange 를 선택 값으로 바꾸고 patchDate?: string 을 더한다(전환 중에만. Task 10 이 dateRange 를 지우고 patchDate 를 필수로 한다).
 // src/hooks/queries/queryKeys.ts
-queryKeys.statistics.patches()      // daily 는 지운다
+queryKeys.statistics.patches()
 // app/_lib/loadStatsPatches.ts (서버 전용)
 export async function loadStatsPatches(): Promise<StatsPatch[]>   // 실패하면 빈 배열. revalidate 는 CACHE_SECONDS.SHORT
 ```
 
-  지우는 것: `enums.ts` 의 `STATS_DATE_RANGES`, `StatsDateRange`, `DATE_RANGE_LABELS`, `DEFAULT_DATE_RANGE`, `parseDateRange`. `types.ts` 의 `StatsDateRangeDto`, `BrawlerResultDailyStatisticsResponse`, 도메인의 `DailyResultStat`, 매퍼 `toDailyResultStat`. 이 태스크가 끝나면 그것을 쓰던 화면 파일들이 타입 오류가 난다. Task 6–9 가 차례로 고치고, 그 사이 커밋은 `pnpm test:run` 대상 테스트만 통과하면 된다(타입 검사는 Task 9 끝에서 전체가 통과한다).
-
-- [ ] **Step 1: 실패하는 테스트를 쓴다.** `patch.test.ts`. `patches = [{ patchDate: "2026-11-11", … }, { patchDate: "2026-11-03", … }]`.
+- [ ] **Step 1: 실패하는 테스트를 쓴다.** `patches = [{ patchDate: "2026-11-11", … }, { patchDate: "2026-11-03", … }]`.
   - "목록에 있는 값은 그 패치다"(`"2026-11-03"` → `"2026-11-03"`)
   - **"목록에 없는 값은 가장 최근 패치다"**(`"2026-10-01"`, `"abc"`, `"LAST_WEEK"` → `"2026-11-11"`)
   - "값이 없으면 가장 최근 패치다"(`undefined`, `null`, `""`)
   - "목록이 비었으면 패치가 없다"(`null`)
-  - "가장 최근 패치인지 안다", "패치일을 'n월 n일 패치'로 표시한다"(`"2026-11-11"` → `"11월 11일 패치"`, `"2026-01-05"` → `"1월 5일 패치"`. 시간대에 따라 하루가 밀리지 않는다)
+  - "가장 최근 패치인지 안다", "패치일을 'n월 n일 패치'로 표시한다"(`"2026-11-11"` → `"11월 11일 패치"`, `"2026-01-05"` → `"1월 5일 패치"`)
   - `loadStatsPatches.test.ts`(MSW): "패치 목록을 받는다", "응답이 500 이면 빈 목록이다", "네트워크 오류면 빈 목록이다"
-  - `enums.test.ts` 에서 기간 옵션의 케이스를, `mappers.test.ts` 에서 `toDailyResultStat` 의 케이스를 지운다.
-- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/unit/domain/statistics tests/unit/app/loadStatsPatches.test.ts` → 모듈 없음으로 실패.
-- [ ] **Step 3: 구현한다.** `formatPatchLabel` 은 문자열을 `-` 로 쪼개 만든다(`Date` 를 거치지 않는다). Task 6 의 `StatsPreparing` 에 쓸 단어를 용어 사전(`docs/superglossary/glossary.md`, 한글 열 코드포인트 순)에 등록한다: `| 준비 | prepare |  |  | 통계를 아직 보일 수 없을 때의 안내 |`.
-- [ ] **Step 4: 통과를 확인한다.** 위 명령 → 통과. `pnpm lint`.
-- [ ] **Step 5: 커밋한다.** `feat(frontend): 패치 목록의 타입과 패치 해석 함수를 더하고 기간 옵션을 지운다`
+- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/unit/domain/statistics/patch.test.ts tests/unit/app/loadStatsPatches.test.ts` → 모듈 없음으로 실패.
+- [ ] **Step 3: 구현한다.** `formatPatchLabel` 은 문자열을 `-` 로 쪼개 만든다(`Date` 를 거치면 시간대에 따라 하루가 밀린다). Task 6 의 `StatsPreparing` 에 쓸 단어를 용어 사전(한글 열 코드포인트 순)에 등록한다: `| 준비 | prepare |  |  | 통계를 아직 보일 수 없을 때의 안내 |`.
+- [ ] **Step 4: 통과를 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run`.
+- [ ] **Step 5: 커밋한다.** `feat(frontend): 패치 목록의 타입과 패치 해석 함수를 더한다`
 
-### Task 6: 선택 UI 와 최근 업데이트
+### Task 6: 새 선택 UI 와 최근 업데이트 (더하기만)
+
+옛 `StatRangeSelector.tsx` 는 건드리지 않는다. 화면이 모두 옮겨 간 뒤 Task 10 이 지운다.
 
 **Files:**
-- Modify: `fe/app/_components/statistics/StatRangeSelector.tsx`
-- Create: `fe/app/_components/statistics/StatsLastUpdated.tsx`, `fe/app/_components/statistics/StatsPreparing.tsx`
-- Test: `fe/tests/unit/components/statistics/StatRangeSelector.test.tsx`, `StatsLastUpdated.test.tsx`
+- Create: `fe/app/_components/statistics/StatsFilterSelector.tsx`, `StatsLastUpdated.tsx`, `StatsPreparing.tsx`
+- Test: `fe/tests/unit/components/statistics/StatsFilterSelector.test.tsx`, `StatsLastUpdated.test.tsx`
 
 **Interfaces:**
-- Consumes: Task 5 의 `StatsPatch`, `formatPatchLabel`, `isRecentPatchDate`. 지금 있는 `formatRelativeTime`(`fe/src/lib/relativeTime.ts`).
+- Consumes: Task 5 의 `StatsPatch`, `formatPatchLabel`, `isRecentPatchDate`. 지금 있는 `formatRelativeTime`(`fe/src/lib/relativeTime.ts`), 티어 선택에 쓰는 `enums.ts` 의 티어 상수.
 - Produces:
 
 ```tsx
@@ -275,51 +275,74 @@ type ViewProps = {
   patches: StatsPatch[];
   onSelect: (next: { tier: StatsTierRange; patchDate: string }) => void;
 };
-export function StatRangeSelectorView(props: ViewProps)       // 티어 선택, 패치 선택(aria-label="패치 선택"), 그 옆에 StatsLastUpdated
-export function StatRangeSelector(props: { tier: StatsTierRange; patchDate: string; patches: StatsPatch[] })   // 목록 페이지용. router.replace
+/** 내비게이션 훅이 없다. ISR 페이지의 클라이언트 패널이 쓴다. */
+export function StatsFilterSelectorView(props: ViewProps)     // 티어 선택, 패치 선택(aria-label="패치 선택"), 그 옆에 StatsLastUpdated
+/** 목록 페이지용. 고르면 router.replace 로 서버가 다시 그린다. */
+export function StatsFilterSelector(props: { tier: StatsTierRange; patchDate: string; patches: StatsPatch[] })
 export function StatsLastUpdated(props: { lastBattleAt: string })   // "최근 업데이트: 55분 전". 마운트 뒤에만 그린다
 export function StatsPreparing()                                    // "통계를 준비하고 있습니다"
 ```
 
-  `StatRangeSelector` 는 주소를 쓸 때 가장 최근 패치면 `patch` 를 지우고, 옛 `date` 파라미터는 늘 지운다.
+  `StatsFilterSelector` 는 주소를 쓸 때 가장 최근 패치면 `patch` 를 지우고, 옛 `date` 파라미터는 늘 지운다.
 
 - [ ] **Step 1: 실패하는 테스트를 쓴다.**
-  - `StatRangeSelector.test.tsx`: 기간의 케이스를 패치로 바꾼다. "지금 패치를 'n월 n일 패치'로 보인다", "패치를 고르면 그 패치일을 넘긴다", "티어를 고르면 패치는 그대로 넘긴다", "가장 최근 패치를 고르면 주소에서 patch 가 빠진다", "다른 패치를 고르면 주소에 patch 가 들어간다", "주소에 남은 옛 date 는 지운다", "고른 패치의 최근 업데이트를 보인다".
+  - `StatsFilterSelector.test.tsx`(옛 `StatRangeSelector.test.tsx` 를 본보기로): "지금 티어와 패치를 보인다"(패치는 "11월 11일 패치"), "패치를 고르면 그 패치일을 넘긴다", "티어를 고르면 패치는 그대로 넘긴다", "가장 최근 패치를 고르면 주소에서 patch 가 빠진다", "다른 패치를 고르면 주소에 patch 가 들어간다", "주소에 남은 옛 date 는 지운다", "고른 패치의 최근 업데이트를 보인다".
   - `StatsLastUpdated.test.tsx`: **"서버 렌더 결과에는 상대 시간이 없고 마운트 뒤에 나타난다"**(`renderToString` 결과에 "전"이 없고, `render` 뒤에는 `최근 업데이트: 55분 전` 이 있다. 시각은 `vi.setSystemTime` 으로 `lastBattleAt` 의 55분 뒤로 고정한다).
-- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/unit/components/statistics` → 실패.
-- [ ] **Step 3: 구현한다.** 패치 선택은 기간 선택이 쓰던 shadcn `Select` 그대로다(너비는 표시 길이에 맞춘다). 문구의 색은 `RenewalStatus` 와 같은 보조 텍스트 색이다.
-- [ ] **Step 4: 통과를 확인한다.** 위 명령 → 통과. `pnpm lint`.
-- [ ] **Step 5: 커밋한다.** `feat(frontend): 기간 선택을 패치 선택으로 바꾸고 최근 업데이트를 보인다`
+- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/unit/components/statistics` → 모듈 없음으로 실패.
+- [ ] **Step 3: 구현한다.** 티어 선택은 옛 선택 컴포넌트와 같은 모양으로 옮겨 적는다. 패치 선택은 기간 선택이 쓰던 shadcn `Select` 다(너비는 표시 길이에 맞춘다). 문구의 색은 `RenewalStatus` 와 같은 보조 텍스트 색이다.
+- [ ] **Step 4: 통과를 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run`.
+- [ ] **Step 5: 커밋한다.** `feat(frontend): 티어와 패치를 고르는 선택 UI 와 최근 업데이트 표시를 더한다`
 
-### Task 7: 브롤러 목록 화면 (`/brawlers`)
+### Task 7: 일별 추이를 지운다
+
+패치 전환과 무관하게 먼저 지울 수 있다. 운영 API 의 일별 엔드포인트는 Task 3 이 나갈 때 사라진다.
+
+**Files:**
+- Modify: `fe/app/brawlers/[id]/page.tsx`, `fe/app/brawlers/[id]/_components/BrawlerStatsPanel.tsx`, `fe/src/hooks/queries/useBrawlerStats.ts`, `fe/src/api/endpoints/statistics.ts`, `fe/src/api/types.ts`, `fe/src/domain/statistics/mappers.ts`, `fe/src/domain/statistics/types.ts`, `fe/src/hooks/queries/queryKeys.ts`, `fe/package.json`, `fe/pnpm-lock.yaml`
+- Delete: `fe/app/brawlers/[id]/_components/DailyTrendChart.tsx`, `fe/src/components/ui/chart.tsx`(쓰는 곳이 없어진다. knip 이 `src/components/ui/**` 를 보지 않으므로 손으로 지운다)
+- Test: `fe/tests/components/BrawlerStatsPanel.test.tsx`, `fe/tests/unit/domain/statistics/mappers.test.ts`
+
+**Interfaces:**
+- Produces: `BrawlerStatsInitial { pair; trio; enemy }`(`daily` 없음), `useBrawlerStats` 가 `{ pair, trio, enemy }` 를 준다. `statisticsApi.daily`, `DailyParams`, `BrawlerResultDailyStatisticsResponse`, `DailyResultStat`, `toDailyResultStat`, `queryKeys.statistics.daily` 가 없다.
+
+- [ ] **Step 1: 실패하는 테스트를 쓴다.** `BrawlerStatsPanel.test.tsx` 에 "일별 트렌드가 없다"(그 제목이 화면에 없다), "일별 통계를 요청하지 않는다"(`*/v1/statistics/brawler/result/daily` 로 온 요청이 0건)를 더한다.
+- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/components/BrawlerStatsPanel.test.tsx` → 두 건 실패.
+- [ ] **Step 3: 지운다.** 테스트의 일별 핸들러, `initial.daily`, `ResizeObserver` 대역과 `mappers.test.ts` 의 `toDailyResultStat` 케이스도 지운다. `pnpm remove recharts`. `git grep -n "recharts\|DailyTrend\|ui/chart\|daily\|Daily" -- imstargg-frontend/src imstargg-frontend/app imstargg-frontend/tests` → 통계의 일별 추이를 가리키는 것이 0건.
+- [ ] **Step 4: 통과를 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run`.
+- [ ] **Step 5: 커밋한다.** `feat(frontend)!: 브롤러 상세의 일별 추이 차트를 없앤다`
+
+### Task 8: 브롤러 목록 화면 (`/brawlers`)
 
 **Files:**
 - Modify: `fe/app/brawlers/page.tsx`, `fe/app/brawlers/_lib/loadBrawlerMetaView.ts`
 - Test: `fe/tests/unit/app/brawlers/loadBrawlerMetaView.test.ts`, `fe/tests/unit/app/brawlers/BrawlersPage.test.tsx`(새로 만든다)
 
 **Interfaces:**
-- Consumes: Task 5 의 `loadStatsPatches`, `resolvePatchDate`. Task 6 의 `StatRangeSelector`, `StatsPreparing`.
+- Consumes: Task 5 의 `loadStatsPatches`, `resolvePatchDate`. Task 6 의 `StatsFilterSelector`, `StatsPreparing`.
 - Produces: `loadBrawlerMetaView(view: BrawlerMetaView, tierRange: StatsTierRange, patchDate: string): Promise<BrawlerMetaViewData | null>`. 통계 조회가 실패하면 `null` 이다.
 
   화면의 흐름: `loadStatsPatches()` → `resolvePatchDate(patches, sp.patch)` → `null` 이면 선택 UI 없이 `StatsPreparing` → 아니면 `loadBrawlerMetaView` → `null` 이면 선택 UI 와 `StatsPreparing`.
 
 - [ ] **Step 1: 실패하는 테스트를 쓴다.** MSW 로 `/v1/statistics/patches` 와 통계 엔드포인트를 대신한다. 페이지는 `await BrawlersPage({ searchParams: Promise.resolve({…}) })` 로 직접 부른다.
-  - `loadBrawlerMetaView.test.ts`: 요청의 `dateRange` 단언을 `patchDate` 로 바꾼다. "통계 조회가 실패하면 null 이다"를 더한다.
-  - `BrawlersPage.test.tsx`: "주소에 패치가 없으면 가장 최근 패치로 조회한다"(요청 주소에 `patchDate=2026-11-11`), "주소의 패치로 조회한다", "주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다", "옛 date 파라미터는 무시한다"(`date=LAST_WEEK`), "패치 목록이 비었으면 준비 안내를 보이고 통계를 요청하지 않는다", "패치 목록을 못 받으면 준비 안내를 보인다", "통계를 못 받으면 준비 안내를 보인다".
+  - `loadBrawlerMetaView.test.ts`: 요청의 `dateRange` 단언을 `patchDate` 로 바꾼다(요청 주소에 `dateRange` 가 없다). "통계 조회가 실패하면 null 이다"를 더한다.
+  - `BrawlersPage.test.tsx`: "주소에 패치가 없으면 가장 최근 패치로 조회한다"(요청 주소에 `patchDate=2026-11-11`), "주소의 패치로 조회한다", "주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다", "옛 date 파라미터는 무시한다"(`date=LAST_WEEK`), "패치 목록이 비었으면 준비 안내를 보이고 통계를 요청하지 않는다", "패치 목록을 못 받으면 준비 안내를 보인다", **"통계를 못 받으면 준비 안내를 보인다"**.
 - [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/unit/app/brawlers` → 실패.
 - [ ] **Step 3: 구현한다.**
-- [ ] **Step 4: 통과를 확인한다.** 위 명령 → 통과. `pnpm lint`.
+- [ ] **Step 4: 통과를 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run`.
 - [ ] **Step 5: 커밋한다.** `feat(frontend): 브롤러 목록의 통계를 패치로 조회한다`
 
-### Task 8: 브롤러 상세 화면과 일별 추이 삭제 (`/brawlers/[id]`)
+### Task 9: 상세 화면 둘 (`/brawlers/[id]`, `/events/[id]`)
+
+두 화면의 패널이 같은 필터 타입(`StatsFilter`)과 같은 주소 처리 방식을 쓴다. 한쪽만 옮기면 다른 쪽이 깨지므로 함께 옮긴다.
 
 **Files:**
-- Modify: `fe/app/brawlers/[id]/page.tsx`, `fe/app/brawlers/[id]/_components/BrawlerStatsPanel.tsx`, `fe/src/hooks/queries/useBrawlerStats.ts`, `fe/package.json`, `fe/pnpm-lock.yaml`
-- Delete: `fe/app/brawlers/[id]/_components/DailyTrendChart.tsx`, `fe/src/components/ui/chart.tsx`(쓰는 곳이 없어진다. knip 이 `src/components/ui/**` 를 보지 않으므로 손으로 지운다)
-- Test: `fe/tests/components/BrawlerStatsPanel.test.tsx`
+- Modify: `fe/src/hooks/queries/useBrawlerStats.ts`, `fe/src/hooks/queries/useEventStats.ts`
+- Modify: `fe/app/brawlers/[id]/page.tsx`, `fe/app/brawlers/[id]/_components/BrawlerStatsPanel.tsx`
+- Modify: `fe/app/events/[id]/_components/EventStatsSection.tsx`, `EventStatsPanel.tsx`
+- Test: `fe/tests/components/BrawlerStatsPanel.test.tsx`, `EventStatsSection.test.tsx`, `EventStatsPanel.test.tsx`
 
 **Interfaces:**
-- Consumes: Task 5, Task 6.
+- Consumes: Task 5, Task 6(`StatsFilterSelectorView`, `StatsPreparing`), Task 7 의 `BrawlerStatsInitial`.
 - Produces:
 
 ```ts
@@ -327,54 +350,59 @@ export function StatsPreparing()                                    // "통계�
 export interface StatsFilter { tier: StatsTierRange; patchDate: string }
 /** 서버가 미리 받아 둔 통계와 같은 필터인가: 기본 티어이고 목록의 첫 패치다. */
 export function isDefaultStatsFilter(filter: StatsFilter, patches: StatsPatch[]): boolean
-export interface BrawlerStatsInitial { pair: PairResultStat[]; trio: TrioResultStat[]; enemy: EnemyResultStat[] }
 export function useBrawlerStats(brawlerId: number, filter: StatsFilter, patches: StatsPatch[], initial?: BrawlerStatsInitial)
-// BrawlerStatsPanel
-props: { brawlerId: number; patches: StatsPatch[]; initial: BrawlerStatsInitial | null }
+// src/hooks/queries/useEventStats.ts
+export function useEventResultStats(eventId, filter: StatsFilter, patches: StatsPatch[], initial?, enabled?)
+export function useEventRankStats(eventId, filter: StatsFilter, patches: StatsPatch[], initial?, enabled?)
+// 패널의 props
+BrawlerStatsPanel: { brawlerId: number; patches: StatsPatch[]; initial: BrawlerStatsInitial | null }
+EventStatsPanel: 지금의 props 에 patches: StatsPatch[] 를 더하고 initialResult, initialRank 는 null 일 수 있다
 ```
 
-  `DEFAULT_STATS_FILTER` 는 지운다(기본 패치가 목록에서 나온다). 페이지는 `loadStatsPatches()` 로 목록을 받고, 목록이 있으면 첫 패치와 기본 티어로 2인·3인·상대 통계를 받는다. 통계 조회는 `try/catch` 로 감싸 실패하면 `initial = null` 로 내린다. 아이템 보유 통계의 조회는 지금 그대로 둔다. 패널은 목록이 비었거나 `initial` 이 `null` 이고 조회도 실패하면 `StatsPreparing` 을 보인다. 주소는 `?patch=` 를 지금의 `?date=` 와 같은 방식(마운트 뒤에 읽기, `popstate`, `applySearchShallow`)으로 다루고, 가장 최근 패치면 `patch: null` 로 지운다.
+  `DEFAULT_STATS_FILTER` 는 지운다(기본 패치가 목록에서 나온다).
 
-- [ ] **Step 1: 실패하는 테스트를 쓴다.** `BrawlerStatsPanel.test.tsx`. 일별 핸들러, `initial.daily`, `ResizeObserver` 대역을 지운다.
-  - "미리 받은 통계를 가장 최근 패치로 보인다"(마운트 직후 통계 요청이 없다)
-  - "패치를 바꾸면 그 패치일로 다시 조회하고 주소에 patch 가 들어간다"
-  - "가장 최근 패치로 돌아오면 주소에서 patch 가 빠진다"
-  - **"주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다"**(`?patch=2026-10-01`, `?date=LAST_WEEK` 각각. 다시 조회하지 않고 미리 받은 통계를 보인다)
-  - "주소의 패치가 목록의 다른 패치면 그 패치일로 조회한다"
-  - "티어를 바꾸면 패치는 그대로 두고 다시 조회한다"
-  - "패치 목록이 비었으면 준비 안내를 보이고 통계를 요청하지 않는다"
-  - **"통계를 못 받으면 준비 안내를 보인다"**(`initial = null` 이고 조회가 500)
-  - "일별 트렌드가 없다"(그 제목이 화면에 없다)
-- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/components/BrawlerStatsPanel.test.tsx` → 실패.
-- [ ] **Step 3: 구현하고 차트를 지운다.** `pnpm remove recharts`. `git grep -n "recharts\|DailyTrend\|ui/chart" -- imstargg-frontend ':!imstargg-frontend/docs' ':!imstargg-frontend/pnpm-lock.yaml'` → 0건.
-- [ ] **Step 4: 통과를 확인한다.** 위 명령 → 통과. `pnpm lint`.
-- [ ] **Step 5: 커밋한다.** `feat(frontend): 브롤러 상세의 통계를 패치로 조회하고 일별 추이를 없앤다`
+  **서버 쪽**: 두 화면 모두 `loadStatsPatches()` 로 목록을 받고, 목록이 있으면 첫 패치와 기본 티어로 통계를 받는다. 통계 조회는 `try/catch` 로 감싸 실패하면 `null` 을 내린다. 브롤러 상세의 아이템 보유 통계는 지금 그대로 둔다. `EventStatsSection` 은 모드가 통계를 제공하지 않으면 지금의 안내를 그대로 보이고 패치 목록도 요청하지 않는다.
 
-### Task 9: 이벤트 상세 화면 (`/events/[id]`)
-
-**Files:**
-- Modify: `fe/app/events/[id]/_components/EventStatsSection.tsx`, `EventStatsPanel.tsx`, `fe/src/hooks/queries/useEventStats.ts`
-- Test: `fe/tests/components/EventStatsSection.test.tsx`, `EventStatsPanel.test.tsx`
-
-**Interfaces:**
-- Consumes: Task 5, Task 6, Task 8 의 `StatsFilter`, `isDefaultStatsFilter`.
-- Produces: `useEventResultStats(eventId, filter, patches, initial?, enabled?)`, `useEventRankStats(…)` 가 `patches` 를 받는다. `EventStatsPanel` 의 props 에 `patches: StatsPatch[]` 를 더하고 `initialResult`, `initialRank` 는 `null` 일 수 있다.
-
-  `EventStatsSection` 의 흐름: 모드가 통계를 제공하지 않으면 지금의 안내 그대로(패치 목록도 요청하지 않는다) → `loadStatsPatches()` → 비었으면 `StatsPreparing` → 첫 패치와 기본 티어로 통계 조회(`try/catch`, 실패하면 `null`) → `EventStatsPanel`.
+  **패널**: 목록이 비었으면 `StatsPreparing` 을 보이고 통계를 요청하지 않는다. 미리 받은 통계가 `null` 이고 조회도 실패하면 `StatsPreparing` 을 보인다. 주소는 `?patch=` 를 지금의 `?date=` 와 같은 방식(마운트 뒤에 읽기, `popstate`, `applySearchShallow`)으로 다루고, 읽은 값은 `resolvePatchDate` 로 푼다. 가장 최근 패치면 `patch: null` 로 지운다.
 
 - [ ] **Step 1: 실패하는 테스트를 쓴다.**
+  - `BrawlerStatsPanel.test.tsx`:
+    - "미리 받은 통계를 가장 최근 패치로 보인다"(마운트 직후 통계 요청이 없다)
+    - "패치를 바꾸면 그 패치일로 다시 조회하고 주소에 patch 가 들어간다"
+    - "가장 최근 패치로 돌아오면 주소에서 patch 가 빠진다"
+    - **"주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다"**(`?patch=2026-10-01`, `?date=LAST_WEEK` 각각. 다시 조회하지 않고 미리 받은 통계를 보인다)
+    - "주소의 패치가 목록의 다른 패치면 그 패치일로 조회한다"
+    - "티어를 바꾸면 패치는 그대로 두고 다시 조회한다"
+    - "패치 목록이 비었으면 준비 안내를 보이고 통계를 요청하지 않는다"
+    - **"통계를 못 받으면 준비 안내를 보인다"**(`initial = null` 이고 조회가 500)
   - `EventStatsSection.test.tsx`: 지금의 케이스를 유지하고 요청 단언을 `patchDate` 로 바꾼다. 더한다: "통계를 제공하지 않는 모드는 패치 목록도 요청하지 않는다", "패치 목록이 비었으면 준비 안내를 보이고 통계를 요청하지 않는다", **"통계를 못 받으면 준비 안내를 보인다"**(통계 엔드포인트가 404 여도 렌더가 던지지 않는다).
   - `EventStatsPanel.test.tsx`: "패치를 바꾸면 그 패치일로 다시 조회한다", "주소의 패치가 목록에 없으면 가장 최근 패치로 조회한다".
-- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/components/EventStatsSection.test.tsx tests/components/EventStatsPanel.test.tsx` → 실패.
+- [ ] **Step 2: 실패를 확인한다.** `pnpm test:run tests/components/BrawlerStatsPanel.test.tsx tests/components/EventStatsSection.test.tsx tests/components/EventStatsPanel.test.tsx` → 실패.
 - [ ] **Step 3: 구현한다.**
-- [ ] **Step 4: 전체를 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run && pnpm build` 모두 통과. `git grep -n "dateRange\|DateRange\|DATE_RANGE\|daily\|Daily" -- imstargg-frontend/src imstargg-frontend/app` → 0건(플레이어 통계 등 무관한 `daily` 가 나오면 그것만 남긴다).
-- [ ] **Step 5: 커밋한다.** `feat(frontend): 이벤트 상세의 통계를 패치로 조회한다`
+- [ ] **Step 4: 통과를 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run`.
+- [ ] **Step 5: 커밋한다.** `feat(frontend): 브롤러 상세와 이벤트 상세의 통계를 패치로 조회한다`
 
-### Task 10: E2E, 문서, 버전 (컨트롤러)
+### Task 10: 기간 옵션과 옛 선택 UI 를 지운다 (프론트 정리)
+
+Task 9 까지 끝나면 기간 옵션을 쓰는 화면이 없다.
+
+**Files:**
+- Delete: `fe/app/_components/statistics/StatRangeSelector.tsx`, `fe/tests/unit/components/statistics/StatRangeSelector.test.tsx`
+- Modify: `fe/src/domain/statistics/enums.ts`(`STATS_DATE_RANGES`, `StatsDateRange`, `DATE_RANGE_LABELS`, `DEFAULT_DATE_RANGE`, `parseDateRange` 삭제), `fe/src/api/types.ts`(`StatsDateRangeDto` 삭제), `fe/src/api/endpoints/statistics.ts`(파라미터 타입 7개에서 `dateRange` 를 지우고 `patchDate: string` 을 필수로)
+- Test: `fe/tests/unit/domain/statistics/enums.test.ts`(기간 옵션의 케이스 삭제)
+
+**Interfaces:**
+- Produces: 프론트에 기간 옵션이 남지 않는다. 통계 파라미터 타입 7개는 `patchDate: string` 을 요구한다.
+
+- [ ] **Step 1: 지운다.** 타입 검사가 남은 사용처를 알려 준다. 나오면 Task 8, 9 에서 빠뜨린 곳이니 `patchDate` 로 고친다.
+- [ ] **Step 2: 확인한다.** `pnpm typecheck && pnpm lint && pnpm test:run && pnpm build` 모두 통과. `git grep -n "dateRange\|DateRange\|DATE_RANGE\|StatRangeSelector" -- imstargg-frontend/src imstargg-frontend/app imstargg-frontend/tests ':!imstargg-frontend/tests/e2e'` → 0건(E2E 는 Task 11 이 고친다).
+- [ ] **Step 3: 커밋한다.** `refactor(frontend)!: 통계의 기간 옵션과 옛 선택 UI 를 지운다`
+
+### Task 11: E2E, 문서, 버전 (컨트롤러)
 
 E2E 는 운영 API(`api.imstargg.com`)를 프록시한다. 운영의 core-api 가 2단계로 바뀌기 전에는 새 E2E 가 통과할 수 없다. 테스트는 여기서 고쳐 두고, 실행은 배포 뒤 확인에서 한다.
 
-- [ ] **Step 1: E2E 를 고친다.** `fe/tests/e2e/statistics.spec.ts`: "기간 선택" 케이스를 "패치 선택 상자에서 다른 패치를 고르면 주소에 `patch=` 가 들어간다"로 바꾼다(패치가 하나뿐이면 건너뛴다). "최근 업데이트:" 문구가 보인다. 브롤러 상세에서 "일별 트렌드" 제목을 기다리던 단언을 "없다"로 바꾼다. 스펙 9장의 "패치 목록을 못 받았을 때의 안내"는 서버 쪽 요청을 E2E 에서 실패시킬 수 없어 Task 7–9 의 컴포넌트 테스트가 맡는다. 이 차이를 PR 본문에 적는다.
+- [ ] **Step 1: E2E 를 고친다.** `fe/tests/e2e/statistics.spec.ts`: "기간 선택" 케이스를 "패치 선택 상자에서 다른 패치를 고르면 주소에 `patch=` 가 들어간다"로 바꾼다(패치가 하나뿐이면 건너뛴다). "최근 업데이트:" 문구가 보인다. 브롤러 상세에서 "일별 트렌드" 제목을 기다리던 단언을 "없다"로 바꾼다. 스펙 9장의 "패치 목록을 못 받았을 때의 안내"는 서버 쪽 요청을 E2E 에서 실패시킬 수 없어 Task 8, Task 9 의 테스트가 맡는다. 이 차이를 PR 본문에 적는다.
 - [ ] **Step 2: 문서.** `imstargg-backend/docs/stats-battle-data-strategy.md` 에서 옛 집계(일별·주별 재집계, 월 파티션)의 설명을 지우고 패치 기준 집계만 남긴다. `/superdomain:domain` 으로 `docs/superdomain/DOMAIN.md` 의 statistics 절을 고친다(기능: 패치 기준 누적 집계, 통계 조회의 "일별 추이" 삭제, 규칙: 패치의 범위와 다시 읽어 맞추기). `imstargg-frontend/` 문서에 기간 선택이나 일별 추이를 말하는 곳이 있으면 고친다.
 - [ ] **Step 3: 용어 검사.** `/superglossary:check` 를 이 브랜치가 더한 코드에 돌린다.
 - [ ] **Step 4: 전체 확인.** `./gradlew test ktlintCheck --rerun-tasks`, `pnpm typecheck && pnpm lint && pnpm test:run && pnpm build`. 건수를 PR 본문에 적는다.
