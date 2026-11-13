@@ -75,13 +75,13 @@ StatsResultBattleEntity                    StatsRankBattleEntity
    | 3 | 친선전 제외 | `BattleType.FRIENDLY` |
    | 4 | 브롤러 중복 없음 | 전투 전체에서 같은 브롤러가 두 번 나오면 버린다 |
    | 5 | 최저 트로피 | 일반 전투는 `StatsTierRange.MIN_TROPHY`(1000) 이상, 경쟁전(`soloRanked`)은 `MIN_SOLO_RANK_TIER`(신화 1) 이상 |
-   | 6 | `StatsEventMode` 허용 목록 | `modeBrawlStarsId` 로만 판정한다. 목록 밖 모드(와이프아웃 25, 태그팀/듀얼 24, 5v5 등)는 버린다 |
+   | 6 | `stats_event_mode` 테이블의 모드 | `modeBrawlStarsId` 로만 판정한다. 목록 밖 모드(와이프아웃 25, 태그팀/듀얼 24, 5v5 등)는 버린다 |
    | 7 | 팀 구성 일치 | 팀 수가 `teamCount`, 모든 팀의 인원이 `teamSize` 와 같아야 한다 |
    | 8 | 유형과 경로 일치 | 순위형 테이블은 `battleRank` 가 있고 `resultType == RANK` 인 모드, 결과형 테이블은 `result` 가 있고 `resultType == RESULT` 인 모드만 받는다 |
 
    - 6번은 `battle.mode` 문자열을 쓰지 않는다. battlelog 가 하키(45)를 `brawlBall`, 아레나(48)를 `siege` 로 보내는 등 문자열을 믿을 수 없기 때문이다.
    - 듀얼은 `BattleBuilder` 가 같은 태그로 브롤러 3개씩 2×3 으로 펼치므로 7번은 통과한다. 6번에서 걸려 버려진다.
-   - 허용 모드와 모드별 팀 구성은 `StatsEventMode`(core-enum)가 단일 출처다.
+   - 모드 → 수집 유형은 `stats_event_mode` 테이블, 유형별 팀 구성은 `StatsEventModeType`(core-enum)이 단일 출처다.
    - core-batch `statsPlayerSyncJob`(통계 전투에서 수집 대상 플레이어 발굴)은 모드를 거르지 않고 통계 전투 테이블을 그대로 읽는다. 그래서 허용 목록 적용 뒤 수집된 전투로는 허용 목록 모드에서 본 플레이어만 발굴한다(미지원 모드에서만 보인 플레이어는 이 경로로 들어오지 않는다). 적용 전에 쌓인 행은 파티션 보존 기간 동안 그대로 발굴에 쓰인다.
 2. **중복 체크**: Stats 테이블에서 이미 처리된 `battleKey` 인지 확인한다.
 3. **Stats Battle 저장**: 중복이 아닌 경우 Stats 테이블에 저장한다 (`battleDate`는 `battleAt`에서 자동 계산).
@@ -177,7 +177,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 
 매치메이킹 봇이 상대인 전투는 집계에서 뺀다. 트로피 분포로 추정하는 규칙이다. 근거와 결정 이력은 [봇 전투 제외 설계](../../docs/superpowers/specs/2026-11-06-stats-bot-battle-exclusion-design.md) 의 §3.1 과 부록 C.
 
-**규칙**: `StatsBotBattlePolicy`(core-batch `domain/statistics`)에 상수, 판정 함수 둘(`isBotBattle`, `isBotLobby`), 단계 함수를 둔다. 순수 함수이고 예외를 던지지 않는다. 조건을 하나라도 만족하지 않으면 `false` 다. 모드는 `StatsEventMode.find(battle.eventModeBrawlStarsId)` 로 정하고 `mode` 문자열은 보지 않는다. 트로피는 팀원의 `brawler.trophies` 다. 이름·태그·파워는 판정에 쓰지 않는다.
+**규칙**: `StatsBotBattlePolicy`(core-batch `domain/statistics`)에 상수, 판정 함수 둘(`isBotBattle`, `isBotLobby`), 단계 함수를 둔다. 순수 함수이고 예외를 던지지 않는다. 조건을 하나라도 만족하지 않으면 `false` 다. 모드를 보지 않고 팀 구성(`StatsEventModeType.find`)으로 유형을 정하며 `mode` 문자열도 보지 않는다. 트로피는 팀원의 `brawler.trophies` 다. 이름·태그·파워는 판정에 쓰지 않는다.
 
 | 상수 | 값 | 뜻 |
 |------|-----|-----|
@@ -192,7 +192,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 **3대3 (`isBotBattle`)**: 아래를 모두 만족하면 봇 전투다. 1 ~ 3 이 적용 범위이고 4 ~ 5 가 판정이다.
 
 1. 전투 유형이 트로피전(`BattleType.RANKED`)이다. 경쟁전, 챌린지, 토너먼트, 알 수 없는 코드는 `false`. 유형을 가장 먼저 본다. 경쟁전 행의 `trophies` 에는 트로피가 아니라 랭크 티어 값이 들어 있다.
-2. 모드가 `StatsEventMode` 의 결과형 모드다.
+2. 팀 구성이 2×3 결과형 구성이다.
 3. 팀이 2개이고 각 팀이 3명이다. 수집자가 여섯 슬롯 중 정확히 한 곳에 있다.
 4. 상대 세 명의 트로피가 모두 2000 미만이다.
 5. 수집자 팀 세 명의 트로피 합을 S 라 할 때 상대 세 명 각각의 트로피 t 가 `3·t ≥ S − 225` 이고 `3·t < S + 75` 다. t 가 수집자 팀 평균의 −75 이상 +25 미만이라는 뜻이다. 평균을 정수 나눗셈으로 내면 경계에서 측정과 달라지므로 정수 비교식으로 고정한다.
@@ -327,7 +327,7 @@ SELECT drop_old_month_partitions('2026-11-05');
 ### 설정
 
 - `StatsBattleAggregateApplier.BATTLE_MAX_AGE_DAYS = 7`: 수집 대상 배틀의 최대 경과 일수
-- `StatsEventMode`: 통계를 수집하는 모드의 허용 목록과 모드별 팀 구성
+- `stats_event_mode` 테이블: 통계를 수집하는 모드의 허용 목록과 모드별 수집 유형. `StatsEventModeType`: 유형별 팀 구성
 - `StatsBotBattlePolicy`: 봇 전투 판정 규칙(섹션 5.5). 상수 일곱 개 `BOT_TROPHY_LIMIT = 2000`, `TEAM_AVERAGE_WINDOW_LOWER = -75`, `TEAM_AVERAGE_WINDOW_UPPER = 25`, `CLUSTER_WIDTH = 75`, `SOLO_SHOWDOWN_CLUSTER_THRESHOLD = 5`, `DUO_SHOWDOWN_CLUSTER_THRESHOLD = 2`, `TRIO_SHOWDOWN_CLUSTER_THRESHOLD = 2`
 - `StatsBotBattleMonitor`(3대3), `StatsBotLobbyMonitor`(쇼다운): 봇 감시 누적기. 경고 문턱과 최소 표본은 클래스 상수
 - `PartitionManageJobConfig`: `DAYS_AHEAD = 7`, `RETENTION_DAYS = 10`, `MONTHS_AHEAD = 1`. 일 스텝(`partitionCreateStep`, `partitionDropStep`) 뒤에 월 스텝(`monthPartitionCreateStep`, `monthPartitionDropStep`)이 `create_month_partitions`, `drop_old_month_partitions` 를 호출한다. 삭제 경계 `monthRetentionCutoff` 는 SQL 과 같은 경계다

@@ -18,7 +18,7 @@ function pickFg(hex: string): string {
 
 /**
  * 모드(modeId) → 이벤트 카드 배경색. 통계를 모으는 모드만 둔다.
- * 백엔드 `StatsEventMode` 에 모드를 추가할 때 여기에도 함께 추가한다.
+ * 관리자 화면에서 통계 수집을 켠 모드는 여기에 색을 더한다. 없으면 기본 회색이다.
  * 아레나(48)는 색이 정해지지 않아 넣지 않았다(기본 회색). 색을 정하면 한 줄 추가한다.
  */
 const MODE_COLORS: Record<number, string> = {

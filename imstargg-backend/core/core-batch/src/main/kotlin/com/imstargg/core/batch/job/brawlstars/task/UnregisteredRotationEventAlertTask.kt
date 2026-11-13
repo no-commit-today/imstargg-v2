@@ -4,7 +4,6 @@ import com.imstargg.core.batch.job.brawlstars.BattleEventSyncItemWriter
 import com.imstargg.core.batch.job.brawlstars.BattleEventSyncJobConfig
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
-import com.imstargg.core.enums.StatsEventMode
 import com.imstargg.infrastructure.db.core.KOREA_ZONE
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventRotationItemEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
@@ -21,7 +20,7 @@ private val log = KotlinLogging.logger {}
 /**
  * 그날 로테이션에 나온 미등록 이벤트를 알린다.
  *
- * - 통계 전투는 허용 목록([StatsEventMode])의 모드만 담는다. 전투 단계(`battleEventSyncFromRankBattleStep`,
+ * - 통계 전투는 통계 수집 모드 테이블(`stats_event_mode`)에 있는 모드만 담는다. 전투 단계(`battleEventSyncFromRankBattleStep`,
  *   `battleEventSyncFromResultBattleStep`)만으로는 미지원 모드의 새 맵을 놓친다. 이벤트를 등록하지 않으면
  *   core-api 가 로테이션에서 그 이벤트를 버리므로, 등록 알림이 끊기면 새 맵이 화면에 나오지 않는다.
  * - 로테이션 동기화 잡(`battleEventRotationSyncJob`, 매시)에 두지 않는다. 미등록 맵마다 하루 24건이 오기 때문이다.
@@ -29,7 +28,7 @@ private val log = KotlinLogging.logger {}
  * - 전투 단계와 중복을 피하는 방식: 전투 단계의 `checkedEventIds` 는 `@StepScope` 라이터마다 따로 있어 이 단계가
  *   볼 수 없다. 대신 그날 통계 전투에 나온 이벤트는 전투 단계가 이미 알렸다는 사실을 쓴다. 그런 이벤트는 여기서
  *   뺀다. 이 단계는 전투 단계가 다룬 이벤트를 다시 알리지 않는다. 전투 단계도 스텝마다 이벤트당 한 번만 알리고
- *   ([BattleEventSyncItemWriter]). 또 core-worker 가 전투 모드의 [StatsEventMode.resultType] 으로 두 통계 테이블 중
+ *   ([BattleEventSyncItemWriter]). 또 core-worker 가 전투 모드의 통계 수집 유형(`StatsEventModeType.resultType`)으로 두 통계 테이블 중
  *   한쪽만 고르므로 한 이벤트의 전투는 한 테이블에만 들어간다. 그래서 세 단계를 합쳐 그날 미등록 이벤트마다 많아야
  *   한 건이 온다.
  *
