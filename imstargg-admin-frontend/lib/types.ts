@@ -76,15 +76,22 @@ export interface BattleEvent {
   createdAt: string | null;
 }
 
-export type BattleEventModeResultType = "RESULT" | "RANK";
+export type StatsEventModeType = "RESULT_3VS3" | "SOLO_SHOWDOWN" | "DUO_SHOWDOWN" | "TRIO_SHOWDOWN";
+
+export const STATS_EVENT_MODE_TYPE_LABELS: Record<StatsEventModeType, string> = {
+  RESULT_3VS3: "3대3 결과형 (2팀 × 3명)",
+  SOLO_SHOWDOWN: "솔로 쇼다운 (10팀 × 1명)",
+  DUO_SHOWDOWN: "듀오 쇼다운 (5팀 × 2명)",
+  TRIO_SHOWDOWN: "트리오 쇼다운 (4팀 × 3명)",
+};
 
 export interface BattleEventMode {
   brawlStarsId: number;
   brawlStarsName: string;
   names: Record<Language, string>;
   iconImageUrl: string | null;
-  // 통계 수집 유형. 통계를 모으지 않는 모드는 본래 결과형이어도 null
-  resultType: BattleEventModeResultType | null;
+  // 통계 수집 유형. 통계를 모으지 않는 모드는 null
+  statsType: StatsEventModeType | null;
 }
 
 export interface Maintenance {

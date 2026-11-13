@@ -1,6 +1,6 @@
 package com.imstargg.core.batch.domain.statistics
 
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -33,22 +33,24 @@ class BrawlerBattleRankStatsAggregatorTest {
     fun `20인 솔로 쇼다운(모드 75)의 순위 19 전투는 건너뛰고 같은 날짜의 솔로 쇼다운 전투는 집계한다`() {
         val sut = BrawlerBattleRankStatsAggregator()
 
-        sut.aggregate(statsRankBattle(teams = listOf(listOf(statsPlayer(1))), battleRank = 19, eventModeBrawlStarsId = 75))
-        sut.aggregate(
-            statsRankBattle(
-                teams = listOf(listOf(statsPlayer(2))),
-                eventModeBrawlStarsId = StatsEventMode.SOLO_SHOWDOWN.modeBrawlStarsId,
-            ),
-        )
+        sut.aggregate(statsRankBattle(teams = (101..120).map { listOf(statsPlayer(it)) }, battleRank = 19, eventModeBrawlStarsId = 75))
+        sut.aggregate(showdown(StatsEventModeType.SOLO_SHOWDOWN, listOf(listOf(1500)) + List(9) { listOf(2100) }))
 
-        assertThat(sut.toEntities().map { it.brawlerBrawlStarsId }).containsOnly(2L)
+        assertThat(sut.toEntities().map { it.brawlerBrawlStarsId }).containsOnly(1L)
     }
 
     @Test
     fun `10팀 듀오 쇼다운(모드 86) 전투는 집계하지 않는다`() {
-        assertThat(
-            aggregate(statsRankBattle(teams = listOf(listOf(statsPlayer(1), statsPlayer(2))), battleRank = 3, eventModeBrawlStarsId = 86)),
-        ).isEmpty()
+        val tenDuos = (0 until 10).map { t -> listOf(statsPlayer(2 * t + 1), statsPlayer(2 * t + 2)) }
+
+        assertThat(aggregate(statsRankBattle(teams = tenDuos, battleRank = 3, eventModeBrawlStarsId = 86))).isEmpty()
+    }
+
+    @Test
+    fun `쇼다운 구성이면 모드 ID 와 관계없이 집계한다`() {
+        val teams = showdown(StatsEventModeType.SOLO_SHOWDOWN, listOf(listOf(1500)) + List(9) { listOf(2100) }).teams
+
+        assertThat(aggregate(statsRankBattle(teams = teams, eventModeBrawlStarsId = 999))).isNotEmpty()
     }
 
     private fun aggregate(battle: StatsRankBattleEntity) = BrawlerBattleRankStatsAggregator().also { it.aggregate(battle) }.toEntities()
@@ -56,5 +58,5 @@ class BrawlerBattleRankStatsAggregatorTest {
     private fun duo(
         vararg others: List<Int>,
         battleRank: Int = 1,
-    ) = showdown(StatsEventMode.DUO_SHOWDOWN, listOf(listOf(1500, 2100)) + others, battleRank = battleRank)
+    ) = showdown(StatsEventModeType.DUO_SHOWDOWN, listOf(listOf(1500, 2100)) + others, battleRank = battleRank)
 }

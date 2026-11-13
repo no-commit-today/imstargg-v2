@@ -1,18 +1,18 @@
 package com.imstargg.core.domain.statistics
 
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 
 object StatsRate {
     /**
      * 3명 팀의 쌍 수(3C2). 기본 티어에서 2인 조합 테이블의 팀 하나는 쌍 3개, 곧 `total_count` 3 으로 쌓인다.
      * 상위 티어는 쌍 단위로 티어를 판정(두 멤버 모두 그 티어 이상)하므로 팀당 0·1·3쌍이 쌓여 `÷ 3` 은 근사다.
-     * 결과형 모드가 모두 2×3 이라는 전제([StatsEventMode.RESULT_SLOTS_PER_GAME])에서 나온다.
+     * 결과형 모드가 모두 2×3 이라는 전제([StatsEventModeType.RESULT_SLOTS_PER_GAME])에서 나온다.
      */
     const val PAIRS_PER_TEAM = 3
 
     /**
      * 한 게임에서 X 가 만나는 적 수(상대 팀 3명). 카운터 테이블에서 X 의 게임 하나는 X 기준 행 3개로 쌓인다.
-     * 결과형 모드가 모두 2×3 이라는 전제([StatsEventMode.RESULT_SLOTS_PER_GAME])에서 나온다.
+     * 결과형 모드가 모두 2×3 이라는 전제([StatsEventModeType.RESULT_SLOTS_PER_GAME])에서 나온다.
      */
     const val ENEMY_SLOTS_PER_GAME = 3
 
@@ -26,7 +26,7 @@ object StatsRate {
 
     /**
      * 결과형 슬롯 합을 게임 수로 환산한다. `슬롯 합 ÷ 6` 이고 정수 나눗셈이라 나머지는 버린다.
-     * 6 은 [StatsEventMode.RESULT_SLOTS_PER_GAME] 이다.
+     * 6 은 [StatsEventModeType.RESULT_SLOTS_PER_GAME] 이다.
      *
      * ## 결정 이력
      * - 이전 `GameSlots.totalGameCount` 의 결정을 이어받는다.
@@ -39,7 +39,7 @@ object StatsRate {
      *
      * @param resultSlotSum 조회 범위 안 결과형 통계의 슬롯 합 (victory + defeat + draw)
      */
-    fun resultGameCount(resultSlotSum: Long): Long = resultSlotSum / StatsEventMode.RESULT_SLOTS_PER_GAME
+    fun resultGameCount(resultSlotSum: Long): Long = resultSlotSum / StatsEventModeType.RESULT_SLOTS_PER_GAME
 
     /**
      * 2인 조합 슬롯 합을 팀 수로 환산한다. `슬롯 합 ÷ 3`([PAIRS_PER_TEAM]) 이고 정수 나눗셈이라 나머지는 버린다.

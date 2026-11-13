@@ -6,7 +6,6 @@ import com.imstargg.core.domain.brawlstars.Message
 import com.imstargg.core.domain.brawlstars.Messages
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
 import com.imstargg.core.domain.brawlstars.event.BattleEventMode
-import com.imstargg.core.enums.StatsEventMode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
@@ -86,7 +85,6 @@ class BattleEventRepository(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages),
                     iconImageUrl = modeIconImage?.toImageUrl(),
-                    resultType = StatsEventMode.find(modeEntity.brawlStarsId)?.resultType,
                 )
             }
 
@@ -109,7 +107,6 @@ class BattleEventRepository(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
                     iconImageUrl = modeIconImages[modeEntity.brawlStarsId]?.toImageUrl(),
-                    resultType = StatsEventMode.find(modeEntity.brawlStarsId)?.resultType,
                 )
             }
         return BattleEvent(

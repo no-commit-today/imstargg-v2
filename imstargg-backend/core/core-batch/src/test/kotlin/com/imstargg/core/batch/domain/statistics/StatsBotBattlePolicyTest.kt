@@ -1,7 +1,7 @@
 package com.imstargg.core.batch.domain.statistics
 
 import com.imstargg.core.enums.BattleEventModeResultType
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -68,12 +68,12 @@ class StatsBotBattlePolicyTest {
         }
 
         @Test
-        fun `결과형 허용 모드가 아니면 false 다`() {
-            // 6 은 솔로 쇼다운, 999 는 허용 목록에 없는 모드
-            listOf(6L, 999L).forEach { modeId ->
+        fun `2×3 결과형이면 모드 ID 와 관계없이 판정 범위에 든다`() {
+            // 수집 모드 목록은 DB 에 있고 배치는 읽지 않는다. 원본에 들어온 전투는 팀 구성으로 판정한다
+            listOf(0L, 25L, 999L).forEach { modeId ->
                 val battle = threeVsThree(listOf(1000, 1100, 1200), listOf(1050, 1080, 1090), eventModeBrawlStarsId = modeId)
-                assertThat(P.appliesTo(battle)).isFalse()
-                assertThat(P.isBotBattle(battle)).isFalse()
+                assertThat(P.appliesTo(battle)).isTrue()
+                assertThat(P.isBotBattle(battle)).isTrue()
             }
         }
 
@@ -104,24 +104,26 @@ class StatsBotBattlePolicyTest {
 
     @Nested
     inner class Showdown {
-        private fun solo(vararg others: Int) = showdown(StatsEventMode.SOLO_SHOWDOWN, listOf(listOf(1500)) + others.map { listOf(it) })
+        private fun solo(vararg others: Int) = showdown(StatsEventModeType.SOLO_SHOWDOWN, listOf(listOf(1500)) + others.map { listOf(it) })
 
-        private fun duo(vararg others: List<Int>) = showdown(StatsEventMode.DUO_SHOWDOWN, listOf(listOf(1500, 1500)) + others)
+        private fun duo(vararg others: List<Int>) = showdown(StatsEventModeType.DUO_SHOWDOWN, listOf(listOf(1500, 1500)) + others)
 
-        private fun trio(vararg others: List<Int>) = showdown(StatsEventMode.TRIO_SHOWDOWN, listOf(listOf(1500, 1500, 1500)) + others)
+        private fun trio(vararg others: List<Int>) = showdown(StatsEventModeType.TRIO_SHOWDOWN, listOf(listOf(1500, 1500, 1500)) + others)
+
+        private val clustered = arrayOf(listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600, 1610))
 
         private val farDuos = arrayOf(listOf(1700, 1710), listOf(1900, 1910))
 
         @Test
-        fun `순위형 허용 모드는 모두 판정 범위에 들고 상대 전원이 한 창에 몰리면 봇 로비다`() {
-            // 새 순위형 모드를 쇼다운 임계값 when 에 넣지 않으면 그 모드의 봇 로비가 조용히 집계에 남는다
+        fun `순위형 유형은 모두 판정 범위에 들고 상대 전원이 한 창에 몰리면 봇 로비다`() {
+            // 새 순위형 유형을 쇼다운 임계값 when 에 넣지 않으면 그 유형의 봇 로비가 조용히 집계에 남는다
             val lobbies =
-                StatsEventMode.entries
+                StatsEventModeType.entries
                     .filter { it.resultType == BattleEventModeResultType.RANK }
-                    .associateWith { mode -> showdown(mode, List(mode.teamCount) { List(mode.teamSize) { 1000 } }) }
+                    .associateWith { type -> showdown(type, List(type.teamCount) { List(type.teamSize) { 1000 } }) }
 
-            assertThat(lobbies.filterValues { !P.appliesTo(it) }.keys).describedAs("판정 범위에서 빠진 순위형 모드").isEmpty()
-            assertThat(lobbies.filterValues { !P.isBotLobby(it) }.keys).describedAs("몰린 로비를 봇 로비로 보지 않는 순위형 모드").isEmpty()
+            assertThat(lobbies.filterValues { !P.appliesTo(it) }.keys).describedAs("판정 범위에서 빠진 순위형 유형").isEmpty()
+            assertThat(lobbies.filterValues { !P.isBotLobby(it) }.keys).describedAs("몰린 로비를 봇 로비로 보지 않는 순위형 유형").isEmpty()
         }
 
         @Test
@@ -176,7 +178,7 @@ class StatsBotBattlePolicyTest {
         fun `수집자 팀은 세지 않는다`() {
             val lobby =
                 showdown(
-                    StatsEventMode.DUO_SHOWDOWN,
+                    StatsEventModeType.DUO_SHOWDOWN,
                     listOf(listOf(1000, 1010), listOf(1020, 1030), listOf(1300, 1310), listOf(1600, 1610), listOf(1900, 1910)),
                 )
             assertThat(P.isBotLobby(lobby)).isFalse()
@@ -184,19 +186,30 @@ class StatsBotBattlePolicyTest {
 
         @Test
         fun `트로피전 쇼다운의 정해진 팀 구성이 아니면 false 다`() {
-            val clustered = arrayOf(listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600, 1610))
-            val notRanked = showdown(StatsEventMode.DUO_SHOWDOWN, listOf(listOf(1500, 1500)) + clustered, type = "soloRanked")
-            val notShowdown = statsRankBattle(duo(*clustered).teams, eventModeBrawlStarsId = StatsEventMode.GEM_GRAB.modeBrawlStarsId)
-            val nineSolos = showdown(StatsEventMode.SOLO_SHOWDOWN, listOf(listOf(1500)) + (0..7).map { listOf(1000 + it) })
+            val notRanked = showdown(StatsEventModeType.DUO_SHOWDOWN, listOf(listOf(1500, 1500)) + clustered, type = "soloRanked")
+            val twentySolos = statsRankBattle(teams = (1..20).map { listOf(statsPlayer(it)) }, eventModeBrawlStarsId = 75)
+            val tenDuos =
+                statsRankBattle(
+                    teams = (0 until 10).map { t -> listOf(statsPlayer(2 * t + 1), statsPlayer(2 * t + 2)) },
+                    eventModeBrawlStarsId = 86,
+                )
+            val nineSolos = showdown(StatsEventModeType.SOLO_SHOWDOWN, listOf(listOf(1500)) + (0..7).map { listOf(1000 + it) })
             val shortTeam =
                 showdown(
-                    StatsEventMode.DUO_SHOWDOWN,
+                    StatsEventModeType.DUO_SHOWDOWN,
                     listOf(listOf(1500, 1500), listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600)),
                 )
-            listOf(notRanked, notShowdown, nineSolos, shortTeam).forEach {
+            listOf(notRanked, twentySolos, tenDuos, nineSolos, shortTeam).forEach {
                 assertThat(P.appliesTo(it)).isFalse()
                 assertThat(P.isBotLobby(it)).isFalse()
             }
+        }
+
+        @Test
+        fun `순위형 판정은 모드 ID 가 아니라 팀 구성으로 정한다`() {
+            val lobby = statsRankBattle(duo(*clustered).teams, eventModeBrawlStarsId = 0L)
+            assertThat(P.appliesTo(lobby)).isTrue()
+            assertThat(P.isBotLobby(lobby)).isTrue()
         }
 
         @Test
@@ -209,7 +222,7 @@ class StatsBotBattlePolicyTest {
                     listOf(statsPlayer(7, 1040), statsPlayer(8, 1050)),
                     listOf(statsPlayer(9, 1700), statsPlayer(10, 1710)),
                 )
-            val lobby = statsRankBattle(teams, eventModeBrawlStarsId = StatsEventMode.DUO_SHOWDOWN.modeBrawlStarsId)
+            val lobby = statsRankBattle(teams, eventModeBrawlStarsId = 9L)
             assertThat(P.isBotLobby(lobby)).isFalse()
         }
 
@@ -224,7 +237,7 @@ class StatsBotBattlePolicyTest {
                     listOf(statsPlayer(7, 1400), statsPlayer(8, 1410)),
                     listOf(statsPlayer(9, 1600), statsPlayer(10, 1610)),
                 )
-            val lobby = statsRankBattle(teams, eventModeBrawlStarsId = StatsEventMode.DUO_SHOWDOWN.modeBrawlStarsId)
+            val lobby = statsRankBattle(teams, eventModeBrawlStarsId = 9L)
             assertThat(P.appliesTo(lobby)).isFalse()
             assertThat(P.isBotLobby(lobby)).isFalse()
         }

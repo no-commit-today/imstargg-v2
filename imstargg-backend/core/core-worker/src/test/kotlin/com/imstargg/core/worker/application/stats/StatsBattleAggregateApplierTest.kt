@@ -1,15 +1,19 @@
 package com.imstargg.core.worker.application.stats
 
 import com.imstargg.CoreWorkerContextTest
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.core.worker.domain.Battle
 import com.imstargg.core.worker.domain.BattleEvent
 import com.imstargg.core.worker.domain.BattleTeamPlayer
 import com.imstargg.core.worker.domain.BattleTeamPlayerBrawler
+import com.imstargg.infrastructure.db.core.statistics.StatsEventModeEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRankBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.StatsEventModeJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Clock
@@ -22,7 +26,20 @@ class StatsBattleAggregateApplierTest(
     private val statsRankBattleRepository: StatsRankBattleJpaRepository,
     private val statsResultBattleRepository: StatsResultBattleJpaRepository,
     private val clock: Clock,
+    private val statsEventModeRepository: StatsEventModeJpaRepository,
+    private val statsEventModeSnapshot: StatsEventModeSnapshot,
 ) : CoreWorkerContextTest() {
+    @BeforeEach
+    fun setUp() {
+        statsEventModeRepository.saveAll(
+            listOf(0L, 2L, 3L, 5L, 17L, 20L, 22L, 45L, 48L).map { StatsEventModeEntity(it, StatsEventModeType.RESULT_3VS3) } +
+                StatsEventModeEntity(6L, StatsEventModeType.SOLO_SHOWDOWN) +
+                StatsEventModeEntity(9L, StatsEventModeType.DUO_SHOWDOWN) +
+                StatsEventModeEntity(38L, StatsEventModeType.TRIO_SHOWDOWN),
+        )
+        statsEventModeSnapshot.reload()
+    }
+
     @AfterEach
     fun tearDown() {
         cleanUp.all()
@@ -155,6 +172,7 @@ class StatsBattleAggregateApplierTest(
                     teams = createDuelTeams(),
                     modeBrawlStarsId = 24L,
                     mode = "duels",
+                    brawlersExpanded = true,
                 )
 
             // when
@@ -162,6 +180,33 @@ class StatsBattleAggregateApplierTest(
 
             // then
             assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `듀얼에 3대3 결과형 유형을 매겨도 펼친 전투는 저장하지 않는다`() {
+            // given
+            statsEventModeRepository.save(StatsEventModeEntity(24L, StatsEventModeType.RESULT_3VS3))
+            statsEventModeSnapshot.reload()
+
+            // when
+            sut.apply(
+                listOf(
+                    createResultBattle(
+                        battleKey = "duel-battle-key",
+                        battleAt = recentBattleAt(),
+                        playerBrawlStarsTag = "#DUEL0",
+                        teams = createDuelTeams(),
+                        modeBrawlStarsId = 24L,
+                        mode = "duels",
+                        brawlersExpanded = true,
+                    ),
+                    createResultBattle("k20", recentBattleAt(), "#A", modeBrawlStarsId = 20L),
+                ),
+            )
+
+            // then
+            assertThat(statsResultBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .isEqualTo(listOf(20L))
         }
 
         @Test
@@ -370,6 +415,72 @@ class StatsBattleAggregateApplierTest(
         }
     }
 
+    @Nested
+    inner class `apply 수집 모드 목록` {
+        @Test
+        fun `목록에서 지운 모드는 다시 읽은 뒤부터 저장하지 않는다`() {
+            // given
+            statsEventModeRepository.delete(statsEventModeRepository.findByEventModeBrawlStarsId(20L)!!)
+            statsEventModeSnapshot.reload()
+
+            // when
+            sut.apply(listOf(createResultBattle("k20", recentBattleAt(), "#A", modeBrawlStarsId = 20L)))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isEqualTo(0)
+        }
+
+        @Test
+        fun `목록에 더한 모드는 다시 읽은 뒤부터 저장한다`() {
+            // given
+            statsEventModeRepository.save(StatsEventModeEntity(25L, StatsEventModeType.RESULT_3VS3))
+            statsEventModeSnapshot.reload()
+
+            // when
+            sut.apply(listOf(createResultBattle("k25", recentBattleAt(), "#A", modeBrawlStarsId = 25L)))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isEqualTo(1)
+        }
+
+        @Test
+        fun `다시 읽기 전에는 이전 목록으로 판정한다`() {
+            // given
+            statsEventModeRepository.save(StatsEventModeEntity(25L, StatsEventModeType.RESULT_3VS3))
+
+            // when
+            sut.apply(listOf(createResultBattle("k25", recentBattleAt(), "#A", modeBrawlStarsId = 25L)))
+
+            // then
+            assertThat(statsResultBattleRepository.count()).isEqualTo(0)
+        }
+
+        @Test
+        fun `유형 구성과 다른 모드에 유형을 매기면 그 모드의 전투만 저장하지 않는다`() {
+            // given
+            statsEventModeRepository.save(StatsEventModeEntity(31L, StatsEventModeType.RESULT_3VS3))
+            statsEventModeSnapshot.reload()
+
+            // when
+            sut.apply(
+                listOf(
+                    createResultBattle(
+                        battleKey = "k31",
+                        battleAt = recentBattleAt(),
+                        playerBrawlStarsTag = "#T0P0",
+                        teams = createTeams(2, 5),
+                        modeBrawlStarsId = 31L,
+                    ),
+                    createResultBattle("k20", recentBattleAt(), "#A", modeBrawlStarsId = 20L),
+                ),
+            )
+
+            // then
+            assertThat(statsResultBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .isEqualTo(listOf(20L))
+        }
+    }
+
     private fun recentBattleAt(): Instant = clock.instant().minus(Duration.ofHours(1))
 
     private fun createRankBattle(
@@ -411,6 +522,7 @@ class StatsBattleAggregateApplierTest(
         mode: String = "knockout",
         battleRank: Int? = null,
         result: String? = "victory",
+        brawlersExpanded: Boolean = false,
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleAt,
@@ -430,6 +542,7 @@ class StatsBattleAggregateApplierTest(
         battleRank = battleRank,
         trophyChange = 8,
         teams = teams,
+        brawlersExpanded = brawlersExpanded,
     )
 
     private fun createTeams(
