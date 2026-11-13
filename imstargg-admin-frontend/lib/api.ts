@@ -7,6 +7,7 @@ import type {
   BattleEvent,
   BattleEventMode,
   Maintenance,
+  StatsEventModeType,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
@@ -229,6 +230,12 @@ export const updateEventModeMessages = (brawlStarsId: number, messages: Record<s
   request<void>(`/event-modes/${brawlStarsId}/messages`, {
     method: "PUT",
     body: JSON.stringify({ messages }),
+  });
+
+export const updateEventModeStatsType = (brawlStarsId: number, type: StatsEventModeType | null) =>
+  request<void>(`/event-modes/${brawlStarsId}/stats-type`, {
+    method: "PUT",
+    body: JSON.stringify({ type }),
   });
 
 export const uploadEventModeImage = (brawlStarsId: number, file: File) => {

@@ -23,11 +23,9 @@ import {
 import { getEventModes, createEventMode, uploadEventModeImage } from "@/lib/api";
 import { ImageThumbnail } from "@/components/image-thumbnail";
 import { PendingImageInput } from "@/components/pending-image-input";
-import type { BattleEventMode } from "@/lib/types";
+import { STATS_EVENT_MODE_TYPE_LABELS, type BattleEventMode } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
-
-const STATS_TYPE_LABELS = { RESULT: "결과형", RANK: "순위형" } as const;
 
 export default function EventModeListPage() {
   const [eventModes, setEventModes] = useState<BattleEventMode[]>([]);
@@ -151,7 +149,7 @@ export default function EventModeListPage() {
             <TableHead>BrawlStars Name</TableHead>
             <TableHead>이름 (KO)</TableHead>
             <TableHead>이름 (EN)</TableHead>
-            <TableHead>통계 유형</TableHead>
+            <TableHead>통계 수집</TableHead>
             <TableHead>아이콘</TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -163,7 +161,7 @@ export default function EventModeListPage() {
               <TableCell>{m.brawlStarsName}</TableCell>
               <TableCell>{m.names.KOREAN || "-"}</TableCell>
               <TableCell>{m.names.ENGLISH || "-"}</TableCell>
-              <TableCell>{m.resultType ? STATS_TYPE_LABELS[m.resultType] : "미지원"}</TableCell>
+              <TableCell>{m.statsType ? STATS_EVENT_MODE_TYPE_LABELS[m.statsType] : "수집 안 함"}</TableCell>
               <TableCell><ImageThumbnail url={m.iconImageUrl} alt={m.names.KOREAN || m.brawlStarsName} /></TableCell>
               <TableCell>
                 <Link href={`/event-modes/${m.brawlStarsId}/edit`}>
