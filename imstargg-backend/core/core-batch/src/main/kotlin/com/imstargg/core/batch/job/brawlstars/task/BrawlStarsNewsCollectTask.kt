@@ -69,7 +69,7 @@ class BrawlStarsNewsCollectTask(
                 }.distinctBy { it.link.linkUrl }
 
         if (repository.count() == 0L) {
-            collectFirstRun(summaries, pause)
+            collectFirstExecution(summaries, pause)
         } else {
             summaries
                 .sortedByDescending { it.publishedAt }
@@ -78,7 +78,7 @@ class BrawlStarsNewsCollectTask(
         log.info { "[$STEP_NAME] 완료" }
     }
 
-    private fun collectFirstRun(
+    private fun collectFirstExecution(
         summaries: List<BrawlStarsBlogArticleSummary>,
         pause: () -> Unit,
     ) {
@@ -97,7 +97,7 @@ class BrawlStarsNewsCollectTask(
                 }
         val saved = repository.saveAll(articles)
         log.info { "[$STEP_NAME] 첫 실행 - 글 ${saved.size}건 저장" }
-        alertManager.alert(NewsArticleAlertMessage.firstRunSummary(saved))
+        alertManager.alert(NewsArticleAlertMessage.firstExecutionSummary(saved))
     }
 
     private fun collectArticle(
@@ -137,7 +137,7 @@ class BrawlStarsNewsCollectTask(
             if (previous == null || previousContent == null) {
                 NewsArticleAlertMessage.newArticle(article = saved, detectedAt = detectedAt)
             } else {
-                NewsArticleAlertMessage.changed(
+                NewsArticleAlertMessage.updated(
                     article = saved,
                     previous = previous,
                     previousContent = previousContent,
@@ -151,7 +151,7 @@ class BrawlStarsNewsCollectTask(
     /** 추출 규칙이 바뀐 경우, 같은 글의 모든 판의 `content` 를 각 판의 `rawBody` 로 다시 만든다. */
     private fun realignContents(articleKey: String) {
         val articles = repository.findAllByLinkArticleKeyOrderByIdAsc(articleKey)
-        articles.forEach { it.changeContent(NewsArticleContentExtractor.extract(it.rawBody)) }
+        articles.forEach { it.updateContent(NewsArticleContentExtractor.extract(it.rawBody)) }
         repository.saveAll(articles)
         log.info { "[$STEP_NAME] 추출 규칙 변경 - $articleKey 의 ${articles.size}건 본문 글자를 다시 만든다" }
     }

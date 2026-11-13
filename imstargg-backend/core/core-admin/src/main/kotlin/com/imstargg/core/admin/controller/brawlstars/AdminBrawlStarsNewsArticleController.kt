@@ -30,11 +30,11 @@ class AdminBrawlStarsNewsArticleController(
     ): ResponseEntity<List<BrawlStarsNewsArticleVersionResponse>> = ResponseEntity.ok(service.findVersions(id))
 
     @PutMapping("/news-articles/{id}/type")
-    fun changeType(
+    fun updateType(
         @PathVariable id: Long,
         @RequestBody request: BrawlStarsNewsArticleTypeUpdateRequest,
     ): ResponseEntity<Unit> {
-        service.changeType(id = id, type = request.type)
+        service.updateType(id = id, type = request.type)
         return ResponseEntity.noContent().build()
     }
 }

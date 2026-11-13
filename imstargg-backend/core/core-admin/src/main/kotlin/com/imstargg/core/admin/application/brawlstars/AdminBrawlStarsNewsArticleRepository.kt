@@ -20,7 +20,7 @@ class AdminBrawlStarsNewsArticleRepository(
     private val queryFactory = JPAQueryFactory(entityManager)
 
     /** 글(주소 키)마다 id 가 가장 큰 판 하나이고, 가장 최근 판의 id 가 큰 것부터다. */
-    fun findLatestVersions(): List<AdminBrawlStarsNewsArticleSummary> {
+    fun findLastVersions(): List<AdminBrawlStarsNewsArticleSummary> {
         val groups =
             queryFactory
                 .select(brawlStarsNewsArticleEntity.id.max(), brawlStarsNewsArticleEntity.id.count())

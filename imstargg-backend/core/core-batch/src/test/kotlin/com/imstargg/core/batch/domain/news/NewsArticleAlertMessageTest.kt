@@ -35,7 +35,7 @@ class NewsArticleAlertMessageTest {
         val current = article(publishedAt = "2026-11-11T03:00:00Z", content = content)
 
         val command =
-            NewsArticleAlertMessage.changed(
+            NewsArticleAlertMessage.updated(
                 article = current,
                 previous = previous,
                 previousContent = previousContent,
@@ -62,7 +62,7 @@ class NewsArticleAlertMessageTest {
         val current = article(path = newPath)
 
         val command =
-            NewsArticleAlertMessage.changed(
+            NewsArticleAlertMessage.updated(
                 article = current,
                 previous = previous,
                 previousContent = "본문",
@@ -129,7 +129,7 @@ class NewsArticleAlertMessageTest {
                 type = BrawlStarsNewsArticleType.OTHER,
             )
 
-        val command = NewsArticleAlertMessage.firstRunSummary(listOf(oldNote, other, latestNote))
+        val command = NewsArticleAlertMessage.firstExecutionSummary(listOf(oldNote, other, latestNote))
 
         assertThat(command.title).isEqualTo("[첫 실행] 공식 뉴스 수집")
         assertThat(command.content).isEqualTo(
@@ -145,7 +145,7 @@ class NewsArticleAlertMessageTest {
     fun `첫 실행 요약은 릴리스 노트가 없으면 없다고 적는다`() {
         val other = article(title = "Brawl Stars x Duolingo", type = BrawlStarsNewsArticleType.OTHER)
 
-        val command = NewsArticleAlertMessage.firstRunSummary(listOf(other))
+        val command = NewsArticleAlertMessage.firstExecutionSummary(listOf(other))
 
         assertThat(command.content).isEqualTo("글 1건 저장, 릴리스 노트 0건\n릴리스 노트 없음")
     }

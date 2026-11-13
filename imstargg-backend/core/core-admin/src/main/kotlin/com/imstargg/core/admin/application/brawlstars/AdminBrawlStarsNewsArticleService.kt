@@ -20,7 +20,7 @@ class AdminBrawlStarsNewsArticleService(
 ) {
     fun findAll(): List<BrawlStarsNewsArticleListItemResponse> =
         adminBrawlStarsNewsArticleRepository
-            .findLatestVersions()
+            .findLastVersions()
             .map(BrawlStarsNewsArticleListItemResponse::of)
 
     fun getDetail(id: Long): BrawlStarsNewsArticleDetailResponse {
@@ -36,14 +36,14 @@ class AdminBrawlStarsNewsArticleService(
 
     /** 같은 주소 키의 모든 판에 적용한다. 유형은 글의 성질이라 판마다 다르면 안 된다. */
     @Transactional
-    fun changeType(
+    fun updateType(
         id: Long,
         type: BrawlStarsNewsArticleType,
     ) {
         val entity = getEntity(id)
         brawlStarsNewsArticleJpaRepository
             .findAllByLinkArticleKeyOrderByIdAsc(entity.link.articleKey)
-            .forEach { it.changeType(type) }
+            .forEach { it.updateType(type) }
     }
 
     private fun getEntity(id: Long): BrawlStarsNewsArticleEntity =

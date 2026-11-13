@@ -7,7 +7,7 @@ package com.imstargg.core.batch.domain.news
  */
 data class NewsArticleContentDiff(
     val addedLineCount: Int,
-    val removedLineCount: Int,
+    val deletedLineCount: Int,
 ) {
     companion object {
         fun of(
@@ -18,7 +18,7 @@ data class NewsArticleContentDiff(
             val counts = countLines(content)
             val added = counts.entries.sumOf { (line, count) -> maxOf(0, count - (previousCounts[line] ?: 0)) }
             val removed = previousCounts.entries.sumOf { (line, count) -> maxOf(0, count - (counts[line] ?: 0)) }
-            return NewsArticleContentDiff(addedLineCount = added, removedLineCount = removed)
+            return NewsArticleContentDiff(addedLineCount = added, deletedLineCount = removed)
         }
 
         private fun countLines(content: String): Map<String, Int> =

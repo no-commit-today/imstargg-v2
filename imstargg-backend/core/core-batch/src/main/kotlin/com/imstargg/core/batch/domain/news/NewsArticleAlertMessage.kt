@@ -31,7 +31,7 @@ object NewsArticleAlertMessage {
             ex = null,
         )
 
-    fun changed(
+    fun updated(
         article: BrawlStarsNewsArticleEntity,
         previous: BrawlStarsNewsArticleEntity,
         previousContent: String,
@@ -54,10 +54,10 @@ object NewsArticleAlertMessage {
         }
         val diff = NewsArticleContentDiff.of(previousContent, article.content)
         lines +=
-            if (diff.addedLineCount == 0 && diff.removedLineCount == 0) {
+            if (diff.addedLineCount == 0 && diff.deletedLineCount == 0) {
                 "본문 동일"
             } else {
-                "본문 ${diff.addedLineCount}줄 추가, ${diff.removedLineCount}줄 삭제"
+                "본문 ${diff.addedLineCount}줄 추가, ${diff.deletedLineCount}줄 삭제"
             }
         return AlertCommand(
             title = "[변경] [${typeLabel(article.type)}] ${article.title}",
@@ -66,15 +66,15 @@ object NewsArticleAlertMessage {
         )
     }
 
-    fun firstRunSummary(articles: List<BrawlStarsNewsArticleEntity>): AlertCommand {
+    fun firstExecutionSummary(articles: List<BrawlStarsNewsArticleEntity>): AlertCommand {
         val releaseNotes = articles.filter { it.type == BrawlStarsNewsArticleType.RELEASE_NOTE }
         val lines = mutableListOf("글 ${articles.size}건 저장, 릴리스 노트 ${releaseNotes.size}건")
-        val latest = releaseNotes.maxByOrNull { it.publishedAt }
-        if (latest == null) {
+        val lastReleaseNote = releaseNotes.maxByOrNull { it.publishedAt }
+        if (lastReleaseNote == null) {
             lines += "릴리스 노트 없음"
         } else {
-            lines += latest.title
-            lines += latest.link.linkUrl
+            lines += lastReleaseNote.title
+            lines += lastReleaseNote.link.linkUrl
         }
         return AlertCommand(
             title = "[첫 실행] 공식 뉴스 수집",

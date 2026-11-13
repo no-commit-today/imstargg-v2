@@ -55,11 +55,11 @@ class BrawlStarsNewsArticleEntity(
     var content: String = content
         protected set
 
-    fun changeType(type: BrawlStarsNewsArticleType) {
+    fun updateType(type: BrawlStarsNewsArticleType) {
         this.type = type
     }
 
-    fun changeContent(content: String) {
+    fun updateContent(content: String) {
         this.content = content
     }
 }
