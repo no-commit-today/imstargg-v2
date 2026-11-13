@@ -132,7 +132,7 @@ export default function EventModeEditPage() {
           <CardHeader>
             <CardTitle>통계 수집</CardTitle>
             <p className="text-sm text-muted-foreground">
-              팀 구성이 다른 모드에 유형을 매기면 그 모드는 수집되지 않습니다.
+              팀 구성이 다른 모드나, 듀얼처럼 한 명이 브롤러 여러 개를 내는 모드에 유형을 매기면 그 모드는 수집되지 않습니다.
             </p>
           </CardHeader>
           <CardContent className="space-y-3">

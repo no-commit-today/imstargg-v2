@@ -366,6 +366,7 @@ create table if not exists stats_event_mode
 create unique index if not exists uk_stats_event_mode__event_mode_brawlstars_id
     on stats_event_mode (event_mode_brawlstars_id);
 -- 새 환경도 운영과 같은 12개로 시작한다. 비면 core-worker 가 아무것도 수집하지 않는다.
+-- 첫 적용 뒤에는 다시 돌리지 않는다. 관리자가 지운(끈) 시드 모드가 되살아난다.
 insert into stats_event_mode (event_mode_brawlstars_id, type)
 values (0, 'RESULT_3VS3'),
        (2, 'RESULT_3VS3'),
