@@ -355,6 +355,32 @@ create table if not exists stats_player
 );
 create unique index if not exists uk_stats_player__brawlstars_tag on stats_player (brawlstars_tag);
 
+create table if not exists stats_event_mode
+(
+    stats_event_mode_id      bigint generated always as identity primary key,
+    event_mode_brawlstars_id bigint      not null,
+    type                     varchar(25) not null,
+    created_at               timestamptz not null default now(),
+    updated_at               timestamptz not null default now()
+);
+create unique index if not exists uk_stats_event_mode__event_mode_brawlstars_id
+    on stats_event_mode (event_mode_brawlstars_id);
+-- 새 환경도 운영과 같은 12개로 시작한다. 비면 core-worker 가 아무것도 수집하지 않는다.
+insert into stats_event_mode (event_mode_brawlstars_id, type)
+values (0, 'RESULT_3VS3'),
+       (2, 'RESULT_3VS3'),
+       (3, 'RESULT_3VS3'),
+       (5, 'RESULT_3VS3'),
+       (6, 'SOLO_SHOWDOWN'),
+       (9, 'DUO_SHOWDOWN'),
+       (17, 'RESULT_3VS3'),
+       (20, 'RESULT_3VS3'),
+       (22, 'RESULT_3VS3'),
+       (38, 'TRIO_SHOWDOWN'),
+       (45, 'RESULT_3VS3'),
+       (48, 'RESULT_3VS3')
+on conflict (event_mode_brawlstars_id) do nothing;
+
 -- battle_event_mode table
 create table if not exists battle_event_mode
 (
