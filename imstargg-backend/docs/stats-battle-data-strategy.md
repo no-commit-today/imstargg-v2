@@ -202,7 +202,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 **쇼다운 (`isBotLobby`)**: 아래를 모두 만족하면 봇 로비다. 1 ~ 3 이 적용 범위이고 4 ~ 6 이 판정이다.
 
 1. 전투 유형이 트로피전이다.
-2. 모드가 `SOLO_SHOWDOWN`(6), `DUO_SHOWDOWN`(9), `TRIO_SHOWDOWN`(38) 중 하나이고, 팀 수와 각 팀의 인원이 그 모드의 `teamCount`·`teamSize`(10×1, 5×2, 4×3)와 같다.
+2. 팀 구성이 순위형 수집 유형(`SOLO_SHOWDOWN` 10×1, `DUO_SHOWDOWN` 5×2, `TRIO_SHOWDOWN` 4×3) 중 하나와 맞는다.
 3. 수집자 팀이 정확히 한 팀이고, 수집자가 전 슬롯 중 정확히 한 곳에 있다.
 4. **자격 있는 팀** = 상대 팀 중 팀원 전원의 트로피가 2000 미만인 팀.
 5. 자격 있는 팀 A 마다 창 `[min(A), min(A) + 75)` 를 놓는다. 자격 있는 팀 T 는 `min(T) ≥ min(A)` 이고 `max(T) < min(A) + 75` 일 때 그 창에 든다. A 자신에게도 같은 조건을 건다. 창마다 드는 팀 수를 세어 가장 큰 값을 **몰린 팀 수**로 한다. 자격 있는 팀이 없으면 0 이다.
