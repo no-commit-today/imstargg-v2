@@ -21,7 +21,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 class PatchStatsWriterTest(
-    jdbcTemplate: JdbcTemplate,
+    private val jdbcTemplate: JdbcTemplate,
     resultBattleJpaRepository: StatsResultBattleJpaRepository,
     rankBattleJpaRepository: StatsRankBattleJpaRepository,
     private val writer: PatchStatsWriter,
@@ -368,6 +368,27 @@ class PatchStatsWriterTest(
         assertThat(checkpointJpaRepository.findAllByStatsType(StatsType.BRAWLER_BATTLE_RESULT))
             .extracting<Long> { it.brawlStarsPatchId }
             .containsExactly(otherPatchId)
+    }
+
+    @Test
+    fun `패치를 지우면 티어 구간 목록에 없는 값의 줄도 사라진다`() {
+        // given
+        val checkpoint = createCheckpoint(StatsType.BRAWLER_BATTLE_RESULT)
+        writer.add(resultTable, patchId, update(checkpoint, 100L), listOf(count(keyA, 3, 1, 0, 4, 1)))
+        jdbcTemplate.update(
+            "insert into brawler_battle_result_stats (brawlstars_patch_id, tier_range, event_brawlstars_id, brawler_brawlstars_id," +
+                " victory_count, defeat_count, draw_count, total_count, star_player_count, created_at, updated_at)" +
+                " values (?, 'NOT_A_TIER_RANGE', 15000001, 16000009, 1, 0, 0, 1, 0, current_timestamp, current_timestamp)",
+            patchId,
+        )
+        assertThat(resultStats()).hasSize(2)
+
+        // when
+        writer.deletePatch(resultTable, patchId, checkpoint.id!!)
+
+        // then
+        assertThat(resultStats()).isEmpty()
+        assertThat(checkpointJpaRepository.findAllByStatsType(StatsType.BRAWLER_BATTLE_RESULT)).isEmpty()
     }
 
     @Test

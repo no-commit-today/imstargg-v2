@@ -32,6 +32,8 @@ import java.time.ZoneOffset
  * 3. 빼기는 뺄 수 있을 때만 갱신되게 조건을 건다. 갱신되지 않은 키가 있으면 통계와 원본이 어긋난 것이므로 실패한다.
  *    합이 0 이 된 줄은 지운다.
  *
+ * [add]·[subtract]·[subtractLast] 가 받는 한 묶음(`counts`)에 같은 키는 하나다(집계기가 키마다 한 줄로 모아 준다).
+ *
  * 예외는 잡지 않는다. 트랜잭션이 되돌려지고 다음 실행이 체크포인트에서 잇는다.
  */
 @Component
@@ -108,7 +110,10 @@ class PatchStatsWriter(
      * 지워진 패치의 통계 줄과 체크포인트 줄을 지운다.
      *
      * 한 트랜잭션이 너무 커지지 않게 티어 구간마다 나눠 지운다. 중간에 죽어도 체크포인트 줄이 남아 있으므로
-     * 다음 실행이 다시 지운다.
+     * 다음 실행이 다시 지운다. 마지막 트랜잭션은 체크포인트 줄을 지운 뒤 그 패치의 통계 줄을 한 번 더 지워,
+     * 티어 구간 목록에 없는 값의 줄이 있어도 남기지 않는다.
+     *
+     * 수정 번호를 확인하지 않는다. 같은 유형의 실행이 겹치지 않는다는 전제(CronJob 의 `concurrencyPolicy: Forbid`)에 기댄다.
      */
     fun deletePatch(
         table: PatchStatsTable,
@@ -123,6 +128,7 @@ class PatchStatsWriter(
         }
         transactionTemplate.executeWithoutResult {
             jdbcTemplate.update(DELETE_CHECKPOINT_SQL, checkpointId)
+            jdbcTemplate.update("delete from ${table.name} where brawlstars_patch_id = ?", brawlStarsPatchId)
         }
     }
 

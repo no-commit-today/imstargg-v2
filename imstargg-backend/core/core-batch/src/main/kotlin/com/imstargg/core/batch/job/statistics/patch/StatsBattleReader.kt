@@ -16,7 +16,11 @@ interface StatsBattleReader<TBattle : BaseStatsBattleEntity> {
     /** 원본에 남아 있는 가장 이른 전투 날짜. 원본이 없으면 null. */
     fun findEarliestBattleDate(): LocalDate?
 
-    /** 전투 날짜가 dateRange 안이고 afterBattleId < id <= battleIdCap 인 원본을 id 순으로, 한 쪽씩 넘긴다. */
+    /**
+     * 전투 날짜가 dateRange 안이고 afterBattleId < id <= battleIdCap 인 원본을 id 순으로, 한 쪽씩 넘긴다.
+     *
+     * 빈 쪽은 넘기지 않는다(`PatchStatsTask` 와 `PatchStatsRangeAligner` 의 `battles.maxOf` 가 여기에 기댄다).
+     */
     fun read(
         dateRange: PatchDateRange,
         afterBattleId: Long,

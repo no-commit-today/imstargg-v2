@@ -360,6 +360,30 @@ class PatchStatsTaskTest(
     }
 
     @Test
+    fun `맞추기 뒤에도 적용한 범위가 지금의 범위와 다르면 실패하고 아무것도 바꾸지 않는다`() {
+        // given
+        val (patch1103, patch1111) = savePatches(LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 11))
+        saveResult(LocalDate.of(2026, 11, 4))
+        saveResult(LocalDate.of(2026, 11, 13))
+        task().execute(aggregations.brawlerBattleResult)
+        patchJpaRepository.save(
+            patchJpaRepository.findById(patch1111).orElseThrow().apply { update(LocalDate.of(2026, 11, 12), null) },
+        )
+        saveResult(LocalDate.of(2026, 11, 14))
+        val checkpointsBefore = listOf(patch1103, patch1111).map { resultCheckpointOf(it).snapshot() }
+        val statsBefore = listOf(patch1103, patch1111).map { resultStatsOf(it) }
+        val idleAligner = mockk<PatchStatsRangeAligner>(relaxUnitFun = true)
+
+        // when & then
+        assertThatThrownBy { task(rangeAligner = idleAligner).execute(aggregations.brawlerBattleResult) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("statsType=BRAWLER_BATTLE_RESULT")
+            .hasMessageContaining("patchId=$patch1103")
+        assertThat(listOf(patch1103, patch1111).map { resultCheckpointOf(it).snapshot() }).isEqualTo(checkpointsBefore)
+        assertThat(listOf(patch1103, patch1111).map { resultStatsOf(it) }).isEqualTo(statsBefore)
+    }
+
+    @Test
     fun `실행 도중에 시각이 흘러도 시작할 때의 오늘과 상한으로 판단한다`() {
         // given
         val (_, patch1111, patch1120) =
@@ -503,7 +527,10 @@ class PatchStatsTaskTest(
         assertThat(actual).describedAs("${table.name} patch=$patchId").isNotEmpty
     }
 
-    private fun task(clock: Clock = Clock.fixed(now, KOREA_ZONE)): PatchStatsTask =
+    private fun task(
+        clock: Clock = Clock.fixed(now, KOREA_ZONE),
+        rangeAligner: PatchStatsRangeAligner = this.rangeAligner,
+    ): PatchStatsTask =
         PatchStatsTask(
             patchJpaRepository = patchJpaRepository,
             checkpointJpaRepository = checkpointJpaRepository,
@@ -546,6 +573,8 @@ class PatchStatsTaskTest(
 
     private fun resultStatsOf(patchId: Long): Map<List<String>, List<Long>> =
         support.statsOf(resultTable.name, resultTable.keyColumns, resultTable.countColumns, patchId)
+
+    private fun StatsCheckpointEntity.snapshot() = listOf(id, lastReadBattleId, appliedStartDate, appliedEndDate, lastBattleAt, version)
 
     private fun resultCheckpointOf(patchId: Long): StatsCheckpointEntity = checkpointOf(StatsType.BRAWLER_BATTLE_RESULT, patchId)
 

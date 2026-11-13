@@ -34,8 +34,8 @@ private val log = KotlinLogging.logger {}
  * ## 평소 읽기
  * - 체크포인트 줄이 없는 패치는 줄을 만든다. 범위가 비었거나, 범위에 오늘까지의 날짜가 없거나,
  *   범위의 첫 날이 원본에 남은 가장 이른 날짜보다 이르면 만들지 않는다(앞부분이 빠진 통계가 온전해 보이지 않게).
- * - 줄의 적용한 범위가 지금의 범위와 다르면 읽지 않는다. 섞으면 새로 든 날의 전투를 두 번 더할 수 있다.
- *   맞추기가 정상으로 끝나면 닿지 않는 방어다.
+ * - 줄의 적용한 범위가 지금의 범위와 다르면 실패한다. 섞어 읽으면 새로 든 날의 전투를 두 번 더할 수 있다.
+ *   맞추기가 정상으로 끝나면 닿지 않는 자리이고, 닿았다면 정렬기의 버그나 바깥의 개입이라 조용히 넘기지 않는다.
  * - 읽은 전투가 [checkpointBattleCount] 이상 쌓이면 저장하고 체크포인트를 그 쪽의 마지막 id 로 올린다.
  *   다 읽으면 남은 것을 저장하며 체크포인트를 상한 id 로 올린다. 새 전투가 없어도 올린다.
  *
@@ -68,7 +68,7 @@ class PatchStatsTask(
 
         val patches = patchJpaRepository.findAll().sortedBy { it.patchDate }
         val dateRanges = PatchDateRange.resolveAll(patches.associate { it.id!! to it.patchDate })
-        deleteRemovedPatches(aggregation = aggregation, dateRanges = dateRanges)
+        deleteDeletedPatches(aggregation = aggregation, dateRanges = dateRanges)
         alignRanges(aggregation = aggregation, dateRanges = dateRanges, today = today)
         val checkpoints = checkpointJpaRepository.findAllByStatsType(aggregation.statsType).associateBy { it.brawlStarsPatchId }
         val earliestBattleDate by lazy { aggregation.reader.findEarliestBattleDate() }
@@ -88,9 +88,10 @@ class PatchStatsTask(
                         earliestBattleDate = earliestBattleDate,
                     )
                     ?: continue
-            if (PatchDateRange(checkpoint.appliedStartDate, checkpoint.appliedEndDate) != dateRange) {
-                log.info { "적용한 범위가 지금의 범위와 달라 읽지 않는다. statsType=${aggregation.statsType}, patchId=$patchId" }
-                continue
+            val appliedRange = PatchDateRange(checkpoint.appliedStartDate, checkpoint.appliedEndDate)
+            check(appliedRange == dateRange) {
+                "맞추기 뒤에도 적용한 범위가 지금의 범위와 다르다. statsType=${aggregation.statsType}, patchId=$patchId, " +
+                    "appliedRange=$appliedRange, dateRange=$dateRange"
             }
             monitoredBattleCount +=
                 readNewBattles(
@@ -131,7 +132,7 @@ class PatchStatsTask(
     }
 
     /** 어드민에서 지운 패치(체크포인트 줄은 있는데 패치 목록에 없는 패치)의 통계 줄과 체크포인트 줄을 지운다. */
-    private fun deleteRemovedPatches(
+    private fun deleteDeletedPatches(
         aggregation: PatchStatsAggregation<*>,
         dateRanges: Map<Long, PatchDateRange>,
     ) {

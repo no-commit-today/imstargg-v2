@@ -408,7 +408,7 @@ create unique index if not exists uk_battle_event__brawlstarsid on battle_event 
 
 -- =============================================================
 -- 옛 통계 {table}_backup 5개(날짜 기준)
--- 패치 기준 통계로 전환하는 동안 남겨 두는 옛 통계. 2단계에서 지운다. 월 파티션은 더 만들지 않는다.
+-- 패치 기준 통계로 전환하는 동안 남겨 두는 옛 통계. 2단계 릴리스에서 이 DDL 을 지운다(운영 테이블은 3단계에서 지운다). 월 파티션은 더 만들지 않는다.
 -- 운영은 V261114a 가 원래 이름의 테이블·인덱스·제약·시퀀스에 _backup 을 붙여 만든 상태다.
 -- =============================================================
 -- (옛) 일별 브롤러별 전투 결과 통계
@@ -456,6 +456,7 @@ alter sequence brawler_battle_rank_stats_backup_seq owned by brawler_battle_rank
 -- (옛) 브롤러 vs 적 브롤러(카운터) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
 -- 한 행 = (티어, 주 버킷)에서 brawler 가 enemy 를 상대로 만난 결과(brawler 기준). (X, Y)·(Y, X) 는 방향이 다른 별개 행이며 승↔패로 보완된다.
 -- 월 파티션 {table}_p_YYYYMM 은 이름을 바꾸기 전에 만든 것만 남는다(이름은 원래 테이블 이름 그대로). default 파티션 없음.
+-- 이 파일로 새로 만든 환경에는 파티션이 없다(옛 조합 잡은 그런 환경에서 실패한다).
 -- PK 는 파티션 키를 포함해야 해서 (id, start_battle_date) 다. 유니크가 brawler 기준 조회를 겸하므로 조회 인덱스는 따로 두지 않는다.
 create sequence if not exists brawler_enemy_battle_result_stats_backup_seq increment by 100;
 create table if not exists brawler_enemy_battle_result_stats_backup
@@ -485,6 +486,7 @@ alter sequence brawler_enemy_battle_result_stats_backup_seq owned by brawler_ene
 -- (옛) 브롤러 pair(같은 팀 2인 조합) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
 -- 한 행 = (티어, 주 버킷)에서 이 조합이 성립한 팀의 승·패·무. 조합은 brawler1 < brawler2 로 정렬한 1행이고 티어는 멤버 전원 기준(최저 trophies)이다.
 -- 월 파티션 {table}_p_YYYYMM 은 이름을 바꾸기 전에 만든 것만 남는다(이름은 원래 테이블 이름 그대로). default 파티션 없음.
+-- 이 파일로 새로 만든 환경에는 파티션이 없다(옛 조합 잡은 그런 환경에서 실패한다).
 -- PK 는 파티션 키를 포함해야 해서 (id, start_battle_date) 다. 위치 인덱스는 "브롤러 X 가 어느 위치에 있든" 조회를 맡는다.
 create sequence if not exists brawler_pair_battle_result_stats_backup_seq increment by 100;
 create table if not exists brawler_pair_battle_result_stats_backup
@@ -518,6 +520,7 @@ alter sequence brawler_pair_battle_result_stats_backup_seq owned by brawler_pair
 -- (옛) 브롤러 trio(같은 팀 3인 조합 = 3v3 한 팀 전체) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
 -- 한 행 = (티어, 주 버킷)에서 이 조합이 성립한 팀의 승·패·무. 조합은 brawler1 < brawler2 < brawler3 로 정렬한 1행이고 티어는 멤버 전원 기준(최저 trophies)이다.
 -- 월 파티션 {table}_p_YYYYMM 은 이름을 바꾸기 전에 만든 것만 남는다(이름은 원래 테이블 이름 그대로). default 파티션 없음.
+-- 이 파일로 새로 만든 환경에는 파티션이 없다(옛 조합 잡은 그런 환경에서 실패한다).
 -- PK 는 파티션 키를 포함해야 해서 (id, start_battle_date) 다. 위치 인덱스는 "브롤러 X 가 어느 위치에 있든" 조회를 맡는다.
 create sequence if not exists brawler_trio_battle_result_stats_backup_seq increment by 100;
 create table if not exists brawler_trio_battle_result_stats_backup
