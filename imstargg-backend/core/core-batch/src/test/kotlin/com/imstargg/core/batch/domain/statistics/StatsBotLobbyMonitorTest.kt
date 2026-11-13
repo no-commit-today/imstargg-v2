@@ -1,7 +1,7 @@
 package com.imstargg.core.batch.domain.statistics
 
 import com.imstargg.core.enums.BattleEventModeResultType
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -10,21 +10,21 @@ class StatsBotLobbyMonitorTest {
 
     private fun botDuo(rank: Int) =
         showdown(
-            StatsEventMode.DUO_SHOWDOWN,
+            StatsEventModeType.DUO_SHOWDOWN,
             listOf(listOf(1500, 1500), listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600, 1610)),
             battleRank = rank,
         )
 
     private fun realDuo(rank: Int) =
         showdown(
-            StatsEventMode.DUO_SHOWDOWN,
+            StatsEventModeType.DUO_SHOWDOWN,
             listOf(listOf(1500, 1500), listOf(1000, 1010), listOf(1200, 1210), listOf(1400, 1410), listOf(1600, 1610)),
             battleRank = rank,
         )
 
     private fun botSolo(rank: Int) =
         showdown(
-            StatsEventMode.SOLO_SHOWDOWN,
+            StatsEventModeType.SOLO_SHOWDOWN,
             listOf(listOf(1500)) + listOf(1000, 1010, 1020, 1030, 1040, 1200, 1400, 1600, 1800).map { listOf(it) },
             battleRank = rank,
         )
@@ -46,12 +46,12 @@ class StatsBotLobbyMonitorTest {
     fun `적용 범위 밖 전투는 세지 않는다`() {
         monitor.record(
             showdown(
-                StatsEventMode.DUO_SHOWDOWN,
+                StatsEventModeType.DUO_SHOWDOWN,
                 botDuo(1).teams.map { team -> team.map { it.brawler.trophies } },
                 type = "soloRanked",
             ),
         )
-        monitor.record(showdown(StatsEventMode.SOLO_SHOWDOWN, listOf(listOf(1500)) + (0..7).map { listOf(1000 + it) }))
+        monitor.record(showdown(StatsEventModeType.SOLO_SHOWDOWN, listOf(listOf(1500)) + (0..7).map { listOf(1000 + it) }))
 
         assertThat(monitor.metrics()).allMatch { it.total == 0L }
     }
@@ -79,19 +79,19 @@ class StatsBotLobbyMonitorTest {
     }
 
     @Test
-    fun `순위형 허용 모드는 모두 지표에 세진다`() {
-        // 새 순위형 모드를 SPECS 에 넣지 않거나 다른 모드로 잘못 넣으면 그 모드의 전투는 record 에서 조용히 버려진다.
-        // 정책의 판정 범위에서 빠진 모드도 여기서 함께 걸린다
+    fun `순위형 유형은 모두 지표에 세진다`() {
+        // 새 순위형 유형을 SPECS 에 넣지 않거나 다른 유형으로 잘못 넣으면 그 유형의 전투는 record 에서 조용히 버려진다.
+        // 정책의 판정 범위에서 빠진 유형도 여기서 함께 걸린다
         val uncounted =
-            StatsEventMode.entries
+            StatsEventModeType.entries
                 .filter { it.resultType == BattleEventModeResultType.RANK }
-                .filter { mode ->
+                .filter { type ->
                     val sut = StatsBotLobbyMonitor()
-                    sut.record(showdown(mode, List(mode.teamCount) { List(mode.teamSize) { 1000 } }))
+                    sut.record(showdown(type, List(type.teamCount) { List(type.teamSize) { 1000 } }))
                     sut.metrics().none { it.total > 0 }
                 }
 
-        assertThat(uncounted).describedAs("감시 지표에 세지지 않는 순위형 모드").isEmpty()
+        assertThat(uncounted).describedAs("감시 지표에 세지지 않는 순위형 유형").isEmpty()
     }
 
     @Test

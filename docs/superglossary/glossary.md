@@ -31,6 +31,7 @@
 | 기준 | baseline |  |  | 비교·수축의 기준값(예: 기준 승률 0.5) |
 | 날짜 | date |  |  | 시각 없는 날. 일시(at)와 구분한다 |
 | 내용 | content |  |  | 본문 텍스트 |
+| 다시 읽기 | reload |  |  | 메모리에 든 기준 데이터를 DB 에서 다시 읽음. 새로고침(refresh)과 다르다 |
 | 다이제스트 | digest |  |  | 기간별 묶음 알림(피드백 일일 다이제스트) |
 | 대미지 | damage |  |  | 대미지 딜러(DAMAGE_DEALER)의 대미지 |
 | 대상 | target |  |  | 판정·집계·처리 대상 |
@@ -127,6 +128,7 @@
 | 이전 | previous | prev |  | 직전 값·스냅샷 |
 | 일별 | daily |  |  | 하루 단위 집계 |
 | 일시 | datetime | at |  | 날짜와 시각. created_at처럼 _at 접미사로 쓴다. 기존 start_time·end_time 컬럼과 API 필드(battleTime)는 유지 |
+| 일치 | match |  |  | 팀 구성이 유형과 맞음 |
 | 저격수 | marksman |  |  | 브롤러 역할 값 MARKSMAN |
 | 저장 | store |  |  | 저장소에 파일을 둠 |
 | 전설 | legendary |  |  | 희귀도·경쟁전 티어 값 LEGENDARY |
@@ -170,6 +172,7 @@
 | 팀 | team |  |  | 같은 편 플레이어 묶음 |
 | 파워 | power |  |  | 브롤러 파워 레벨 |
 | 패배 | defeat |  | loss | 승/패/무의 패 |
+| 펼침 | expand |  |  | 플레이어 한 명의 브롤러 여러 개를 같은 태그의 여러 슬롯으로 늘어놓음(듀얼). expanded 는 활용형 |
 | 평균 | average |  | avg | 평균값 |
 | 포인트 | point |  |  | 경험치 포인트. 복수형 points |
 | 포화 | saturation |  |  | 커질수록 상한에 붙어 더 늘지 않음 |

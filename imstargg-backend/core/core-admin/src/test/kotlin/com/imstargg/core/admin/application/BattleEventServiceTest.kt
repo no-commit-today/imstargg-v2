@@ -3,10 +3,8 @@ package com.imstargg.core.admin.application
 import com.imstargg.CoreAdminContextTest
 import com.imstargg.core.admin.request.BattleEventCreateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
-import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.Language
 import com.imstargg.infrastructure.db.core.brawlstars.MessageType
-import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventModeEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
@@ -78,27 +76,6 @@ class BattleEventServiceTest
             assertThat(names)
                 .containsExactlyInAnyOrderEntriesOf(
                     mapOf(Language.KOREAN to "젬 그랩", Language.ENGLISH to "Gem Grab"),
-                )
-        }
-
-        @Test
-        fun `모드 목록의 resultType 은 통계 수집 유형이다`() {
-            // given
-            battleEventModeJpaRepository.save(BattleEventModeEntity(brawlStarsId = 0L, brawlStarsName = "gemGrab"))
-            battleEventModeJpaRepository.save(BattleEventModeEntity(brawlStarsId = 6L, brawlStarsName = "soloShowdown"))
-            battleEventModeJpaRepository.save(BattleEventModeEntity(brawlStarsId = 24L, brawlStarsName = "duels"))
-
-            // when
-            val result = sut.findAllModes()
-
-            // then
-            assertThat(result.associate { it.brawlStarsId to it.resultType })
-                .containsExactlyInAnyOrderEntriesOf(
-                    mapOf(
-                        0L to BattleEventModeResultType.RESULT,
-                        6L to BattleEventModeResultType.RANK,
-                        24L to null,
-                    ),
                 )
         }
     }

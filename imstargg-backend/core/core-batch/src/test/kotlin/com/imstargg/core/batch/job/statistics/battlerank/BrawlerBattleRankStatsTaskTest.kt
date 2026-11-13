@@ -5,7 +5,7 @@ import com.imstargg.core.batch.domain.statistics.showdown
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.core.enums.BattleType
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
@@ -105,21 +105,24 @@ class BrawlerBattleRankStatsTaskTest {
 
     private fun trioBotLobby() =
         showdown(
-            StatsEventMode.TRIO_SHOWDOWN,
+            StatsEventModeType.TRIO_SHOWDOWN,
             listOf(listOf(1500, 1500, 1500), listOf(1000, 1010, 1020), listOf(1030, 1040, 1050), listOf(1400, 1410, 1420)),
             battleRank = 2,
         )
 
     private fun duoBotLobby() =
         showdown(
-            StatsEventMode.DUO_SHOWDOWN,
+            StatsEventModeType.DUO_SHOWDOWN,
             listOf(listOf(1500, 1500), listOf(1000, 1010), listOf(1020, 1030), listOf(1400, 1410), listOf(1600, 1610)),
             battleRank = 2,
         )
 
     private fun rankBattle(): StatsRankBattleEntity {
         val playerTag = "#TAG1"
-        val teams = listOf(listOf(player(tag = playerTag, index = 1)))
+        // 수집자 한 명과 상대 아홉 명인 10×1 솔로 쇼다운 구성. 상대는 2000 이상이라 봇 로비가 아니다
+        val teams =
+            listOf(listOf(player(tag = playerTag, index = 1))) +
+                (2..10).map { listOf(player(tag = "#TAG$it", index = it, trophies = 2100)) }
         return StatsRankBattleEntity(
             battleKey = "battle-key",
             battleAt = OffsetDateTime.parse("2026-05-01T09:00:00+09:00").toInstant(),
@@ -137,6 +140,7 @@ class BrawlerBattleRankStatsTaskTest {
     private fun player(
         tag: String,
         index: Int,
+        trophies: Int = 1000,
     ): StatsBattleEntityTeamPlayer =
         StatsBattleEntityTeamPlayer(
             brawlStarsTag = tag,
@@ -146,7 +150,7 @@ class BrawlerBattleRankStatsTaskTest {
                     brawlStarsId = index.toLong(),
                     name = "Brawler$index",
                     power = 11,
-                    trophies = 1000,
+                    trophies = trophies,
                 ),
         )
 }

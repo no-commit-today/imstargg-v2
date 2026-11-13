@@ -52,6 +52,10 @@ app:
       enabled: true
       interval: 60s
       player-count: 1
+    stats-event-mode-reload:
+      enabled: true
+      # 관리자가 바꾼 통계 수집 모드가 반영되기까지의 최대 지연. core-api 로컬 캐시 만료(5분)와 같다
+      interval: 5m
 
 ---
 spring:

@@ -61,6 +61,7 @@ class BattleBuilder(
             battleRank = battle.rank,
             trophyChange = battle.trophyChange,
             teams = buildTeams(teams),
+            brawlersExpanded = teams.flatten().any { it.brawler == null },
         )
     }
 

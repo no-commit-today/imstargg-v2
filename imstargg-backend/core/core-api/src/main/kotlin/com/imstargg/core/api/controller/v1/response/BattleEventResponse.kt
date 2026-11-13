@@ -1,6 +1,7 @@
 package com.imstargg.core.api.controller.v1.response
 
 import com.imstargg.core.domain.brawlstars.event.BattleEvent
+import com.imstargg.core.domain.statistics.StatsEventModeTypes
 
 data class BattleEventResponse(
     val id: Long,
@@ -8,11 +9,13 @@ data class BattleEventResponse(
     val mapName: MessagesResponse,
 ) {
     companion object {
-        fun of(event: BattleEvent) =
-            BattleEventResponse(
-                id = event.id.value,
-                mode = event.mode?.let { BattleEventModeResponse.of(it) },
-                mapName = MessagesResponse.of(event.mapName),
-            )
+        fun of(
+            event: BattleEvent,
+            statsEventModeTypes: StatsEventModeTypes,
+        ) = BattleEventResponse(
+            id = event.id.value,
+            mode = event.mode?.let { BattleEventModeResponse.of(it, statsEventModeTypes) },
+            mapName = MessagesResponse.of(event.mapName),
+        )
     }
 }

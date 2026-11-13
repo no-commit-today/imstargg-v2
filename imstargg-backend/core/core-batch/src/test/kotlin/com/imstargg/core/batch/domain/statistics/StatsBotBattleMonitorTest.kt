@@ -95,7 +95,6 @@ class StatsBotBattleMonitorTest {
     fun `적용 범위 밖 전투는 어느 지표에도 세지 않는다`() {
         record(
             threeVsThree(listOf(19, 19, 19), listOf(19, 19, 19), type = "soloRanked"),
-            threeVsThree(listOf(1000, 1100, 1200), listOf(1050, 1080, 1090), eventModeBrawlStarsId = 6),
             statsResultBattle(listOf(listOf(statsPlayer(1)), listOf(statsPlayer(2)))),
         )
 

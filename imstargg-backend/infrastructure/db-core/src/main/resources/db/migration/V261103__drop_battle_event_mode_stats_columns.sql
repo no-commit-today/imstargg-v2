@@ -1,7 +1,7 @@
 -- 이벤트 모드의 통계 관련 컬럼(result_type, player_counts, color)을 없앤다.
 -- 대상: battle_event_mode
 --
--- 배경: 스펙 A(통계 수집 모드 허용 목록) 결정 5. 결과형/순위형은 코드 enum(StatsEventMode)이 단일 출처이고,
+-- 배경: 스펙 A(통계 수집 모드 허용 목록) 결정 5. 결과형/순위형은 수집 유형 enum(StatsEventModeType)과 stats_event_mode 테이블이 단일 출처이고,
 --   결과형 게임 수는 3v3 상수(슬롯 합 ÷ 6)로 계산하며, 카드 배경색은 프론트 상수로 옮겼다.
 --   이 컬럼들을 읽고 쓰는 곳은 더 이상 없다.
 --

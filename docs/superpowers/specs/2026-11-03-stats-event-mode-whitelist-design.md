@@ -4,6 +4,7 @@
 - 대상: `core/core-enum`, `core/core-worker`(통계 전투 수집), `core/core-api`(이벤트 모드 응답·게임 수 환산), `core/core-admin`, `core/core-batch`(미등록 이벤트 감지), `infrastructure/db-core`(`battle_event_mode`), `imstargg-frontend`, `imstargg-admin-frontend`, `imstargg-backend/docs`
 - 상태: 설계 확정 (구현 전)
 - 변경: 2026-11-03 — 코드 대조 검토 반영. 테스트 목록·KDoc 목록·상수 위치·프론트 분기 위치를 정했고, 미등록 이벤트 감지를 로테이션으로 넓혔다(결정 11, §3.9)
+- 변경: 2026-11-13 — 결정 2(허용 목록은 코드 enum)는 [통계 수집 모드 DB 관리 설계](2026-11-13-stats-event-mode-db-design.md)로 대체했다. 결정 10(컬럼 삭제 시점)도 그 설계 §3.9 가 바꿨다.
 - 관련: 같은 검토에서 나온 스펙 B(조합 통계 재구성 — 보존 정책·이벤트 키·3인 조합)와 스펙 C(티어 스코어 개선)는 이 스펙 다음에 따로 작성한다. 두 스펙의 입력이 되는 데이터 근거는 [부록](#부록-통계-검토-근거-2026-11-03)에 남긴다.
 
 ## 1. 배경
