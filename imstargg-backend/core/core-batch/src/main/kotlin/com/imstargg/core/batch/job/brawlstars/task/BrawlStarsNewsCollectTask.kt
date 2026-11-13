@@ -54,34 +54,39 @@ class BrawlStarsNewsCollectTask(
     fun collect() {
         log.info { "[$STEP_NAME] 시작" }
         val detectedAt = clock.instant()
-        val pacer = RequestPacer()
+        var requested = false
+        val pause = {
+            // 실행의 첫 요청 전에는 쉬지 않는다. 상태를 지역에 두어 실행마다 다시 시작한다.
+            if (requested) sleepRandomInterval()
+            requested = true
+        }
 
         val summaries =
             (1..LIST_PAGE_COUNT)
                 .flatMap {
-                    pacer.pause()
+                    pause()
                     blogClient.getArticleSummaries(it)
                 }.distinctBy { it.link.linkUrl }
 
         if (repository.count() == 0L) {
-            collectFirstRun(summaries, pacer)
+            collectFirstRun(summaries, pause)
         } else {
             summaries
                 .sortedByDescending { it.publishedAt }
-                .forEach { collectArticle(it, detectedAt, pacer) }
+                .forEach { collectArticle(it, detectedAt, pause) }
         }
         log.info { "[$STEP_NAME] 완료" }
     }
 
     private fun collectFirstRun(
         summaries: List<BrawlStarsBlogArticleSummary>,
-        pacer: RequestPacer,
+        pause: () -> Unit,
     ) {
         val articles =
             summaries
                 .sortedBy { it.publishedAt }
                 .map { summary ->
-                    pacer.pause()
+                    pause()
                     val rawBody = blogClient.getRawBody(summary.link)
                     newEntity(
                         summary = summary,
@@ -98,9 +103,9 @@ class BrawlStarsNewsCollectTask(
     private fun collectArticle(
         summary: BrawlStarsBlogArticleSummary,
         detectedAt: Instant,
-        pacer: RequestPacer,
+        pause: () -> Unit,
     ) {
-        pacer.pause()
+        pause()
         val rawBody = blogClient.getRawBody(summary.link)
         val content = NewsArticleContentExtractor.extract(rawBody)
         val previous = repository.findPrevious(summary.link)
@@ -165,18 +170,11 @@ class BrawlStarsNewsCollectTask(
         content = content,
     )
 
-    /** 블로그 요청 사이를 무작위로 쉰다. 한 번의 실행 안에서 첫 요청 전에는 쉬지 않는다. */
-    private inner class RequestPacer {
-        private var requested = false
-
-        fun pause() {
-            if (requested) {
-                val millis = ThreadLocalRandom.current().nextLong(requestIntervalMinMillis, requestIntervalMaxMillis + 1)
-                if (millis > 0) {
-                    Thread.sleep(millis)
-                }
-            }
-            requested = true
+    /** 최소·최대(양끝 포함) 사이의 무작위 시간만큼 쉰다. 0 이면 쉬지 않는다. */
+    private fun sleepRandomInterval() {
+        val millis = ThreadLocalRandom.current().nextLong(requestIntervalMinMillis, requestIntervalMaxMillis + 1)
+        if (millis > 0) {
+            Thread.sleep(millis)
         }
     }
 

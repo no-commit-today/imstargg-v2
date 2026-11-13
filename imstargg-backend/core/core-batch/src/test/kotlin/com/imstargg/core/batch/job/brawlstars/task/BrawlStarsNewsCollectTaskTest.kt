@@ -22,12 +22,14 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.Instant
 
 class BrawlStarsNewsCollectTaskTest(
     private val sut: BrawlStarsNewsCollectTask,
     private val repository: BrawlStarsNewsArticleJpaRepository,
     private val cleanUp: CleanUp,
+    private val clock: Clock,
 ) : CoreBatchContextTest() {
     @MockkBean
     private lateinit var blogClient: BrawlStarsBlogClient
@@ -302,6 +304,36 @@ class BrawlStarsNewsCollectTaskTest(
         assertThat(repository.count()).isEqualTo(5)
         assertThat(alerts.map { it.title }).containsExactly("[새 글] [기타] ${early.title}")
     }
+
+    @Test
+    fun `요청 간격이 있어도 수집은 끝까지 간다`() {
+        // given
+        val task = taskWithInterval(min = 1, max = 1)
+        serve(listOf(doc("a", days = 3)), listOf(doc("b", days = 1)), listOf(doc("c", days = 2)))
+
+        // when
+        task.collect()
+
+        // then
+        assertThat(repository.count()).isEqualTo(3)
+    }
+
+    @Test
+    fun `요청 간격의 최소가 최대보다 크면 만들 수 없다`() {
+        assertThatThrownBy { taskWithInterval(min = 2, max = 1) }.isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    private fun taskWithInterval(
+        min: Long,
+        max: Long,
+    ) = BrawlStarsNewsCollectTask(
+        clock = clock,
+        blogClient = blogClient,
+        repository = repository,
+        alertManager = alertManager,
+        requestIntervalMinMillis = min,
+        requestIntervalMaxMillis = max,
+    )
 
     private data class Doc(
         val slug: String,
