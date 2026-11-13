@@ -1,5 +1,7 @@
 package com.imstargg.core.batch.job.statistics.patch
 
+import com.imstargg.core.batch.domain.statistics.StatsBotBattleMonitor
+import com.imstargg.core.batch.domain.statistics.StatsBotLobbyMonitor
 import com.imstargg.core.batch.domain.statistics.patch.BrawlerBattleRankPatchStatsAggregator
 import com.imstargg.core.batch.domain.statistics.patch.BrawlerBattleResultPatchStatsAggregator
 import com.imstargg.core.batch.domain.statistics.patch.BrawlerEnemyBattleResultPatchStatsAggregator
@@ -21,6 +23,7 @@ class PatchStatsAggregations(
     val brawlerBattleResult: PatchStatsAggregation<StatsResultBattleEntity> =
         PatchStatsAggregation(
             statsType = StatsType.BRAWLER_BATTLE_RESULT,
+            jobName = PatchStatsJobConfig.BRAWLER_BATTLE_RESULT_JOB_NAME,
             table =
                 PatchStatsTable(
                     name = "brawler_battle_result_stats",
@@ -29,11 +32,13 @@ class PatchStatsAggregations(
                 ),
             reader = resultBattleReader,
             createAggregator = ::BrawlerBattleResultPatchStatsAggregator,
+            createBotMonitor = ::StatsBotBattleMonitor,
         )
 
     val brawlerBattleRank: PatchStatsAggregation<StatsRankBattleEntity> =
         PatchStatsAggregation(
             statsType = StatsType.BRAWLER_BATTLE_RANK,
+            jobName = PatchStatsJobConfig.BRAWLER_BATTLE_RANK_JOB_NAME,
             table =
                 PatchStatsTable(
                     name = "brawler_battle_rank_stats",
@@ -42,11 +47,13 @@ class PatchStatsAggregations(
                 ),
             reader = rankBattleReader,
             createAggregator = ::BrawlerBattleRankPatchStatsAggregator,
+            createBotMonitor = ::StatsBotLobbyMonitor,
         )
 
     val brawlerEnemyBattleResult: PatchStatsAggregation<StatsResultBattleEntity> =
         PatchStatsAggregation(
             statsType = StatsType.BRAWLER_ENEMY_BATTLE_RESULT,
+            jobName = PatchStatsJobConfig.BRAWLER_ENEMY_BATTLE_RESULT_JOB_NAME,
             table =
                 PatchStatsTable(
                     name = "brawler_enemy_battle_result_stats",
@@ -60,6 +67,7 @@ class PatchStatsAggregations(
     val brawlerPairBattleResult: PatchStatsAggregation<StatsResultBattleEntity> =
         PatchStatsAggregation(
             statsType = StatsType.BRAWLER_PAIR_BATTLE_RESULT,
+            jobName = PatchStatsJobConfig.BRAWLER_PAIR_BATTLE_RESULT_JOB_NAME,
             table =
                 PatchStatsTable(
                     name = "brawler_pair_battle_result_stats",
@@ -73,6 +81,7 @@ class PatchStatsAggregations(
     val brawlerTrioBattleResult: PatchStatsAggregation<StatsResultBattleEntity> =
         PatchStatsAggregation(
             statsType = StatsType.BRAWLER_TRIO_BATTLE_RESULT,
+            jobName = PatchStatsJobConfig.BRAWLER_TRIO_BATTLE_RESULT_JOB_NAME,
             table =
                 PatchStatsTable(
                     name = "brawler_trio_battle_result_stats",

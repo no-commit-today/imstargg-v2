@@ -18,7 +18,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEnti
  *
  * 정책의 판정 함수만 부른다. [record] 는 예외를 던지지 않는다. 스레드 안전하지 않다.
  */
-class StatsBotLobbyMonitor {
+class StatsBotLobbyMonitor : StatsBotMonitor<StatsRankBattleEntity> {
     private val tallies = MODES.associateWith { Tally() }
 
     private class Tally {
@@ -37,7 +37,7 @@ class StatsBotLobbyMonitor {
         val remainingMinSample: Long,
     )
 
-    fun record(battle: StatsRankBattleEntity) {
+    override fun record(battle: StatsRankBattleEntity) {
         if (!StatsBotBattlePolicy.appliesTo(battle)) return
         val type = StatsEventModeType.find(BattleEventModeResultType.RANK, battle.teams.map { it.size }) ?: return
         val tally = tallies[type] ?: return
@@ -52,7 +52,7 @@ class StatsBotLobbyMonitor {
     }
 
     /** 솔로·듀오·트리오 순으로 모드마다 걸린 전투 1위 비율, 남은 전투 1위 비율, 걸리는 비중 순이다. */
-    fun metrics(): List<StatsBotMonitorMetric> =
+    override fun metrics(): List<StatsBotMonitorMetric> =
         SPECS.flatMap { spec ->
             val tally = tallies.getValue(spec.type)
             listOf(
@@ -79,7 +79,7 @@ class StatsBotLobbyMonitor {
         }
 
     /** 요약 로그용 한 줄. 모드별 대상 수는 걸리는 비중의 표본, 걸린 수는 걸린 전투 1위 비율의 표본으로 찍힌다. */
-    fun summary(): String = metrics().joinToString(", ") { it.describe() }
+    override fun summary(): String = metrics().joinToString(", ") { it.describe() }
 
     companion object {
         private val SPECS =

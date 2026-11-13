@@ -1,6 +1,9 @@
 package com.imstargg.core.batch.job.statistics.patch
 
+import com.imstargg.core.batch.domain.statistics.StatsBotMonitor
 import com.imstargg.core.batch.domain.statistics.patch.PatchDateRange
+import com.imstargg.core.batch.support.alert.AlertCommand
+import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.infrastructure.db.core.brawlstars.patch.repository.BrawlStarsPatchJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.StatsCheckpointEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
@@ -36,6 +39,11 @@ private val log = KotlinLogging.logger {}
  * - 읽은 전투가 [checkpointBattleCount] 이상 쌓이면 저장하고 체크포인트를 그 쪽의 마지막 id 로 올린다.
  *   다 읽으면 남은 것을 저장하며 체크포인트를 상한 id 로 올린다. 새 전투가 없어도 올린다.
  *
+ * ## 봇 감시
+ * 감시를 만드는 자리가 있는 유형은 실행마다 감시 하나를 만들어 평소 읽기에서 읽은 전투만 넣는다(범위 맞추기로 다시 읽는
+ * 전투는 넣지 않는다). 실행 끝에 한 번, 넣은 전투가 있으면 요약 로그를 남기고 경고 지표가 있으면 알림을 한 번 보낸다.
+ * 이 구간의 예외는 로그만 남기고 잡을 실패시키지 않는다(`DiscordAlertManager` 는 전송 실패를 예외로 던진다).
+ *
  * 읽기는 트랜잭션 밖에서 하고, 쓰기는 [PatchStatsWriter] 가 저장마다 자기 트랜잭션을 연다. 그래서 이 클래스에는
  * 트랜잭션을 걸지 않는다. 예외는 잡지 않는다. 잡이 그 자리에서 실패하고 다음 실행이 체크포인트에서 잇는다.
  */
@@ -44,6 +52,7 @@ class PatchStatsTask(
     private val checkpointJpaRepository: StatsCheckpointJpaRepository,
     private val writer: PatchStatsWriter,
     private val rangeAligner: PatchStatsRangeAligner,
+    private val alertManager: AlertManager,
     private val clock: Clock,
     private val checkpointBattleCount: Long,
 ) {
@@ -63,6 +72,8 @@ class PatchStatsTask(
         alignRanges(aggregation = aggregation, dateRanges = dateRanges, today = today)
         val checkpoints = checkpointJpaRepository.findAllByStatsType(aggregation.statsType).associateBy { it.brawlStarsPatchId }
         val earliestBattleDate by lazy { aggregation.reader.findEarliestBattleDate() }
+        val monitor = aggregation.createBotMonitor?.invoke()
+        var monitoredBattleCount = 0L
 
         for (patch in patches) {
             val patchId = patch.id!!
@@ -81,7 +92,41 @@ class PatchStatsTask(
                 log.info { "적용한 범위가 지금의 범위와 달라 읽지 않는다. statsType=${aggregation.statsType}, patchId=$patchId" }
                 continue
             }
-            readNewBattles(aggregation = aggregation, checkpoint = checkpoint, dateRange = dateRange, battleIdCap = battleIdCap)
+            monitoredBattleCount +=
+                readNewBattles(
+                    aggregation = aggregation,
+                    checkpoint = checkpoint,
+                    dateRange = dateRange,
+                    battleIdCap = battleIdCap,
+                    monitor = monitor,
+                )
+        }
+
+        if (monitor != null && monitoredBattleCount > 0) {
+            reportBotMonitor(jobName = aggregation.jobName, monitor = monitor)
+        }
+    }
+
+    /** 요약 로그를 남기고 경고 지표가 있으면 알림을 한 번 보낸다. 예외는 로그만 남긴다. */
+    private fun reportBotMonitor(
+        jobName: String,
+        monitor: StatsBotMonitor<*>,
+    ) {
+        try {
+            log.info { "[$jobName] 봇 감시 - ${monitor.summary()}" }
+            val warnings = monitor.metrics().filter { it.isWarning }
+            if (warnings.isNotEmpty()) {
+                alertManager.alert(
+                    AlertCommand
+                        .builder()
+                        .warn()
+                        .title("[$jobName] 봇 전투 규칙 이상 감지")
+                        .content(warnings.joinToString("\n") { it.describe() })
+                        .build(),
+                )
+            }
+        } catch (ex: Exception) {
+            log.error(ex) { "[$jobName] 봇 감시 요약 실패" }
         }
     }
 
@@ -135,13 +180,15 @@ class PatchStatsTask(
             .single { it.brawlStarsPatchId == brawlStarsPatchId }
     }
 
+    /** 읽은 전투 수를 준다. 읽지 않았으면 0. 읽은 전투는 모두 monitor 에 넣는다. */
     private fun <TBattle : BaseStatsBattleEntity> readNewBattles(
         aggregation: PatchStatsAggregation<TBattle>,
         checkpoint: StatsCheckpointEntity,
         dateRange: PatchDateRange,
         battleIdCap: Long?,
-    ) {
-        if (battleIdCap == null || battleIdCap <= checkpoint.lastReadBattleId) return
+        monitor: StatsBotMonitor<TBattle>?,
+    ): Long {
+        if (battleIdCap == null || battleIdCap <= checkpoint.lastReadBattleId) return 0L
 
         var version = checkpoint.version
         var lastBattleAt = checkpoint.lastBattleAt
@@ -179,7 +226,10 @@ class PatchStatsTask(
             afterBattleId = checkpoint.lastReadBattleId,
             battleIdCap = battleIdCap,
         ) { battles ->
-            battles.forEach { aggregator.aggregate(it) }
+            battles.forEach {
+                aggregator.aggregate(it)
+                monitor?.record(it)
+            }
             unsavedBattleCount += battles.size
             readBattleCount += battles.size
             unsavedLastBattleAt = listOfNotNull(unsavedLastBattleAt, battles.maxOf { it.battleAt }).max()
@@ -193,6 +243,7 @@ class PatchStatsTask(
             "패치 통계를 더했다. statsType=${aggregation.statsType}, patchId=${checkpoint.brawlStarsPatchId}, " +
                 "readBattleCount=$readBattleCount, saveCount=$saveCount, lastReadBattleId=$battleIdCap"
         }
+        return readBattleCount
     }
 
     // 원본 엔티티의 id 는 하위 클래스마다 따로 있어(BaseStatsBattleEntity 에는 없다) 유형으로 가른다.

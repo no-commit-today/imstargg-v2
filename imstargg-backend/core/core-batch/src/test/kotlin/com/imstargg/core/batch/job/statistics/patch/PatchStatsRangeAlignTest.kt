@@ -15,6 +15,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRan
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.StatsCheckpointJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
+import io.mockk.mockk
 import jakarta.persistence.EntityManagerFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -144,7 +145,13 @@ class PatchStatsRangeAlignTest(
         val patch1111 = savePatch(date(11))
         val failingReader = FailingOnReadBattleReader(resultReader, failingRead = 3)
         val failingAggregation =
-            PatchStatsAggregation(aggregation.statsType, aggregation.table, failingReader, aggregation.createAggregator)
+            PatchStatsAggregation(
+                aggregation.statsType,
+                aggregation.jobName,
+                aggregation.table,
+                failingReader,
+                aggregation.createAggregator,
+            )
         assertThatThrownBy { task().execute(failingAggregation) }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("3 번째 읽기")
@@ -234,7 +241,13 @@ class PatchStatsRangeAlignTest(
         savePatch(date(11))
         val recordingReader = RecordingBattleReader(resultReader)
         val recordingAggregation =
-            PatchStatsAggregation(aggregation.statsType, aggregation.table, recordingReader, aggregation.createAggregator)
+            PatchStatsAggregation(
+                aggregation.statsType,
+                aggregation.jobName,
+                aggregation.table,
+                recordingReader,
+                aggregation.createAggregator,
+            )
 
         // when
         task().execute(recordingAggregation)
@@ -279,7 +292,13 @@ class PatchStatsRangeAlignTest(
         saveResult(date(14))
         val recordingReader = RecordingBattleReader(resultReader)
         val recordingAggregation =
-            PatchStatsAggregation(aggregation.statsType, aggregation.table, recordingReader, aggregation.createAggregator)
+            PatchStatsAggregation(
+                aggregation.statsType,
+                aggregation.jobName,
+                aggregation.table,
+                recordingReader,
+                aggregation.createAggregator,
+            )
 
         // when
         task().execute(recordingAggregation)
@@ -302,7 +321,13 @@ class PatchStatsRangeAlignTest(
         val before = statsOf(patch1103)
         val recordingReader = RecordingBattleReader(resultReader)
         val recordingAggregation =
-            PatchStatsAggregation(aggregation.statsType, aggregation.table, recordingReader, aggregation.createAggregator)
+            PatchStatsAggregation(
+                aggregation.statsType,
+                aggregation.jobName,
+                aggregation.table,
+                recordingReader,
+                aggregation.createAggregator,
+            )
 
         // when: 끝 없음 → 오늘(11-20)에서 끝남
         val patch1121 = savePatch(date(21))
@@ -327,6 +352,7 @@ class PatchStatsRangeAlignTest(
             checkpointJpaRepository = checkpointJpaRepository,
             writer = writer,
             rangeAligner = rangeAligner,
+            alertManager = mockk(relaxUnitFun = true),
             clock = clock,
             checkpointBattleCount = 4,
         )

@@ -24,6 +24,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsRan
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsResultBattleJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.StatsCheckpointJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
+import io.mockk.mockk
 import jakarta.persistence.EntityManagerFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -153,7 +154,7 @@ class PatchStatsTaskTest(
         val failingReader = FailingOnPageBattleReader(resultReader, failingPage = 3)
         val failingAggregation =
             aggregations.brawlerBattleResult.let {
-                PatchStatsAggregation(it.statsType, it.table, failingReader, it.createAggregator)
+                PatchStatsAggregation(it.statsType, it.jobName, it.table, failingReader, it.createAggregator)
             }
         assertThatThrownBy { task().execute(failingAggregation) }
             .isInstanceOf(IllegalStateException::class.java)
@@ -480,6 +481,7 @@ class PatchStatsTaskTest(
             checkpointJpaRepository = checkpointJpaRepository,
             writer = writer,
             rangeAligner = rangeAligner,
+            alertManager = mockk(relaxUnitFun = true),
             clock = clock,
             checkpointBattleCount = 4,
         )
