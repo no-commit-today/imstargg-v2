@@ -291,7 +291,7 @@ create table if not exists club_ranking_item
 );
 create unique index if not exists uk_club_ranking_item__club_ranking_id_brawlstars_tag on club_ranking_item (club_ranking_id, brawlstars_tag);
 
--- stats_rank_battle table (파티셔닝: battle_date 기준, 보관 기간 10일(PartitionManageJobConfig.RETENTION_DAYS))
+-- stats_rank_battle table (파티셔닝: battle_date 기준, 보관 기간 45일(PartitionManageJobConfig.RETENTION_DAYS, 임시))
 -- 역할: 배틀 랭크 통계 데이터 (플레이어별)
 create table if not exists stats_rank_battle
 (
@@ -317,7 +317,7 @@ create index if not exists ix_stats_rank_battle__battle_date_event
     on stats_rank_battle (battle_date, event_brawlstars_id);
 create table if not exists stats_rank_battle_default partition of stats_rank_battle default;
 
--- stats_result_battle table (파티셔닝: battle_date 기준, 보관 기간 10일(PartitionManageJobConfig.RETENTION_DAYS))
+-- stats_result_battle table (파티셔닝: battle_date 기준, 보관 기간 45일(PartitionManageJobConfig.RETENTION_DAYS, 임시))
 -- 역할: 배틀 결과 통계 데이터 (배틀 단위)
 create table if not exists stats_result_battle
 (

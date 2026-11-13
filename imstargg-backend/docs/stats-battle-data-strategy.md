@@ -21,8 +21,8 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 
 | 테이블 | 역할 | 파티션 키 | 보관 기간 |
 |--------|------|----------|----------|
-| `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 10일 (`RETENTION_DAYS`) |
-| `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 10일 (`RETENTION_DAYS`) |
+| `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 45일 (임시, `RETENTION_DAYS`) |
+| `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 45일 (임시, `RETENTION_DAYS`) |
 
 조합 통계 집계 테이블 3종(`brawler_pair_battle_result_stats` 등)의 파티션·보관은 섹션 5.4, 6 참조.
 
@@ -117,9 +117,9 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 ```
 
 - **파티션 키**: `battle_date` (배틀 일자, 한국 시간 기준)
-- **보관 기간**: 10일 (`PartitionManageJobConfig.RETENTION_DAYS`)
+- **보관 기간**: 45일 (`PartitionManageJobConfig.RETENTION_DAYS`). 패치 기준 통계 재설계(새 집계 구조) 가동 전까지 원본을 남기려는 임시값이며(기존 10일), 가동 뒤 다시 줄인다.
 - **삭제 시점**: `partitionManageJob` (매일 02:00 KST) 이 `date - RETENTION_DAYS` 보다 이른 일 파티션을 DETACH 후 DROP (`drop_old_partitions`)
-- **10일인 이유**: 주간 통계 잡의 최대 룩백(`StatsWeekRange.currentAndPrevious` 기준 최대 7일 + 실행일 보정 1일)을 원본이 커버해야 한다. 가드: `PartitionRetentionLookbackTest`
+- **하한**: 주간 통계 잡의 최대 룩백(`StatsWeekRange.currentAndPrevious` 기준 최대 7일 + 실행일 보정 1일)을 원본이 커버해야 한다. 가드: `PartitionRetentionLookbackTest`
 
 ## 5. 통계 집계 배치 전략
 
@@ -266,10 +266,10 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 
 | 테이블 유형 | 파티션 | 보관 기간 | 삭제 조건 |
 |-------------|--------|----------|----------|
-| Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 10일 (`RETENTION_DAYS`) | `date - 10일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
+| Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 45일 (임시, `RETENTION_DAYS`) | `date - 45일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
 | 조합 통계 (`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`) |
 
-- 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 최대 룩백을 덮고 여유를 두어 10일 보관한다.
+- 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 평소에는 주간 통계 최대 룩백을 덮는 10일을 보관한다. 지금은 패치 기준 통계 재설계가 가동될 때까지 원본을 남기려고 임시로 45일 보관한다.
 - 조합 통계의 삭제 경계는 API 가 읽는 가장 오래된 날짜(`StatsDateRange.SINCE_LAST_MONTH`, 지난달 1일)와 같다. `date` 가 속한 달의 1일에서 한 달을 뺀 날짜가 속한 달보다 이른 파티션이 지워진다. 예) 2026-11-01 실행이면 2026-09 까지 삭제하고 2026-10 은 남는다. 월 단위 DROP 은 블로트를 남기지 않는다.
 - 매일 다시 쓰는 버킷의 삭제 흔적은 그 달 파티션 안에서 autovacuum 이 정리한다.
 
@@ -288,8 +288,8 @@ SELECT create_partitions('2025-01-24', 7);
 ### 7.2 파티션 삭제 (보관 기간 초과)
 
 ```sql
--- Stats Battle: 2025-01-24 기준 10일(RETENTION_DAYS) 이전, 즉 2025-01-14 보다 이른 파티션 삭제
-SELECT drop_old_partitions('2025-01-24', 10);
+-- Stats Battle: 2025-01-24 기준 45일(RETENTION_DAYS) 이전, 즉 2024-12-10 보다 이른 파티션 삭제
+SELECT drop_old_partitions('2025-01-24', 45);
 ```
 
 ### 7.3 월 파티션 (조합 통계)

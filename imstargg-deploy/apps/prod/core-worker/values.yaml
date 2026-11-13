@@ -6,11 +6,15 @@ deployment:
   replicaCount: 1
   image:
     repository: 347351797221.dkr.ecr.ap-northeast-2.amazonaws.com/imstargg/core-worker
-    tag: "0.2.3-1174ccc"
+    tag: "0.3.0-73053da"
     pullPolicy: Always
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: prod
+    - name: REDIS_HOST
+      value: valkey-imstargg-primary.valkey
+    - name: REDIS_PORT
+      value: "6379"
   envFrom:
     - secretRef:
         name: core-worker-secret
