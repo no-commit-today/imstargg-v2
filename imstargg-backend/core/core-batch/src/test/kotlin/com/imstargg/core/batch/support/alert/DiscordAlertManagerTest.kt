@@ -74,8 +74,24 @@ class DiscordAlertManagerTest {
             .satisfies({ ex -> assertThat(ex.stackTraceToString()).doesNotContain(SECRET) })
     }
 
+    @Test
+    fun `주소가 깨져 있어도 예외에 웹훅 주소가 없다`() {
+        // given
+        val sut = DiscordAlertManager(RestClient.builder(), "\"$WEBHOOK_URL\"")
+
+        // when & then
+        assertThatThrownBy { sut.alert(command) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasNoCause()
+            .satisfies({ ex ->
+                assertThat(ex.message).doesNotContain(SECRET).doesNotContain(HOST)
+                assertThat(ex.stackTraceToString()).doesNotContain(SECRET).doesNotContain(HOST)
+            })
+    }
+
     companion object {
+        private const val HOST = "discord.test"
         private const val SECRET = "secret-token"
-        private const val WEBHOOK_URL = "https://discord.test/api/webhooks/1/$SECRET"
+        private const val WEBHOOK_URL = "https://$HOST/api/webhooks/1/$SECRET"
     }
 }

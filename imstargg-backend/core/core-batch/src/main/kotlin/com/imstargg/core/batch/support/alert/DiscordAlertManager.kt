@@ -14,6 +14,8 @@ private val log = KotlinLogging.logger {}
  *   `HttpServerErrorException.ServiceUnavailable` 로 나가야 `BrawlStarsApiTasklet` 이 점검으로 넘길 수 있다.
  * - 연결 오류(`ResourceAccessException`)의 메시지에는 요청 주소가 들어 있다. 웹훅 주소는 비밀이므로
  *   원인 예외를 잇지 않고 주소를 뺀 `IllegalStateException` 으로 바꿔 던진다.
+ * - 그 밖의 예외(설정 값이 따옴표나 공백으로 깨져 `.uri()` 가 던지는 `IllegalArgumentException` 등)도 메시지에 주소가 실릴 수 있어
+ *   같은 방식으로 예외 클래스 이름만 남긴 `IllegalStateException` 으로 바꿔 던진다. 이 catch 는 앞의 두 catch 뒤에 둔다.
  *
  * 실패하면 알림 문구 전문을 ERROR 로그에 남긴다. 어느 경우에도 웹훅 주소는 로그에 적지 않는다.
  */
@@ -39,6 +41,10 @@ internal class DiscordAlertManager(
             val causeName = (ex.cause ?: ex).javaClass.simpleName
             log.error { "Discord 알림 전송 실패 - 원인: $causeName, 알림 문구:\n${request.content}" }
             throw IllegalStateException("Discord 알림 전송 실패: $causeName")
+        } catch (ex: Exception) {
+            val exceptionName = ex.javaClass.simpleName
+            log.error { "Discord 알림 전송 실패 - 원인: $exceptionName, 알림 문구:\n${request.content}" }
+            throw IllegalStateException("Discord 알림 전송 실패: $exceptionName")
         }
     }
 }
