@@ -21,8 +21,8 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 
 | 테이블 | 역할 | 파티션 키 | 보관 기간 |
 |--------|------|----------|----------|
-| `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 45일 (임시, `RETENTION_DAYS`) |
-| `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 45일 (임시, `RETENTION_DAYS`) |
+| `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 45일 (`RETENTION_DAYS`) |
+| `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 45일 (`RETENTION_DAYS`) |
 
 조합 통계 집계 테이블 3종(`brawler_pair_battle_result_stats` 등)의 파티션·보관은 섹션 5.4, 6 참조.
 
@@ -98,7 +98,7 @@ StatsResultBattleEntity                    StatsRankBattleEntity
 | 집계 제외 | 배치 (집계기 다섯 개) | 추정 규칙에 따른 제외. 봇 전투 | 원본에 저장되고 집계에서만 빠진다 |
 
 - 봇 전투는 매치메이킹 봇이 상대인 전투이고, 트로피 분포로 추정하는 규칙(섹션 5.5)으로 판정한다.
-- 원본에 남기는 까닭은 둘이다. 규칙을 고친 뒤 원본이 남은 10일 안에서 다시 집계할 수 있다. 같은 전투로 감시 지표를 낼 수 있다.
+- 원본에 남기는 까닭은 둘이다. 규칙을 고친 뒤 원본이 남은 45일 안에서 다시 집계할 수 있다. 같은 전투로 감시 지표를 낼 수 있다.
 
 ## 4. 파티셔닝 전략
 
@@ -117,7 +117,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 ```
 
 - **파티션 키**: `battle_date` (배틀 일자, 한국 시간 기준)
-- **보관 기간**: 45일 (`PartitionManageJobConfig.RETENTION_DAYS`). 패치 기준 통계 재설계(새 집계 구조) 가동 전까지 원본을 남기려는 임시값이며(기존 10일), 가동 뒤 다시 줄인다.
+- **보관 기간**: 45일 (`PartitionManageJobConfig.RETENTION_DAYS`). 패치일 등록 기한(30일)보다 길어야 한다. 범위 맞추기가 등록 기한 안의 날짜를 원본에서 다시 읽기 때문이다(가드: `PartitionRetentionLookbackTest`).
 - **삭제 시점**: `partitionManageJob` (매일 02:00 KST) 이 `date - RETENTION_DAYS` 보다 이른 일 파티션을 DETACH 후 DROP (`drop_old_partitions`)
 - **하한**: 주간 통계 잡의 최대 룩백(`StatsWeekRange.currentAndPrevious` 기준 최대 7일 + 실행일 보정 1일)을 원본이 커버해야 한다. 가드: `PartitionRetentionLookbackTest`
 
@@ -126,7 +126,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 ### 5.1 멱등 배치
 
 통계 집계 배치는 **멱등(idempotent)** 하게 설계합니다.
-- 동일한 날짜에 대해 배치를 재실행해도 안전(원본이 남아 있는 동안). 단 조합·카운터·3인 잡은 버킷을 통째로 덮어쓰므로, 다시 쓰는 버킷의 시작일이 실행일 − 10 보다 이르면 남은 원본만으로 덮어써 부분 데이터가 된다(섹션 10)
+- 동일한 날짜에 대해 배치를 재실행해도 안전(원본이 남아 있는 동안). 단 조합·카운터·3인 잡은 버킷을 통째로 덮어쓰므로, 다시 쓰는 버킷의 시작일이 실행일 − 45 보다 이르면 남은 원본만으로 덮어써 부분 데이터가 된다(섹션 10)
 - 기존 통계를 삭제 후 재집계하는 방식
 
 ### 5.2 재집계 범위
@@ -141,7 +141,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 - **1인 브롤러 통계**: `date` 하루만 집계합니다. 이미 집계한 날짜에 늦게 들어온 전투는 다시 반영되지 않는 한계가 있습니다(조합 통계 재구성 스펙의 비목표).
 - **조합·카운터·3인**: 현재 주 버킷을 통째로 다시 집계하고, `date` 전날이 다른 주에 속하면(월요일, 월 첫날) 직전 주 버킷도 다시 집계합니다. 최대 두 버킷입니다. 주 버킷은 월 경계에서 잘립니다(`StatsWeekRange`).
 
-**이유**: 전투 데이터는 계속 수집되며, 이전 날짜에 대해서도 새로운 데이터가 축적됩니다. 주 버킷 단위로 다시 집계해 늦게 수집된 데이터를 같은 주의 통계에 반영합니다. 이 룩백이 원본 배틀 보관 기간(10일, 섹션 4.2)을 넘지 않아야 합니다.
+**이유**: 전투 데이터는 계속 수집되며, 이전 날짜에 대해서도 새로운 데이터가 축적됩니다. 주 버킷 단위로 다시 집계해 늦게 수집된 데이터를 같은 주의 통계에 반영합니다. 이 룩백이 원본 배틀 보관 기간(45일, 섹션 4.2)을 넘지 않아야 합니다.
 
 ### 5.3 배치 실행 흐름
 
@@ -266,10 +266,10 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 
 | 테이블 유형 | 파티션 | 보관 기간 | 삭제 조건 |
 |-------------|--------|----------|----------|
-| Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 45일 (임시, `RETENTION_DAYS`) | `date - 45일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
+| Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 45일 (`RETENTION_DAYS`) | `date - 45일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
 | 조합 통계 (`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`) |
 
-- 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 평소에는 주간 통계 최대 룩백을 덮는 10일을 보관한다. 지금은 패치 기준 통계 재설계가 가동될 때까지 원본을 남기려고 임시로 45일 보관한다.
+- 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 주간 통계 최대 룩백과 패치일 등록 기한(30일)을 모두 덮도록 45일 보관한다.
 - 조합 통계의 삭제 경계는 API 가 읽는 가장 오래된 날짜(`StatsDateRange.SINCE_LAST_MONTH`, 지난달 1일)와 같다. `date` 가 속한 달의 1일에서 한 달을 뺀 날짜가 속한 달보다 이른 파티션이 지워진다. 예) 2026-11-01 실행이면 2026-09 까지 삭제하고 2026-10 은 남는다. 월 단위 DROP 은 블로트를 남기지 않는다.
 - 매일 다시 쓰는 버킷의 삭제 흔적은 그 달 파티션 안에서 autovacuum 이 정리한다.
 
@@ -386,21 +386,21 @@ java -jar core-batch.jar \
 
 - Job 의 `DefaultJobParametersValidator` 는 `date` 만 required 로 강제하고 optional 리스트는 비워둔다. Spring Batch 6 의 `DefaultJobParametersValidator.validate()` 는 optional 리스트가 비어있으면 required 외 키에 대한 검사를 아예 건너뛰므로, 운영자는 임의 이름의 재실행 구분 키를 자유롭게 붙일 수 있다 (`rerun=1`, `manualRun=1` 등). `date` 만 누락되지 않으면 검증을 통과한다.
 - 반드시 **non-option argument** (`key=value`) 형식이어야 한다. `-Drerun=...` 같은 JVM 시스템 프로퍼티는 Spring 환경에만 반영되고 `JobParameters` 에는 들어가지 않으므로 JobInstance 구분에 영향을 주지 못한다.
-- **덮어쓰기 주의**: 조합·카운터·3인 잡은 `currentAndPrevious(date)` 버킷을 통째로 지우고 다시 쓴다. 다시 쓰는 버킷의 시작일이 실행일 − 10 보다 이르면 원본이 모자라 남은 원본만으로 덮어써 부분 데이터가 된다. `date` 가 버킷의 첫날(월요일 또는 1일)이면 직전 버킷도 다시 쓰므로 직전 버킷의 시작일도 같은 기준으로 본다. 1인 잡은 원본이 없는 날짜로 실행하면 그 날짜의 집계가 전 티어에서 지워진다.
+- **덮어쓰기 주의**: 조합·카운터·3인 잡은 `currentAndPrevious(date)` 버킷을 통째로 지우고 다시 쓴다. 다시 쓰는 버킷의 시작일이 실행일 − 45 보다 이르면 원본이 모자라 남은 원본만으로 덮어써 부분 데이터가 된다. `date` 가 버킷의 첫날(월요일 또는 1일)이면 직전 버킷도 다시 쓰므로 직전 버킷의 시작일도 같은 기준으로 본다. 1인 잡은 원본이 없는 날짜로 실행하면 그 날짜의 집계가 전 티어에서 지워진다.
 - `run.id` 같은 Spring Batch 예약 키는 피한다. `RunIdIncrementer` 가 쓰는 키라 혼동 소지가 있음. 본 프로젝트는 `RunIdIncrementer` 를 도입하지 않았다 — `JobLauncherApplicationRunner` 는 CLI 파라미터로 JobInstance 를 먼저 조회하고, 완료 상태면 incrementer 를 호출하지 않기 때문에 정기 스케줄 케이스에서 효과가 없다 (Spring Boot issue #22602).
 
 ### 봇 판정 규칙을 고친 뒤의 재집계
 
 규칙(섹션 5.5)을 고치면 원본이 남은 날짜만 새 규칙으로 다시 집계할 수 있다. 일반 절차만 적는다. 이번 전환에만 쓰는 백업 후 삭제와 순서는 [설계 문서](../../docs/superpowers/specs/2026-11-06-stats-bot-battle-exclusion-design.md) §3.4 를 따른다.
 
-- **다시 집계할 수 있는 날짜**: 실행일을 T 라 하면 T − 10 ~ T − 1 이다. T 당일은 수집 중이다. `partitionManageJob` 이 T 의 02:00 에 `battle_date < T − 10` 인 파티션을 지우고 T − 10 파티션은 T + 1 의 02:00 에 지워지므로, 재집계는 T + 1 의 02:00 전에 끝낸다.
+- **다시 집계할 수 있는 날짜**: 실행일을 T 라 하면 T − 45 ~ T − 1 이다. T 당일은 수집 중이다. `partitionManageJob` 이 T 의 02:00 에 `battle_date < T − 45` 인 파티션을 지우고 T − 45 파티션은 T + 1 의 02:00 에 지워지므로, 재집계는 T + 1 의 02:00 전에 끝낸다.
 - **시간대**: 통계 배치 시간대(02:00 ~ 09:00 KST) 밖에서 한다. 같은 날짜·묶음을 두 프로세스가 쓰지 않게 한다.
 - **1인 잡**(`brawlerBattleResultStatsJob`, `brawlerBattleRankStatsJob`): `date` 하루를 전 티어 통째로 지우고 다시 쓴다. 가장 오래된 날짜부터 실행한다. 범위 밖 날짜를 넘기지 않는다.
-- **조합 잡**(카운터·2인·3인): 다시 쓸 수 있는 묶음은 시작일이 T − 10 이상인 묶음뿐이다. `date` 는 이렇게 고른다.
+- **조합 잡**(카운터·2인·3인): 다시 쓸 수 있는 묶음은 시작일이 T − 45 이상인 묶음뿐이다. `date` 는 이렇게 고른다.
   - 묶음 하나만 다시 쓰려면 `date` 로 그 묶음의 마지막 날을 넘긴다.
   - 하루짜리 묶음(달 경계)은 다음 묶음의 첫날을 넘겨 두 묶음을 함께 다시 쓴다.
-  - 묶음의 첫날을 넘기면 직전 묶음까지 다시 쓰므로, 직전 묶음의 시작일이 T − 10 보다 이르면 넘기지 않는다.
-  - 다시 쓰는 범위는 시작일이 T − 10 이상인 묶음부터 T − 1 이 속한 묶음까지 전부다.
+  - 묶음의 첫날을 넘기면 직전 묶음까지 다시 쓰므로, 직전 묶음의 시작일이 T − 45 보다 이르면 넘기지 않는다.
+  - 다시 쓰는 범위는 시작일이 T − 45 이상인 묶음부터 T − 1 이 속한 묶음까지 전부다.
   - 배포가 T 의 새벽 정기 실행(카운터 04:00, 3인 05:00, 2인 07:00 KST)보다 늦었으면 T − 1 이 속한 묶음은 구 이미지가 쓴 값이라 세 잡을 `date` = T − 1 로도 실행한다. 예는 설계 문서 §3.4 의 3번.
 - **감시**: 수동 재집계에서도 감시가 돈다. 요약 로그와 경고를 같은 기준으로 본다.
 - **화면**: 통계 캐시 TTL 30분이 지난 뒤에 본다.
@@ -416,5 +416,5 @@ java -jar core-batch.jar \
    - 2000 이상 구간 승률이 올라갔다: 봇 매치 상한이 바뀌었다.
    - 기본 이름 비율이 내려갔다: 봇 표기가 바뀌었다. 이 지표만 내려갔으면 규칙은 이름을 쓰지 않으므로 그대로 두고, 걸린 전투의 승률과 함께 내려갔으면 실제 전투를 지우고 있는 쪽을 먼저 본다.
 3. 공식 릴리스 노트의 매치메이킹 변경과 시즌 전환·트로피 초기화 직후인지를 확인한다.
-4. 규칙을 고쳐야 하면 `StatsBotBattlePolicy` 의 상수나 판정을 테스트와 함께 고쳐 배포하고, 위 절차로 원본이 남은 10일 안에서 다시 집계한다.
+4. 규칙을 고쳐야 하면 `StatsBotBattlePolicy` 의 상수나 판정을 테스트와 함께 고쳐 배포하고, 위 절차로 원본이 남은 45일 안에서 다시 집계한다.
 5. 일시적인 현상이면 조치 없이 요약 로그를 며칠 더 본다.

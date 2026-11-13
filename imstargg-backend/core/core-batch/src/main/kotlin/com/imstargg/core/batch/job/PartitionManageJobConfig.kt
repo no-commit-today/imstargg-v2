@@ -39,8 +39,8 @@ class PartitionManageJobConfig(
          * 주간 통계 잡의 최대 룩백([com.imstargg.core.enums.StatsWeekRange.currentAndPrevious] 기준
          * 최대 7일 + 실행일 보정 1일)을 커버해야 한다 — 가드: PartitionRetentionLookbackTest
          *
-         * 45 는 패치 기준 통계 재설계(새 집계 구조) 가동 전까지 원본을 보존하기 위한 임시값이다(기존 10).
-         * 새 집계 구조가 가동되면 다시 줄인다.
+         * 45 는 패치일 등록 기한(30일)보다 길어야 하는 값이다. 범위 맞추기가 등록 기한 안의 날짜를
+         * 원본에서 다시 읽으므로 보관이 그보다 짧으면 통계가 불완전해진다 — 가드: PartitionRetentionLookbackTest
          */
         const val RETENTION_DAYS = 45
 
