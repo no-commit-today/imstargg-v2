@@ -406,11 +406,16 @@ create table if not exists battle_event
 );
 create unique index if not exists uk_battle_event__brawlstarsid on battle_event (brawlstars_id);
 
--- 일별 브롤러별 전투 결과 통계
-create sequence if not exists brawler_battle_result_stats_seq increment by 100;
-create table if not exists brawler_battle_result_stats
+-- =============================================================
+-- 옛 통계 {table}_backup 5개(날짜 기준)
+-- 패치 기준 통계로 전환하는 동안 남겨 두는 옛 통계. 2단계에서 지운다. 월 파티션은 더 만들지 않는다.
+-- 운영은 V261114a 가 원래 이름의 테이블·인덱스·제약·시퀀스에 _backup 을 붙여 만든 상태다.
+-- =============================================================
+-- (옛) 일별 브롤러별 전투 결과 통계
+create sequence if not exists brawler_battle_result_stats_backup_seq increment by 100;
+create table if not exists brawler_battle_result_stats_backup
 (
-    brawler_battle_result_stats_id bigint primary key default nextval('brawler_battle_result_stats_seq'),
+    brawler_battle_result_stats_id bigint primary key default nextval('brawler_battle_result_stats_backup_seq'),
     event_brawlstars_id           bigint       not null,
     tier_range                    varchar(45)  not null,
     battle_date                   date         not null,
@@ -423,17 +428,17 @@ create table if not exists brawler_battle_result_stats
     created_at                    timestamptz  not null default now(),
     updated_at                    timestamptz  not null default now()
 );
-create index if not exists ix_brawler_battle_result_stats_1 on brawler_battle_result_stats (event_brawlstars_id, tier_range, battle_date);
-create index if not exists ix_brawler_battle_result_stats_2 on brawler_battle_result_stats (brawler_brawlstars_id, tier_range, battle_date);
-create unique index if not exists uk_brawler_battle_result_stats__1
-    on brawler_battle_result_stats (event_brawlstars_id, tier_range, battle_date, brawler_brawlstars_id);
-alter sequence brawler_battle_result_stats_seq owned by brawler_battle_result_stats.brawler_battle_result_stats_id;
+create index if not exists ix_brawler_battle_result_stats_backup_1 on brawler_battle_result_stats_backup (event_brawlstars_id, tier_range, battle_date);
+create index if not exists ix_brawler_battle_result_stats_backup_2 on brawler_battle_result_stats_backup (brawler_brawlstars_id, tier_range, battle_date);
+create unique index if not exists uk_brawler_battle_result_stats_backup__1
+    on brawler_battle_result_stats_backup (event_brawlstars_id, tier_range, battle_date, brawler_brawlstars_id);
+alter sequence brawler_battle_result_stats_backup_seq owned by brawler_battle_result_stats_backup.brawler_battle_result_stats_id;
 
--- 일별 브롤러 전투 랭크 통계
-create sequence if not exists brawler_battle_rank_stats_seq increment by 100;
-create table if not exists brawler_battle_rank_stats
+-- (옛) 일별 브롤러 전투 랭크 통계
+create sequence if not exists brawler_battle_rank_stats_backup_seq increment by 100;
+create table if not exists brawler_battle_rank_stats_backup
 (
-    brawler_battle_rank_stats_id bigint primary key default nextval('brawler_battle_rank_stats_seq'),
+    brawler_battle_rank_stats_id bigint primary key default nextval('brawler_battle_rank_stats_backup_seq'),
     event_brawlstars_id          bigint       not null,
     tier_range                   varchar(45)  not null,
     battle_date                  date         not null,
@@ -443,20 +448,19 @@ create table if not exists brawler_battle_rank_stats
     created_at                   timestamptz  not null default now(),
     updated_at                   timestamptz  not null default now()
 );
-create index if not exists ix_brawler_battle_rank_stats on brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date);
-create unique index if not exists uk_brawler_battle_rank_stats__1
-    on brawler_battle_rank_stats (event_brawlstars_id, tier_range, battle_date, brawler_brawlstars_id);
-alter sequence brawler_battle_rank_stats_seq owned by brawler_battle_rank_stats.brawler_battle_rank_stats_id;
+create index if not exists ix_brawler_battle_rank_stats_backup on brawler_battle_rank_stats_backup (event_brawlstars_id, tier_range, battle_date);
+create unique index if not exists uk_brawler_battle_rank_stats_backup__1
+    on brawler_battle_rank_stats_backup (event_brawlstars_id, tier_range, battle_date, brawler_brawlstars_id);
+alter sequence brawler_battle_rank_stats_backup_seq owned by brawler_battle_rank_stats_backup.brawler_battle_rank_stats_id;
 
--- 브롤러 vs 적 브롤러(카운터) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
+-- (옛) 브롤러 vs 적 브롤러(카운터) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
 -- 한 행 = (티어, 주 버킷)에서 brawler 가 enemy 를 상대로 만난 결과(brawler 기준). (X, Y)·(Y, X) 는 방향이 다른 별개 행이며 승↔패로 보완된다.
--- 월 파티션 {table}_p_YYYYMM 은 partition-manage.sql 의 create_month_partitions(current_date, 1) 로 만든다. default 파티션 없음.
--- 보존: drop_old_month_partitions 가 지난달 이전 달을 지운다.
+-- 월 파티션 {table}_p_YYYYMM 은 이름을 바꾸기 전에 만든 것만 남는다(이름은 원래 테이블 이름 그대로). default 파티션 없음.
 -- PK 는 파티션 키를 포함해야 해서 (id, start_battle_date) 다. 유니크가 brawler 기준 조회를 겸하므로 조회 인덱스는 따로 두지 않는다.
-create sequence if not exists brawler_enemy_battle_result_stats_seq increment by 100;
-create table if not exists brawler_enemy_battle_result_stats
+create sequence if not exists brawler_enemy_battle_result_stats_backup_seq increment by 100;
+create table if not exists brawler_enemy_battle_result_stats_backup
 (
-    brawler_enemy_battle_result_stats_id bigint       not null default nextval('brawler_enemy_battle_result_stats_seq'),
+    brawler_enemy_battle_result_stats_id bigint       not null default nextval('brawler_enemy_battle_result_stats_backup_seq'),
     tier_range                           varchar(45)  not null,
     start_battle_date                    date         not null,
     end_battle_date                      date         not null,
@@ -469,24 +473,23 @@ create table if not exists brawler_enemy_battle_result_stats
     created_at                           timestamptz  not null default now(),
     updated_at                           timestamptz  not null default now(),
     primary key (brawler_enemy_battle_result_stats_id, start_battle_date),
-    constraint ck_brawler_enemy_battle_result_stats_distinct_brawler
+    constraint ck_brawler_enemy_battle_result_stats_backup_distinct_brawler
         check (brawler_brawlstars_id <> enemy_brawler_brawlstars_id)
 ) partition by range (start_battle_date);
-create unique index if not exists uk_brawler_enemy_battle_result_stats__1
-    on brawler_enemy_battle_result_stats (
+create unique index if not exists uk_brawler_enemy_battle_result_stats_backup__1
+    on brawler_enemy_battle_result_stats_backup (
         tier_range, brawler_brawlstars_id, start_battle_date, enemy_brawler_brawlstars_id
     );
-alter sequence brawler_enemy_battle_result_stats_seq owned by brawler_enemy_battle_result_stats.brawler_enemy_battle_result_stats_id;
+alter sequence brawler_enemy_battle_result_stats_backup_seq owned by brawler_enemy_battle_result_stats_backup.brawler_enemy_battle_result_stats_id;
 
--- 브롤러 pair(같은 팀 2인 조합) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
+-- (옛) 브롤러 pair(같은 팀 2인 조합) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
 -- 한 행 = (티어, 주 버킷)에서 이 조합이 성립한 팀의 승·패·무. 조합은 brawler1 < brawler2 로 정렬한 1행이고 티어는 멤버 전원 기준(최저 trophies)이다.
--- 월 파티션 {table}_p_YYYYMM 은 partition-manage.sql 의 create_month_partitions(current_date, 1) 로 만든다. default 파티션 없음.
--- 보존: drop_old_month_partitions 가 지난달 이전 달을 지운다.
+-- 월 파티션 {table}_p_YYYYMM 은 이름을 바꾸기 전에 만든 것만 남는다(이름은 원래 테이블 이름 그대로). default 파티션 없음.
 -- PK 는 파티션 키를 포함해야 해서 (id, start_battle_date) 다. 위치 인덱스는 "브롤러 X 가 어느 위치에 있든" 조회를 맡는다.
-create sequence if not exists brawler_pair_battle_result_stats_seq increment by 100;
-create table if not exists brawler_pair_battle_result_stats
+create sequence if not exists brawler_pair_battle_result_stats_backup_seq increment by 100;
+create table if not exists brawler_pair_battle_result_stats_backup
 (
-    brawler_pair_battle_result_stats_id bigint      not null default nextval('brawler_pair_battle_result_stats_seq'),
+    brawler_pair_battle_result_stats_id bigint      not null default nextval('brawler_pair_battle_result_stats_backup_seq'),
     tier_range                          varchar(45) not null,
     start_battle_date                   date        not null,
     end_battle_date                     date        not null,
@@ -499,28 +502,27 @@ create table if not exists brawler_pair_battle_result_stats
     created_at                          timestamptz not null default now(),
     updated_at                          timestamptz not null default now(),
     primary key (brawler_pair_battle_result_stats_id, start_battle_date),
-    constraint ck_brawler_pair_battle_result_stats_ordered
+    constraint ck_brawler_pair_battle_result_stats_backup_ordered
         check (brawler1_brawlstars_id < brawler2_brawlstars_id)
 ) partition by range (start_battle_date);
-create unique index if not exists uk_brawler_pair_battle_result_stats__1
-    on brawler_pair_battle_result_stats (
+create unique index if not exists uk_brawler_pair_battle_result_stats_backup__1
+    on brawler_pair_battle_result_stats_backup (
         tier_range, start_battle_date, brawler1_brawlstars_id, brawler2_brawlstars_id
     );
-create index if not exists ix_brawler_pair_battle_result_stats__brawler1
-    on brawler_pair_battle_result_stats (tier_range, brawler1_brawlstars_id, start_battle_date);
-create index if not exists ix_brawler_pair_battle_result_stats__brawler2
-    on brawler_pair_battle_result_stats (tier_range, brawler2_brawlstars_id, start_battle_date);
-alter sequence brawler_pair_battle_result_stats_seq owned by brawler_pair_battle_result_stats.brawler_pair_battle_result_stats_id;
+create index if not exists ix_brawler_pair_battle_result_stats_backup__brawler1
+    on brawler_pair_battle_result_stats_backup (tier_range, brawler1_brawlstars_id, start_battle_date);
+create index if not exists ix_brawler_pair_battle_result_stats_backup__brawler2
+    on brawler_pair_battle_result_stats_backup (tier_range, brawler2_brawlstars_id, start_battle_date);
+alter sequence brawler_pair_battle_result_stats_backup_seq owned by brawler_pair_battle_result_stats_backup.brawler_pair_battle_result_stats_id;
 
--- 브롤러 trio(같은 팀 3인 조합 = 3v3 한 팀 전체) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
+-- (옛) 브롤러 trio(같은 팀 3인 조합 = 3v3 한 팀 전체) 전투 결과 통계 (파티셔닝: start_battle_date 월 범위)
 -- 한 행 = (티어, 주 버킷)에서 이 조합이 성립한 팀의 승·패·무. 조합은 brawler1 < brawler2 < brawler3 로 정렬한 1행이고 티어는 멤버 전원 기준(최저 trophies)이다.
--- 월 파티션 {table}_p_YYYYMM 은 partition-manage.sql 의 create_month_partitions(current_date, 1) 로 만든다. default 파티션 없음.
--- 보존: drop_old_month_partitions 가 지난달 이전 달을 지운다.
+-- 월 파티션 {table}_p_YYYYMM 은 이름을 바꾸기 전에 만든 것만 남는다(이름은 원래 테이블 이름 그대로). default 파티션 없음.
 -- PK 는 파티션 키를 포함해야 해서 (id, start_battle_date) 다. 위치 인덱스는 "브롤러 X 가 어느 위치에 있든" 조회를 맡는다.
-create sequence if not exists brawler_trio_battle_result_stats_seq increment by 100;
-create table if not exists brawler_trio_battle_result_stats
+create sequence if not exists brawler_trio_battle_result_stats_backup_seq increment by 100;
+create table if not exists brawler_trio_battle_result_stats_backup
 (
-    brawler_trio_battle_result_stats_id bigint      not null default nextval('brawler_trio_battle_result_stats_seq'),
+    brawler_trio_battle_result_stats_id bigint      not null default nextval('brawler_trio_battle_result_stats_backup_seq'),
     tier_range                          varchar(45) not null,
     start_battle_date                   date        not null,
     end_battle_date                     date        not null,
@@ -534,20 +536,159 @@ create table if not exists brawler_trio_battle_result_stats
     created_at                          timestamptz not null default now(),
     updated_at                          timestamptz not null default now(),
     primary key (brawler_trio_battle_result_stats_id, start_battle_date),
-    constraint ck_brawler_trio_battle_result_stats_ordered
+    constraint ck_brawler_trio_battle_result_stats_backup_ordered
         check (brawler1_brawlstars_id < brawler2_brawlstars_id and brawler2_brawlstars_id < brawler3_brawlstars_id)
 ) partition by range (start_battle_date);
-create unique index if not exists uk_brawler_trio_battle_result_stats__1
-    on brawler_trio_battle_result_stats (
+create unique index if not exists uk_brawler_trio_battle_result_stats_backup__1
+    on brawler_trio_battle_result_stats_backup (
         tier_range, start_battle_date, brawler1_brawlstars_id, brawler2_brawlstars_id, brawler3_brawlstars_id
     );
-create index if not exists ix_brawler_trio_battle_result_stats__brawler1
-    on brawler_trio_battle_result_stats (tier_range, brawler1_brawlstars_id, start_battle_date);
+create index if not exists ix_brawler_trio_battle_result_stats_backup__brawler1
+    on brawler_trio_battle_result_stats_backup (tier_range, brawler1_brawlstars_id, start_battle_date);
+create index if not exists ix_brawler_trio_battle_result_stats_backup__brawler2
+    on brawler_trio_battle_result_stats_backup (tier_range, brawler2_brawlstars_id, start_battle_date);
+create index if not exists ix_brawler_trio_battle_result_stats_backup__brawler3
+    on brawler_trio_battle_result_stats_backup (tier_range, brawler3_brawlstars_id, start_battle_date);
+alter sequence brawler_trio_battle_result_stats_backup_seq owned by brawler_trio_battle_result_stats_backup.brawler_trio_battle_result_stats_id;
+
+-- =============================================================
+-- 패치별 통계 5개와 체크포인트
+-- 한 줄 = 패치 × 키. 잡이 SQL 로 직접 쓴다. id 는 identity, 외래 키 제약과 파티션은 두지 않는다.
+-- =============================================================
+
+-- 패치별 브롤러 전투 결과 통계
+create table if not exists brawler_battle_result_stats
+(
+    brawler_battle_result_stats_id bigint generated always as identity primary key,
+    brawlstars_patch_id            bigint      not null,
+    tier_range                     varchar(45) not null,
+    event_brawlstars_id            bigint      not null,
+    brawler_brawlstars_id          bigint      not null,
+    victory_count                  bigint      not null,
+    defeat_count                   bigint      not null,
+    draw_count                     bigint      not null,
+    total_count                    bigint      not null,
+    star_player_count              bigint      not null,
+    created_at                     timestamptz not null default now(),
+    updated_at                     timestamptz not null default now()
+);
+create unique index if not exists uk_brawler_battle_result_stats__1
+    on brawler_battle_result_stats (brawlstars_patch_id, tier_range, event_brawlstars_id, brawler_brawlstars_id);
+
+-- 패치별 브롤러 전투 순위 통계. 순위별 횟수는 rank1_count ~ rank10_count 컬럼 10개다.
+create table if not exists brawler_battle_rank_stats
+(
+    brawler_battle_rank_stats_id bigint generated always as identity primary key,
+    brawlstars_patch_id          bigint      not null,
+    tier_range                   varchar(45) not null,
+    event_brawlstars_id          bigint      not null,
+    brawler_brawlstars_id        bigint      not null,
+    rank1_count                  bigint      not null,
+    rank2_count                  bigint      not null,
+    rank3_count                  bigint      not null,
+    rank4_count                  bigint      not null,
+    rank5_count                  bigint      not null,
+    rank6_count                  bigint      not null,
+    rank7_count                  bigint      not null,
+    rank8_count                  bigint      not null,
+    rank9_count                  bigint      not null,
+    rank10_count                 bigint      not null,
+    total_count                  bigint      not null,
+    created_at                   timestamptz not null default now(),
+    updated_at                   timestamptz not null default now()
+);
+create unique index if not exists uk_brawler_battle_rank_stats__1
+    on brawler_battle_rank_stats (brawlstars_patch_id, tier_range, event_brawlstars_id, brawler_brawlstars_id);
+
+-- 패치별 브롤러 vs 상대 브롤러 전투 결과 통계
+create table if not exists brawler_enemy_battle_result_stats
+(
+    brawler_enemy_battle_result_stats_id bigint generated always as identity primary key,
+    brawlstars_patch_id                  bigint      not null,
+    tier_range                           varchar(45) not null,
+    brawler_brawlstars_id                bigint      not null,
+    enemy_brawler_brawlstars_id          bigint      not null,
+    victory_count                        bigint      not null,
+    defeat_count                         bigint      not null,
+    draw_count                           bigint      not null,
+    total_count                          bigint      not null,
+    created_at                           timestamptz not null default now(),
+    updated_at                           timestamptz not null default now(),
+    constraint ck_brawler_enemy_battle_result_stats_distinct_brawler
+        check (brawler_brawlstars_id <> enemy_brawler_brawlstars_id)
+);
+create unique index if not exists uk_brawler_enemy_battle_result_stats__1
+    on brawler_enemy_battle_result_stats (brawlstars_patch_id, tier_range, brawler_brawlstars_id, enemy_brawler_brawlstars_id);
+
+-- 패치별 브롤러 pair(같은 팀 2인 조합) 전투 결과 통계. 조합은 brawler1 < brawler2 로 정렬한 한 줄이다.
+-- 브롤러가 어느 자리에 있든 찾도록 둘째 브롤러 인덱스를 둔다(첫째는 유니크의 앞부분으로 찾는다).
+create table if not exists brawler_pair_battle_result_stats
+(
+    brawler_pair_battle_result_stats_id bigint generated always as identity primary key,
+    brawlstars_patch_id                 bigint      not null,
+    tier_range                          varchar(45) not null,
+    brawler1_brawlstars_id              bigint      not null,
+    brawler2_brawlstars_id              bigint      not null,
+    victory_count                       bigint      not null,
+    defeat_count                        bigint      not null,
+    draw_count                          bigint      not null,
+    total_count                         bigint      not null,
+    created_at                          timestamptz not null default now(),
+    updated_at                          timestamptz not null default now(),
+    constraint ck_brawler_pair_battle_result_stats_ordered
+        check (brawler1_brawlstars_id < brawler2_brawlstars_id)
+);
+create unique index if not exists uk_brawler_pair_battle_result_stats__1
+    on brawler_pair_battle_result_stats (brawlstars_patch_id, tier_range, brawler1_brawlstars_id, brawler2_brawlstars_id);
+create index if not exists ix_brawler_pair_battle_result_stats__brawler2
+    on brawler_pair_battle_result_stats (brawlstars_patch_id, tier_range, brawler2_brawlstars_id);
+
+-- 패치별 브롤러 trio(같은 팀 3인 조합 = 3v3 한 팀 전체) 전투 결과 통계. 조합은 brawler1 < brawler2 < brawler3 로 정렬한 한 줄이다.
+-- 브롤러가 어느 자리에 있든 찾도록 둘째·셋째 브롤러 인덱스를 둔다.
+create table if not exists brawler_trio_battle_result_stats
+(
+    brawler_trio_battle_result_stats_id bigint generated always as identity primary key,
+    brawlstars_patch_id                 bigint      not null,
+    tier_range                          varchar(45) not null,
+    brawler1_brawlstars_id              bigint      not null,
+    brawler2_brawlstars_id              bigint      not null,
+    brawler3_brawlstars_id              bigint      not null,
+    victory_count                       bigint      not null,
+    defeat_count                        bigint      not null,
+    draw_count                          bigint      not null,
+    total_count                         bigint      not null,
+    created_at                          timestamptz not null default now(),
+    updated_at                          timestamptz not null default now(),
+    constraint ck_brawler_trio_battle_result_stats_ordered
+        check (brawler1_brawlstars_id < brawler2_brawlstars_id and brawler2_brawlstars_id < brawler3_brawlstars_id)
+);
+create unique index if not exists uk_brawler_trio_battle_result_stats__1
+    on brawler_trio_battle_result_stats (
+        brawlstars_patch_id, tier_range, brawler1_brawlstars_id, brawler2_brawlstars_id, brawler3_brawlstars_id
+    );
 create index if not exists ix_brawler_trio_battle_result_stats__brawler2
-    on brawler_trio_battle_result_stats (tier_range, brawler2_brawlstars_id, start_battle_date);
+    on brawler_trio_battle_result_stats (brawlstars_patch_id, tier_range, brawler2_brawlstars_id);
 create index if not exists ix_brawler_trio_battle_result_stats__brawler3
-    on brawler_trio_battle_result_stats (tier_range, brawler3_brawlstars_id, start_battle_date);
-alter sequence brawler_trio_battle_result_stats_seq owned by brawler_trio_battle_result_stats.brawler_trio_battle_result_stats_id;
+    on brawler_trio_battle_result_stats (brawlstars_patch_id, tier_range, brawler3_brawlstars_id);
+
+-- 패치별 통계의 체크포인트. 한 줄 = 통계 유형 × 패치.
+-- 한 패치의 통계는 "전투 날짜가 applied_start_date ~ applied_end_date 안이고 id 가 last_read_battle_id 이하"인 원본 전투를 집계한 값과 같다.
+-- applied_end_date 는 다음 패치가 없으면 비운다. last_battle_at 은 반영된 전투가 없으면 비어 있다. version 은 쓸 때마다 1 올린다.
+create table if not exists stats_checkpoint
+(
+    stats_checkpoint_id bigint generated always as identity primary key,
+    stats_type          varchar(45) not null,
+    brawlstars_patch_id bigint      not null,
+    last_read_battle_id bigint      not null,
+    applied_start_date  date        not null,
+    applied_end_date    date        null,
+    last_battle_at      timestamptz null,
+    version             bigint      not null,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+create unique index if not exists uk_stats_checkpoint__stats_type_brawlstars_patch_id
+    on stats_checkpoint (stats_type, brawlstars_patch_id);
 
 create table if not exists battle_event_rotation
 (
