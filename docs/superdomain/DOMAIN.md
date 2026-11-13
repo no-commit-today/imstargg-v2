@@ -4,7 +4,7 @@
 
 ## brawlstars — 브롤스타즈
 - 역할: 브롤스타즈 게임의 데이터(기준정보·플레이어·전적·랭킹)를 공식 API에서 받아 우리 모델로 관리하고 제공한다.
-- 기능: 플레이어·클럽 프로필과 전적의 반영·조회·검색, 브롤러·아이템·이벤트·모드 등록(관리자)과 변경 감지 알림, 로테이션과 경쟁전 시즌 맵 목록, 국가별 랭킹, API 점검·스펙 추적
+- 기능: 플레이어·클럽 프로필과 전적의 반영·조회·검색, 브롤러·아이템·이벤트·모드 등록(관리자)과 변경 감지 알림, 로테이션과 경쟁전 시즌 맵 목록, 국가별 랭킹, API 점검·스펙 추적, 공식 블로그 글 수집과 변경 알림, 패치일 등록(관리자)
 - 분류: supporting
 - 하위 도메인:
   - player — 플레이어·클럽 프로필과 보유 브롤러
@@ -13,9 +13,11 @@
   - event — 이벤트(맵)·모드·로테이션·경쟁전 시즌 맵 목록
   - ranking — 국가별 플레이어·클럽·브롤러 랭킹
   - system — 공식 API의 점검 상태와 스펙 변화
-- 패키지: `brawlstars`(core-api의 domain·application, db-core), core-worker의 `domain`·`application.player`·`application.club`·`application.maintenance`, core-batch의 `job.brawlstars`, core-admin(operation 제외), `brawlstars-client`. core-api는 조회 모델, core-worker는 동기화 모델을 따로 둔다(같은 이름의 다른 모델)
+  - news — 공식 블로그의 글과 그 변경 이력
+  - patch — 운영자가 등록하는 패치일
+- 패키지: `brawlstars`(core-api의 domain·application, db-core), core-worker의 `domain`·`application.player`·`application.club`·`application.maintenance`, core-batch의 `job.brawlstars`·`domain.news`·`support.blog`, core-admin(operation 제외), `brawlstars-client`. core-api는 조회 모델, core-worker는 동기화 모델을 따로 둔다(같은 이름의 다른 모델)
 - 개념: 플레이어와 태그, 보유 브롤러, 전적(플레이어별 전투 기록. statistics의 통계 전투와 다르다), 전투 키(같은 전투를 가리키는 키), 클럽, 브롤러와 아이템, 이벤트(맵)·모드·로테이션, 경쟁전 시즌, 랭킹, API 점검
-- 외부: 브롤스타즈 공식 API — 플레이어·클럽·전투 기록·브롤러·이벤트 로테이션·랭킹을 받고, 점검 신호와 API 스펙을 본다
+- 외부: 브롤스타즈 공식 API — 플레이어·클럽·전투 기록·브롤러·이벤트 로테이션·랭킹을 받고, 점검 신호와 API 스펙을 본다. 공식 블로그 — 글 목록과 본문을 읽는다
 - 규칙:
   - 브롤러·아이템·이벤트·모드는 관리자가 등록한다. 배치는 공식 API와 비교해 신규·삭제·미등록을 알리기만 한다. 등록되지 않은 이벤트는 로테이션에 나오지 않는다.
   - 게임에서 빠진 브롤러·아이템·이벤트는 지우지 않고 삭제 표시만 한다. 과거 전투를 보여 줘야 하기 때문이다.
