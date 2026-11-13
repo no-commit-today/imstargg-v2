@@ -13,7 +13,7 @@
   - event — 이벤트(맵)·모드·로테이션·경쟁전 시즌 맵 목록
   - ranking — 국가별 플레이어·클럽·브롤러 랭킹
   - system — 공식 API의 점검 상태와 스펙 변화
-- 코드: `brawlstars` 패키지(core-api의 domain·application, db-core), core-worker의 `domain`·`application.player`·`application.club`·`application.maintenance`, core-batch의 `job.brawlstars`, core-admin(operation·statistics 제외), `brawlstars-client`. core-api는 조회 모델, core-worker는 동기화 모델을 따로 둔다(같은 이름의 다른 모델)
+- 패키지: `brawlstars`(core-api의 domain·application, db-core), core-worker의 `domain`·`application.player`·`application.club`·`application.maintenance`, core-batch의 `job.brawlstars`, core-admin(operation·statistics 제외), `brawlstars-client`. core-api는 조회 모델, core-worker는 동기화 모델을 따로 둔다(같은 이름의 다른 모델)
 - 개념: 플레이어와 태그, 보유 브롤러, 전적(플레이어별 전투 기록. statistics의 통계 전투와 다르다), 전투 키(같은 전투를 가리키는 키), 클럽, 브롤러와 아이템, 이벤트(맵)·모드·로테이션, 경쟁전 시즌, 랭킹, API 점검
 - 외부: 브롤스타즈 공식 API — 플레이어·클럽·전투 기록·브롤러·이벤트 로테이션·랭킹을 받고, 점검 신호와 API 스펙을 본다
 - 규칙:
@@ -28,21 +28,21 @@
 - 역할: 플레이어·클럽 갱신 요청을 받아 접수부터 완료까지의 상태를 관리한다.
 - 기능: 갱신 요청, 갱신 상태 조회, 비동기 실행, 랭킹 노출 플레이어 사전 갱신
 - 분류: supporting
-- 코드: `renewal` 패키지(core-api의 domain·application, db-core, core-worker의 application, core-batch의 job), core-worker `application.player`·`application.club` 안의 갱신 실행과 `consumer`, aws-sqs
-- 개념: 갱신(유형은 플레이어·클럽. 상태는 REQUESTED → PENDING → EXECUTING → COMPLETED·NOT_FOUND·FAILED)
+- 패키지: `renewal`(core-api의 domain·application, db-core, core-worker의 application, core-batch의 job), core-worker `application.player`·`application.club` 안의 갱신 실행과 `consumer`, aws-sqs
+- 개념: 갱신(유형은 플레이어·클럽. 상태는 요청됨 → 실행 대기 → 실행 중 → 완료·대상 없음·실패)
 - 규칙:
   - 진행 중인 갱신은 요청하고 10초가 지나야 다시 요청할 수 있다. 끝난 갱신은 바로 다시 요청할 수 있다.
   - 삭제된 플레이어·클럽의 갱신과 API 점검 중의 갱신은 받지 않는다.
   - 갱신 접수는 core-api 한 곳에서만 한다. 배치도 같은 API로 요청한다.
   - 한 갱신은 한 워커만 실행한다.
-  - 공식 API에 없는 대상은 NOT_FOUND로, 점검이나 오류는 FAILED로 끝내고 자동으로 다시 시도하지 않는다. 전투 기록만 볼 수 없으면 전투 0건으로 완료한다.
+  - 공식 API에 없는 대상은 '대상 없음'으로, 점검이나 오류는 '실패'로 끝내고 자동으로 다시 시도하지 않는다. 전투 기록만 볼 수 없으면 전투 0건으로 완료한다.
 - 하지 않는 것: 플레이어·클럽 데이터 반영 (→ brawlstars), 플레이어 프로필 주기 새로고침 (→ brawlstars), 통계 수집 (→ statistics)
 
 ## statistics — 통계
 - 역할: 전투 표본을 모아 브롤러·조합·카운터·아이템 보유의 승률·픽률·순위 통계를 정한 규칙대로 집계하고 제공한다.
 - 기능: 통계 전투 수집, 일별 1인 통계와 주 단위 조합·카운터 통계 집계, 아이템 보유 통계, 봇 전투 제외, 통계 조회(티어 스코어·픽률·일별 추이), 플레이어 브롤러 통계
 - 분류: core
-- 코드: `statistics` 패키지(core-api의 domain·application, db-core, redis-core, core-batch의 domain·job), core-worker의 `application.stats`, core-admin의 `statistics` 패키지. 통계 규칙 enum은 여러 모듈이 함께 쓰려고 core-enum에 둔다
+- 패키지: `statistics`(core-api의 domain·application, db-core, redis-core, core-batch의 domain·job, core-admin), core-worker의 `application.stats`, core-enum의 통계 규칙
 - 개념: 통계 전투(결과형·순위형. 전적과 다른 모델이고 10일만 보관한다), 수집 대상 플레이어(전투 기록을 볼 수 없게 되면 수집에서 빠지고 되돌리지 않는다), 통계 수집 모드(허용 목록), 티어 구간, 봇 전투, 티어 스코어, 플레이어 브롤러 통계(한 플레이어의 전적으로 계산한다)
 - 규칙:
   - 수집 필터를 통과한 전투만 저장한다. 최근 7일, 친선전 제외, 최저 트로피(일반 1000, 경쟁전 신화 1), 관리자가 정한 허용 목록의 모드, 수집 유형에 맞는 팀 구성, 한 명이 브롤러 여러 개를 낸 전투 제외가 조건이다.
@@ -50,32 +50,25 @@
   - 같은 전투는 전투 키로 1행에 모은다. 순위형은 같은 팀의 관측끼리 모은다.
   - 원본 통계 전투는 10일 보관하고 재집계는 그 기간 안에서 한다. 1인 통계는 하루 단위로, 조합·카운터 통계는 주 단위로 통째로 다시 쓴다.
   - 결과형 게임 수는 슬롯 합 ÷ 6이다. 결과형 수집 유형은 3대3 하나뿐이다. 조합 픽률의 분모는 조합 통계에서 구하고 1인 통계에 기대지 않는다.
-- 미정:
-  - 아이템 보유 통계에 오래된 프로필을 얼마나 허용할지(신선도 기준).
 - 하지 않는 것: 플레이어 전적 저장·조회 (→ brawlstars), 브롤러·이벤트 기준정보 (→ brawlstars)
 
 ## operation — 운영
 - 역할: 사용자 피드백을 받아 운영자가 확인하게 한다.
 - 기능: 피드백 제출, 관리자 확인, 일일 요약 알림
 - 분류: generic
-- 코드: `operation` 패키지(core-api, core-admin, core-batch, db-core, core-enum)
-- 개념: 피드백(만족도, 내용, 확인 여부)
+- 패키지: `operation`(core-api, core-admin, core-batch, db-core, core-enum)
 
 ## 관계
 | 도메인 | 의존 대상 | 방식 | 설명 |
 |---|---|---|---|
 | renewal | brawlstars | ID 참조 · 동기 호출 · 데이터 읽기 | 갱신 대상을 태그로 가리킨다. 삭제 여부와 API 점검을 확인하고, 실행할 때 플레이어·클럽 반영을 맡긴다. 사전 갱신은 랭킹의 플레이어를 읽는다 |
-| statistics | brawlstars | ID 참조 · 동기 호출 · 데이터 읽기 · 이벤트 | 브롤러·이벤트를 ID로 가리키고 API 점검을 확인한다. 전적·보유 브롤러·랭킹을 읽어 통계의 원천으로 쓴다. 새 전적이 반영되면 이벤트로 받아 통계를 수집한다(이벤트는 아직 구현 전) |
+| statistics | brawlstars | ID 참조 · 동기 호출 · 데이터 읽기 · 이벤트 | 브롤러·이벤트를 ID로 가리키고 API 점검을 확인한다. 전적·보유 브롤러·랭킹을 읽어 통계의 원천으로 쓴다. 새 전적이 반영되면 이벤트로 받아 통계를 수집한다 |
 
-- operation은 다른 도메인과 관계가 없다.
-- 외부와 맞닿은 도메인은 brawlstars뿐이다. 운영 알림(Discord)은 도메인이 아닌 공용 수단이다.
-- 여러 도메인의 데이터를 합쳐 응답을 만드는 계층(QueryComposer)과, 한 도메인에서 읽어 다른 도메인에 넘기는 배치 Job은 도메인 사이 의존으로 세지 않는다.
-- core-enum에 둔 공유 규칙(통계 수집 유형 등)을 읽는 것도 의존으로 세지 않는다.
+- 의존으로 세지 않는 코드: core-api의 `query`와 core-admin의 컨트롤러(여러 도메인을 합쳐 응답을 만든다), core-batch의 Job 구성(한 도메인에서 읽어 다른 도메인에 넘긴다), core-enum(여러 도메인이 함께 읽는 규칙)
 
-### 방향과 어긋난 코드
-방향은 위 표대로 정했고, 아래는 아직 고치지 않았다.
+## 알려진 어긋남
 - brawlstars와 renewal이 statistics를 직접 부른다(전적 반영 뒤 통계 캐시 삭제, 갱신 뒤 통계 수집). → brawlstars가 '새 전적 반영' 이벤트를 내고 statistics가 받는다.
 - 전투 키를 만드는 코드가 statistics 쪽에 있다. → brawlstars로 옮긴다.
 - 이벤트 동기화 배치의 brawlstars 코드가 통계 전투를 직접 읽어 미등록 이벤트를 찾고 경쟁전 맵 목록을 만든다. → 배치 Job이 필요한 값만 넘긴다. 수집되지 않은 경쟁전 맵이 목록에서 빠지는 것은 허용한다.
-- renewal의 갱신 실행과 statistics의 전투 수집이 공식 API를 직접 부른다. → brawlstars로 모을지 정하지 않았다.
-- frontend의 브롤러 코드가 statistics의 타입을 가져다 쓴다. → 옮길지 정하지 않았다.
+- renewal의 갱신 실행과 statistics의 전투 수집이 공식 API를 직접 부른다. → 정하지 않음
+- frontend의 브롤러 코드가 statistics의 타입을 가져다 쓴다. → 정하지 않음
