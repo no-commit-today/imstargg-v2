@@ -63,5 +63,5 @@ imstargg-v2/
 ## 용어 사전·도메인 정의
 
 - 용어 사전: docs/superglossary/glossary.md (이름을 짓기 전에 읽는다. 없는 단어는 /superglossary:glossary로 추가한다)
-- 도메인 정의: docs/superdomain/DOMAIN.md (도메인의 역할·관계를 바꾸는 작업 전에 읽는다)
-- 결정 기록: docs/superdomain/adr/ (비싸거나 중요한 결정을 내린 작업을 마치면 /superdomain:adr로 기록할지 제안한다)
+- 도메인 정의: docs/superdomain/DOMAIN.md (도메인의 역할·관계를 바꾸는 작업 전에 읽는다. 고칠 때는 /superdomain:domain으로 고친다)
+- 결정 기록: docs/superdomain/adr/ (정해진 구조·정책을 바꾸는 제안을 하거나 받으면 먼저 관련 기록을 찾아 읽는다. 비싸거나 중요한 결정을 내린 작업을 마치면 /superdomain:adr로 기록할지 제안한다. 기록에는 결정마다 이유·버린 안·비용을 적고, 결정이 아닌 코드 이름과 절차는 적지 않는다)
