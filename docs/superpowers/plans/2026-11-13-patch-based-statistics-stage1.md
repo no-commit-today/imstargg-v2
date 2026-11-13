@@ -49,7 +49,7 @@
 | CHECK | `ck_brawler_pair_battle_result_stats_ordered`, `ck_brawler_trio_battle_result_stats_ordered`, `ck_brawler_enemy_battle_result_stats_distinct_brawler` | 테이블 이름 자리에 `_backup` 을 넣는다(`ck_brawler_pair_battle_result_stats_backup_ordered` 등) |
 | 월 파티션 `{t}_p_YYYYMM` 과 그 인덱스 | 그대로 | 그대로(겹치는 이름이 없다) |
 
-옛 엔티티의 `@Table(name)`, `Index(name)`, `UniqueConstraint(name)`, `@SequenceGenerator` 의 `name` 과 `sequenceName` 이 오른쪽 열과 같아야 한다.
+옛 엔티티의 `@Table(name)`, `Index(name)`, `UniqueConstraint(name)`, `@SequenceGenerator` 의 `sequenceName` 이 오른쪽 열과 같아야 한다. 생성기의 `name`(JPA 안에서만 쓰는 이름)은 지금의 낙타 표기를 따라 `…StatsBackupSeq` 로 한다(예: `brawlerPairBattleResultStatsBackupSeq`).
 
 **새 것이 원래 이름을 쓴다**
 
@@ -188,7 +188,7 @@ assertThat(table.indexes.map { it.name }).containsExactlyInAnyOrder(
 )
 // id 필드의 @SequenceGenerator
 assertThat(sequenceGenerator.sequenceName).isEqualTo("brawler_pair_battle_result_stats_backup_seq")
-assertThat(sequenceGenerator.name).isEqualTo("brawler_pair_battle_result_stats_backup_seq")
+assertThat(sequenceGenerator.name).isEqualTo("brawlerPairBattleResultStatsBackupSeq")
 ```
 
 - [ ] **Step 2: 실패를 확인한다.** `./gradlew :infrastructure:db-core:test --tests '*StatsBackupEntityNameTest'` → 컴파일 실패(`…BackupEntity` 없음).
