@@ -151,3 +151,38 @@ export interface BrawlStarsPatchList {
   earliestRegistrableDate: string;
   patches: BrawlStarsPatch[];
 }
+
+export type NewsArticleType = "RELEASE_NOTE" | "OTHER";
+
+export interface NewsArticleListItem {
+  id: number;
+  articleKey: string;
+  linkUrl: string;
+  title: string;
+  type: NewsArticleType;
+  publishedAt: string;
+  seenAt: string;
+  versionCount: number;
+}
+
+export interface NewsArticleDetail {
+  id: number;
+  articleKey: string;
+  linkUrl: string;
+  title: string;
+  type: NewsArticleType;
+  publishedAt: string;
+  seenAt: string;
+  content: string;
+  previousId: number | null;
+  previousSeenAt: string | null;
+  previousContent: string | null;
+}
+
+export interface NewsArticleVersion {
+  id: number;
+  linkUrl: string;
+  title: string;
+  publishedAt: string;
+  seenAt: string;
+}
