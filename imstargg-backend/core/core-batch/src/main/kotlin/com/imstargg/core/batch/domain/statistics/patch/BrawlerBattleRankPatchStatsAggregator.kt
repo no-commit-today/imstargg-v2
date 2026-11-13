@@ -16,7 +16,9 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEnti
  *
  * ## 집계 규칙
  * - **아군 팀(playerTeam)만** 집계 (순위형 배틀에는 적군 개념이 없음)
- * - 각 배틀의 순위(1위~N위)를 분포로 누적 (예: 1위 5회, 2위 3회, ...). 순위가 1~10 이 아니면 실패한다
+ * - 각 배틀의 순위(1위~N위)를 분포로 누적 (예: 1위 5회, 2위 3회, ...). 순위가 10 을 넘으면 실패하고,
+ *   1 미만이면 세지 않는다(옛 집계와 같다). 옛 집계는 순위가 1 미만인 전투만 있는 키에 값이 모두 0 인 줄을 만들지만,
+ *   패치 통계 테이블에는 합이 0 인 줄을 두지 않으므로 이 집계기는 그 줄을 내지 않는다
  * - **티어 구간**: 각 플레이어 본인의 트로피 기준으로 결정
  * - **봇 로비**: 봇 로비 판정에 걸린 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 줄에도 들지 않는다
  * - **모드**: 솔로·듀오·트리오 쇼다운 유형의 팀 구성인 전투만 집계한다. 모드를 거르지 않던 이전 수집기가 쓴 원본에는
@@ -44,7 +46,8 @@ class BrawlerBattleRankPatchStatsAggregator : PatchStatsAggregator<StatsRankBatt
                             eventBrawlStarsId = battle.eventBrawlStarsId,
                             brawlerBrawlStarsId = player.brawler.brawlStarsId,
                         )
-                    require(battle.battleRank in 1..MAX_RANK) { "rank(${battle.battleRank})는 1 이상 $MAX_RANK 이하여야 합니다." }
+                    require(battle.battleRank <= MAX_RANK) { "rank(${battle.battleRank})는 최대 $MAX_RANK 이어야 합니다." }
+                    if (battle.battleRank < 1) continue
                     rankCounts.getOrPut(key) { LongArray(MAX_RANK) }[battle.battleRank - 1]++
                 }
             }

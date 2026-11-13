@@ -83,13 +83,24 @@ class BrawlerBattleRankPatchStatsAggregatorTest {
     }
 
     @Test
-    fun `순위가 1부터 10 사이가 아니면 실패한다`() {
+    fun `순위가 10 을 넘으면 실패한다`() {
         val teams = listOf(listOf(1500)) + List(9) { listOf(2100) }
 
         assertThatThrownBy { aggregate(showdown(StatsEventModeType.SOLO_SHOWDOWN, teams, battleRank = 11)) }
             .isInstanceOf(IllegalArgumentException::class.java)
-        assertThatThrownBy { aggregate(showdown(StatsEventModeType.SOLO_SHOWDOWN, teams, battleRank = 0)) }
-            .isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
+    fun `순위가 1 미만인 전투는 옛 집계처럼 세지 않는다`() {
+        val teams = listOf(listOf(1500)) + List(9) { listOf(2100) }
+
+        assertThat(aggregate(showdown(StatsEventModeType.SOLO_SHOWDOWN, teams, battleRank = 0))).isEmpty()
+
+        val sut = BrawlerBattleRankPatchStatsAggregator()
+        sut.aggregate(showdown(StatsEventModeType.SOLO_SHOWDOWN, teams, battleRank = 0))
+        sut.aggregate(showdown(StatsEventModeType.SOLO_SHOWDOWN, teams, battleRank = 2, battleKey = "other"))
+        assertThat(sut.toCounts().single { it.keys[2] == 1L }.counts)
+            .containsExactly(0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L)
     }
 
     private fun aggregate(battle: StatsRankBattleEntity) = BrawlerBattleRankPatchStatsAggregator().also { it.aggregate(battle) }.toCounts()

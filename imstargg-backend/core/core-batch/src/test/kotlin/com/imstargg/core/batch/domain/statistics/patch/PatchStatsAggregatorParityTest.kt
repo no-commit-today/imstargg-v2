@@ -56,6 +56,7 @@ class PatchStatsAggregatorParityTest {
         val expected =
             old
                 .toEntities()
+                .filter { it.rankCounts.totalCount > 0 }
                 .groupBy { Triple(it.tierRange.name, it.eventBrawlStarsId, it.brawlerBrawlStarsId) }
                 .map { (key, entities) ->
                     val rankCounts = entities.map { it.rankCounts }.reduce(RankCountsEmbedded::plus)
@@ -164,6 +165,7 @@ class PatchStatsAggregatorParityTest {
             showdown(StatsEventModeType.SOLO_SHOWDOWN, solo, battleRank = 1, battleKey = "r1", battleAt = at("2026-11-01")),
             showdown(StatsEventModeType.SOLO_SHOWDOWN, solo, battleRank = 4, battleKey = "r2", battleAt = at("2026-11-02")),
             showdown(StatsEventModeType.SOLO_SHOWDOWN, solo, battleRank = 10, battleKey = "r3", battleAt = at("2026-11-09")),
+            showdown(StatsEventModeType.SOLO_SHOWDOWN, solo, battleRank = 0, battleKey = "r0", battleAt = at("2026-11-07")),
             showdown(
                 StatsEventModeType.DUO_SHOWDOWN,
                 listOf(listOf(1500, 2100), listOf(1200, 1210), listOf(1400, 1410), listOf(1600, 1610)),
