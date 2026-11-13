@@ -3,7 +3,7 @@ package com.imstargg.core.worker.application.stats
 import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
@@ -22,6 +22,7 @@ class StatsBattleAggregateApplier(
     private val clock: Clock,
     private val statsRankBattleRepository: StatsRankBattleJpaRepository,
     private val statsResultBattleRepository: StatsResultBattleJpaRepository,
+    private val statsEventModeSnapshot: StatsEventModeSnapshot,
 ) {
     @Transactional
     fun apply(battles: List<Battle>) {
@@ -57,12 +58,12 @@ class StatsBattleAggregateApplier(
     }
 
     /**
-     * 통계로 수집할 수 있는 전투면 그 모드를 돌려주고, 아니면 null 을 돌려준다.
+     * 통계로 수집할 수 있는 전투면 그 모드의 유형을 돌려주고, 아니면 null 을 돌려준다.
      *
      * 모드는 `battle.mode` 문자열이 아니라 `modeBrawlStarsId` 로만 판정한다.
      * battlelog 는 하키(45)를 `brawlBall`, 아레나(48)를 `siege` 로 보내는 등 문자열을 믿을 수 없다.
      */
-    private fun findStatsEventMode(battle: Battle): StatsEventMode? {
+    private fun findStatsEventModeType(battle: Battle): StatsEventModeType? {
         val event = battle.event ?: return null
         if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return null
         if (battle.mode == null || battle.type == null) return null
@@ -81,20 +82,19 @@ class StatsBattleAggregateApplier(
             if (minTrophies < StatsTierRange.MIN_TROPHY) return null
         }
 
-        val statsEventMode = StatsEventMode.find(event.modeBrawlStarsId) ?: return null
-        if (battle.teams.size != statsEventMode.teamCount) return null
-        if (battle.teams.any { it.size != statsEventMode.teamSize }) return null
-        return statsEventMode
+        val type = statsEventModeSnapshot.find(event.modeBrawlStarsId) ?: return null
+        if (!type.matches(battle.teams.map { it.size })) return null
+        return type
     }
 
     private fun canCreateRankBattle(battle: Battle): Boolean {
         if (battle.battleRank == null) return false
-        return findStatsEventMode(battle)?.resultType == BattleEventModeResultType.RANK
+        return findStatsEventModeType(battle)?.resultType == BattleEventModeResultType.RANK
     }
 
     private fun canCreateResultBattle(battle: Battle): Boolean {
         if (battle.result == null) return false
-        return findStatsEventMode(battle)?.resultType == BattleEventModeResultType.RESULT
+        return findStatsEventModeType(battle)?.resultType == BattleEventModeResultType.RESULT
     }
 
     private fun toStatsRankBattle(battle: Battle) =
