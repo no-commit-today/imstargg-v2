@@ -169,6 +169,7 @@ class BattleBuilderTest {
         // then
         assertBattle(result, battleResponse)
         assertBattleTeams(result.teams, battleResponse.battle.teams!!)
+        assertThat(result.brawlersExpanded).isFalse()
     }
 
     @Test
@@ -412,6 +413,7 @@ class BattleBuilderTest {
         // then
         assertBattle(result, battleResponse)
         assertBattlePlayers(result.teams, battleResponse.battle.players!!)
+        assertThat(result.brawlersExpanded).isFalse()
     }
 
     @Test
@@ -466,6 +468,7 @@ class BattleBuilderTest {
         // then
         assertBattle(result, battleResponse)
         assertBattlePlayers(result.teams, battleResponse.battle.players!!)
+        assertThat(result.brawlersExpanded).isTrue()
     }
 
     @Test

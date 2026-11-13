@@ -61,9 +61,13 @@ class StatsBattleAggregateApplier(
      * 통계로 수집할 수 있는 전투면 그 모드의 유형을 돌려주고, 아니면 null 을 돌려준다.
      *
      * 모드는 `battle.mode` 문자열이 아니라 `modeBrawlStarsId` 로만 판정한다.
+     * 플레이어 한 명이 브롤러 여러 개를 낸 전투(듀얼 펼침)는 유형과 관계없이 거른다.
+     * 펼침은 전적 표시용이고, 통계에서는 한 명의 브롤러들이 팀원으로 오해된다.
+     *
      * battlelog 는 하키(45)를 `brawlBall`, 아레나(48)를 `siege` 로 보내는 등 문자열을 믿을 수 없다.
      */
     private fun findStatsEventModeType(battle: Battle): StatsEventModeType? {
+        if (battle.brawlersExpanded) return null
         val event = battle.event ?: return null
         if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return null
         if (battle.mode == null || battle.type == null) return null

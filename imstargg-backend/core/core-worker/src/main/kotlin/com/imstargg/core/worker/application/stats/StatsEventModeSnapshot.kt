@@ -13,7 +13,7 @@ private val log = KotlinLogging.logger {}
  *
  * - 기동할 때 한 번 읽는다. 읽기에 실패하면 기동이 실패한다.
  * - 이후 [StatsEventModeReloadScheduler][com.imstargg.core.worker.schedule.StatsEventModeReloadScheduler] 가
- *   주기적으로 다시 읽는다. 관리자가 바꾼 모드는 그 주기만큼 늦게 반영된다.
+ *   주기적으로 다시 읽는다. 관리자가 바꾼 모드는 최대 한 주기 뒤에 반영된다.
  * - 다시 읽기에 실패하면 예외를 던지고 이전 목록을 그대로 쓴다.
  * - 목록이 비면 아무 전투도 수집하지 않으므로 WARN 을 남긴다.
  */

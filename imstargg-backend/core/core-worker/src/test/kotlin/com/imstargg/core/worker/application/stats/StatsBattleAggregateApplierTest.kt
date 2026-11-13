@@ -172,6 +172,7 @@ class StatsBattleAggregateApplierTest(
                     teams = createDuelTeams(),
                     modeBrawlStarsId = 24L,
                     mode = "duels",
+                    brawlersExpanded = true,
                 )
 
             // when
@@ -179,6 +180,33 @@ class StatsBattleAggregateApplierTest(
 
             // then
             assertThat(statsResultBattleRepository.count()).isZero()
+        }
+
+        @Test
+        fun `듀얼에 3대3 결과형 유형을 매겨도 펼친 전투는 저장하지 않는다`() {
+            // given
+            statsEventModeRepository.save(StatsEventModeEntity(24L, StatsEventModeType.RESULT_3VS3))
+            statsEventModeSnapshot.reload()
+
+            // when
+            sut.apply(
+                listOf(
+                    createResultBattle(
+                        battleKey = "duel-battle-key",
+                        battleAt = recentBattleAt(),
+                        playerBrawlStarsTag = "#DUEL0",
+                        teams = createDuelTeams(),
+                        modeBrawlStarsId = 24L,
+                        mode = "duels",
+                        brawlersExpanded = true,
+                    ),
+                    createResultBattle("k20", recentBattleAt(), "#A", modeBrawlStarsId = 20L),
+                ),
+            )
+
+            // then
+            assertThat(statsResultBattleRepository.findAll().map { it.eventModeBrawlStarsId })
+                .isEqualTo(listOf(20L))
         }
 
         @Test
@@ -494,6 +522,7 @@ class StatsBattleAggregateApplierTest(
         mode: String = "knockout",
         battleRank: Int? = null,
         result: String? = "victory",
+        brawlersExpanded: Boolean = false,
     ) = Battle(
         battleKey = battleKey,
         battleAt = battleAt,
@@ -513,6 +542,7 @@ class StatsBattleAggregateApplierTest(
         battleRank = battleRank,
         trophyChange = 8,
         teams = teams,
+        brawlersExpanded = brawlersExpanded,
     )
 
     private fun createTeams(
