@@ -306,8 +306,8 @@ SELECT drop_old_month_partitions('2026-11-05');
 
 - (옛 동작) `partitionManageJob` 은 일별 스텝 둘(`create_partitions`, `drop_old_partitions`) 뒤에 월 스텝 둘(`create_month_partitions`, `drop_old_month_partitions`)을 실행했다. 지금은 일별 스텝 둘만 실행한다.
 - 월 파티션 이름은 `{table}_p_YYYYMM`(6자리), 일 파티션은 `_p_YYYYMMDD`(8자리)라 두 삭제 함수의 정규식이 겹치지 않는다.
-- default 파티션이 없으므로 파티션이 없는 달의 행은 삽입에 실패한다. 다음 달 파티션을 `MONTHS_AHEAD` 로 미리 만들어 두는 이유다.
-- **`partition-manage.sql` 은 앱이 적용하지 않는다.** 함수를 바꾸는 배포는 새 core-batch 이미지가 돌기 전에 운영자가 DB 에 직접 적용해야 한다(파일은 `DROP FUNCTION IF EXISTS` + `CREATE OR REPLACE` 라 여러 번 적용해도 같은 결과). 적용하지 않으면 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패한다.
+- (옛 동작) default 파티션이 없으므로 파티션이 없는 달의 행은 삽입에 실패한다. 다음 달 파티션을 `MONTHS_AHEAD`(1단계부터 없음)로 미리 만들어 두는 이유였다.
+- **`partition-manage.sql` 은 앱이 적용하지 않는다.** 함수를 바꾸는 배포는 새 core-batch 이미지가 돌기 전에 운영자가 DB 에 직접 적용해야 한다(파일은 `DROP FUNCTION IF EXISTS` + `CREATE OR REPLACE` 라 여러 번 적용해도 같은 결과). (옛 동작) 적용하지 않으면 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패했다. 월 스텝이 없어진 지금은 해당하지 않는다.
 
 ### 7.4 운영 권장 사항
 
@@ -332,7 +332,7 @@ SELECT drop_old_month_partitions('2026-11-05');
 - `stats_event_mode` 테이블: 통계를 수집하는 모드의 허용 목록과 모드별 수집 유형. `StatsEventModeType`: 유형별 팀 구성
 - `StatsBotBattlePolicy`: 봇 전투 판정 규칙(섹션 5.5). 상수 일곱 개 `BOT_TROPHY_LIMIT = 2000`, `TEAM_AVERAGE_WINDOW_LOWER = -75`, `TEAM_AVERAGE_WINDOW_UPPER = 25`, `CLUSTER_WIDTH = 75`, `SOLO_SHOWDOWN_CLUSTER_THRESHOLD = 5`, `DUO_SHOWDOWN_CLUSTER_THRESHOLD = 2`, `TRIO_SHOWDOWN_CLUSTER_THRESHOLD = 2`
 - `StatsBotBattleMonitor`(3대3), `StatsBotLobbyMonitor`(쇼다운): 봇 감시 누적기. 경고 문턱과 최소 표본은 클래스 상수
-- `PartitionManageJobConfig`: `DAYS_AHEAD = 7`, `RETENTION_DAYS = 10`, `MONTHS_AHEAD = 1`. 일 스텝(`partitionCreateStep`, `partitionDropStep`) 뒤에 월 스텝(`monthPartitionCreateStep`, `monthPartitionDropStep`)이 `create_month_partitions`, `drop_old_month_partitions` 를 호출한다. 삭제 경계 `monthRetentionCutoff` 는 SQL 과 같은 경계다
+- `PartitionManageJobConfig`: `DAYS_AHEAD = 7`, `RETENTION_DAYS = 45`. 일 스텝(`partitionCreateStep`, `partitionDropStep`)만 있다. (옛 동작, 1단계부터 없음) 일 스텝 뒤에 월 스텝(`monthPartitionCreateStep`, `monthPartitionDropStep`)이 `create_month_partitions`, `drop_old_month_partitions` 를 호출했고, `MONTHS_AHEAD = 1` 과 삭제 경계 `monthRetentionCutoff` 가 있었다
 - `partition-manage.sql`: 일·월 파티션 함수. 앱이 적용하지 않는다(섹션 7.3)
 - `StatsWeekRange.currentAndPrevious`: 주간 통계 잡의 재집계 범위. `StatsTierRange.resolveAll`: 조합 통계의 티어 판정
 - `BattleStatsConstants`: 리더 페이지 크기 `READ_PAGE_SIZE = 5000`, 라이터 청크 `BATCH_SIZE = 1000`
