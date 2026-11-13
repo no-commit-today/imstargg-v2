@@ -45,9 +45,11 @@
 | 인덱스(1인 순위) | `ix_brawler_battle_rank_stats` | `ix_brawler_battle_rank_stats_backup` |
 | 인덱스(2인) | `ix_brawler_pair_battle_result_stats__brawler1`, `…__brawler2` | `ix_brawler_pair_battle_result_stats_backup__brawler1`, `…_backup__brawler2` |
 | 인덱스(3인) | `ix_brawler_trio_battle_result_stats__brawler1`, `…2`, `…3` | `ix_brawler_trio_battle_result_stats_backup__brawler1`, `…2`, `…3` |
-| 인덱스(상대, 운영에만 있을 수 있음) | `ix_brawler_enemy_battle_result_stats_1` | `ix_brawler_enemy_battle_result_stats_backup_1` (`alter index if exists`) |
+| 인덱스(상대, 운영에만 있을 수 있음) | `ix_brawler_enemy_battle_result_stats_1` | `ix_brawler_enemy_battle_result_stats_backup_1` |
 | CHECK | `ck_brawler_pair_battle_result_stats_ordered`, `ck_brawler_trio_battle_result_stats_ordered`, `ck_brawler_enemy_battle_result_stats_distinct_brawler` | 테이블 이름 자리에 `_backup` 을 넣는다(`ck_brawler_pair_battle_result_stats_backup_ordered` 등) |
 | 월 파티션 `{t}_p_YYYYMM` 과 그 인덱스 | 그대로 | 그대로(겹치는 이름이 없다) |
+
+`ix_` 아홉 개는 모두 `alter index if exists` 로 바꾼다. 있으면 반드시 바뀌고 없으면 넘어간다(없을 때 실패시켜 얻는 안전이 없다).
 
 옛 엔티티의 `@Table(name)`, `Index(name)`, `UniqueConstraint(name)`, `@SequenceGenerator` 의 `sequenceName` 이 오른쪽 열과 같아야 한다. 생성기의 `name`(JPA 안에서만 쓰는 이름)은 지금의 낙타 표기를 따라 `…StatsBackupSeq` 로 한다(예: `brawlerPairBattleResultStatsBackupSeq`).
 
@@ -690,13 +692,14 @@ H2 테스트가 보지 못하는 것을 본다. 결과(본 것과 보지 못한 
 - **Task 11 의 여섯 단계가 빠뜨린 경우**: 적용한 끝이 없는데 지금의 범위에 오늘 이후의 끝이 생기면 뺄 날이 없어 범위가 계속 어긋난다. 통계 줄 없이 체크포인트 줄의 끝 날짜만 고치는 쓰기를 넣었다(오늘 뒤의 날짜에는 체크포인트 이하의 전투가 없어 지키는 규칙이 그대로다).
 - **Task 11 의 테스트 목록**: 앞 늘리기(패치일을 앞으로 당기는 장면)가 빠져 있었다. 마지막 수정 묶음에서 더했다.
 - **Task 12**: 알림 제목의 잡 이름을 태스크가 알 방법이 없었다. `PatchStatsAggregation` 에 `jobName` 을 두고, 잡 이름 상수는 `PatchStatsJobConfig` 에 한 번만 적었다. 읽기 빈 이름은 옛 빈과 겹쳐 `patchStatsResultBattleReader`, `patchStatsRankBattleReader` 다.
+- **마지막 수정 묶음(브랜치 전체 검토)**: 맞춘 뒤에도 범위가 어긋나 있으면 건너뛰지 않고 실패시킨다. 범위의 마지막 날을 뺀 뒤 줄이 남으면 실패시킨다. 지워진 패치는 마지막 트랜잭션에서 티어 구간과 상관없이 남은 줄까지 지운다. 전략 문서의 다시 채우기 SQL 은 체크포인트 줄부터 지우게 고쳤다(통계 줄부터 지우면 돌던 잡이 넣은 줄이 남을 수 있다).
 - **Task 13 Step 2**: 로컬에서 앱이 뜨려면 가짜 API 키 인자가 필요했다. `--spring.batch.jdbc.initialize-schema=always` 는 잡 저장소가 메모리 기반이라 아무 일도 하지 않아 뺐다.
 
 ## 배포 (1단계, 이 PR 밖)
 
 순서는 스펙 10장이다. 1번과 2번은 붙여서 한다. 그 사이에는 캐시에 없는 통계 요청이 500 이 되고 브롤러 목록·브롤러 상세·이벤트 상세 페이지가 오류로 보인다. 트래픽이 적고 02:00–09:00 KST 를 벗어난 때에 한다.
 
-0. **먼저 확인**: 운영 core-batch 가 0.4.5 이상이다(원본 보관 45일). 첫 번째 스펙(패치 테이블)이 운영에 있다. 로컬 PostgreSQL 에서 마이그레이션을 두 번 적용해 봤다(Task 4).
+0. **먼저 확인**: 운영 core-batch 가 0.4.5 이상이다(원본 보관 45일). 첫 번째 스펙(패치 테이블)이 운영에 있다. 로컬 PostgreSQL 에서 마이그레이션을 두 번 적용해 봤다(Task 4). 운영 DB 에서 옛 통계 테이블 다섯 개를 `\d+` 로 보아 `_pkey`·`uk_`·`ix_`·`ck_`·시퀀스 이름이 이름 표의 왼쪽 열과 같은지 본다(다르면 마이그레이션의 마지막 점검이 실패해 전부 되돌아간다). 원본이 지금 며칠치 쌓였는지 본다(`\d+ stats_result_battle` 의 가장 오래된 일 파티션). 체크포인트 줄이 만들어지는 패치는 범위의 첫 날이 원본에 있는 것뿐이라, 배포 시점에 따라 첫 실행이 아무 줄도 만들지 않을 수 있다(고장이 아니다). 원본이 30일치 쌓이기 전에는 패치일을 원본의 가장 이른 날짜보다 앞으로 당기지 않는다.
 1. 운영 DB 에 Task 4 의 SQL 을 적용한다(`psql -v ON_ERROR_STOP=1 -f`).
 2. core-api 와 core-batch 를 배포한다. 옛 통계 화면과 옛 잡 5종, `partitionManageJob` 이 정상인지 본다.
 3. 그 뒤에 `imstargg-deploy/apps/prod/core-batch/values.yaml` 에 CronJob 다섯 개를 더한다. 배포보다 먼저 더하면 옛 이미지가 모르는 잡 이름으로 뜬다.
@@ -724,7 +727,7 @@ H2 테스트가 보지 못하는 것을 본다. 결과(본 것과 보지 못한 
       - "java -jar /app/application.jar --job.name=brawlerTrioBattleResultPatchStatsJob"
 ```
 
-**CronJob 을 더하기 전에 볼 것**(스펙 12장): 차트의 시간 제한(`activeDeadlineSeconds`)과 재시도(`backoffLimit`) 기본값. 첫 실행은 유형당 2시간을 넘길 수 있다(스펙 5.7). 시간 제한이 그보다 짧아도 10만 건마다 저장하므로 다음 실행이 잇지만, 실패 알림이 그만큼 온다. 재시도가 있으면 실패한 실행마다 알림이 곱해진다.
+**CronJob 을 더하기 전에 볼 것**(스펙 12장): 차트의 시간 제한(`activeDeadlineSeconds`)과 재시도(`backoffLimit`) 기본값. 첫 실행은 유형당 2시간을 넘길 수 있다(스펙 5.7). 시간 제한이 그보다 짧아도 10만 건마다 저장하므로 다음 실행이 잇지만, 실패 알림이 그만큼 온다. 재시도가 있으면 실패한 실행마다 알림이 곱해진다. 컨테이너 메모리 한도가 2Gi 이고 JVM 옵션이 없어 기본 힙은 약 512MB 다. 범위 맞추기는 하루치를 한 집계기에 모으므로 3인 조합에서 힙이 모자랄 수 있다(키 133만이면 약 470MB 로 어림했고 재지는 않았다). 전환 조건 3번(시험 패치)에서 쓰기 시간과 함께 힙 최고치를 본다.
 
 **가동 뒤에 재는 것**(스펙 12장, 1단계에서는 화면이 새 테이블을 읽지 않는다): 상대·2인·3인의 처리 속도, 다섯 유형이 함께 처음 채울 때의 DB 부하(크면 CronJob 을 멈췄다가 하나씩 켠다), 파티션이 45개로 늘었을 때 읽기 쿼리의 계획 시간, 원본 저장 트랜잭션의 길이(10분 여유의 근거).
 
