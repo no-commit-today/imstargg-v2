@@ -46,6 +46,7 @@
 | 로보 럼블 | robo rumble |  |  | 게임 모드(bestRoboRumbleTime) |
 | 로비 | lobby |  |  | 한 전투에 모인 참가자 묶음(봇 판정) |
 | 로테이션 | rotation |  |  | 지금 열려 있는 이벤트 목록 |
+| 마지막 | last |  |  | 가장 나중 것(last_battle_at). 목록의 최근은 recent |
 | 만족 | satisfied |  |  | 만족도 값(SATISFIED·VERY_SATISFIED) |
 | 만족도 | rating |  |  | 피드백 만족도 5단계 |
 | 매우 | very |  |  | 만족도 값 접두(VERY_) |
@@ -59,6 +60,7 @@
 | 무승부 | draw |  |  | 승/패/무의 무 |
 | 문턱 | threshold |  |  | 판정 경계값 |
 | 배지 | badge |  |  | 클럽 배지·프레스티지 배지 |
+| 버전 | version |  |  | 쓸 때마다 올리는 수정 번호 |
 | 버피 | buffy |  | buffys | 가젯·스타파워·하이퍼차지 강화 아이템. 복수형 buffies |
 | 번호 | number |  |  | 회차·순번 값(시즌 번호 등) |
 | 변동 | change |  |  | 트로피·순위 증감 |
@@ -127,8 +129,10 @@
 | 이전 | previous | prev |  | 직전 값·스냅샷 |
 | 일별 | daily |  |  | 하루 단위 집계 |
 | 일시 | datetime | at |  | 날짜와 시각. created_at처럼 _at 접미사로 쓴다. 기존 start_time·end_time 컬럼과 API 필드(battleTime)는 유지 |
+| 읽기 | read |  |  | 원본을 읽어 온 위치(last_read_battle_id) |
 | 저격수 | marksman |  |  | 브롤러 역할 값 MARKSMAN |
 | 저장 | store |  |  | 저장소에 파일을 둠 |
+| 적용 | apply |  |  | 값을 만들 때 쓴 기준(applied_start_date). applied는 활용형 |
 | 전설 | legendary |  |  | 희귀도·경쟁전 티어 값 LEGENDARY |
 | 전투 | battle |  |  | 플레이어별 전투 기록. 주석의 '배틀'도 같은 단어 |
 | 전투 기록 | battle log |  |  | 플레이어의 최근 전투 목록(API 경로는 battlelog) |
@@ -147,6 +151,7 @@
 | 창 | window |  |  | 판정용 값 범위. 브라우저 window와 같은 영문 |
 | 챌린지 | challenge |  |  | 전투 유형 CHALLENGE |
 | 챔피언십 | championship |  |  | 챔피언십 챌린지의 챔피언십 |
+| 체크포인트 | checkpoint |  |  | 집계가 원본을 어디까지 읽었는지 적어 두는 자리 |
 | 초 | super |  |  | 초희귀(SUPER_RARE)의 초 |
 | 초상화 | portrait |  |  | 브롤러 대표 이미지 |
 | 총 | total |  |  | 합계. 관리자 화면은 '전체' |
@@ -170,6 +175,7 @@
 | 팀 | team |  |  | 같은 편 플레이어 묶음 |
 | 파워 | power |  |  | 브롤러 파워 레벨 |
 | 패배 | defeat |  | loss | 승/패/무의 패 |
+| 패치 | patch |  |  | 밸런스 패치. 패치일(patch_date)로 통계 구간을 나눈다 |
 | 평균 | average |  | avg | 평균값 |
 | 포인트 | point |  |  | 경험치 포인트. 복수형 points |
 | 포화 | saturation |  |  | 커질수록 상한에 붙어 더 늘지 않음 |
