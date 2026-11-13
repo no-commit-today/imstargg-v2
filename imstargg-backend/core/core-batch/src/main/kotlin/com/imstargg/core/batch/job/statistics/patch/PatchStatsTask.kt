@@ -23,10 +23,16 @@ private val log = KotlinLogging.logger {}
  * 10분의 여유를 넘겨도 판단이 바뀌지 않는다. 상한 id 는 실행 시작 10분 전까지 저장된 원본 중 가장 큰 id 이고,
  * 찾는 날짜를 최근 8일로 좁힌다(적재가 받는 가장 오래된 전투가 7일 전이다).
  *
+ * ## 평소 읽기 앞에서 하는 일
+ * 1. 어드민에서 지운 패치의 통계 줄과 체크포인트 줄을 지운다.
+ * 2. 적용한 범위가 지금의 범위와 다른 줄을 [PatchStatsRangeAligner] 로 하루씩 맞춘다. 끝나면 체크포인트 줄을 다시 읽는다.
+ *    맞추기로 줄이 지워진 패치는 아래의 줄 만들기 규칙을 그대로 탄다.
+ *
  * ## 평소 읽기
  * - 체크포인트 줄이 없는 패치는 줄을 만든다. 범위가 비었거나, 범위에 오늘까지의 날짜가 없거나,
  *   범위의 첫 날이 원본에 남은 가장 이른 날짜보다 이르면 만들지 않는다(앞부분이 빠진 통계가 온전해 보이지 않게).
  * - 줄의 적용한 범위가 지금의 범위와 다르면 읽지 않는다. 섞으면 새로 든 날의 전투를 두 번 더할 수 있다.
+ *   맞추기가 정상으로 끝나면 닿지 않는 방어다.
  * - 읽은 전투가 [checkpointBattleCount] 이상 쌓이면 저장하고 체크포인트를 그 쪽의 마지막 id 로 올린다.
  *   다 읽으면 남은 것을 저장하며 체크포인트를 상한 id 로 올린다. 새 전투가 없어도 올린다.
  *
@@ -37,6 +43,7 @@ class PatchStatsTask(
     private val patchJpaRepository: BrawlStarsPatchJpaRepository,
     private val checkpointJpaRepository: StatsCheckpointJpaRepository,
     private val writer: PatchStatsWriter,
+    private val rangeAligner: PatchStatsRangeAligner,
     private val clock: Clock,
     private val checkpointBattleCount: Long,
 ) {
@@ -52,6 +59,8 @@ class PatchStatsTask(
 
         val patches = patchJpaRepository.findAll().sortedBy { it.patchDate }
         val dateRanges = PatchDateRange.resolveAll(patches.associate { it.id!! to it.patchDate })
+        deleteRemovedPatches(aggregation = aggregation, dateRanges = dateRanges)
+        alignRanges(aggregation = aggregation, dateRanges = dateRanges, today = today)
         val checkpoints = checkpointJpaRepository.findAllByStatsType(aggregation.statsType).associateBy { it.brawlStarsPatchId }
         val earliestBattleDate by lazy { aggregation.reader.findEarliestBattleDate() }
 
@@ -73,6 +82,38 @@ class PatchStatsTask(
                 continue
             }
             readNewBattles(aggregation = aggregation, checkpoint = checkpoint, dateRange = dateRange, battleIdCap = battleIdCap)
+        }
+    }
+
+    /** 어드민에서 지운 패치(체크포인트 줄은 있는데 패치 목록에 없는 패치)의 통계 줄과 체크포인트 줄을 지운다. */
+    private fun deleteRemovedPatches(
+        aggregation: PatchStatsAggregation<*>,
+        dateRanges: Map<Long, PatchDateRange>,
+    ) {
+        checkpointJpaRepository
+            .findAllByStatsType(aggregation.statsType)
+            .filter { it.brawlStarsPatchId !in dateRanges }
+            .forEach { checkpoint ->
+                writer.deletePatch(
+                    table = aggregation.table,
+                    brawlStarsPatchId = checkpoint.brawlStarsPatchId,
+                    checkpointId = checkpoint.id!!,
+                )
+                log.info { "지워진 패치의 통계를 지웠다. statsType=${aggregation.statsType}, patchId=${checkpoint.brawlStarsPatchId}" }
+            }
+    }
+
+    /** 적용한 범위가 지금의 범위와 다른 줄을 하루씩 맞춘다. 범위가 다 빈 줄은 지워진다. */
+    private fun <TBattle : BaseStatsBattleEntity> alignRanges(
+        aggregation: PatchStatsAggregation<TBattle>,
+        dateRanges: Map<Long, PatchDateRange>,
+        today: LocalDate,
+    ) {
+        checkpointJpaRepository.findAllByStatsType(aggregation.statsType).forEach { checkpoint ->
+            val dateRange = dateRanges.getValue(checkpoint.brawlStarsPatchId)
+            if (PatchDateRange(checkpoint.appliedStartDate, checkpoint.appliedEndDate) != dateRange) {
+                rangeAligner.align(aggregation = aggregation, checkpoint = checkpoint, dateRange = dateRange, today = today)
+            }
         }
     }
 

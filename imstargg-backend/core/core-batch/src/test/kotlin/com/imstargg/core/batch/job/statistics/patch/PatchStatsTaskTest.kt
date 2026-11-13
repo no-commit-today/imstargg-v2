@@ -45,6 +45,7 @@ class PatchStatsTaskTest(
     private val patchJpaRepository: BrawlStarsPatchJpaRepository,
     private val checkpointJpaRepository: StatsCheckpointJpaRepository,
     private val writer: PatchStatsWriter,
+    private val rangeAligner: PatchStatsRangeAligner,
     private val cleanUp: CleanUp,
 ) : CoreBatchContextTest() {
     private val support = PatchStatsTestSupport(jdbcTemplate, resultBattleJpaRepository, rankBattleJpaRepository)
@@ -330,32 +331,6 @@ class PatchStatsTaskTest(
     }
 
     @Test
-    fun `적용한 범위가 지금의 범위와 다른 패치는 읽지 않는다`() {
-        // given
-        val (patch1103, patch1111) = savePatches(LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 11))
-        saveResult(LocalDate.of(2026, 11, 4))
-        saveResult(LocalDate.of(2026, 11, 13))
-        task().execute(aggregations.brawlerBattleResult)
-        val before1103 = resultCheckpointOf(patch1103)
-        val before1111 = resultCheckpointOf(patch1111)
-        patchJpaRepository.save(
-            patchJpaRepository.findById(patch1111).orElseThrow().apply { update(LocalDate.of(2026, 11, 12), null) },
-        )
-        saveResult(LocalDate.of(2026, 11, 14))
-
-        // when
-        task().execute(aggregations.brawlerBattleResult)
-
-        // then
-        listOf(before1103 to resultCheckpointOf(patch1103), before1111 to resultCheckpointOf(patch1111)).forEach { (before, after) ->
-            assertThat(after.lastReadBattleId).isEqualTo(before.lastReadBattleId)
-            assertThat(after.version).isEqualTo(before.version)
-        }
-        assertResultStats(patch1103, range1103)
-        assertResultStats(patch1111, range1111)
-    }
-
-    @Test
     fun `실행 도중에 시각이 흘러도 시작할 때의 오늘과 상한으로 판단한다`() {
         // given
         val (_, patch1111, patch1120) =
@@ -504,6 +479,7 @@ class PatchStatsTaskTest(
             patchJpaRepository = patchJpaRepository,
             checkpointJpaRepository = checkpointJpaRepository,
             writer = writer,
+            rangeAligner = rangeAligner,
             clock = clock,
             checkpointBattleCount = 4,
         )
