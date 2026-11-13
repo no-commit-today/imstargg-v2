@@ -10,11 +10,10 @@ import tools.jackson.databind.json.JsonMapper
  * 화면에서 한 줄로 보이는 글자만 남긴다.
  */
 object NewsArticleContentExtractor {
-
     private val jsonMapper = JsonMapper.builder().build()
 
     private val LINE_BREAK = Regex("""\r\n|\r|\n""")
-    private val SPECIAL_SPACE = Regex("""[   -​  　﻿\t]""")
+    private val SPECIAL_SPACE = Regex("""[   -​  　\t]""")
     private val MULTIPLE_SPACES = Regex(" {2,}")
     private val HEADING_TYPES = (1..6).map { "heading-$it" }.toSet()
 
@@ -24,7 +23,10 @@ object NewsArticleContentExtractor {
         return lines.map(::normalize).filter { it.isNotEmpty() }.joinToString("\n")
     }
 
-    private fun collectBlock(block: JsonNode, lines: MutableList<String>) {
+    private fun collectBlock(
+        block: JsonNode,
+        lines: MutableList<String>,
+    ) {
         when (val typeName = block.path("__typename").asString("")) {
             "TextBlock" -> {
                 lines += block.path("title").asString("")
@@ -39,16 +41,20 @@ object NewsArticleContentExtractor {
         }
     }
 
-    private fun collectNode(node: JsonNode, lines: MutableList<String>) {
+    private fun collectNode(
+        node: JsonNode,
+        lines: MutableList<String>,
+    ) {
         val nodeType = node.path("nodeType").asString("")
         when {
             nodeType == "paragraph" || nodeType in HEADING_TYPES ->
                 lines += concatText(node).split(LINE_BREAK)
 
             nodeType == "table-row" ->
-                lines += node.path("content").joinToString(" ") { cell ->
-                    concatText(cell).replace(LINE_BREAK, " ")
-                }
+                lines +=
+                    node.path("content").joinToString(" ") { cell ->
+                        concatText(cell).replace(LINE_BREAK, " ")
+                    }
 
             else -> node.path("content").forEach { collectNode(it, lines) }
         }
@@ -59,6 +65,5 @@ object NewsArticleContentExtractor {
         return node.path("content").joinToString("") { concatText(it) }
     }
 
-    private fun normalize(line: String): String =
-        line.replace(SPECIAL_SPACE, " ").replace(MULTIPLE_SPACES, " ").trim()
+    private fun normalize(line: String): String = line.replace(SPECIAL_SPACE, " ").replace(MULTIPLE_SPACES, " ").trim()
 }

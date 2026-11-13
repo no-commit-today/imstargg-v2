@@ -6,9 +6,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.http.client.autoconfigure.HttpClientAutoConfiguration
 import org.springframework.boot.http.client.autoconfigure.imperative.ImperativeHttpClientAutoConfiguration
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.restclient.RestClientCustomizer
 import org.springframework.boot.restclient.autoconfigure.RestClientAutoConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -82,7 +82,12 @@ class AlertConfigTest {
                     "app.alert.discord.webhook-url=http://localhost:${server.address.port}/hook",
                 ).run { context ->
                     val sut = context.getBean(AlertManager::class.java)
-                    val command = AlertCommand.builder().warn().title("제목").build()
+                    val command =
+                        AlertCommand
+                            .builder()
+                            .warn()
+                            .title("제목")
+                            .build()
 
                     // when
                     val start = System.nanoTime()

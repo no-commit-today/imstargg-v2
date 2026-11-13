@@ -23,14 +23,16 @@ class BrawlStarsBlogClientTest {
     private val server = MockRestServiceServer.bindTo(builder).build()
     private val sut = BrawlStarsBlogClient(builder)
 
-    private val link = BrawlStarsNewsArticleLink.of(
-        "/en/games/brawlstars/blog/game-updates/release-notes-november-2026",
-    )
+    private val link =
+        BrawlStarsNewsArticleLink.of(
+            "/en/games/brawlstars/blog/game-updates/release-notes-november-2026",
+        )
 
     @Test
     fun `목록 1쪽을 읽는다`() {
         // given
-        server.expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
+        server
+            .expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess(resource("list-page-1.html"), MediaType.TEXT_HTML))
 
@@ -50,7 +52,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `목록 2쪽은 page 경로로 요청한다`() {
         // given
-        server.expect(requestTo("https://supercell.com/en/games/brawlstars/blog/page/2/"))
+        server
+            .expect(requestTo("https://supercell.com/en/games/brawlstars/blog/page/2/"))
             .andRespond(withSuccess(resource("list-page-1.html"), MediaType.TEXT_HTML))
 
         // when
@@ -63,7 +66,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `글 본문을 JSON 문자열로 돌려준다`() {
         // given
-        server.expect(requestTo(link.linkUrl + "/"))
+        server
+            .expect(requestTo(link.linkUrl + "/"))
             .andRespond(
                 withSuccess(
                     resource("article-release-notes-november-2026.masked.html"),
@@ -85,7 +89,8 @@ class BrawlStarsBlogClientTest {
     fun `문자 인코딩 표시가 없어도 한글과 이모지를 읽는다`() {
         // given
         val html = articleHtml("""[{"type":"TextBlock","title":"한글 ⚖️"}]""")
-        server.expect(requestTo(link.linkUrl + "/"))
+        server
+            .expect(requestTo(link.linkUrl + "/"))
             .andRespond(
                 withStatus(HttpStatus.OK)
                     .contentType(MediaType.parseMediaType("text/html"))
@@ -102,7 +107,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `NEXT_DATA 가 없으면 예외다`() {
         // given
-        server.expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
+        server
+            .expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
             .andRespond(withSuccess("<html><body>없음</body></html>", MediaType.TEXT_HTML))
 
         // when & then
@@ -115,7 +121,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `목록에 글이 없으면 예외다`() {
         // given
-        server.expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
+        server
+            .expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
             .andRespond(
                 withSuccess(
                     nextDataHtml("""{"props":{"pageProps":{"articles":[]}},"page":"/en/games/brawlstars/blog"}"""),
@@ -132,7 +139,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `게시일이 없는 글이 목록에 있으면 예외다`() {
         // given
-        server.expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
+        server
+            .expect(requestTo("https://supercell.com/en/games/brawlstars/blog/"))
             .andRespond(
                 withSuccess(
                     nextDataHtml(
@@ -151,7 +159,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `없는 글의 페이지는 예외다`() {
         // given
-        server.expect(requestTo(link.linkUrl + "/"))
+        server
+            .expect(requestTo(link.linkUrl + "/"))
             .andRespond(
                 withSuccess(
                     nextDataHtml("""{"props":{"pageProps":{}},"page":"/404"}"""),
@@ -169,7 +178,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `글 페이지에 본문이 없으면 예외다`() {
         // given
-        server.expect(requestTo(link.linkUrl + "/"))
+        server
+            .expect(requestTo(link.linkUrl + "/"))
             .andRespond(withSuccess(articleHtml("[]"), MediaType.TEXT_HTML))
 
         // when & then
@@ -181,7 +191,8 @@ class BrawlStarsBlogClientTest {
     @Test
     fun `서버 오류는 그대로 던진다`() {
         // given
-        server.expect(requestTo(link.linkUrl + "/"))
+        server
+            .expect(requestTo(link.linkUrl + "/"))
             .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR))
 
         // when & then
@@ -198,6 +209,5 @@ class BrawlStarsBlogClientTest {
     private fun nextDataHtml(json: String): String =
         """<html><body><script id="__NEXT_DATA__" type="application/json">$json</script></body></html>"""
 
-    private fun resource(name: String): String =
-        ClassPathResource("brawlstars-blog/$name").getContentAsString(Charsets.UTF_8)
+    private fun resource(name: String): String = ClassPathResource("brawlstars-blog/$name").getContentAsString(Charsets.UTF_8)
 }

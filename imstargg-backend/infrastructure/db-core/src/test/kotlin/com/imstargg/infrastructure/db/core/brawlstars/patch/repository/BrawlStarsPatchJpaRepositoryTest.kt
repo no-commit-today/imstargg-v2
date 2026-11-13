@@ -11,7 +11,6 @@ import java.time.LocalDate
 class BrawlStarsPatchJpaRepositoryTest(
     private val repository: BrawlStarsPatchJpaRepository,
 ) : DbCoreContextTest() {
-
     @Test
     fun `같은 패치일을 두 번 저장하면 실패한다`() {
         repository.saveAndFlush(BrawlStarsPatchEntity(LocalDate.of(2026, 12, 1), null))
@@ -30,7 +29,9 @@ class BrawlStarsPatchJpaRepositoryTest(
         val dates = repository.findAllByOrderByPatchDateDesc().map { it.patchDate }
 
         assertThat(dates).containsExactly(
-            LocalDate.of(2026, 12, 20), LocalDate.of(2026, 12, 10), LocalDate.of(2026, 12, 1),
+            LocalDate.of(2026, 12, 20),
+            LocalDate.of(2026, 12, 10),
+            LocalDate.of(2026, 12, 1),
         )
     }
 

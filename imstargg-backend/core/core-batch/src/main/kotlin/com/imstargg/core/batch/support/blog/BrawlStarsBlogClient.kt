@@ -33,7 +33,11 @@ class BrawlStarsBlogClient(
         if (!articles.isArray || articles.isEmpty) {
             throw BrawlStarsBlogPageException("목록에 글이 없다 - $url")
         }
-        return articles.iterator().asSequence().map { toSummary(it, url) }.toList()
+        return articles
+            .iterator()
+            .asSequence()
+            .map { toSummary(it, url) }
+            .toList()
     }
 
     /** 글 페이지의 `bodyCollection` 을 JSON 문자열 그대로 돌려준다. */
@@ -51,15 +55,19 @@ class BrawlStarsBlogClient(
         return jsonMapper.writeValueAsString(bodyCollection)
     }
 
-    private fun toSummary(article: JsonNode, url: String): BrawlStarsBlogArticleSummary {
+    private fun toSummary(
+        article: JsonNode,
+        url: String,
+    ): BrawlStarsBlogArticleSummary {
         val title = article.path("title").asString("").trim()
         val linkUrl = article.path("linkUrl").asString("")
         val publishDate = article.path("publishDate").asString("")
         if (title.isEmpty() || linkUrl.isEmpty()) {
             throw BrawlStarsBlogPageException("목록의 글에 제목이나 주소가 없다 - $url, linkUrl: $linkUrl")
         }
-        val publishedAt = parseInstant(publishDate)
-            ?: throw BrawlStarsBlogPageException("목록의 글에 게시일이 없거나 해석되지 않는다 - $url, linkUrl: $linkUrl, publishDate: $publishDate")
+        val publishedAt =
+            parseInstant(publishDate)
+                ?: throw BrawlStarsBlogPageException("목록의 글에 게시일이 없거나 해석되지 않는다 - $url, linkUrl: $linkUrl, publishDate: $publishDate")
         return BrawlStarsBlogArticleSummary(
             title = title,
             link = BrawlStarsNewsArticleLink.of(linkUrl),
@@ -76,11 +84,17 @@ class BrawlStarsBlogClient(
 
     private fun readNextData(url: String): JsonNode {
         // 응답에 문자 인코딩 표시가 없을 수 있어 바이트로 받아 UTF-8 로 직접 해석한다.
-        val bytes = restClient.get().uri(url).retrieve().body(ByteArray::class.java)
-            ?: throw BrawlStarsBlogPageException("응답 본문이 없다 - $url")
+        val bytes =
+            restClient
+                .get()
+                .uri(url)
+                .retrieve()
+                .body(ByteArray::class.java)
+                ?: throw BrawlStarsBlogPageException("응답 본문이 없다 - $url")
         val html = String(bytes, Charsets.UTF_8)
-        val json = NEXT_DATA_PATTERN.find(html)?.groupValues?.get(1)
-            ?: throw BrawlStarsBlogPageException("__NEXT_DATA__ 가 없다 - $url")
+        val json =
+            NEXT_DATA_PATTERN.find(html)?.groupValues?.get(1)
+                ?: throw BrawlStarsBlogPageException("__NEXT_DATA__ 가 없다 - $url")
         return try {
             jsonMapper.readTree(json)
         } catch (ex: Exception) {

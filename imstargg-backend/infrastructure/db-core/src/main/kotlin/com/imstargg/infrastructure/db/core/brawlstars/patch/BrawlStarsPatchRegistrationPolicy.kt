@@ -13,11 +13,13 @@ object BrawlStarsPatchRegistrationPolicy {
     const val REGISTRATION_DEADLINE_DAYS = 30L
 
     /** 오늘에서 패치일까지가 0일 이상 30일 이하일 때만 참이다. 미래 날짜는 거짓이다. */
-    fun isRegistrable(today: LocalDate, patchDate: LocalDate): Boolean {
+    fun isRegistrable(
+        today: LocalDate,
+        patchDate: LocalDate,
+    ): Boolean {
         val days = ChronoUnit.DAYS.between(patchDate, today)
         return days in 0..REGISTRATION_DEADLINE_DAYS
     }
 
-    fun earliestRegistrableDate(today: LocalDate): LocalDate =
-        today.minusDays(REGISTRATION_DEADLINE_DAYS)
+    fun earliestRegistrableDate(today: LocalDate): LocalDate = today.minusDays(REGISTRATION_DEADLINE_DAYS)
 }

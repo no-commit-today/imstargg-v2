@@ -11,20 +11,19 @@ import java.time.Instant
 class BrawlStarsNewsArticlePreviousFinderTest(
     private val repository: BrawlStarsNewsArticleJpaRepository,
 ) : DbCoreContextTest() {
+    private fun link(slug: String) = BrawlStarsNewsArticleLink.of("/en/games/brawlstars/blog/game-updates/$slug")
 
-    private fun link(slug: String) =
-        BrawlStarsNewsArticleLink.of("/en/games/brawlstars/blog/game-updates/$slug")
-
-    private fun save(slug: String) = repository.saveAndFlush(
-        BrawlStarsNewsArticleEntity(
-            link = link(slug),
-            title = "제목",
-            publishedAt = Instant.parse("2026-11-01T00:00:00Z"),
-            type = BrawlStarsNewsArticleType.OTHER,
-            rawBody = "raw",
-            content = "content",
+    private fun save(slug: String) =
+        repository.saveAndFlush(
+            BrawlStarsNewsArticleEntity(
+                link = link(slug),
+                title = "제목",
+                publishedAt = Instant.parse("2026-11-01T00:00:00Z"),
+                type = BrawlStarsNewsArticleType.OTHER,
+                rawBody = "raw",
+                content = "content",
+            ),
         )
-    )
 
     @Test
     fun `같은 주소의 행이 있으면 주소 키가 같은 더 최근 행보다 그것을 고른다`() {

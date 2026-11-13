@@ -35,7 +35,10 @@ class BrawlStarsPatchEntity(
     var memo: String? = memo
         protected set
 
-    fun update(patchDate: LocalDate, memo: String?) {
+    fun update(
+        patchDate: LocalDate,
+        memo: String?,
+    ) {
         this.patchDate = patchDate
         this.memo = memo
     }
