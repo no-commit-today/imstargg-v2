@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -17,32 +17,35 @@ export default function NewsArticleHistoryPage() {
   const id = Number(params?.id);
   const [detail, setDetail] = useState<NewsArticleDetail | null>(null);
   const [versions, setVersions] = useState<NewsArticleVersion[]>([]);
-  const [loading, setLoading] = useState(false);
   const [failedId, setFailedId] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    if (!Number.isFinite(id)) return;
-    setLoading(true);
-    try {
-      const [d, v] = await Promise.all([getNewsArticleDetail(id), getNewsArticleVersions(id)]);
-      setDetail(d);
-      setVersions(v);
-      setFailedId(null);
-    } catch {
-      toast.error("글을 불러오지 못했습니다.");
-      setFailedId(id);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!Number.isFinite(id)) return;
+    // id 가 바뀌거나 화면을 떠나면 이전 요청의 응답은 버린다
+    let cancelled = false;
+    (async () => {
+      try {
+        const [d, v] = await Promise.all([getNewsArticleDetail(id), getNewsArticleVersions(id)]);
+        if (cancelled) return;
+        setDetail(d);
+        setVersions(v);
+        setFailedId(null);
+      } catch {
+        if (cancelled) return;
+        toast.error("글을 불러오지 못했습니다.");
+        setFailedId(id);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   // id 가 바뀐 직후 이전 글이 잠깐 보이지 않도록 현재 id 의 데이터만 그린다
   const current = detail && detail.id === id ? detail : null;
   const notFound = !Number.isFinite(id) || failedId === id;
+  // 현재 id 의 응답이 아직 없고 실패도 아니면 읽는 중이다
+  const loading = !current && !notFound;
 
   return (
     <AdminLayout>
