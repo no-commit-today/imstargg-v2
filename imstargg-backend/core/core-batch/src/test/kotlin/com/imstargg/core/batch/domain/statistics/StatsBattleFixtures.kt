@@ -2,7 +2,7 @@ package com.imstargg.core.batch.domain.statistics
 
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
@@ -38,7 +38,7 @@ internal fun statsResultBattle(
     teams: List<List<StatsBattleEntityTeamPlayer>>,
     result: String = BattleResult.VICTORY.code,
     type: String = BattleType.RANKED.code,
-    eventModeBrawlStarsId: Long = StatsEventMode.GEM_GRAB.modeBrawlStarsId,
+    eventModeBrawlStarsId: Long = 0L,
     playerBrawlStarsTag: String = teams.first().first().brawlStarsTag,
     starPlayerBrawlStarsTag: String? = null,
 ): StatsResultBattleEntity =
@@ -61,7 +61,7 @@ internal fun statsRankBattle(
     teams: List<List<StatsBattleEntityTeamPlayer>>,
     battleRank: Int = 1,
     type: String = BattleType.RANKED.code,
-    eventModeBrawlStarsId: Long = StatsEventMode.SOLO_SHOWDOWN.modeBrawlStarsId,
+    eventModeBrawlStarsId: Long = 6L,
     playerBrawlStarsTag: String = teams.first().first().brawlStarsTag,
 ): StatsRankBattleEntity =
     StatsRankBattleEntity(
@@ -83,7 +83,7 @@ internal fun threeVsThree(
     opponents: List<Int>,
     result: String = BattleResult.VICTORY.code,
     type: String = BattleType.RANKED.code,
-    eventModeBrawlStarsId: Long = StatsEventMode.GEM_GRAB.modeBrawlStarsId,
+    eventModeBrawlStarsId: Long = 0L,
     opponentNames: List<String> = listOf("Player4", "Player5", "Player6"),
 ): StatsResultBattleEntity =
     statsResultBattle(
@@ -97,9 +97,9 @@ internal fun threeVsThree(
         eventModeBrawlStarsId = eventModeBrawlStarsId,
     )
 
-/** 쇼다운. teamTrophies 의 첫 팀이 수집자 팀이고 그 첫 팀원이 수집자(#TAG1)다. 슬롯 인덱스는 1 부터 팀 순서대로. 모드 id 는 mode 의 것. */
+/** 쇼다운. teamTrophies 의 첫 팀이 수집자 팀이고 그 첫 팀원이 수집자(#TAG1)다. 슬롯 인덱스는 1 부터 팀 순서대로. 모드 ID 는 유형의 시드 값이다. */
 internal fun showdown(
-    mode: StatsEventMode,
+    modeType: StatsEventModeType,
     teamTrophies: List<List<Int>>,
     battleRank: Int = 1,
     type: String = BattleType.RANKED.code,
@@ -110,6 +110,15 @@ internal fun showdown(
         teams = teams,
         battleRank = battleRank,
         type = type,
-        eventModeBrawlStarsId = mode.modeBrawlStarsId,
+        eventModeBrawlStarsId = showdownModeId(modeType),
     )
 }
+
+/** 시드의 쇼다운 모드 ID. 수집 모드 목록은 DB 에 있어 배치 코드에는 없으므로 테스트가 값을 직접 안다. */
+private fun showdownModeId(modeType: StatsEventModeType): Long =
+    when (modeType) {
+        StatsEventModeType.SOLO_SHOWDOWN -> 6L
+        StatsEventModeType.DUO_SHOWDOWN -> 9L
+        StatsEventModeType.TRIO_SHOWDOWN -> 38L
+        StatsEventModeType.RESULT_3VS3 -> error("쇼다운 유형이 아니다: $modeType")
+    }

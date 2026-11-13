@@ -1,10 +1,11 @@
 package com.imstargg.core.batch.domain.statistics
 
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.BattleEventModeResultType
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 
 /**
- * 쇼다운 봇 로비 규칙이 맞게 돌고 있는지 지켜보는 누적기. 모드(솔로·듀오·트리오)별로 센다.
+ * 쇼다운 봇 로비 규칙이 맞게 돌고 있는지 지켜보는 누적기. 유형(솔로·듀오·트리오)별로 센다.
  * 대상은 [StatsBotBattlePolicy.appliesTo] 를 만족하는 전투뿐이고, 적용 범위 밖 전투는 어느 지표에도 세지 않는다.
  *
  * 지표의 뜻(스펙 §3.3):
@@ -28,7 +29,7 @@ class StatsBotLobbyMonitor {
     }
 
     private class ModeSpec(
-        val mode: StatsEventMode,
+        val type: StatsEventModeType,
         val label: String,
         val flaggedWarnBelow: Double,
         val flaggedMinSample: Long,
@@ -38,8 +39,8 @@ class StatsBotLobbyMonitor {
 
     fun record(battle: StatsRankBattleEntity) {
         if (!StatsBotBattlePolicy.appliesTo(battle)) return
-        val mode = StatsEventMode.find(battle.eventModeBrawlStarsId) ?: return
-        val tally = tallies[mode] ?: return
+        val type = StatsEventModeType.find(BattleEventModeResultType.RANK, battle.teams.map { it.size }) ?: return
+        val tally = tallies[type] ?: return
         val first = battle.battleRank == 1
         if (StatsBotBattlePolicy.isBotLobby(battle)) {
             tally.flagged++
@@ -53,7 +54,7 @@ class StatsBotLobbyMonitor {
     /** 솔로·듀오·트리오 순으로 모드마다 걸린 전투 1위 비율, 남은 전투 1위 비율, 걸리는 비중 순이다. */
     fun metrics(): List<StatsBotMonitorMetric> =
         SPECS.flatMap { spec ->
-            val tally = tallies.getValue(spec.mode)
+            val tally = tallies.getValue(spec.type)
             listOf(
                 StatsBotMonitorMetric(
                     name = "${spec.label} 걸린 전투 1위 비율",
@@ -85,7 +86,7 @@ class StatsBotLobbyMonitor {
             listOf(
                 // 걸린 전투 기준선 56.5 ~ 61.8%, 남은 전투 기준선 9.4 ~ 10.8%
                 ModeSpec(
-                    mode = StatsEventMode.SOLO_SHOWDOWN,
+                    type = StatsEventModeType.SOLO_SHOWDOWN,
                     label = "솔로",
                     flaggedWarnBelow = 0.50,
                     flaggedMinSample = 1000,
@@ -94,7 +95,7 @@ class StatsBotLobbyMonitor {
                 ),
                 // 걸린 전투 기준선 76.3 ~ 81.2%, 남은 전투 기준선 18.7 ~ 21.6%
                 ModeSpec(
-                    mode = StatsEventMode.DUO_SHOWDOWN,
+                    type = StatsEventModeType.DUO_SHOWDOWN,
                     label = "듀오",
                     flaggedWarnBelow = 0.70,
                     flaggedMinSample = 500,
@@ -103,7 +104,7 @@ class StatsBotLobbyMonitor {
                 ),
                 // 걸린 전투 기준선 76.0 ~ 85.8%, 남은 전투 기준선 23.5 ~ 28.0%
                 ModeSpec(
-                    mode = StatsEventMode.TRIO_SHOWDOWN,
+                    type = StatsEventModeType.TRIO_SHOWDOWN,
                     label = "트리오",
                     flaggedWarnBelow = 0.70,
                     flaggedMinSample = 300,
@@ -112,6 +113,6 @@ class StatsBotLobbyMonitor {
                 ),
             )
 
-        private val MODES = SPECS.map { it.mode }
+        private val MODES = SPECS.map { it.type }
     }
 }

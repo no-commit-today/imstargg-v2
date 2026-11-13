@@ -3,7 +3,7 @@ package com.imstargg.core.batch.domain.statistics
 import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
-import com.imstargg.core.enums.StatsEventMode
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.infrastructure.db.core.statistics.battle.BaseStatsBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
@@ -12,8 +12,8 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEn
 /**
  * 통계에서 뺄 매치메이킹 봇 전투의 판정 규칙. 집계기는 [isBotBattle]·[isBotLobby] 만 부르고, 감시 누적기는 단계 함수를 함께 쓴다.
  *
- * - 3대3(결과형): 트로피전 2×3 전투에서 상대 세 명의 트로피가 모두 2000 미만이고 모두 수집자 팀 평균의 -75 이상 +25 미만이면 봇 전투다.
- * - 쇼다운(순위형): 수집자 팀을 뺀 팀 중 팀원 전원이 2000 미만인 팀에서, 폭 75 인 트로피 창 하나에 팀째로 드는 팀이
+ * - 3대3(결과형): 트로피전의 2×3 결과형 구성 전투에서 상대 세 명의 트로피가 모두 2000 미만이고 모두 수집자 팀 평균의 -75 이상 +25 미만이면 봇 전투다.
+ * - 쇼다운(순위형): 솔로·듀오·트리오 쇼다운 유형의 팀 구성인 트로피전에서 수집자 팀을 뺀 팀 중 팀원 전원이 2000 미만인 팀에서, 폭 75 인 트로피 창 하나에 팀째로 드는 팀이
  *   솔로 5, 듀오 2, 트리오 2 이상이면 봇 로비다.
  *
  * 모두 순수 함수이고 예외를 던지지 않는다. 조건을 하나라도 만족하지 않으면 `false` 다.
@@ -37,6 +37,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEn
  * - 이름·태그·파워를 판정에 쓰지 않는다. 봇의 표기가 2026년에 두 번(04-22, 06-30) 바뀌었다. 이름은 감시 로그에서만 쓴다.
  * - 2000 미만 조건은 상대 세 명(쇼다운은 팀원 전원)에 건다. 10-29 이전에는 수집자 본인이 2000 이상이어도 팀 평균이 2000 아래면 봇이 붙었고, 이 방식은 그때와 지금
  *   모두 맞는다. 조건을 없애면 2000 이상 전투의 1.09%(실제 팀, 승률 58%)를 지운다.
+ * - 모드 ID 가 아니라 팀 구성으로 유형을 정한다. 수집 모드 목록은 DB 에 있고 배치는 읽지 않는다(2026-11-13 통계 수집 모드 DB 관리 설계 §3.5).
  * - 원본 전투는 그대로 두고 집계 단계에서만 뺀다. 규칙이 추정이라 고친 뒤 다시 집계할 수 있어야 한다.
  * - 로비 단위로 맞추지 않는다. 같은 로비를 다른 수집자가 수집한 행은 경계에서 판정이 갈릴 수 있으나 행 기준 0.2 ~ 0.4% 다.
  *
@@ -66,7 +67,7 @@ object StatsBotBattlePolicy {
 
     private const val RESULT_TEAM_SIZE = 3
 
-    /** 3대3 적용 범위: 트로피전, 결과형 허용 모드, 2×3 팀, 수집자 슬롯 정확히 하나. */
+    /** 3대3 적용 범위: 트로피전, 2×3 결과형 팀 구성, 수집자 슬롯 정확히 하나. */
     fun appliesTo(battle: StatsResultBattleEntity): Boolean = resultTeams(battle) != null
 
     /** 3대3 판정의 상대 세 명 모두 2000 미만. 적용 범위 밖이면 `false` 다. */
@@ -125,9 +126,7 @@ object StatsBotBattlePolicy {
 
     private fun resultTeams(battle: StatsResultBattleEntity): ResultTeams? {
         if (!isTrophyBattle(battle)) return null
-        val mode = StatsEventMode.find(battle.eventModeBrawlStarsId) ?: return null
-        if (mode.resultType != BattleEventModeResultType.RESULT) return null
-        if (battle.teams.size != 2 || battle.teams.any { it.size != RESULT_TEAM_SIZE }) return null
+        StatsEventModeType.find(BattleEventModeResultType.RESULT, battle.teams.map { it.size }) ?: return null
         if (!hasSingleCollectorSlot(battle)) return null
         return ResultTeams(
             collector = battle.playerTeams().single(),
@@ -137,15 +136,14 @@ object StatsBotBattlePolicy {
 
     private fun rankLobby(battle: StatsRankBattleEntity): RankLobby? {
         if (!isTrophyBattle(battle)) return null
-        val mode = StatsEventMode.find(battle.eventModeBrawlStarsId) ?: return null
+        val type = StatsEventModeType.find(BattleEventModeResultType.RANK, battle.teams.map { it.size }) ?: return null
         val threshold =
-            when (mode) {
-                StatsEventMode.SOLO_SHOWDOWN -> SOLO_SHOWDOWN_CLUSTER_THRESHOLD
-                StatsEventMode.DUO_SHOWDOWN -> DUO_SHOWDOWN_CLUSTER_THRESHOLD
-                StatsEventMode.TRIO_SHOWDOWN -> TRIO_SHOWDOWN_CLUSTER_THRESHOLD
-                else -> return null
+            when (type) {
+                StatsEventModeType.SOLO_SHOWDOWN -> SOLO_SHOWDOWN_CLUSTER_THRESHOLD
+                StatsEventModeType.DUO_SHOWDOWN -> DUO_SHOWDOWN_CLUSTER_THRESHOLD
+                StatsEventModeType.TRIO_SHOWDOWN -> TRIO_SHOWDOWN_CLUSTER_THRESHOLD
+                StatsEventModeType.RESULT_3VS3 -> return null
             }
-        if (battle.teams.size != mode.teamCount || battle.teams.any { it.size != mode.teamSize }) return null
         if (!hasSingleCollectorSlot(battle)) return null
         return RankLobby(opponentTeams = battle.enemyTeams(), threshold = threshold)
     }
