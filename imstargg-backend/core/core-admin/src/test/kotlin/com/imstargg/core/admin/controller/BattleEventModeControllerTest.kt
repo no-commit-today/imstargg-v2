@@ -72,4 +72,20 @@ class BattleEventModeControllerTest
                 }.andExpect { status { isOk() } }
             assertThat(statsEventModeJpaRepository.findByEventModeBrawlStarsId(20L)).isNull()
         }
+
+        @Test
+        fun `유형 지정 API 는 본문에 type 키가 없으면 400 이고 행을 그대로 둔다`() {
+            // given
+            battleEventModeJpaRepository.save(BattleEventModeEntity(brawlStarsId = 20L, brawlStarsName = "knockout"))
+            statsEventModeJpaRepository.save(StatsEventModeEntity(20L, StatsEventModeType.RESULT_3VS3))
+
+            // when & then
+            mockMvc
+                .put("/event-modes/20/stats-type") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = "{}"
+                }.andExpect { status { isBadRequest() } }
+            assertThat(statsEventModeJpaRepository.findByEventModeBrawlStarsId(20L)?.type)
+                .isEqualTo(StatsEventModeType.RESULT_3VS3)
+        }
     }
