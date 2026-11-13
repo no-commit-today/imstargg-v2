@@ -15,6 +15,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.JdbcTemplate
 import java.time.Instant
 import java.time.LocalDate
@@ -242,6 +243,49 @@ class PatchStatsWriterTest(
         assertThatThrownBy {
             writer.subtractLast(resultTable, patchId, checkpoint.id!!, 0L, listOf(count(keyA, 3, 1, 0, 4, 1)))
         }.isInstanceOf(IllegalStateException::class.java)
+        assertThat(resultStats()).isEqualTo(statsBefore)
+        assertThat(findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()).isEqualTo(checkpointBefore)
+    }
+
+    @Test
+    fun `마지막 날을 빼다 실패하면 체크포인트 줄이 남고 아무것도 바뀌지 않는다`() {
+        // given
+        val checkpoint = createCheckpoint(StatsType.BRAWLER_BATTLE_RESULT)
+        writer.add(resultTable, patchId, update(checkpoint, 100L), listOf(count(keyA, 3, 1, 0, 4, 1)))
+        val statsBefore = resultStats()
+        val checkpointBefore = findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()
+
+        // when & then: 체크포인트 줄은 지워진 뒤 없는 키(keyC)에서 실패한다
+        assertThatThrownBy {
+            writer.subtractLast(
+                resultTable,
+                patchId,
+                checkpoint.id!!,
+                1L,
+                listOf(count(keyA, 1, 0, 0, 1, 0), count(keyC, 1, 0, 0, 1, 0)),
+            )
+        }.isInstanceOf(IllegalStateException::class.java)
+        assertThat(resultStats()).isEqualTo(statsBefore)
+        assertThat(findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()).isEqualTo(checkpointBefore)
+    }
+
+    @Test
+    fun `더하다 실패하면 체크포인트 줄도 되돌아가고 아무것도 바뀌지 않는다`() {
+        // given
+        val checkpoint = createCheckpoint(StatsType.BRAWLER_BATTLE_RESULT)
+        writer.add(resultTable, patchId, update(checkpoint, 100L), listOf(count(keyA, 3, 1, 0, 4, 1)))
+        val statsBefore = resultStats()
+        val checkpointBefore = findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()
+
+        // when & then: 체크포인트 갱신과 keyA 더하기는 된 뒤, 같은 새 키(keyB)를 두 번 넣다 유니크 위반으로 실패한다
+        assertThatThrownBy {
+            writer.add(
+                resultTable,
+                patchId,
+                update(checkpoint, 200L, version = 1L),
+                listOf(count(keyA, 1, 0, 0, 1, 0), count(keyB, 0, 2, 0, 2, 0), count(keyB, 0, 2, 0, 2, 0)),
+            )
+        }.isInstanceOf(DuplicateKeyException::class.java)
         assertThat(resultStats()).isEqualTo(statsBefore)
         assertThat(findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()).isEqualTo(checkpointBefore)
     }
