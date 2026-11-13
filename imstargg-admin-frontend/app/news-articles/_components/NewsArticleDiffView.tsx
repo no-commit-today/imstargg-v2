@@ -22,7 +22,8 @@ export function NewsArticleDiffView({ previousContent, content }: NewsArticleDif
     );
   }
 
-  const changes = diffLines(previousContent, content);
+  // 본문은 끝 개행이 없어 그대로 견주면 끝에 줄이 붙거나 빠질 때 마지막 줄을 삭제 + 추가로 본다
+  const changes = diffLines(previousContent + "\n", content + "\n");
 
   if (changes.every((change) => !change.added && !change.removed)) {
     return <p className="text-sm text-neutral-500">직전 판과 본문이 같습니다.</p>;
