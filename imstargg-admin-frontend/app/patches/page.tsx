@@ -27,6 +27,7 @@ export default function PatchesPage() {
   const [data, setData] = useState<BrawlStarsPatchList | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BrawlStarsPatch | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,6 +46,7 @@ export default function PatchesPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
     try {
       await deletePatch(deleteTarget.id);
       toast.success("패치일이 삭제되었습니다.");
@@ -52,6 +54,8 @@ export default function PatchesPage() {
       load();
     } catch {
       toast.error("삭제에 실패했습니다.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -120,7 +124,11 @@ export default function PatchesPage() {
                           <Button variant="outline" onClick={() => setDeleteTarget(null)}>
                             취소
                           </Button>
-                          <Button variant="destructive" onClick={handleDelete}>
+                          <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={deletingId === p.id}
+                          >
                             삭제
                           </Button>
                         </div>
