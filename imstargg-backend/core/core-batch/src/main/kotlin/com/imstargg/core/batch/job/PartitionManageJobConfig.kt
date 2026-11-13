@@ -15,10 +15,13 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import java.sql.Date
-import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
+/**
+ * 원본 전투의 일 파티션을 만들고 지운다.
+ * 조합 통계의 월 파티션은 패치 기준 통계 1단계부터 관리하지 않는다(새 테이블은 파티션이 없다).
+ */
 @Configuration
 class PartitionManageJobConfig(
     private val jobRepository: JobRepository,
@@ -30,8 +33,6 @@ class PartitionManageJobConfig(
         const val DATE_PARAMETER_NAME = "partitionManageJobDateJobParameter"
         private const val CREATE_STEP_NAME = "partitionCreateStep"
         private const val DROP_STEP_NAME = "partitionDropStep"
-        private const val MONTH_CREATE_STEP_NAME = "monthPartitionCreateStep"
-        private const val MONTH_DROP_STEP_NAME = "monthPartitionDropStep"
         private const val DAYS_AHEAD = 7
 
         /**
@@ -43,22 +44,6 @@ class PartitionManageJobConfig(
          * 원본에서 다시 읽으므로 보관이 그보다 짧으면 통계가 불완전해진다 — 가드: PartitionRetentionLookbackTest
          */
         const val RETENTION_DAYS = 45
-
-        /**
-         * 조합 통계 3종(pair·trio·enemy)의 월 파티션. 삭제 경계는 API 최대 조회 범위 SINCE_LAST_MONTH 와 같다 —
-         * 가드: MonthPartitionRetentionTest
-         *
-         * 이번 달에 더해 [MONTHS_AHEAD] 달 뒤까지 미리 만든다.
-         */
-        const val MONTHS_AHEAD = 1
-
-        /**
-         * 월 파티션 삭제 경계 — [date] 가 속한 달의 1일에서 한 달을 뺀 날짜(지난달 1일).
-         * 이 날짜가 속한 달보다 이전 달의 파티션을 드롭한다.
-         * SQL `drop_old_month_partitions` 의 `date_trunc('month', base_date) - interval '1 month'` 와 같은 경계다.
-         * 이 경계는 API `SINCE_LAST_MONTH` 의 시작일(지난달 1일)과 같아서, API 가 읽을 수 있는 구간은 지워지지 않는다.
-         */
-        fun monthRetentionCutoff(date: LocalDate): LocalDate = date.withDayOfMonth(1).minusMonths(1)
     }
 
     @Bean(DATE_PARAMETER_NAME)
@@ -75,8 +60,6 @@ class PartitionManageJobConfig(
                 ),
             ).start(partitionCreateStep())
             .next(partitionDropStep())
-            .next(monthPartitionCreateStep())
-            .next(monthPartitionDropStep())
             .build()
 
     @Bean(CREATE_STEP_NAME)
@@ -111,41 +94,6 @@ class PartitionManageJobConfig(
                     RETENTION_DAYS,
                 )
                 log.info { "오래된 파티션 삭제 완료" }
-                RepeatStatus.FINISHED
-            }, txManager)
-            .build()
-
-    @Bean(MONTH_CREATE_STEP_NAME)
-    @JobScope
-    fun monthPartitionCreateStep(): Step =
-        StepBuilder(MONTH_CREATE_STEP_NAME, jobRepository)
-            .tasklet({ _, _ ->
-                val date = dateJobParameter().date!!
-                log.info { "월 파티션 생성 시작. date=$date, monthsAhead=$MONTHS_AHEAD" }
-                jdbcTemplate.queryForObject(
-                    "SELECT create_month_partitions(?, ?)",
-                    Any::class.java,
-                    Date.valueOf(date),
-                    MONTHS_AHEAD,
-                )
-                log.info { "월 파티션 생성 완료" }
-                RepeatStatus.FINISHED
-            }, txManager)
-            .build()
-
-    @Bean(MONTH_DROP_STEP_NAME)
-    @JobScope
-    fun monthPartitionDropStep(): Step =
-        StepBuilder(MONTH_DROP_STEP_NAME, jobRepository)
-            .tasklet({ _, _ ->
-                val date = dateJobParameter().date!!
-                log.info { "월 파티션 삭제 시작. date=$date, cutoffMonth=${monthRetentionCutoff(date)}" }
-                jdbcTemplate.queryForObject(
-                    "SELECT drop_old_month_partitions(?)",
-                    Any::class.java,
-                    Date.valueOf(date),
-                )
-                log.info { "월 파티션 삭제 완료" }
                 RepeatStatus.FINISHED
             }, txManager)
             .build()

@@ -267,7 +267,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 | 테이블 유형 | 파티션 | 보관 기간 | 삭제 조건 |
 |-------------|--------|----------|----------|
 | Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 45일 (`RETENTION_DAYS`) | `date - 45일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
-| 조합 통계 (`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`) |
+| 조합 통계 (`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`; 패치 기준 통계 1단계부터 부르지 않음) |
 
 - 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 주간 통계 최대 룩백과 패치일 등록 기한(30일)을 모두 덮도록 45일 보관한다.
 - 조합 통계의 삭제 경계는 API 가 읽는 가장 오래된 날짜(`StatsDateRange.SINCE_LAST_MONTH`, 지난달 1일)와 같다. `date` 가 속한 달의 1일에서 한 달을 뺀 날짜가 속한 달보다 이른 파티션이 지워진다. 예) 2026-11-01 실행이면 2026-09 까지 삭제하고 2026-10 은 남는다. 월 단위 DROP 은 블로트를 남기지 않는다.
@@ -294,6 +294,8 @@ SELECT drop_old_partitions('2025-01-24', 45);
 
 ### 7.3 월 파티션 (조합 통계)
 
+> 패치 기준 통계 1단계부터 `partitionManageJob` 은 월 파티션 함수를 부르지 않는다. 옛 조합 테이블(`_backup`)에는 이번 달과 다음 달 파티션까지만 있다. 아래는 옛 동작의 기록이다(전면 개정은 2단계).
+
 ```sql
 -- 조합 통계 3종: 2026-11 부터 1달 뒤(2026-12)까지 월 파티션 생성 (MONTHS_AHEAD = 1)
 SELECT create_month_partitions('2026-11-05', 1);
@@ -302,7 +304,7 @@ SELECT create_month_partitions('2026-11-05', 1);
 SELECT drop_old_month_partitions('2026-11-05');
 ```
 
-- `partitionManageJob` 은 일별 스텝 둘(`create_partitions`, `drop_old_partitions`) 뒤에 월 스텝 둘(`create_month_partitions`, `drop_old_month_partitions`)을 실행한다.
+- (옛 동작) `partitionManageJob` 은 일별 스텝 둘(`create_partitions`, `drop_old_partitions`) 뒤에 월 스텝 둘(`create_month_partitions`, `drop_old_month_partitions`)을 실행했다. 지금은 일별 스텝 둘만 실행한다.
 - 월 파티션 이름은 `{table}_p_YYYYMM`(6자리), 일 파티션은 `_p_YYYYMMDD`(8자리)라 두 삭제 함수의 정규식이 겹치지 않는다.
 - default 파티션이 없으므로 파티션이 없는 달의 행은 삽입에 실패한다. 다음 달 파티션을 `MONTHS_AHEAD` 로 미리 만들어 두는 이유다.
 - **`partition-manage.sql` 은 앱이 적용하지 않는다.** 함수를 바꾸는 배포는 새 core-batch 이미지가 돌기 전에 운영자가 DB 에 직접 적용해야 한다(파일은 `DROP FUNCTION IF EXISTS` + `CREATE OR REPLACE` 라 여러 번 적용해도 같은 결과). 적용하지 않으면 다음 날 02:00 `partitionManageJob` 의 월 스텝이 `function does not exist` 로 실패한다.
@@ -310,7 +312,7 @@ SELECT drop_old_month_partitions('2026-11-05');
 ### 7.4 운영 권장 사항
 
 1. **자동화**: 파티션 추가/삭제는 `partitionManageJob` 으로 자동화
-2. **미리 생성**: 일 파티션은 7일 앞(`DAYS_AHEAD`), 월 파티션은 다음 달(`MONTHS_AHEAD`)까지 미리 생성
+2. **미리 생성**: 일 파티션은 7일 앞(`DAYS_AHEAD`)까지 미리 생성(월 파티션은 1단계부터 관리하지 않는다)
 3. **모니터링**: 파티션 크기 및 개수 모니터링
 4. **백업**: 파티션 삭제 전 필요시 백업 수행
 
