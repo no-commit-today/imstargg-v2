@@ -6,6 +6,7 @@ import com.imstargg.infrastructure.db.core.statistics.StatsEventModeEntity
 import com.imstargg.infrastructure.db.core.statistics.repository.StatsEventModeJpaRepository
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -25,6 +26,7 @@ class StatsEventModeReloadSchedulerTest {
         sut.reload()
 
         // then
+        verify(exactly = 2) { repository.findAll() }
         assertThat(snapshot.find(20L)).isEqualTo(StatsEventModeType.RESULT_3VS3)
     }
 }
