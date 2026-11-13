@@ -40,7 +40,7 @@ import java.time.ZoneId
 
 class PatchStatsTaskTest(
     entityManagerFactory: EntityManagerFactory,
-    jdbcTemplate: JdbcTemplate,
+    private val jdbcTemplate: JdbcTemplate,
     resultBattleJpaRepository: StatsResultBattleJpaRepository,
     rankBattleJpaRepository: StatsRankBattleJpaRepository,
     private val patchJpaRepository: BrawlStarsPatchJpaRepository,
@@ -329,6 +329,34 @@ class PatchStatsTaskTest(
             assertThat(after.lastBattleAt).isEqualTo(before.lastBattleAt)
         }
         assertResultStats(patch1111, range1111)
+    }
+
+    @Test
+    fun `상한 id 가 체크포인트보다 작으면 읽지 않고 체크포인트를 내리지 않는다`() {
+        // given
+        val (patch1103, patch1111) = savePatches(LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 11))
+        saveResult(LocalDate.of(2026, 11, 4))
+        val cap = saveResult(LocalDate.of(2026, 11, 13))
+        task().execute(aggregations.brawlerBattleResult)
+        val raised = cap.id!! + 100
+        jdbcTemplate.update(
+            "update stats_checkpoint set last_read_battle_id = ? where stats_checkpoint_id = ?",
+            raised,
+            resultCheckpointOf(patch1111).id,
+        )
+        val before = resultCheckpointOf(patch1111)
+        val statsBefore = resultStatsOf(patch1111)
+
+        // when
+        task().execute(aggregations.brawlerBattleResult)
+
+        // then
+        val after = resultCheckpointOf(patch1111)
+        assertThat(after.lastReadBattleId).isEqualTo(raised)
+        assertThat(after.version).isEqualTo(before.version)
+        assertThat(statsBefore).isNotEmpty
+        assertThat(resultStatsOf(patch1111)).isEqualTo(statsBefore)
+        assertThat(resultCheckpointOf(patch1103).lastReadBattleId).isEqualTo(cap.id)
     }
 
     @Test

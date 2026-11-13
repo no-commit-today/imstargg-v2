@@ -119,6 +119,41 @@ class PatchStatsRangeAlignTest(
     }
 
     @Test
+    fun `패치일을 앞으로 고치면 앞 패치는 줄고 그 패치는 넓어진다`() {
+        // given
+        saveBattlesEveryDay()
+        val patch1103 = savePatch(date(3))
+        val patch1111 = savePatch(date(11))
+        task().execute(aggregation)
+        patchJpaRepository.save(
+            patchJpaRepository.findById(patch1111).orElseThrow().apply { update(date(9), null) },
+        )
+        val recordingReader = RecordingBattleReader(resultReader)
+        val recordingAggregation =
+            PatchStatsAggregation(
+                aggregation.statsType,
+                aggregation.jobName,
+                aggregation.table,
+                recordingReader,
+                aggregation.createAggregator,
+            )
+
+        // when
+        task().execute(recordingAggregation)
+
+        // then
+        assertThat(assertStats(patch1103, PatchDateRange(date(4), date(8)))).isNotEmpty
+        assertThat(assertStats(patch1111, PatchDateRange(date(10), null))).isNotEmpty
+        // 앞 패치는 바깥쪽 날부터 빼고, 고친 패치는 범위에 붙은 날부터 더한다. 새 전투가 없어 평소 읽기는 없다.
+        assertThat(recordingReader.dateRanges).containsExactly(
+            PatchDateRange(date(10), date(10)),
+            PatchDateRange(date(9), date(9)),
+            PatchDateRange(date(11), date(11)),
+            PatchDateRange(date(10), date(10)),
+        )
+    }
+
+    @Test
     fun `패치를 사이에 끼워 넣으면 앞 패치가 줄고 끼운 패치가 처음부터 채워진다`() {
         // given
         saveBattlesEveryDay()

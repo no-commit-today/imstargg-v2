@@ -83,11 +83,11 @@ class PatchStatsBotMonitorTest(
 
     @Test
     fun `경고 지표가 있으면 실행당 한 번 알린다`() {
-        // given
+        // given: 두 패치 모두에서 평소 읽기가 일어나게 한다(패치당 한 번 알리는 회귀를 잡는다).
         savePatch(LocalDate.of(2026, 11, 3))
-        saveResult(LocalDate.of(2026, 11, 4))
-        saveResult(LocalDate.of(2026, 11, 13))
-        saveResult(LocalDate.of(2026, 11, 14))
+        savePatch(LocalDate.of(2026, 11, 11))
+        val in1103 = listOf(saveResult(LocalDate.of(2026, 11, 4)), saveResult(LocalDate.of(2026, 11, 5)))
+        val in1111 = listOf(saveResult(LocalDate.of(2026, 11, 13)), saveResult(LocalDate.of(2026, 11, 14)))
         val monitor = RecordingMonitor(listOf(warningMetric, calmMetric))
         val command = slot<AlertCommand>()
 
@@ -99,6 +99,7 @@ class PatchStatsBotMonitorTest(
         assertThat(command.captured.title).endsWith("[testPatchStatsJob] 봇 전투 규칙 이상 감지")
         assertThat(command.captured.content).isEqualTo(warningMetric.describe())
         assertThat(monitor.summaryCount).isEqualTo(1)
+        assertThat(monitor.recorded.map { it.id }).containsExactlyInAnyOrderElementsOf((in1103 + in1111).map { it.id })
     }
 
     @Test

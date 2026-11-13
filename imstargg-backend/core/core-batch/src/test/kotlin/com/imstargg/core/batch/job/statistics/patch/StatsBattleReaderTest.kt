@@ -38,17 +38,17 @@ class StatsBattleReaderTest(
 
     @Test
     fun `저장된 지 오래된 전투 중 가장 큰 id 가 상한이다`() {
-        // given
+        // given: 저장 순서와 created_at 순서를 엇갈리게 둔다. created_at 이 가장 늦은 줄은 old1 이다.
         val date = LocalDate.of(2026, 11, 5)
-        val old1 = saveResult(date, "k1", createdAt.minusSeconds(900))
-        val old2 = saveResult(date, "k2", createdAt.minusSeconds(700))
+        val old1 = saveResult(date, "k1", createdAt.minusSeconds(100))
+        val old2 = saveResult(date, "k2", createdAt.minusSeconds(900))
         saveResult(date, "k3", createdAt.plusSeconds(60))
 
         // when
         val cap = resultReader.findBattleIdCap(createdAt, date)
 
         // then
-        assertThat(cap).isEqualTo(maxOf(old1.id!!, old2.id!!))
+        assertThat(old1.id).isLessThan(old2.id)
         assertThat(cap).isEqualTo(old2.id)
     }
 
@@ -153,6 +153,113 @@ class StatsBattleReaderTest(
         assertThat(rankReader.findEarliestBattleDate()).isEqualTo(LocalDate.of(2026, 11, 2))
         assertThat(ids).containsExactly(inRange.id, cap.id)
         assertThat(ids).doesNotContain(before.id)
+    }
+
+    @Test
+    fun `순위형도 저장된 지 오래된 전투 중 가장 큰 id 가 상한이다`() {
+        // given: 저장 순서와 created_at 순서를 엇갈리게 둔다. created_at 이 가장 늦은 줄은 old1 이다.
+        val date = LocalDate.of(2026, 11, 5)
+        val old1 = saveRank(date, "k1", createdAt.minusSeconds(100))
+        val old2 = saveRank(date, "k2", createdAt.minusSeconds(900))
+        saveRank(date, "k3", createdAt.plusSeconds(60))
+
+        // when
+        val cap = rankReader.findBattleIdCap(createdAt, date)
+
+        // then
+        assertThat(old1.id).isLessThan(old2.id)
+        assertThat(cap).isEqualTo(old2.id)
+    }
+
+    @Test
+    fun `순위형도 기준 날짜보다 앞선 전투만 있으면 상한이 없다`() {
+        // given
+        saveRank(LocalDate.of(2026, 11, 1), "k1", createdAt.minusSeconds(900))
+
+        // when
+        val cap = rankReader.findBattleIdCap(createdAt, LocalDate.of(2026, 11, 2))
+
+        // then
+        assertThat(cap).isNull()
+    }
+
+    @Test
+    fun `순위형도 남아 있는 가장 이른 전투 날짜를 준다`() {
+        // given
+        saveRank(LocalDate.of(2026, 11, 5), "k1", createdAt)
+        saveRank(LocalDate.of(2026, 11, 3), "k2", createdAt)
+        saveRank(LocalDate.of(2026, 11, 8), "k3", createdAt)
+
+        // when
+        val earliest = rankReader.findEarliestBattleDate()
+
+        // then
+        assertThat(earliest).isEqualTo(LocalDate.of(2026, 11, 3))
+    }
+
+    @Test
+    fun `순위형도 원본이 없으면 가장 이른 날짜가 없다`() {
+        assertThat(rankReader.findEarliestBattleDate()).isNull()
+    }
+
+    @Test
+    fun `순위형도 날짜 범위 안에서 체크포인트 뒤부터 상한까지 id 순으로 읽는다`() {
+        // given
+        val before = saveRank(LocalDate.of(2026, 11, 2), "k0", createdAt)
+        val atCheckpoint = saveRank(LocalDate.of(2026, 11, 4), "k1", createdAt)
+        val inRange1 = saveRank(LocalDate.of(2026, 11, 5), "k2", createdAt)
+        val outOfRange = saveRank(LocalDate.of(2026, 11, 9), "k3", createdAt)
+        val inRange2 = saveRank(LocalDate.of(2026, 11, 6), "k4", createdAt)
+        val atCap = saveRank(LocalDate.of(2026, 11, 8), "k5", createdAt)
+        val overCap = saveRank(LocalDate.of(2026, 11, 7), "k6", createdAt)
+        val range = PatchDateRange(LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 8))
+
+        // when
+        val ids = readRankIds(range, afterBattleId = atCheckpoint.id!!, battleIdCap = atCap.id!!)
+
+        // then
+        assertThat(ids).containsExactly(inRange1.id, inRange2.id, atCap.id)
+        assertThat(ids).doesNotContain(before.id, outOfRange.id, overCap.id)
+    }
+
+    @Test
+    fun `순위형도 끝이 없는 범위는 시작 날짜 뒤를 모두 읽는다`() {
+        // given
+        saveRank(LocalDate.of(2026, 11, 2), "k0", createdAt)
+        val a = saveRank(LocalDate.of(2026, 11, 3), "k1", createdAt)
+        val b = saveRank(LocalDate.of(2026, 12, 25), "k2", createdAt)
+        val range = PatchDateRange(LocalDate.of(2026, 11, 3), null)
+
+        // when
+        val ids = readRankIds(range, afterBattleId = 0L, battleIdCap = b.id!!)
+
+        // then
+        assertThat(ids).containsExactly(a.id, b.id)
+    }
+
+    @Test
+    fun `순위형도 쪽 경계를 넘겨도 빠지거나 겹치지 않는다`() {
+        // given
+        val saved = (1..5).map { saveRank(LocalDate.of(2026, 11, 5), "k$it", createdAt) }
+        val range = PatchDateRange(LocalDate.of(2026, 11, 3), null)
+        val pages = mutableListOf<List<Long>>()
+
+        // when
+        rankReader.read(range, 0L, saved.last().id!!) { battles -> pages.add(battles.map { it.id!! }) }
+
+        // then
+        assertThat(pages).hasSize(3)
+        assertThat(pages.flatten()).containsExactlyElementsOf(saved.map { it.id })
+    }
+
+    private fun readRankIds(
+        range: PatchDateRange,
+        afterBattleId: Long,
+        battleIdCap: Long,
+    ): List<Long> {
+        val ids = mutableListOf<Long>()
+        rankReader.read(range, afterBattleId, battleIdCap) { battles -> ids.addAll(battles.map { it.id!! }) }
+        return ids
     }
 
     private fun readIds(
