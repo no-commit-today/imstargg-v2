@@ -498,7 +498,7 @@ class PatchStatsWriter(jdbcTemplate: JdbcTemplate, txManager: PlatformTransactio
     - "패치를 지우면 그 패치의 통계 줄과 체크포인트 줄만 사라진다"(다른 패치의 줄은 남는다)
     - "한 묶음보다 많은 키도 모두 쓴다"(키 1,001개)
 - [ ] **Step 2: 실패를 확인한다.** `./gradlew :core:core-batch:test --tests '*BatchUpdateCountsTest' --tests '*PatchStatsWriterTest'` → 컴파일 실패.
-- [ ] **Step 3: 네 클래스를 만든다.** `TransactionTemplate(txManager)` 에 `PROPAGATION_REQUIRES_NEW` 를 건다. SQL 문자열은 `PatchStatsTable` 의 컬럼 목록으로 조립한다(값은 모두 바인딩한다). `null` 일 수 있는 날짜와 일시는 SQL 타입을 명시해 넘긴다(`Types.DATE`, `Types.TIMESTAMP_WITH_TIMEZONE`). 묶음은 `BattleStatsConstants.BATCH_SIZE` 줄씩 `batchUpdate` 한다.
+- [ ] **Step 3: 네 클래스를 만든다.** `TransactionTemplate(txManager)` 에 `PROPAGATION_REQUIRES_NEW` 를 건다. SQL 문자열은 `PatchStatsTable` 의 컬럼 목록으로 조립한다(값은 모두 바인딩한다). `null` 일 수 있는 날짜와 일시는 SQL 타입을 명시해 넘긴다(`Types.DATE`, `Types.TIMESTAMP_WITH_TIMEZONE`). `Instant` 는 `OffsetDateTime`(UTC)으로 바꿔 넘긴다(PostgreSQL 드라이버가 `Instant` 를 직접 받지 않는다. H2 테스트로는 드러나지 않고 Task 13 이 확인한다). 묶음은 `BattleStatsConstants.BATCH_SIZE` 줄씩 `batchUpdate` 한다.
 - [ ] **Step 4: 통과를 확인한다.** 위 명령 → 통과. "없던 키는 넣고 있던 키는 더한다"가 통과하면 스펙 12장의 첫 항목(H2 에서 두 단계 쓰기)이 닫힌다. `ktlintFormat`, `ktlintCheck`.
 - [ ] **Step 5: 커밋한다.** `feat(backend): 패치 통계 줄과 체크포인트 줄을 한 트랜잭션으로 쓴다`
 
