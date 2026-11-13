@@ -2,9 +2,9 @@ package com.imstargg.core.batch.domain.news
 
 import com.imstargg.core.batch.support.alert.AlertCommand
 import com.imstargg.core.enums.BrawlStarsNewsArticleType
+import com.imstargg.infrastructure.db.core.KOREA_ZONE
 import com.imstargg.infrastructure.db.core.brawlstars.news.BrawlStarsNewsArticleEntity
 import java.time.Instant
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
@@ -13,9 +13,8 @@ import java.time.format.DateTimeFormatter
  * 시각은 `yyyy-MM-dd HH:mm KST`, 게시일은 KST 날짜 `yyyy-MM-dd` 로 적는다. 본문은 싣지 않는다.
  */
 object NewsArticleAlertMessage {
-    private val KST = ZoneId.of("Asia/Seoul")
-    private val DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'KST'").withZone(KST)
-    private val DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(KST)
+    private val DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'KST'").withZone(KOREA_ZONE)
+    private val DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(KOREA_ZONE)
 
     fun newArticle(
         article: BrawlStarsNewsArticleEntity,

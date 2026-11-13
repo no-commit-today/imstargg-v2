@@ -100,6 +100,23 @@ class NewsArticleAlertMessageTest {
     }
 
     @Test
+    fun `새 글 알림의 게시일은 KST 날짜로 적는다`() {
+        val command =
+            NewsArticleAlertMessage.newArticle(
+                article = article(publishedAt = "2026-11-10T16:00:00Z"),
+                detectedAt = Instant.parse("2026-11-10T16:30:00Z"),
+            )
+
+        assertThat(command.content).isEqualTo(
+            """
+            $url
+            게시일 2026-11-11
+            감지 2026-11-11 01:30 KST
+            """.trimIndent(),
+        )
+    }
+
+    @Test
     fun `첫 실행 요약은 글 수와 릴리스 노트 수와 가장 최근 릴리스 노트를 담는다`() {
         val oldNote =
             article(path = "/en/games/brawlstars/blog/game-updates/old", title = "Old Notes", publishedAt = "2026-10-01T03:00:00Z")
