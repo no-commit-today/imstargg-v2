@@ -223,12 +223,34 @@ class PatchStatsWriterTest(
             patchId,
             checkpoint.id!!,
             1L,
-            listOf(count(keyA, 3, 1, 0, 4, 1), count(keyB, 0, 1, 0, 1, 0)),
+            listOf(count(keyA, 3, 1, 0, 4, 1), count(keyB, 0, 2, 0, 2, 0)),
         )
 
         // then
-        assertThat(resultStats()).isEqualTo(mapOf(keyB.asStrings() to listOf(0L, 1L, 0L, 1L, 0L)))
+        assertThat(resultStats()).isEmpty()
         assertThat(checkpointJpaRepository.findAllByStatsType(StatsType.BRAWLER_BATTLE_RESULT)).isEmpty()
+    }
+
+    @Test
+    fun `마지막 날을 뺀 뒤에 줄이 남으면 실패하고 아무것도 바뀌지 않는다`() {
+        // given
+        val checkpoint = createCheckpoint(StatsType.BRAWLER_BATTLE_RESULT)
+        writer.add(
+            resultTable,
+            patchId,
+            update(checkpoint, 100L),
+            listOf(count(keyA, 3, 1, 0, 4, 1), count(keyB, 0, 2, 0, 2, 0)),
+        )
+        val statsBefore = resultStats()
+        val checkpointBefore = findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()
+
+        // when & then: keyA 는 0 이 되어 지워지지만 keyB 가 남는다
+        assertThatThrownBy {
+            writer.subtractLast(resultTable, patchId, checkpoint.id!!, 1L, listOf(count(keyA, 3, 1, 0, 4, 1)))
+        }.isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("remaining=1")
+        assertThat(resultStats()).isEqualTo(statsBefore)
+        assertThat(findCheckpoint(StatsType.BRAWLER_BATTLE_RESULT).snapshot()).isEqualTo(checkpointBefore)
     }
 
     @Test

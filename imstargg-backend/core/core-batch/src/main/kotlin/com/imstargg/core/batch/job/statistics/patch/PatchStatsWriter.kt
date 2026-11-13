@@ -88,7 +88,12 @@ class PatchStatsWriter(
         }
     }
 
-    /** 범위의 마지막 날을 뺀다. 체크포인트 줄을 지운다. */
+    /**
+     * 범위의 마지막 날을 뺀다. 체크포인트 줄을 지운다.
+     *
+     * 빼고 나서 그 패치의 통계 줄이 남아 있으면 실패한다(통계와 원본이 어긋난 것이다).
+     * 같은 트랜잭션이라 체크포인트 줄도 되돌아간다.
+     */
     fun subtractLast(
         table: PatchStatsTable,
         brawlStarsPatchId: Long,
@@ -103,6 +108,15 @@ class PatchStatsWriter(
             }
             subtractFromRows(table = table, brawlStarsPatchId = brawlStarsPatchId, counts = counts)
             deleteZeroRows(table, brawlStarsPatchId)
+            val remaining =
+                jdbcTemplate.queryForObject(
+                    "select count(*) from ${table.name} where brawlstars_patch_id = ?",
+                    Long::class.java,
+                    brawlStarsPatchId,
+                )
+            check(remaining == 0L) {
+                "마지막 날을 뺀 뒤에도 통계 줄이 남았다. brawlStarsPatchId=$brawlStarsPatchId, remaining=$remaining"
+            }
         }
     }
 
