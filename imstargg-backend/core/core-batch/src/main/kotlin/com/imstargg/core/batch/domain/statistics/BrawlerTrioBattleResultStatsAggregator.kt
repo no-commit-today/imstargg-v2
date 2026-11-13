@@ -4,7 +4,7 @@ import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 import java.time.LocalDate
@@ -31,7 +31,7 @@ import java.time.LocalDate
 class BrawlerTrioBattleResultStatsAggregator(
     private val startBattleDate: LocalDate,
     private val endBattleDate: LocalDate,
-) : BattleStatsAggregator<StatsResultBattleEntity, BrawlerTrioBattleResultStatsEntity> {
+) : BattleStatsAggregator<StatsResultBattleEntity, BrawlerTrioBattleResultStatsBackupEntity> {
     private val resultCounts = ResultCountAccumulator<BrawlerTrioBattleStatsKey>()
 
     override fun aggregate(battle: StatsResultBattleEntity) {
@@ -73,10 +73,10 @@ class BrawlerTrioBattleResultStatsAggregator(
         }
     }
 
-    override fun forEachEntity(consumer: (BrawlerTrioBattleResultStatsEntity) -> Unit) {
+    override fun forEachEntity(consumer: (BrawlerTrioBattleResultStatsBackupEntity) -> Unit) {
         resultCounts.forEach { key, resultCount ->
             consumer(
-                BrawlerTrioBattleResultStatsEntity(
+                BrawlerTrioBattleResultStatsBackupEntity(
                     tierRange = key.tierRange,
                     startBattleDate = startBattleDate,
                     endBattleDate = endBattleDate,
@@ -89,7 +89,7 @@ class BrawlerTrioBattleResultStatsAggregator(
         }
     }
 
-    override fun toEntities(): List<BrawlerTrioBattleResultStatsEntity> =
+    override fun toEntities(): List<BrawlerTrioBattleResultStatsBackupEntity> =
         buildList {
             forEachEntity { add(it) }
         }

@@ -2,18 +2,18 @@ package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.DbCoreContextTest
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsBackupEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsBackupEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class ComboBattleResultStatsJpaRepositoryCustomImplTest(
-    private val pairRepository: BrawlerPairBattleResultStatsJpaRepository,
-    private val trioRepository: BrawlerTrioBattleResultStatsJpaRepository,
-    private val enemyRepository: BrawlerEnemyBattleResultStatsJpaRepository,
+class ComboBattleResultStatsBackupJpaRepositoryCustomImplTest(
+    private val pairRepository: BrawlerPairBattleResultStatsBackupJpaRepository,
+    private val trioRepository: BrawlerTrioBattleResultStatsBackupJpaRepository,
+    private val enemyRepository: BrawlerEnemyBattleResultStatsBackupJpaRepository,
 ) : DbCoreContextTest() {
     private val tierRange = StatsTierRange.TROPHY_1000_PLUS
 
@@ -134,7 +134,7 @@ class ComboBattleResultStatsJpaRepositoryCustomImplTest(
         defeat: Long = 0L,
         draw: Long = 0L,
     ) = pairRepository.save(
-        BrawlerPairBattleResultStatsEntity(
+        BrawlerPairBattleResultStatsBackupEntity(
             tierRange = tierRange,
             startBattleDate = startDate,
             endBattleDate = endDate,
@@ -154,7 +154,7 @@ class ComboBattleResultStatsJpaRepositoryCustomImplTest(
         defeat: Long = 0L,
         draw: Long = 0L,
     ) = trioRepository.save(
-        BrawlerTrioBattleResultStatsEntity(
+        BrawlerTrioBattleResultStatsBackupEntity(
             tierRange = tierRange,
             startBattleDate = startDate,
             endBattleDate = endDate,
@@ -174,7 +174,7 @@ class ComboBattleResultStatsJpaRepositoryCustomImplTest(
         defeat: Long = 0L,
         draw: Long = 0L,
     ) = enemyRepository.save(
-        BrawlerEnemyBattleResultStatsEntity(
+        BrawlerEnemyBattleResultStatsBackupEntity(
             tierRange = tierRange,
             startBattleDate = startDate,
             endBattleDate = endDate,

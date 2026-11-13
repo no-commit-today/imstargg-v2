@@ -1,14 +1,14 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsEntity.Companion.brawlerBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleResultStatsBackupEntity.Companion.brawlerBattleResultStatsBackupEntity
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import java.time.LocalDate
 
-internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
+internal class BrawlerBattleResultStatsBackupJpaRepositoryCustomImpl(
     entityManager: EntityManager,
-) : BrawlerBattleResultStatsJpaRepositoryCustom {
+) : BrawlerBattleResultStatsBackupJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
     override fun findGroupedByEventAndBrawler(
@@ -17,21 +17,21 @@ internal class BrawlerBattleResultStatsJpaRepositoryCustomImpl(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<BrawlerEventResultProjection> {
-        val eventId = brawlerBattleResultStatsEntity.eventBrawlStarsId
-        val brawlerId = brawlerBattleResultStatsEntity.brawlerBrawlStarsId
-        val victorySum = brawlerBattleResultStatsEntity.resultCount.victoryCount.sumLong()
-        val defeatSum = brawlerBattleResultStatsEntity.resultCount.defeatCount.sumLong()
-        val drawSum = brawlerBattleResultStatsEntity.resultCount.drawCount.sumLong()
-        val starPlayerSum = brawlerBattleResultStatsEntity.starPlayerCount.sumLong()
+        val eventId = brawlerBattleResultStatsBackupEntity.eventBrawlStarsId
+        val brawlerId = brawlerBattleResultStatsBackupEntity.brawlerBrawlStarsId
+        val victorySum = brawlerBattleResultStatsBackupEntity.resultCount.victoryCount.sumLong()
+        val defeatSum = brawlerBattleResultStatsBackupEntity.resultCount.defeatCount.sumLong()
+        val drawSum = brawlerBattleResultStatsBackupEntity.resultCount.drawCount.sumLong()
+        val starPlayerSum = brawlerBattleResultStatsBackupEntity.starPlayerCount.sumLong()
 
         return queryFactory
             .select(eventId, brawlerId, victorySum, defeatSum, drawSum, starPlayerSum)
-            .from(brawlerBattleResultStatsEntity)
+            .from(brawlerBattleResultStatsBackupEntity)
             .where(
-                eventBrawlStarsId?.let { brawlerBattleResultStatsEntity.eventBrawlStarsId.eq(it) },
-                brawlerBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerBattleResultStatsEntity.battleDate.goe(startDate),
-                brawlerBattleResultStatsEntity.battleDate.loe(endDate),
+                eventBrawlStarsId?.let { brawlerBattleResultStatsBackupEntity.eventBrawlStarsId.eq(it) },
+                brawlerBattleResultStatsBackupEntity.tierRange.eq(tierRange),
+                brawlerBattleResultStatsBackupEntity.battleDate.goe(startDate),
+                brawlerBattleResultStatsBackupEntity.battleDate.loe(endDate),
             ).groupBy(eventId, brawlerId)
             .fetch()
             .map { tuple ->

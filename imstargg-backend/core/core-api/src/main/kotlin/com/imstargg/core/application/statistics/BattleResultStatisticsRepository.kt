@@ -19,11 +19,11 @@ import com.imstargg.core.domain.statistics.StatsRate
 import com.imstargg.core.domain.statistics.TrioResultRanking
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.infrastructure.jpa.toResultCount
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsBackupJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairResultProjection
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsBackupJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioResultProjection
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -32,10 +32,10 @@ import java.time.LocalDate
 @Repository
 @Transactional(readOnly = true)
 class BattleResultStatisticsRepository(
-    private val battleResultJpaRepository: BrawlerBattleResultStatsJpaRepository,
-    private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
-    private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
-    private val trioBattleResultJpaRepository: BrawlerTrioBattleResultStatsJpaRepository,
+    private val battleResultJpaRepository: BrawlerBattleResultStatsBackupJpaRepository,
+    private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsBackupJpaRepository,
+    private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsBackupJpaRepository,
+    private val trioBattleResultJpaRepository: BrawlerTrioBattleResultStatsBackupJpaRepository,
 ) {
     fun findBrawlerResultStatistics(
         eventId: BrawlStarsId?,

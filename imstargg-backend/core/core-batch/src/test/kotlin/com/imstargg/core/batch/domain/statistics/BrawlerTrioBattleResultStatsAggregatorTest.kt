@@ -3,7 +3,7 @@ package com.imstargg.core.batch.domain.statistics
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
@@ -82,13 +82,13 @@ class BrawlerTrioBattleResultStatsAggregatorTest {
         }
     }
 
-    private fun aggregate(players: List<StatsBattleEntityTeamPlayer>): List<BrawlerTrioBattleResultStatsEntity> =
+    private fun aggregate(players: List<StatsBattleEntityTeamPlayer>): List<BrawlerTrioBattleResultStatsBackupEntity> =
         aggregate(teams = listOf(players), result = BattleResult.VICTORY)
 
     private fun aggregate(
         teams: List<List<StatsBattleEntityTeamPlayer>>,
         result: BattleResult,
-    ): List<BrawlerTrioBattleResultStatsEntity> {
+    ): List<BrawlerTrioBattleResultStatsBackupEntity> {
         val aggregator = BrawlerTrioBattleResultStatsAggregator(START_DATE, END_DATE)
         aggregator.aggregate(resultBattle(teams = teams, result = result))
         return aggregator.toEntities()

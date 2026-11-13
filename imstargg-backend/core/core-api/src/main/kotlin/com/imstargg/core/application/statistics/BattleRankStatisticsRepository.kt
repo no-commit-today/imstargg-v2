@@ -5,7 +5,7 @@ import com.imstargg.core.domain.statistics.BrawlerRankCount
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.infrastructure.jpa.toRankCount
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsBackupJpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -13,7 +13,7 @@ import java.time.LocalDate
 @Repository
 @Transactional(readOnly = true)
 class BattleRankStatisticsRepository(
-    private val soloBattleRankJpaRepository: BrawlerBattleRankStatsJpaRepository,
+    private val soloBattleRankJpaRepository: BrawlerBattleRankStatsBackupJpaRepository,
 ) {
     fun findBrawlerRankStatistics(
         eventId: BrawlStarsId,

@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BrawlerPairBattleResultStatsEntityTest {
+class BrawlerPairBattleResultStatsBackupEntityTest {
     @Test
     fun `brawler1 이 brawler2 와 같으면 IllegalArgumentException 이 발생한다`() {
         // when & then
@@ -34,7 +34,7 @@ class BrawlerPairBattleResultStatsEntityTest {
     private fun aPair(
         brawler1BrawlStarsId: Long,
         brawler2BrawlStarsId: Long,
-    ) = BrawlerPairBattleResultStatsEntity(
+    ) = BrawlerPairBattleResultStatsBackupEntity(
         tierRange = StatsTierRange.TROPHY_1000_PLUS,
         startBattleDate = LocalDate.of(2026, 10, 26),
         endBattleDate = LocalDate.of(2026, 10, 31),

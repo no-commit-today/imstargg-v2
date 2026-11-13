@@ -17,6 +17,8 @@ import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
 
 /**
+ * 패치 기준 통계로 전환하는 동안 남겨 두는 옛 통계다. 2단계에서 지운다.
+ *
  * 같은 팀 브롤러 3인 조합(결과형 3v3 한 팀 전체)의 승/패/무 배틀 통계.
  *
  * ## 한 행의 뜻
@@ -34,24 +36,24 @@ import java.time.LocalDate
  */
 @Entity
 @Table(
-    name = "brawler_trio_battle_result_stats",
+    name = "brawler_trio_battle_result_stats_backup",
     indexes = [
         Index(
-            name = "ix_brawler_trio_battle_result_stats__brawler1",
+            name = "ix_brawler_trio_battle_result_stats_backup__brawler1",
             columnList = "tier_range, brawler1_brawlstars_id, start_battle_date",
         ),
         Index(
-            name = "ix_brawler_trio_battle_result_stats__brawler2",
+            name = "ix_brawler_trio_battle_result_stats_backup__brawler2",
             columnList = "tier_range, brawler2_brawlstars_id, start_battle_date",
         ),
         Index(
-            name = "ix_brawler_trio_battle_result_stats__brawler3",
+            name = "ix_brawler_trio_battle_result_stats_backup__brawler3",
             columnList = "tier_range, brawler3_brawlstars_id, start_battle_date",
         ),
     ],
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_brawler_trio_battle_result_stats__1",
+            name = "uk_brawler_trio_battle_result_stats_backup__1",
             columnNames = [
                 "tier_range",
                 "start_battle_date",
@@ -62,7 +64,7 @@ import java.time.LocalDate
         ),
     ],
 )
-class BrawlerTrioBattleResultStatsEntity(
+class BrawlerTrioBattleResultStatsBackupEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
@@ -87,10 +89,10 @@ class BrawlerTrioBattleResultStatsEntity(
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerTrioBattleResultStatsSeq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerTrioBattleResultStatsBackupSeq")
     @SequenceGenerator(
-        name = "brawlerTrioBattleResultStatsSeq",
-        sequenceName = "brawler_trio_battle_result_stats_seq",
+        name = "brawlerTrioBattleResultStatsBackupSeq",
+        sequenceName = "brawler_trio_battle_result_stats_backup_seq",
         allocationSize = 100,
     )
     @Column(name = "brawler_trio_battle_result_stats_id", nullable = false)

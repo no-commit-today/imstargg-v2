@@ -1,14 +1,14 @@
 package com.imstargg.infrastructure.db.core.statistics.repository
 
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsBackupEntity.Companion.brawlerEnemyBattleResultStatsBackupEntity
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import java.time.LocalDate
 
-internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
+internal class BrawlerEnemyBattleResultStatsBackupJpaRepositoryCustomImpl(
     entityManager: EntityManager,
-) : BrawlerEnemyBattleResultStatsJpaRepositoryCustom {
+) : BrawlerEnemyBattleResultStatsBackupJpaRepositoryCustom {
     private val queryFactory = JPAQueryFactory(entityManager)
 
     override fun findAllByBrawler(
@@ -17,19 +17,19 @@ internal class BrawlerEnemyBattleResultStatsJpaRepositoryCustomImpl(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<BrawlerEnemyResultProjection> {
-        val brawlerId = brawlerEnemyBattleResultStatsEntity.brawlerBrawlStarsId
-        val enemyBrawlerId = brawlerEnemyBattleResultStatsEntity.enemyBrawlerBrawlStarsId
-        val victorySum = brawlerEnemyBattleResultStatsEntity.resultCount.victoryCount.sumLong()
-        val defeatSum = brawlerEnemyBattleResultStatsEntity.resultCount.defeatCount.sumLong()
-        val drawSum = brawlerEnemyBattleResultStatsEntity.resultCount.drawCount.sumLong()
+        val brawlerId = brawlerEnemyBattleResultStatsBackupEntity.brawlerBrawlStarsId
+        val enemyBrawlerId = brawlerEnemyBattleResultStatsBackupEntity.enemyBrawlerBrawlStarsId
+        val victorySum = brawlerEnemyBattleResultStatsBackupEntity.resultCount.victoryCount.sumLong()
+        val defeatSum = brawlerEnemyBattleResultStatsBackupEntity.resultCount.defeatCount.sumLong()
+        val drawSum = brawlerEnemyBattleResultStatsBackupEntity.resultCount.drawCount.sumLong()
 
         return queryFactory
             .select(brawlerId, enemyBrawlerId, victorySum, defeatSum, drawSum)
-            .from(brawlerEnemyBattleResultStatsEntity)
+            .from(brawlerEnemyBattleResultStatsBackupEntity)
             .where(
                 brawlerId.eq(brawlerBrawlStarsId),
-                brawlerEnemyBattleResultStatsEntity.tierRange.eq(tierRange),
-                brawlerEnemyBattleResultStatsEntity.startBattleDate.between(startDate, endDate),
+                brawlerEnemyBattleResultStatsBackupEntity.tierRange.eq(tierRange),
+                brawlerEnemyBattleResultStatsBackupEntity.startBattleDate.between(startDate, endDate),
             ).groupBy(brawlerId, enemyBrawlerId)
             .orderBy(enemyBrawlerId.asc())
             .fetch()
