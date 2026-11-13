@@ -7,6 +7,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTe
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
+import java.time.Instant
 import java.time.OffsetDateTime
 
 private const val BATTLE_KEY = "battle-key"
@@ -41,11 +42,14 @@ internal fun statsResultBattle(
     eventModeBrawlStarsId: Long = 0L,
     playerBrawlStarsTag: String = teams.first().first().brawlStarsTag,
     starPlayerBrawlStarsTag: String? = null,
+    battleKey: String = BATTLE_KEY,
+    battleAt: Instant = BATTLE_AT,
+    eventBrawlStarsId: Long = EVENT_BRAWL_STARS_ID,
 ): StatsResultBattleEntity =
     StatsResultBattleEntity(
-        battleKey = BATTLE_KEY,
-        battleAt = BATTLE_AT,
-        eventBrawlStarsId = EVENT_BRAWL_STARS_ID,
+        battleKey = battleKey,
+        battleAt = battleAt,
+        eventBrawlStarsId = eventBrawlStarsId,
         eventModeBrawlStarsId = eventModeBrawlStarsId,
         eventMap = EVENT_MAP,
         mode = "gemGrab",
@@ -63,10 +67,12 @@ internal fun statsRankBattle(
     type: String = BattleType.RANKED.code,
     eventModeBrawlStarsId: Long = 6L,
     playerBrawlStarsTag: String = teams.first().first().brawlStarsTag,
+    battleKey: String = BATTLE_KEY,
+    battleAt: Instant = BATTLE_AT,
 ): StatsRankBattleEntity =
     StatsRankBattleEntity(
-        battleKey = BATTLE_KEY,
-        battleAt = BATTLE_AT,
+        battleKey = battleKey,
+        battleAt = battleAt,
         eventBrawlStarsId = EVENT_BRAWL_STARS_ID,
         eventModeBrawlStarsId = eventModeBrawlStarsId,
         eventMap = EVENT_MAP,
@@ -85,6 +91,9 @@ internal fun threeVsThree(
     type: String = BattleType.RANKED.code,
     eventModeBrawlStarsId: Long = 0L,
     opponentNames: List<String> = listOf("Player4", "Player5", "Player6"),
+    battleKey: String = BATTLE_KEY,
+    battleAt: Instant = BATTLE_AT,
+    starPlayerBrawlStarsTag: String? = null,
 ): StatsResultBattleEntity =
     statsResultBattle(
         teams =
@@ -95,6 +104,9 @@ internal fun threeVsThree(
         result = result,
         type = type,
         eventModeBrawlStarsId = eventModeBrawlStarsId,
+        starPlayerBrawlStarsTag = starPlayerBrawlStarsTag,
+        battleKey = battleKey,
+        battleAt = battleAt,
     )
 
 /** 쇼다운. teamTrophies 의 첫 팀이 수집자 팀이고 그 첫 팀원이 수집자(#TAG1)다. 슬롯 인덱스는 1 부터 팀 순서대로. 모드 ID 는 유형의 시드 값이다. */
@@ -103,6 +115,8 @@ internal fun showdown(
     teamTrophies: List<List<Int>>,
     battleRank: Int = 1,
     type: String = BattleType.RANKED.code,
+    battleKey: String = BATTLE_KEY,
+    battleAt: Instant = BATTLE_AT,
 ): StatsRankBattleEntity {
     var index = 0
     val teams = teamTrophies.map { team -> team.map { trophies -> statsPlayer(++index, trophies) } }
@@ -111,6 +125,8 @@ internal fun showdown(
         battleRank = battleRank,
         type = type,
         eventModeBrawlStarsId = showdownModeId(modeType),
+        battleKey = battleKey,
+        battleAt = battleAt,
     )
 }
 
