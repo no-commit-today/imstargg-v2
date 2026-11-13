@@ -2,7 +2,7 @@
 
 - 작성일: 2026-11-13
 - 대상: `core/core-batch`(집계 잡), `infrastructure/db-core`(엔티티·DDL), `core/core-enum`(통계 유형, 기간 옵션 삭제), `core/core-api`, `imstargg-frontend`, `imstargg-deploy`(CronJob)
-- 상태: 검토 중 (구현 전)
+- 상태: 설계 확정 (구현 전)
 - 관련: 통계를 날짜 기준에서 패치 기준으로 바꾸는 재설계의 두 번째 스펙이다. 첫 번째 스펙(`2026-11-11-brawlstars-news-collect-patch-date-design.md`)이 만드는 패치일 목록을 읽는다.
 - 기준 코드: `develop`(2026-11-13, `edd949dd`). 조합 통계 재설계(상대·2인 조합의 키에서 이벤트 제거, 3인 조합 추가, 주 단위 버킷)가 들어간 상태다.
 
