@@ -6,7 +6,6 @@ import com.imstargg.core.admin.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
 import com.imstargg.core.enums.Language
-import com.imstargg.core.enums.StatsEventMode
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageEntity
 import com.imstargg.infrastructure.db.core.brawlstars.BrawlStarsImageType
 import com.imstargg.infrastructure.db.core.brawlstars.MessageEntity
@@ -68,7 +67,6 @@ class BattleEventService(
                 brawlStarsName = mode.brawlStarsName,
                 names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
                 iconImageUrl = imagesByBrawlStarsId[mode.brawlStarsId]?.let { "${cloudFrontProperties.baseUrl}/${it.storedName}" },
-                resultType = StatsEventMode.find(mode.brawlStarsId)?.resultType,
             )
         }
     }

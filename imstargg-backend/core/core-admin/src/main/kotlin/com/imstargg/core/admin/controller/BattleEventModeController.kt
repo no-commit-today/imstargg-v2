@@ -1,6 +1,7 @@
 package com.imstargg.core.admin.controller
 
 import com.imstargg.core.admin.application.BattleEventService
+import com.imstargg.core.admin.application.statistics.StatsEventModeService
 import com.imstargg.core.admin.controller.support.toImageUpdate
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
 import com.imstargg.core.admin.request.MessagesUpdateRequest
@@ -18,9 +19,15 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 class BattleEventModeController(
     private val battleEventService: BattleEventService,
+    private val statsEventModeService: StatsEventModeService,
 ) {
     @GetMapping("/event-modes")
-    fun getAll(): ResponseEntity<List<BattleEventModeResponse>> = ResponseEntity.ok(battleEventService.findAllModes())
+    fun getAll(): ResponseEntity<List<BattleEventModeResponse>> {
+        val types = statsEventModeService.findAllTypes()
+        return ResponseEntity.ok(
+            battleEventService.findAllModes().map { it.copy(statsType = types[it.brawlStarsId]) },
+        )
+    }
 
     @PostMapping("/event-modes")
     fun create(
