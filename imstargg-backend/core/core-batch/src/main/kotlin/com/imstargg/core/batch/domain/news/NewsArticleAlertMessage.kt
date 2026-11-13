@@ -11,6 +11,9 @@ import java.time.format.DateTimeFormatter
  * 공식 뉴스 수집이 Discord 로 보내는 알림 문구.
  *
  * 시각은 `yyyy-MM-dd HH:mm KST`, 게시일은 KST 날짜 `yyyy-MM-dd` 로 적는다. 본문은 싣지 않는다.
+ *
+ * 변경 알림의 본문 줄은 문자열이 같을 때만 "본문 동일"이다. 줄 수 비교는 순서를 보지 않아서,
+ * 줄이 자리만 옮긴 경우(0줄 추가·0줄 삭제)는 "본문 줄 순서 변경"으로 따로 적는다.
  */
 object NewsArticleAlertMessage {
     private val DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'KST'").withZone(KOREA_ZONE)
@@ -54,8 +57,10 @@ object NewsArticleAlertMessage {
         }
         val diff = NewsArticleContentDiff.of(previousContent, article.content)
         lines +=
-            if (diff.addedLineCount == 0 && diff.deletedLineCount == 0) {
+            if (previousContent == article.content) {
                 "본문 동일"
+            } else if (diff.addedLineCount == 0 && diff.deletedLineCount == 0) {
+                "본문 줄 순서 변경"
             } else {
                 "본문 ${diff.addedLineCount}줄 추가, ${diff.deletedLineCount}줄 삭제"
             }

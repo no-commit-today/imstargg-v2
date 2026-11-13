@@ -81,6 +81,31 @@ class NewsArticleAlertMessageTest {
     }
 
     @Test
+    fun `줄 순서만 바뀌면 줄 순서 변경이라고 적는다`() {
+        val previousContent = "첫째 줄\n둘째 줄"
+        val content = "둘째 줄\n첫째 줄"
+        val previous = article(content = previousContent)
+        val current = article(content = content)
+
+        val command =
+            NewsArticleAlertMessage.updated(
+                article = current,
+                previous = previous,
+                previousContent = previousContent,
+                previousSeenAt = Instant.parse("2026-11-10T12:20:00Z"),
+                detectedAt = Instant.parse("2026-11-11T12:20:00Z"),
+            )
+
+        assertThat(command.content).isEqualTo(
+            """
+            $url
+            감지 2026-11-11 21:20 KST · 직전 판 2026-11-10 21:20 KST
+            본문 줄 순서 변경
+            """.trimIndent(),
+        )
+    }
+
+    @Test
     fun `새 글 알림은 유형과 제목과 주소와 게시일과 감지 시각을 담는다`() {
         val command =
             NewsArticleAlertMessage.newArticle(
