@@ -24,7 +24,7 @@ Stats Battle 시스템은 BrawlStars 게임의 배틀 데이터를 수집하고 
 | `stats_result_battle` | 배틀 결과 통계 데이터 (승/패/무) | `battle_date` | 45일 (`RETENTION_DAYS`) |
 | `stats_rank_battle` | 배틀 랭크 통계 데이터 (순위) | `battle_date` | 45일 (`RETENTION_DAYS`) |
 
-조합 통계 집계 테이블 3종(`brawler_pair_battle_result_stats` 등)의 파티션·보관은 섹션 5.4, 6 참조.
+옛 조합 통계 집계 테이블 3종(`brawler_pair_battle_result_stats_backup` 등. 패치 기준 통계 1단계에서 `_backup` 을 붙였다)의 파티션·보관은 섹션 5.4, 6 참조. 패치 기준 통계 테이블과 체크포인트는 섹션 5.6 참조.
 
 ### 2.2 Stats Battle 테이블
 
@@ -105,7 +105,7 @@ StatsResultBattleEntity                    StatsRankBattleEntity
 ### 4.1 파티션 키
 
 - 원본 배틀 테이블(`stats_result_battle`, `stats_rank_battle`)은 `battle_date` (전투일, 한국 시간 기준)를 파티션 키로 사용합니다.
-- 조합 통계 집계 테이블 3종(`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`)은 `start_battle_date` (주 버킷 시작일) 월 파티션입니다. 섹션 5.4 참조.
+- 옛 조합 통계 집계 테이블 3종(`brawler_pair_battle_result_stats_backup`, `brawler_trio_battle_result_stats_backup`, `brawler_enemy_battle_result_stats_backup`)은 `start_battle_date` (주 버킷 시작일) 월 파티션입니다. 섹션 5.4 참조. 패치 기준 통계 테이블(섹션 5.6)은 파티션이 없습니다.
 
 ### 4.2 Stats Battle 테이블 파티셔닝
 
@@ -122,6 +122,8 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 - **하한**: 주간 통계 잡의 최대 룩백(`StatsWeekRange.currentAndPrevious` 기준 최대 7일 + 실행일 보정 1일)을 원본이 커버해야 한다. 가드: `PartitionRetentionLookbackTest`
 
 ## 5. 통계 집계 배치 전략
+
+> 섹션 5.1 ~ 5.4 는 날짜 기준의 옛 집계다. 패치 기준 통계 1단계부터 옛 집계가 쓰는 테이블 이름에는 `_backup` 이 붙었고(잡과 동작은 그대로다), 새 집계(섹션 5.6)와 함께 돈다. 옛 집계의 설명은 2단계에서 지운다.
 
 ### 5.1 멱등 배치
 
@@ -165,7 +167,7 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 
 ### 5.4 조합 통계 (2인·3인·카운터)
 
-대상 테이블은 `brawler_pair_battle_result_stats`(같은 팀 두 브롤러), `brawler_trio_battle_result_stats`(같은 팀 세 브롤러), `brawler_enemy_battle_result_stats`(내 브롤러 대 상대 브롤러)입니다. 쇼다운 조합 순위(`brawler_pair_battle_rank_stats`)는 지웠습니다.
+대상 테이블은 `brawler_pair_battle_result_stats_backup`(같은 팀 두 브롤러), `brawler_trio_battle_result_stats_backup`(같은 팀 세 브롤러), `brawler_enemy_battle_result_stats_backup`(내 브롤러 대 상대 브롤러)입니다. `_backup` 이 없는 이름은 패치 기준 통계 테이블입니다(섹션 5.6). 쇼다운 조합 순위(`brawler_pair_battle_rank_stats`)는 지웠습니다.
 
 - **이벤트 키 없음**: 세 테이블 어디에도 이벤트(맵) 키가 없습니다. 맵에 따른 조합 승률 차이는 거의 다 개인 브롤러의 맵 효과이고 이벤트별 칸은 표본이 얇아 예측에 보탬이 없어 뺐습니다. 근거와 결정 이력은 [조합 통계 재구성 설계](../../docs/superpowers/specs/2026-11-04-combo-stats-redesign-design.md) 결정 1·부록 B.1.
 - **키 (2인·3인)**: 조합당 1행이고 브롤러 id 오름차순으로 정렬해 저장합니다(`brawler1 < brawler2 [< brawler3]`, CHECK 제약). 방향 중복이 없습니다. 유니크 `(tier_range, start_battle_date, brawler1, brawler2[, brawler3])`, 브롤러 위치별 조회 인덱스 `(tier_range, brawlerN, start_battle_date)`.
@@ -262,12 +264,69 @@ create table stats_result_battle_default partition of stats_result_battle defaul
 - 요약과 알림을 만드는 구간에서 난 예외는 로그로만 남기고 집계 잡을 실패시키지 않는다.
 - 수동 재집계(섹션 10)에서도 같은 감시가 돈다.
 
+### 5.6 패치 기준 통계 (1단계)
+
+통계를 날짜가 아니라 **패치**로 구분해 누적한다. 설계는 [패치 기준 통계 설계](../../docs/superpowers/specs/2026-11-13-patch-based-statistics-design.md)에 있다. 1단계에서는 새 테이블을 채우기만 한다. API 와 화면은 여전히 옛 통계(`_backup` 테이블)를 읽고, 옛 잡 5종도 그대로 돈다. 읽는 쪽을 바꾸는 것은 2단계, `_backup` 테이블을 지우는 것은 3단계다.
+
+**테이블**
+
+| 테이블 | 한 줄의 뜻 | 키 (유니크 `uk_{table}__1`) |
+|--------|-----------|------------------------------|
+| `brawler_battle_result_stats` | 1인 승률 | `brawlstars_patch_id, tier_range, event_brawlstars_id, brawler_brawlstars_id` |
+| `brawler_battle_rank_stats` | 1인 순위(`rank1_count` ~ `rank10_count`) | `brawlstars_patch_id, tier_range, event_brawlstars_id, brawler_brawlstars_id` |
+| `brawler_enemy_battle_result_stats` | 상대(카운터) | `brawlstars_patch_id, tier_range, brawler_brawlstars_id, enemy_brawler_brawlstars_id` |
+| `brawler_pair_battle_result_stats` | 2인 조합 | `brawlstars_patch_id, tier_range, brawler1_brawlstars_id, brawler2_brawlstars_id` |
+| `brawler_trio_battle_result_stats` | 3인 조합 | `brawlstars_patch_id, tier_range, brawler1_brawlstars_id, brawler2_brawlstars_id, brawler3_brawlstars_id` |
+| `stats_checkpoint` | 통계 유형 × 패치마다 한 줄. 어디까지 읽었는지(`last_read_battle_id`), 어떤 날짜 범위로 만든 숫자인지(`applied_start_date`, `applied_end_date`), 반영된 가장 최근 전투 일시(`last_battle_at`), 수정 번호(`version`) | `stats_type, brawlstars_patch_id` |
+
+- 날짜 컬럼과 파티션이 없다. 패치 하나에 키마다 한 줄이고, 새 전투가 들어오면 그 줄의 숫자를 더한다.
+- 집계 규칙(티어 구간, 봇 전투 제외, 조합의 브롤러 순서)은 옛 집계와 같다. 키에서 날짜가 빠지고 패치가 들어갔을 뿐이다.
+
+**패치의 범위**: 패치일 다음 날부터 다음 패치일 전날까지다. 다음 패치가 없으면 끝이 없다. 패치 당일의 전투와 가장 이른 패치보다 앞선 전투는 어느 패치에도 넣지 않는다.
+
+**지키는 규칙**: 한 패치의 통계는 "전투 날짜가 체크포인트 줄의 적용한 범위 안이고 id 가 체크포인트 이하"인 원본 전투를 집계한 값과 같다. 쓰기 트랜잭션마다 통계 줄과 체크포인트 줄을 함께 바꾸므로, 잡이 어디서 죽어도 이 규칙이 성립하고 다음 실행이 이어서 한다.
+
+**잡** (파라미터 없음, 3시간마다, 10분씩 엇갈림)
+
+| 잡 | CronJob | 스케줄 (UTC) |
+|----|---------|--------------|
+| `brawlerBattleResultPatchStatsJob` | `battle-result-patch-stats` | `0 */3 * * *` |
+| `brawlerBattleRankPatchStatsJob` | `battle-rank-patch-stats` | `10 */3 * * *` |
+| `brawlerEnemyBattleResultPatchStatsJob` | `enemy-battle-result-patch-stats` | `20 */3 * * *` |
+| `brawlerPairBattleResultPatchStatsJob` | `pair-battle-result-patch-stats` | `30 */3 * * *` |
+| `brawlerTrioBattleResultPatchStatsJob` | `trio-battle-result-patch-stats` | `40 */3 * * *` |
+
+한 번의 실행은 다음 순서다.
+
+1. 상한 id 를 잡는다. 실행 시작 10분 전까지 저장된 원본 중 가장 큰 id 이고, 한 실행 내내 같은 값을 쓴다.
+2. 패치 목록으로 패치마다 범위를 구한다.
+3. 어드민에서 지운 패치의 통계 줄과 체크포인트 줄을 지운다.
+4. 적용한 범위가 지금의 범위와 다른 줄을 하루씩 맞춘다. 빠진 날은 그 날짜의 전투를 다시 읽어 빼고, 새로 든 날은 다시 읽어 더한다. 하루가 트랜잭션 하나이고 줄이기를 먼저 한다. 범위가 다 비면 체크포인트 줄도 지운다.
+5. 체크포인트 뒤의 새 전투를 더한다. 전투 10만 건마다 저장하고, 다 읽으면 체크포인트를 상한 id 로 올린다. 체크포인트 줄이 없는 패치는 줄을 만들고 처음부터 읽는다(범위의 첫 날이 원본에 남아 있을 때만).
+
+- 패치를 등록·수정·삭제하면 다음 실행의 4번이 원본을 다시 읽어 맞춘다. 패치일은 오늘에서 30일 안에서만 바뀌고 원본은 45일 남으므로(섹션 6) 다시 읽을 날짜가 늘 남아 있다.
+- 봇 감시(섹션 5.5)는 새 1인 잡 둘도 한다. 5번에서 읽은 전투만 넣고 실행 끝에 한 번 판정한다(하루치가 아니라 3시간치). 1단계에서는 옛 1인 잡의 감시도 함께 돈다.
+- 예외는 잡지 않는다. 잡이 그 자리에서 실패하고 다음 실행이 체크포인트에서 잇는다. 빼려는 줄이 없거나 빼면 음수가 되면 통계와 원본이 어긋난 것이라 실패시킨다. 같은 자리에서 계속 실패하면 아래 방법으로 다시 채운다.
+
+**다시 채우기**: 어긋난 (통계 유형, 패치)의 통계 줄과 체크포인트 줄을 지우면 다음 실행이 원본에서 다시 채운다. 범위의 첫 날이 원본에 남아 있는 패치만 된다.
+
+```sql
+-- 예: 1인 승률의 한 패치를 다시 채운다. 줄이 많은 유형은 통계 줄을 tier_range 별로 나눠 지운다.
+BEGIN;
+DELETE FROM brawler_battle_result_stats WHERE brawlstars_patch_id = :patch_id;
+DELETE FROM stats_checkpoint WHERE stats_type = 'BRAWLER_BATTLE_RESULT' AND brawlstars_patch_id = :patch_id;
+COMMIT;
+```
+
+- 집계 규칙을 바꾸는 배포는 다섯 유형의 통계 줄과 체크포인트 줄을 모두 지우고 다시 채우는 것과 함께 한다. 더할 때와 뺄 때의 규칙이 다르면 빼기가 어긋난다. 원본에 남은 날짜만큼만 돌아온다.
+- 지우는 동안 돌던 잡은 수정 번호 확인에 걸려 실패하고, 다음 실행이 새로 시작한다.
+
 ## 6. 데이터 보관 정책
 
 | 테이블 유형 | 파티션 | 보관 기간 | 삭제 조건 |
 |-------------|--------|----------|----------|
 | Stats Battle (`stats_result_battle`, `stats_rank_battle`) | 일 파티션 `{table}_p_YYYYMMDD` (`battle_date`) | 45일 (`RETENTION_DAYS`) | `date - 45일` 보다 이른 파티션 DROP (`drop_old_partitions`) |
-| 조합 통계 (`brawler_pair_battle_result_stats`, `brawler_trio_battle_result_stats`, `brawler_enemy_battle_result_stats`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`; 패치 기준 통계 1단계부터 부르지 않음) |
+| 옛 조합 통계 (`brawler_pair_battle_result_stats_backup`, `brawler_trio_battle_result_stats_backup`, `brawler_enemy_battle_result_stats_backup`) | 월 파티션 `{table}_p_YYYYMM` (`start_battle_date`), default 파티션 없음 | 지난달 1일부터 | 월 파티션 `{table}_p_YYYYMM`, 지난달 1일 이전 월 DROP (`drop_old_month_partitions`; 패치 기준 통계 1단계부터 부르지 않음) |
 
 - 원본 배틀은 주 버킷 재집계(섹션 5.2)로 통계에 반영하며, 반영 후에는 필요 없다. 보존 기간 안에서는 원본이 재집계(봇 판정 규칙을 고친 뒤 포함)의 원천이다. 주간 통계 최대 룩백과 패치일 등록 기한(30일)을 모두 덮도록 45일 보관한다.
 - 조합 통계의 삭제 경계는 API 가 읽는 가장 오래된 날짜(`StatsDateRange.SINCE_LAST_MONTH`, 지난달 1일)와 같다. `date` 가 속한 달의 1일에서 한 달을 뺀 날짜가 속한 달보다 이른 파티션이 지워진다. 예) 2026-11-01 실행이면 2026-09 까지 삭제하고 2026-10 은 남는다. 월 단위 DROP 은 블로트를 남기지 않는다.
@@ -322,9 +381,11 @@ SELECT drop_old_month_partitions('2026-11-05');
 
 - `StatsResultBattleEntity`: 결과 기반 통계 배틀 엔티티
 - `StatsRankBattleEntity`: 랭크 기반 통계 배틀 엔티티
-- `BrawlerPairBattleResultStatsEntity`: 2인 조합 통계 (`brawler1BrawlStarsId < brawler2BrawlStarsId`)
-- `BrawlerTrioBattleResultStatsEntity`: 3인 조합 통계 (`brawler1 < brawler2 < brawler3`)
-- `BrawlerEnemyBattleResultStatsEntity`: 카운터 통계 (방향성 `(brawler, enemy)`)
+- `BrawlerPairBattleResultStatsBackupEntity`: 옛 2인 조합 통계 (`brawler1BrawlStarsId < brawler2BrawlStarsId`)
+- `BrawlerTrioBattleResultStatsBackupEntity`: 옛 3인 조합 통계 (`brawler1 < brawler2 < brawler3`)
+- `BrawlerEnemyBattleResultStatsBackupEntity`: 옛 카운터 통계 (방향성 `(brawler, enemy)`)
+- `Brawler{BattleResult,BattleRank,EnemyBattleResult,PairBattleResult,TrioBattleResult}StatsEntity`: 패치 기준 통계 다섯 유형(섹션 5.6). 옛 1인 통계 엔티티 둘에도 `Backup` 이 붙었다
+- `StatsCheckpointEntity`: 패치 기준 통계의 체크포인트
 
 ### 설정
 
@@ -341,6 +402,7 @@ SELECT drop_old_month_partitions('2026-11-05');
 
 - `brawlerBattleRankStatsJob` (02:00 KST), `brawlerBattleResultStatsJob` (03:00): 1인 브롤러 통계, `date` 하루
 - `brawlerEnemyBattleResultStatsJob` (04:00), `brawlerTrioBattleResultStatsJob` (05:00, CronJob `trio-battle-result-stats`), `brawlerPairBattleResultStatsJob` (07:00): 조합·카운터·3인, 주 버킷 재집계
+- `brawler{BattleResult,BattleRank,EnemyBattleResult,PairBattleResult,TrioBattleResult}PatchStatsJob`: 패치 기준 통계, 3시간마다, 파라미터 없음(섹션 5.6)
 - `partitionManageJob` (02:00): 파티션 생성·삭제
 - `brawlerPairBattleRankStatsJob` 과 CronJob `pair-battle-rank-stats` 는 쇼다운 조합 순위 기능과 함께 지웠다
 

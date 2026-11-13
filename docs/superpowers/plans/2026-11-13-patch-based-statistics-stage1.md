@@ -276,7 +276,7 @@ $PSQL -c "select create_month_partitions(current_date, 1)"
 -- 기대: 다섯 테이블 모두 backup 에 1, 새 테이블에 0
 select (select count(*) from brawler_pair_battle_result_stats_backup) as backup, (select count(*) from brawler_pair_battle_result_stats) as patch;
 -- 기대: 0 줄(옛 이름으로 남은 시퀀스가 없다)
-select relname from pg_class where relkind = 'S' and relname ~ '^brawler_.*_stats_seq$';
+select relname from pg_class where relkind = 'S' and relname ~ '^brawler_(battle_result|battle_rank|enemy_battle_result|pair_battle_result|trio_battle_result)_stats_seq$';
 -- 기대: 값이 나온다(옛 잡의 nextval 이 산다)
 select nextval('brawler_pair_battle_result_stats_backup_seq');
 -- 기대: 이름 표의 "새 것" 인덱스와 유니크가 모두 있다
@@ -384,7 +384,7 @@ class BrawlerTrioBattleResultPatchStatsAggregator : PatchStatsAggregator<StatsRe
   - `PatchStatsBotBattleExclusionTest`: `StatsBotBattleExclusionTest` 의 케이스를 새 결과형 집계기 넷에, 순위형의 봇 로비 케이스를 새 순위 집계기에 옮긴다.
   - `PatchStatsAggregatorParityTest`: 유형마다 하나. 날짜가 다른 전투를 섞은 묶음(승·패·무, 티어 구간이 다른 트로피, 스타플레이어, 봇 전투 하나, 쇼다운 순위 여러 개)을 옛 집계기와 새 집계기에 똑같이 넣는다. 옛 엔티티를 날짜·주를 버리고 키별로 합친 값이 새 `toCounts()` 와 같아야 한다. 테스트 이름: "옛 1인 승률 집계와 숫자가 같다" 등.
 - [ ] **Step 2: 실패를 확인한다.** `./gradlew :core:core-batch:test --tests '*PatchStats*'` → 컴파일 실패.
-- [ ] **Step 3: 집계기 다섯 개를 만든다.** `aggregate` 의 규칙은 같은 이름의 옛 집계기에서 그대로 옮긴다(건너뛰는 조건의 순서까지). 키에서 날짜가 빠진다. 1인 순위는 `RankCountAccumulator` 를 쓰지 않고 키마다 `LongArray(10)` 에 직접 센다(`RankCountsEmbedded` 는 2단계에서 지운다). 순위가 1부터 10 사이가 아니면 지금처럼 `require` 로 실패시킨다. `total_count` 는 값의 합이다.
+- [ ] **Step 3: 집계기 다섯 개를 만든다.** `aggregate` 의 규칙은 같은 이름의 옛 집계기에서 그대로 옮긴다(건너뛰는 조건의 순서까지). 키에서 날짜가 빠진다. 1인 순위는 `RankCountAccumulator` 를 쓰지 않고 키마다 `LongArray(10)` 에 직접 센다(`RankCountsEmbedded` 는 2단계에서 지운다). 순위가 10 을 넘으면 `require` 로 실패시키고, 1 미만이면 옛 집계처럼 세지 않는다(증분 잡에서는 그런 전투 하나가 패치를 계속 막는다). `total_count` 는 값의 합이다.
 - [ ] **Step 4: 통과를 확인한다.** `./gradlew :core:core-batch:test --tests '*PatchStats*' --tests '*StatsAggregatorTest' --tests '*StatsBotBattleExclusionTest'` → 통과(옛 테스트도 그대로 통과). `ktlintFormat`, `ktlintCheck`.
 - [ ] **Step 5: 커밋한다.** `feat(backend): 전투를 패치 통계의 키별 값으로 모으는 집계기를 더한다`
 
@@ -664,7 +664,7 @@ H2 테스트가 보지 못하는 것을 본다. 결과(본 것과 보지 못한 
 - Consumes: Task 4 의 컨테이너(`patch-stats-pg`, 55432), 잡 이름 표.
 
 - [ ] **Step 1: 원본과 패치를 넣는다.** 패치일 둘(어제 기준 10일 전, 3일 전)과, 그 범위 안팎의 결과형·순위형 원본을 몇 건 SQL 로 넣는다. `teams` 의 JSON 모양은 `StatsBattleEntityTeamPlayer` 의 필드 그대로다. `created_at` 은 한 시간 전으로 한다.
-- [ ] **Step 2: 새 잡을 두 번 돌린다.** `./gradlew :core:core-batch:bootRun --args='--job.name=brawlerBattleResultPatchStatsJob --storage.datasource.core.jdbc-url=jdbc:postgresql://localhost:55432/imstargg --spring.batch.jdbc.initialize-schema=always'`(접속 계정은 로컬 프로필의 값을 쓴다. 맞지 않으면 같은 방식의 인자로 덮는다. 앱이 뜨는 데 다른 로컬 인프라가 필요하면 `imstargg-backend/` 에서 `docker-compose up -d` 로 띄운다). 두 번째 실행 전에 있던 키와 없던 키에 걸친 원본을 더 넣는다. 기대: 두 번 다 `COMPLETED`, 통계 값이 손으로 센 값과 같다. 이것으로 운영 설정(`reWriteBatchedInserts=true`)에서 배치 갱신이 줄별 결과를 주는지를 본다(주지 않으면 `BatchUpdateCounts` 가 실패시킨다). 다섯 잡을 모두 한 번씩 돌린다.
+- [ ] **Step 2: 새 잡을 두 번 돌린다.** `./gradlew :core:core-batch:bootRun --args='--job.name=brawlerBattleResultPatchStatsJob --storage.datasource.core.jdbc-url=jdbc:postgresql://localhost:55432/imstargg --app.client.brawlstars.api-keys=<가짜 값>'`(API 키는 앱이 뜨는 데만 필요하다. 통계 잡은 API 를 부르지 않는다. 잡 저장소가 메모리 기반이라 배치 메타데이터 테이블은 필요 없다. 접속 계정은 로컬 프로필의 값을 쓴다. 맞지 않으면 같은 방식의 인자로 덮는다. 앱이 뜨는 데 다른 로컬 인프라가 필요하면 `imstargg-backend/` 에서 `docker-compose up -d` 로 띄운다). 두 번째 실행 전에 있던 키와 없던 키에 걸친 원본을 더 넣는다. 기대: 두 번 다 `COMPLETED`, 통계 값이 손으로 센 값과 같다. 이것으로 운영 설정(`reWriteBatchedInserts=true`)에서 배치 갱신이 줄별 결과를 주는지를 본다(주지 않으면 `BatchUpdateCounts` 가 실패시킨다). 다섯 잡을 모두 한 번씩 돌린다.
 - [ ] **Step 3: 패치를 끼워 넣고 지운다.** 범위 안에 패치를 `insert` 하고 잡을 돌린 뒤, 그 패치를 지우고 다시 돌린다. 기대: 마지막 통계 값이 끼워 넣기 전과 정확히 같다(끝 날짜 `null` 을 넘기는 갱신이 PostgreSQL 에서 도는지도 여기서 본다).
 - [ ] **Step 4: 옛 잡을 한 번 돌린다.** `--job.name=brawlerPairBattleResultStatsJob date=<어제>` 와 `--job.name=brawlerBattleResultStatsJob date=<어제>`. 기대: `COMPLETED`, `_backup` 테이블에 줄이 생긴다(시퀀스 이름이 맞다는 뜻이다). `--job.name=partitionManageJob date=<오늘>` 도 `COMPLETED` 다.
 - [ ] **Step 5: 3인 조합 하루치 빼기의 시간을 어림한다.** 새 3인 조합 테이블에 `generate_series` 로 30만 줄을 넣고, 그 30만 줄을 한 트랜잭션에서 한 줄씩 조건부 `update` 하는 SQL 파일을 `\timing` 으로 돌린다. 수치는 참고용이다. 운영 수치는 전환 조건 3번에서 잰다.
@@ -678,6 +678,19 @@ H2 테스트가 보지 못하는 것을 본다. 결과(본 것과 보지 못한 
 - [ ] **Step 4: 전체 확인.** `./gradlew test ktlintCheck --rerun-tasks` 전체 통과. 건수를 PR 본문에 적는다.
 - [ ] **Step 5: 버전.** `/release bump`(변경 감지의 base 는 `origin/develop`). core-api 와 core-batch 가 대상이다. 이미 SNAPSHOT 이면 바뀌지 않는다.
 - [ ] **Step 6: 결정 기록을 제안한다.** 사용자에게 `/superdomain:adr` 로 남길지 묻는다: "통계를 패치마다 한 줄에 누적하고 원본을 다시 읽어 범위를 맞춘다", "새 통계 테이블이 옛 이름을 쓰고 옛 것은 `_backup` 으로 옮긴다".
+
+## 실행하며 고친 것
+
+계획을 실행하며 드러난 빈틈과 그때 정한 것이다. 위 본문에서 틀렸던 문장은 고쳐 두었다.
+
+- **Task 4 Step 3**: 옛 시퀀스가 남았는지 보는 정규식이 보유 통계의 시퀀스(`brawler_gadget_ownership_stats_seq` 등)까지 잡았다. 대상 다섯으로 좁혔다.
+- **Task 7 Step 3**: "순위가 1부터 10 사이가 아니면 실패"는 옛 집계와 달랐다. 옛 집계는 순위 1 미만을 세지 않는다. 옛 동작에 맞췄다.
+- **Task 9**: 수정 번호 불일치 테스트는 첫 문장에서 멈춰 롤백을 증명하지 못한다. 뒤 문장에서 실패하는 테스트 둘(마지막 날 빼기, 더하기)을 더했다.
+- **Task 10·11**: Task 10 의 테스트 "적용한 범위가 지금의 범위와 다른 패치는 읽지 않는다"는 Task 11 이 들어오면 전제를 만들 수 없어 지웠다. 같은 장면은 "패치일을 뒤로 고치면…" 이 덮는다. 읽지 않는 가드는 방어로 남겼다.
+- **Task 11 의 여섯 단계가 빠뜨린 경우**: 적용한 끝이 없는데 지금의 범위에 오늘 이후의 끝이 생기면 뺄 날이 없어 범위가 계속 어긋난다. 통계 줄 없이 체크포인트 줄의 끝 날짜만 고치는 쓰기를 넣었다(오늘 뒤의 날짜에는 체크포인트 이하의 전투가 없어 지키는 규칙이 그대로다).
+- **Task 11 의 테스트 목록**: 앞 늘리기(패치일을 앞으로 당기는 장면)가 빠져 있었다. 마지막 수정 묶음에서 더했다.
+- **Task 12**: 알림 제목의 잡 이름을 태스크가 알 방법이 없었다. `PatchStatsAggregation` 에 `jobName` 을 두고, 잡 이름 상수는 `PatchStatsJobConfig` 에 한 번만 적었다. 읽기 빈 이름은 옛 빈과 겹쳐 `patchStatsResultBattleReader`, `patchStatsRankBattleReader` 다.
+- **Task 13 Step 2**: 로컬에서 앱이 뜨려면 가짜 API 키 인자가 필요했다. `--spring.batch.jdbc.initialize-schema=always` 는 잡 저장소가 메모리 기반이라 아무 일도 하지 않아 뺐다.
 
 ## 배포 (1단계, 이 PR 밖)
 
