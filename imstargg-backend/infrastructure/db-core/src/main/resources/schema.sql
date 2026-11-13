@@ -703,6 +703,17 @@ create table if not exists brawlstars_news_article
     updated_at                 timestamptz  not null default now()
 );
 
+-- brawlstars_patch table
+create table if not exists brawlstars_patch
+(
+    brawlstars_patch_id bigint generated always as identity primary key,
+    patch_date          date         not null,
+    memo                varchar(255) null,
+    created_at          timestamptz  not null default now(),
+    updated_at          timestamptz  not null default now()
+);
+create unique index if not exists uk_brawlstars_patch__patch_date on brawlstars_patch (patch_date);
+
 -- brawler_gear_ownership_stats table
 create sequence if not exists brawler_gear_ownership_stats_seq increment by 100;
 create table if not exists brawler_gear_ownership_stats
