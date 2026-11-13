@@ -127,6 +127,7 @@
 | 이전 | previous | prev |  | 직전 값·스냅샷 |
 | 일별 | daily |  |  | 하루 단위 집계 |
 | 일시 | datetime | at |  | 날짜와 시각. created_at처럼 _at 접미사로 쓴다. 기존 start_time·end_time 컬럼과 API 필드(battleTime)는 유지 |
+| 일치 | match |  |  | 팀 구성이 유형과 맞음 |
 | 저격수 | marksman |  |  | 브롤러 역할 값 MARKSMAN |
 | 저장 | store |  |  | 저장소에 파일을 둠 |
 | 전설 | legendary |  |  | 희귀도·경쟁전 티어 값 LEGENDARY |
