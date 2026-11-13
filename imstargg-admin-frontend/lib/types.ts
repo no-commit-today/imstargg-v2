@@ -139,3 +139,15 @@ export interface ApiSpecDetail {
   previousCollectedAt: string | null;
   previousContent: string | null;
 }
+
+export interface BrawlStarsPatch {
+  id: number;
+  patchDate: string;
+  memo: string | null;
+}
+
+export interface BrawlStarsPatchList {
+  today: string;
+  earliestRegistrableDate: string;
+  patches: BrawlStarsPatch[];
+}
