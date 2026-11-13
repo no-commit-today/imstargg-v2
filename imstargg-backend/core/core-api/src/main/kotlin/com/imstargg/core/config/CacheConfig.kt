@@ -28,6 +28,7 @@ class CacheConfig : CachingConfigurer {
         CaffeineCacheManager(
             CacheNames.BRAWLER,
             CacheNames.BATTLE_EVENT,
+            CacheNames.STATS_EVENT_MODE,
         ).apply {
             setCaffeine(
                 Caffeine

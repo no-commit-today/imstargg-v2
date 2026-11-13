@@ -1,6 +1,7 @@
 package com.imstargg.core.api.controller.v1.response
 
 import com.imstargg.core.domain.brawlstars.battle.Battle
+import com.imstargg.core.domain.statistics.StatsEventModeTypes
 import com.imstargg.core.enums.BattleMode
 import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
@@ -19,21 +20,23 @@ data class BattleResponse(
     val teams: List<List<BattlePlayerResponse>>,
 ) {
     companion object {
-        fun of(battle: Battle) =
-            BattleResponse(
-                battleTime = battle.battleTime,
-                event = battle.event?.let { BattleEventResponse.of(it) },
-                mode = battle.mode,
-                type = battle.type,
-                result = battle.result,
-                duration = battle.duration,
-                starPlayerTag = battle.starPlayerTag?.value,
-                rank = battle.rank,
-                trophyChange = battle.trophyChange,
-                teams =
-                    battle.teams.map { team ->
-                        team.map { BattlePlayerResponse.of(it) }
-                    },
-            )
+        fun of(
+            battle: Battle,
+            statsEventModeTypes: StatsEventModeTypes,
+        ) = BattleResponse(
+            battleTime = battle.battleTime,
+            event = battle.event?.let { BattleEventResponse.of(it, statsEventModeTypes) },
+            mode = battle.mode,
+            type = battle.type,
+            result = battle.result,
+            duration = battle.duration,
+            starPlayerTag = battle.starPlayerTag?.value,
+            rank = battle.rank,
+            trophyChange = battle.trophyChange,
+            teams =
+                battle.teams.map { team ->
+                    team.map { BattlePlayerResponse.of(it) }
+                },
+        )
     }
 }
