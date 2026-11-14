@@ -1,6 +1,7 @@
 package com.imstargg.core.batch.job
 
 import com.imstargg.core.enums.StatsWeekRange
+import com.imstargg.infrastructure.db.core.brawlstars.patch.BrawlStarsPatchRegistrationPolicy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -31,5 +32,15 @@ class PartitionRetentionLookbackTest {
         val safetyMarginDays = 1L
         assertThat(maxLookbackFromDate + executionDateOffset + safetyMarginDays)
             .isLessThanOrEqualTo(PartitionManageJobConfig.RETENTION_DAYS.toLong())
+    }
+
+    /**
+     * 범위 맞추기는 패치일 등록 기한 안의 날짜를 원본에서 다시 읽는다.
+     * 원본 보관이 기한보다 짧으면 기한 안에 등록된 패치의 통계가 지워진 원본으로 조용히 불완전해진다.
+     */
+    @Test
+    fun `원본 보관 일수가 패치일 등록 기한보다 길다`() {
+        assertThat(PartitionManageJobConfig.RETENTION_DAYS.toLong())
+            .isGreaterThan(BrawlStarsPatchRegistrationPolicy.REGISTRATION_DEADLINE_DAYS)
     }
 }

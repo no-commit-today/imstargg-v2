@@ -62,6 +62,7 @@
 | 마지막 | last |  |  | 가장 나중 것(last_battle_at). 목록의 최근은 recent |
 | 만족 | satisfied |  |  | 만족도 값(SATISFIED·VERY_SATISFIED) |
 | 만족도 | rating |  |  | 피드백 만족도 5단계 |
+| 맞춤 | align |  |  | 적용한 날짜 범위를 지금의 패치 범위에 맞춤 |
 | 매우 | very |  |  | 만족도 값 접두(VERY_) |
 | 맵 | map |  |  | 전투 맵 |
 | 메모 | memo |  |  | 운영자가 덧붙이는 설명 |
@@ -75,6 +76,7 @@
 | 무승부 | draw |  |  | 승/패/무의 무 |
 | 문턱 | threshold |  |  | 판정 경계값 |
 | 배지 | badge |  |  | 클럽 배지·프레스티지 배지 |
+| 백업 | backup |  |  | 전환 동안 남겨 두는 옛 통계(`_backup` 테이블) |
 | 버전 | version |  |  | 쓸 때마다 올리는 수정 번호, 글의 판(versions) |
 | 버피 | buffy |  | buffys | 가젯·스타파워·하이퍼차지 강화 아이템. 복수형 buffies |
 | 번호 | number |  |  | 회차·순번 값(시즌 번호 등) |
@@ -94,6 +96,7 @@
 | 비율 | rate |  |  | 픽률·승률·보유율의 률 |
 | 비활성화 | deactivate |  |  | 사라진 플레이어·클럽을 비활성으로 표시 |
 | 빅 브롤러 | big brawler |  |  | 빅 게임 모드의 역할(bestTimeAsBigBrawler) |
+| 빼기 | subtract |  |  | 범위에서 빠진 날의 전투를 통계에서 뺌 |
 | 삭제 | delete |  |  | 삭제(soft delete 표시 포함) |
 | 상대 | enemy |  | opponent | 같은 전투의 상대 팀(카운터 통계) |
 | 상세 | detail |  |  | 한 건의 전체 내용을 주는 응답·화면 |
@@ -133,6 +136,7 @@
 | 알림 | alert |  |  | 운영 알림(디스코드) |
 | 어쌔신 | assassin |  |  | 브롤러 역할 값 ASSASSIN |
 | 언어 | language | lang |  | 다국어 문구의 언어 |
+| 여유 | margin |  |  | 저장 중인 트랜잭션이 끝나기를 기다려 두는 시간 |
 | 역할 | role |  |  | 브롤러 역할과 클럽 직책 |
 | 연승 | win streak |  |  | 연속 승리(maxWinStreak) |
 | 영어 | english | en |  | 언어 값 ENGLISH |

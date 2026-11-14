@@ -5,7 +5,7 @@ import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleRankStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleRankStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEntity
 
 /**
@@ -25,7 +25,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsRankBattleEnti
  *   쓰기에서 실패한다. 순위 10 을 넘는 전투만 빼지 않는 이유: 모드 75 의 상위 10등만 남아 그 이벤트의 순위 분포가
  *   틀린 값이 된다.
  */
-class BrawlerBattleRankStatsAggregator : BattleStatsAggregator<StatsRankBattleEntity, BrawlerBattleRankStatsEntity> {
+class BrawlerBattleRankStatsAggregator : BattleStatsAggregator<StatsRankBattleEntity, BrawlerBattleRankStatsBackupEntity> {
     private val rankCounts = RankCountAccumulator<BrawlerBattleStatsKey>()
 
     override fun aggregate(battle: StatsRankBattleEntity) {
@@ -50,10 +50,10 @@ class BrawlerBattleRankStatsAggregator : BattleStatsAggregator<StatsRankBattleEn
         }
     }
 
-    override fun forEachEntity(consumer: (BrawlerBattleRankStatsEntity) -> Unit) {
+    override fun forEachEntity(consumer: (BrawlerBattleRankStatsBackupEntity) -> Unit) {
         rankCounts.forEach { key, rankCountsEmbedded ->
             consumer(
-                BrawlerBattleRankStatsEntity(
+                BrawlerBattleRankStatsBackupEntity(
                     eventBrawlStarsId = key.eventBrawlStarsId,
                     tierRange = key.tierRange,
                     battleDate = key.battleDate,
@@ -64,7 +64,7 @@ class BrawlerBattleRankStatsAggregator : BattleStatsAggregator<StatsRankBattleEn
         }
     }
 
-    override fun toEntities(): List<BrawlerBattleRankStatsEntity> =
+    override fun toEntities(): List<BrawlerBattleRankStatsBackupEntity> =
         buildList {
             forEachEntity { add(it) }
         }

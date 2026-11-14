@@ -4,15 +4,15 @@ import com.imstargg.CoreApiContextTest
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.domain.statistics.StatsRate
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
-import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsBackupEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerEnemyBattleResultStatsBackupEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsBackupEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerTrioBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsBackupJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
@@ -22,10 +22,10 @@ import java.time.LocalDate
 
 class BattleResultStatisticsRepositoryTest(
     private val sut: BattleResultStatisticsRepository,
-    private val resultStatsJpaRepository: BrawlerBattleResultStatsJpaRepository,
-    private val pairStatsJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
-    private val enemyStatsJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
-    private val trioStatsJpaRepository: BrawlerTrioBattleResultStatsJpaRepository,
+    private val resultStatsJpaRepository: BrawlerBattleResultStatsBackupJpaRepository,
+    private val pairStatsJpaRepository: BrawlerPairBattleResultStatsBackupJpaRepository,
+    private val enemyStatsJpaRepository: BrawlerEnemyBattleResultStatsBackupJpaRepository,
+    private val trioStatsJpaRepository: BrawlerTrioBattleResultStatsBackupJpaRepository,
     private val cleanUp: CleanUp,
 ) : CoreApiContextTest() {
     private val tierRange = StatsTierRange.TROPHY_1000_PLUS
@@ -40,7 +40,7 @@ class BattleResultStatisticsRepositoryTest(
     fun `findBrawlerResultStatistics - 게임 수 분모로 픽률 계산`() {
         val event = BrawlStarsId(100L)
         resultStatsJpaRepository.save(
-            BrawlerBattleResultStatsEntity(
+            BrawlerBattleResultStatsBackupEntity(
                 eventBrawlStarsId = event.value,
                 tierRange = tierRange,
                 battleDate = date,
@@ -233,7 +233,7 @@ class BattleResultStatisticsRepositoryTest(
     fun `findBrawlerDailyResultStatistics - 날짜별 row 반환`() {
         val event = BrawlStarsId(103L)
         resultStatsJpaRepository.save(
-            BrawlerBattleResultStatsEntity(
+            BrawlerBattleResultStatsBackupEntity(
                 eventBrawlStarsId = event.value,
                 tierRange = tierRange,
                 battleDate = date,
@@ -260,7 +260,7 @@ class BattleResultStatisticsRepositoryTest(
         val event1 = BrawlStarsId(105L)
         val event2 = BrawlStarsId(106L)
         resultStatsJpaRepository.save(
-            BrawlerBattleResultStatsEntity(
+            BrawlerBattleResultStatsBackupEntity(
                 eventBrawlStarsId = event1.value,
                 tierRange = tierRange,
                 battleDate = date,
@@ -270,7 +270,7 @@ class BattleResultStatisticsRepositoryTest(
             ),
         )
         resultStatsJpaRepository.save(
-            BrawlerBattleResultStatsEntity(
+            BrawlerBattleResultStatsBackupEntity(
                 eventBrawlStarsId = event2.value,
                 tierRange = tierRange,
                 battleDate = date,
@@ -303,7 +303,7 @@ class BattleResultStatisticsRepositoryTest(
         defeatCount: Long,
     ) {
         pairStatsJpaRepository.save(
-            BrawlerPairBattleResultStatsEntity(
+            BrawlerPairBattleResultStatsBackupEntity(
                 tierRange = tierRange,
                 startBattleDate = date,
                 endBattleDate = date,
@@ -323,7 +323,7 @@ class BattleResultStatisticsRepositoryTest(
         defeatCount: Long,
     ) {
         trioStatsJpaRepository.save(
-            BrawlerTrioBattleResultStatsEntity(
+            BrawlerTrioBattleResultStatsBackupEntity(
                 tierRange = tierRange,
                 startBattleDate = date,
                 endBattleDate = date,
@@ -343,7 +343,7 @@ class BattleResultStatisticsRepositoryTest(
         defeatCount: Long,
     ) {
         enemyStatsJpaRepository.save(
-            BrawlerEnemyBattleResultStatsEntity(
+            BrawlerEnemyBattleResultStatsBackupEntity(
                 tierRange = tierRange,
                 startBattleDate = date,
                 endBattleDate = date,

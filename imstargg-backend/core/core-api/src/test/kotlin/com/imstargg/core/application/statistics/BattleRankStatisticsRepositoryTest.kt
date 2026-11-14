@@ -3,9 +3,9 @@ package com.imstargg.core.application.statistics
 import com.imstargg.CoreApiContextTest
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleRankStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleRankStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.RankCountsEmbedded
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleRankStatsBackupJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 class BattleRankStatisticsRepositoryTest(
     private val sut: BattleRankStatisticsRepository,
-    private val soloRankStatsJpaRepository: BrawlerBattleRankStatsJpaRepository,
+    private val soloRankStatsJpaRepository: BrawlerBattleRankStatsBackupJpaRepository,
     private val cleanUp: CleanUp,
 ) : CoreApiContextTest() {
     private val tierRange = StatsTierRange.TROPHY_1000_PLUS
@@ -29,7 +29,7 @@ class BattleRankStatisticsRepositoryTest(
     fun `findBrawlerRankStatistics - solo rank entity 들을 브롤러별로 합산한 items 반환`() {
         val event = BrawlStarsId(200L)
         soloRankStatsJpaRepository.save(
-            BrawlerBattleRankStatsEntity(
+            BrawlerBattleRankStatsBackupEntity(
                 eventBrawlStarsId = event.value,
                 tierRange = tierRange,
                 battleDate = date,

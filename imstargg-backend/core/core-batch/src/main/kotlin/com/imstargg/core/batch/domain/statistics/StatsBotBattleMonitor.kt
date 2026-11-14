@@ -19,7 +19,7 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEn
  * 정책의 판정·단계 함수만 부르고 범위·창 산식을 다시 쓰지 않는다. [record] 는 예외를 던지지 않는다.
  * 스레드 안전하지 않다. 한 Task 실행 안에서 하나씩 만들어 쓴다.
  */
-class StatsBotBattleMonitor {
+class StatsBotBattleMonitor : StatsBotMonitor<StatsResultBattleEntity> {
     /** 3대3 적용 범위 안의 전투 수. */
     var targetCount: Long = 0
         private set
@@ -39,7 +39,7 @@ class StatsBotBattleMonitor {
     private var defaultNameSlots = 0L
     private var flaggedOpponentSlots = 0L
 
-    fun record(battle: StatsResultBattleEntity) {
+    override fun record(battle: StatsResultBattleEntity) {
         if (!StatsBotBattlePolicy.appliesTo(battle)) return
         targetCount++
 
@@ -86,7 +86,7 @@ class StatsBotBattleMonitor {
     }
 
     /** 걸린 전투 승률, 남은 전투 승률, 2000 이상 구간 승률, 걸리는 비중, 기본 이름 비율 순이다. */
-    fun metrics(): List<StatsBotMonitorMetric> =
+    override fun metrics(): List<StatsBotMonitorMetric> =
         listOf(
             StatsBotMonitorMetric(
                 name = FLAGGED_WIN_RATE,
@@ -114,7 +114,7 @@ class StatsBotBattleMonitor {
         )
 
     /** 요약 로그용 한 줄. 본인 1000~1999 전투 수와 그중 걸린 수는 걸리는 비중 지표의 표본과 분자다. */
-    fun summary(): String =
+    override fun summary(): String =
         "대상 ${targetCount}건, 걸린 전투 ${flaggedCount}건, " +
             "본인 1000~1999 ${ownRangeCount}건 중 걸린 ${ownRangeFlagged}건, " +
             metrics().joinToString(", ") { it.describe() }

@@ -1,0 +1,9 @@
+package com.imstargg.core.enums
+
+enum class StatsType {
+    BRAWLER_BATTLE_RESULT,
+    BRAWLER_BATTLE_RANK,
+    BRAWLER_ENEMY_BATTLE_RESULT,
+    BRAWLER_PAIR_BATTLE_RESULT,
+    BRAWLER_TRIO_BATTLE_RESULT,
+}

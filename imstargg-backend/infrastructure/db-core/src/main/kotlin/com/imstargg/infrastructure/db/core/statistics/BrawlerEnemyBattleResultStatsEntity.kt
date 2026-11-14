@@ -10,26 +10,20 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
-import java.time.LocalDate
 
 /**
- * 브롤러 vs 적 브롤러(카운터) 결과형(승/패/무) 배틀 통계.
+ * 결과형 배틀에서 브롤러가 상대 브롤러를 만났을 때의 승/패/무 통계. 패치마다 키별 한 줄이다.
  *
- * ## 한 행의 뜻
- * (티어, 주 버킷)에서 `brawler` 가 `enemy` 를 상대로 만난 결과(`brawler` 기준).
- * (X, Y) 행과 (Y, X) 행은 방향이 있는 별개 행이며, 승↔패가 서로 보완된다.
- * 티어는 기준 플레이어(`brawler`) 의 trophies 로 판정한다.
+ * ## 한 줄의 키
+ * 패치 × 티어 구간 × 브롤러 × 상대 브롤러.
  *
- * ## 이벤트 키를 뺀 이유
- * 2026-11 스펙 B 에서 이벤트 키를 뺐다. 이벤트(맵)에 따른 승률 차이는 대부분 개인 브롤러의 1인 맵 효과로 설명되고,
- * 이벤트별 값은 표본만 얇게 흩어 예측에 보탬이 없었다.
+ * ## 셈 규칙
+ * 브롤러와 상대는 서로 다른 팀이다. 브롤러 기준의 승/패/무를 센다.
+ * 상대는 자기 자신일 수 없다.
  *
- * ## 물리 구조
- * `start_battle_date` 월 범위 파티션 테이블이다. PK `(id, start_battle_date)`·파티션·CHECK 제약은 `schema.sql` 에만 있고,
- * 이 엔티티는 단일 `id` 를 `@Id` 로 쓴다. 유니크 인덱스가 `brawler` 기준 조회를 겸하므로 별도 조회 인덱스는 없다.
+ * 잡이 SQL 로 직접 쓴다.
  */
 @Entity
 @Table(
@@ -38,22 +32,20 @@ import java.time.LocalDate
         UniqueConstraint(
             name = "uk_brawler_enemy_battle_result_stats__1",
             columnNames = [
+                "brawlstars_patch_id",
                 "tier_range",
                 "brawler_brawlstars_id",
-                "start_battle_date",
                 "enemy_brawler_brawlstars_id",
             ],
         ),
     ],
 )
 class BrawlerEnemyBattleResultStatsEntity(
+    @Column(name = "brawlstars_patch_id", updatable = false, nullable = false)
+    val brawlStarsPatchId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
-    @Column(name = "start_battle_date", updatable = false, nullable = false)
-    val startBattleDate: LocalDate,
-    @Column(name = "end_battle_date", updatable = false, nullable = false)
-    val endBattleDate: LocalDate,
     @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
     val brawlerBrawlStarsId: Long,
     @Column(name = "enemy_brawler_brawlstars_id", updatable = false, nullable = false)
@@ -63,17 +55,12 @@ class BrawlerEnemyBattleResultStatsEntity(
 ) : BaseTimeEntity() {
     init {
         require(brawlerBrawlStarsId != enemyBrawlerBrawlStarsId) {
-            "brawlerBrawlStarsId($brawlerBrawlStarsId)와 enemyBrawlerBrawlStarsId($enemyBrawlerBrawlStarsId)는 달라야 합니다."
+            "enemyBrawlerBrawlStarsId($enemyBrawlerBrawlStarsId)는 brawlerBrawlStarsId($brawlerBrawlStarsId)와 달라야 합니다."
         }
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerEnemyBattleResultStatsSeq")
-    @SequenceGenerator(
-        name = "brawlerEnemyBattleResultStatsSeq",
-        sequenceName = "brawler_enemy_battle_result_stats_seq",
-        allocationSize = 100,
-    )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_enemy_battle_result_stats_id", nullable = false)
     val id: Long? = null
 }

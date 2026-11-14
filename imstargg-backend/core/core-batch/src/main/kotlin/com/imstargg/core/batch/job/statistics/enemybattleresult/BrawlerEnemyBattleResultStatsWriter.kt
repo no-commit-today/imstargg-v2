@@ -4,7 +4,7 @@ import com.imstargg.core.batch.domain.statistics.BrawlerEnemyBattleResultStatsAg
 import com.imstargg.core.batch.job.statistics.BattleStatsConstants
 import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
 import com.imstargg.core.enums.WeekRange
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsEntity.Companion.brawlerEnemyBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerEnemyBattleResultStatsBackupEntity.Companion.brawlerEnemyBattleResultStatsBackupEntity
 import org.springframework.stereotype.Component
 
 /**
@@ -22,10 +22,10 @@ class BrawlerEnemyBattleResultStatsWriter(
         var totalEntities = 0L
         transactionRunner.run { em, queryFactory ->
             queryFactory
-                .delete(brawlerEnemyBattleResultStatsEntity)
+                .delete(brawlerEnemyBattleResultStatsBackupEntity)
                 .where(
-                    brawlerEnemyBattleResultStatsEntity.startBattleDate.eq(weekRange.start),
-                    brawlerEnemyBattleResultStatsEntity.endBattleDate.eq(weekRange.end),
+                    brawlerEnemyBattleResultStatsBackupEntity.startBattleDate.eq(weekRange.start),
+                    brawlerEnemyBattleResultStatsBackupEntity.endBattleDate.eq(weekRange.end),
                 ).execute()
 
             aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->

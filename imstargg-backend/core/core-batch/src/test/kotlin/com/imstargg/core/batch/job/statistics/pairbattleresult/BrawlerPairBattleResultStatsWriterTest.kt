@@ -6,12 +6,12 @@ import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.enums.WeekRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.ResultCountEmbedded
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayerBrawler
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsBackupJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -21,7 +21,7 @@ import java.time.OffsetDateTime
 
 class BrawlerPairBattleResultStatsWriterTest(
     private val sut: BrawlerPairBattleResultStatsWriter,
-    private val repository: BrawlerPairBattleResultStatsJpaRepository,
+    private val repository: BrawlerPairBattleResultStatsBackupJpaRepository,
     private val cleanUp: CleanUp,
 ) : CoreBatchContextTest() {
     @AfterEach
@@ -63,8 +63,8 @@ class BrawlerPairBattleResultStatsWriterTest(
         assertThat(rowsB.single().brawler2BrawlStarsId).isEqualTo(20L)
     }
 
-    private fun staleRow(weekRange: WeekRange): BrawlerPairBattleResultStatsEntity =
-        BrawlerPairBattleResultStatsEntity(
+    private fun staleRow(weekRange: WeekRange): BrawlerPairBattleResultStatsBackupEntity =
+        BrawlerPairBattleResultStatsBackupEntity(
             tierRange = StatsTierRange.TROPHY_1000_PLUS,
             startBattleDate = weekRange.start,
             endBattleDate = weekRange.end,
