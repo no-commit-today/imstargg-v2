@@ -1,12 +1,12 @@
 package com.imstargg.core.worker.config
 
+import com.imstargg.infrastructure.db.core.KOREA_ZONE
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
-import java.time.ZoneId
 
 @Configuration
 class ClockConfig {
     @Bean
-    fun clock(): Clock = Clock.system(ZoneId.of("Asia/Seoul"))
+    fun clock(): Clock = Clock.system(KOREA_ZONE)
 }

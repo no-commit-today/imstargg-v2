@@ -1,7 +1,8 @@
 dependencies {
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
-    implementation("io.github.openfeign:feign-hc5")
-    implementation("io.github.openfeign:feign-micrometer")
-    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    api("org.springframework:spring-web")
+    implementation(project(":support:http-client"))
+    implementation(project(":support:logging"))
+    implementation("org.springframework.boot:spring-boot-restclient")
+    implementation("io.github.resilience4j:resilience4j-spring-boot4:${property("resilience4jVersion")}")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:${property("resilience4jVersion")}")
 }

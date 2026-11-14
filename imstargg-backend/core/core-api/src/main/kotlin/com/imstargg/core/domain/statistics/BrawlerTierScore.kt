@@ -4,54 +4,99 @@ import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.math.tanh
 
+/**
+ * 1인 브롤러 티어 점수. 50 이 기준 평균 승률에 해당하고, 클수록 그보다 낫다.
+ * 등급([grade])은 전투 수가 [GRADE_MIN_BATTLE_COUNT] 이상일 때만 있다.
+ *
+ * 점수 = `round(max(0, 50 + SCALING_K × (수축 승률 − 평균 승률) + 가산))`.
+ * - 수축 승률 = `(n × 승률 + BAYESIAN_C × 평균 승률) / (n + BAYESIAN_C)`. 표본이 적을수록 평균 승률 쪽으로 당겨진다.
+ *   n 은 승 + 패 + 무다.
+ * - 평균 승률(μ) = 입력 전체의 `Σ승 / Σ(승 + 패)`.
+ * - 가산 = `PICK_RATE_BONUS_CAP × tanh(ln(n / 중앙값) / ln(PICK_RATE_BONUS_SATURATION))`.
+ *   픽률 ÷ 픽률 중앙값의 로그를 tanh 로 ±4점에 묶은 값이며, 전투 수 ÷ 전투 수 중앙값과 같다.
+ *   중앙값은 등급을 받는(전투 수가 [GRADE_MIN_BATTLE_COUNT] 이상인) 브롤러만으로 낸다.
+ *   그런 브롤러가 없으면 모든 가산이 0 이고, 있는데 n 이 0 이면 −4 다.
+ *
+ * ## 상수를 이렇게 둔 이유
+ * 가산 상한 4 는 A 경계까지의 거리(5)보다 작아, 인기만으로는 등급이 바뀌지 않는다.
+ * 표본 하한 300 은 수축 승률이 자기 승률과 평균 승률의 중간이 되는 판수(`BAYESIAN_C`)다.
+ *
+ * ## 중앙값을 등급 받는 브롤러만으로 내는 이유
+ * 표본이 적은 브롤러가 과반인 맥락(맵 하나, 상위 티어 구간)에서 모든 브롤러로 중앙값을 내면
+ * 중앙값이 표본 하한 아래로 내려간다. 그러면 등급을 받는 브롤러가 모두 상한에 가까운 가산을 받아,
+ * 가산이 브롤러를 가르지 못하고 그 맥락의 등급만 위로 민다.
+ *
+ * ## 맥락에 따라 점수가 바뀐다
+ * μ 는 조회 맥락(이벤트, 티어 구간, 기간)의 모든 브롤러에서, 중앙값은 그중 등급을 받는 브롤러에서 나오므로,
+ * 맥락이 바뀌면 같은 브롤러의 점수도 바뀐다.
+ *
+ * ## 저장하지 않는다
+ * 사전 집계 없이 조회 때 계산한다. 결과는 Redis `statistics` 캐시에 30분 보관되므로,
+ * 산식이나 타입을 바꾸면 캐시 키 버전을 올린다.
+ *
+ * ## 결정 이력
+ * 2026-11 스펙 C2 가 픽률을 곱하던 가중을 버리고 가산으로 바꿨고,
+ * 등급 경계를 55/52/48/45 에서 60/55/45/40 으로 넓혔고, 표본 하한을 새로 뒀다. 근거 수치는 스펙 부록 C2.
+ * 같은 스펙의 2026-11-10 개정이 중앙값을 내는 대상을 등급 받는 브롤러로 좁혔다(부록 C2.12).
+ */
 data class BrawlerTierScore(
     val value: Int,
+    val grade: TierGrade?,
 ) {
-    fun tier(): BrawlerTier =
-        when {
-            value >= 55 -> BrawlerTier.S
-            value >= 52 -> BrawlerTier.A
-            value >= 48 -> BrawlerTier.B
-            value >= 45 -> BrawlerTier.C
-            else -> BrawlerTier.D
-        }
-
     companion object {
         private const val BAYESIAN_C = 300.0
-        private const val LOG_ALPHA = 100.0
         private const val SCALING_K = 200.0
-        private const val MIN_WEIGHT_BETA = 0.1
+        private const val PICK_RATE_BONUS_CAP = 4.0
+        private const val PICK_RATE_BONUS_SATURATION = 3.0
+        private const val GRADE_MIN_BATTLE_COUNT = 300L
 
-        fun create(counts: List<BrawlerResultCount>): Map<BrawlStarsId, BrawlerTierScore> {
+        fun create(counts: Map<BrawlStarsId, ResultCount>): Map<BrawlStarsId, BrawlerTierScore> {
             if (counts.isEmpty()) return emptyMap()
 
-            val totalBattleCount = counts.sumOf { it.resultCount.totalCount }
-            val totalWins = counts.sumOf { it.resultCount.victoryCount }
-            val totalLosses = counts.sumOf { it.resultCount.defeatCount }
-            val avgWinRate = StatsRate.winRate(totalWins, totalLosses)
+            val averageWinRate =
+                StatsRate.winRate(
+                    victoryCount = counts.values.sumOf { it.victoryCount },
+                    defeatCount = counts.values.sumOf { it.defeatCount },
+                )
+            val median = median(counts.values.map { it.totalCount }.filter { it >= GRADE_MIN_BATTLE_COUNT })
 
-            val maxPickRate =
-                counts.maxOf {
-                    StatsRate.pickRate(it.resultCount.totalCount, totalBattleCount)
-                }
-            if (maxPickRate == 0.0) {
-                return counts.associate { it.brawlerId to BrawlerTierScore(50) }
+            return counts.mapValues { (_, resultCount) ->
+                val n = resultCount.totalCount.toDouble()
+                val adjustedWinRate = (n * resultCount.winRate + BAYESIAN_C * averageWinRate) / (n + BAYESIAN_C)
+                val bonus =
+                    when {
+                        median == null -> 0.0
+                        n == 0.0 -> -PICK_RATE_BONUS_CAP
+                        else -> PICK_RATE_BONUS_CAP * tanh(ln(n / median) / ln(PICK_RATE_BONUS_SATURATION))
+                    }
+                val value = max(0.0, 50.0 + SCALING_K * (adjustedWinRate - averageWinRate) + bonus).roundToInt()
+                BrawlerTierScore(value = value, grade = gradeOf(value = value, battleCount = resultCount.totalCount))
+            }
+        }
+
+        fun gradeOf(
+            value: Int,
+            battleCount: Long,
+        ): TierGrade? =
+            when {
+                battleCount < GRADE_MIN_BATTLE_COUNT -> null
+                value >= 60 -> TierGrade.S
+                value >= 55 -> TierGrade.A
+                value >= 45 -> TierGrade.B
+                value >= 40 -> TierGrade.C
+                else -> TierGrade.D
             }
 
-            return counts.associate { count ->
-                val n = count.resultCount.totalCount.toDouble()
-                val winRate = count.resultCount.winRate
-                val pickRate = StatsRate.pickRate(count.resultCount.totalCount, totalBattleCount)
-
-                val adjustedWinRate = (n * winRate + BAYESIAN_C * avgWinRate) / (n + BAYESIAN_C)
-                val pickRateWeight = ln(1.0 + LOG_ALPHA * pickRate) / ln(1.0 + LOG_ALPHA * maxPickRate)
-                val rawScore =
-                    50.0 + (adjustedWinRate - avgWinRate) * SCALING_K *
-                        (MIN_WEIGHT_BETA + (1.0 - MIN_WEIGHT_BETA) * pickRateWeight)
-                val score = max(0.0, rawScore).roundToInt()
-
-                count.brawlerId to BrawlerTierScore(score)
+        private fun median(values: List<Long>): Double? {
+            if (values.isEmpty()) return null
+            val sorted = values.sorted()
+            val middle = sorted.size / 2
+            return if (sorted.size % 2 == 1) {
+                sorted[middle].toDouble()
+            } else {
+                (sorted[middle - 1] + sorted[middle]) / 2.0
             }
         }
     }

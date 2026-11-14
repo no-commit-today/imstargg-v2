@@ -1,6 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { EventResultStatsTable } from "@app/events/[id]/_components/EventResultStatsTable";
 import { EventRankStatsTable } from "@app/events/[id]/_components/EventRankStatsTable";
 import type { Brawler } from "@/domain/brawler/types";
@@ -13,97 +12,99 @@ const brawler: Brawler = {
   portraitImageUrl: null,
 };
 
+const resultItem = {
+  battleCount: 275,
+  pickRate: 0.03,
+  winRate: 0.713,
+  starPlayerRate: 0.276,
+  tierScore: 100,
+  tier: "S" as const,
+};
+
 describe("EventStatsTables", () => {
   it("결과형 통계 행은 승률·픽률·스타플레이어·전투수 셀을 모두 노출한다", () => {
-    render(
-      <EventResultStatsTable
-        items={[
-          {
-            brawler,
-            battleCount: 275,
-            pickRate: 0.03,
-            winRate: 0.713,
-            starPlayerRate: 0.276,
-            tierScore: 100,
-            tier: "S",
-          },
-        ]}
-        selectedBrawlerId={null}
-        onToggleBrawler={vi.fn()}
-      />,
-    );
+    render(<EventResultStatsTable items={[{ brawler, ...resultItem }]} />);
 
-    const row = screen.getByRole("button", { name: /데미안/ });
+    const row = screen.getByRole("link", { name: /데미안/ });
     expect(within(row).getByText("71.3%")).toBeInTheDocument();
     expect(within(row).getByText("3.0%")).toBeInTheDocument();
     expect(within(row).getByText("27.6%")).toBeInTheDocument();
     expect(within(row).getByText("275")).toBeInTheDocument();
   });
 
-  it("선택된 결과형 통계 행은 aria-pressed=true 로 표시된다", () => {
-    render(
-      <EventResultStatsTable
-        items={[
-          {
-            brawler,
-            battleCount: 275,
-            pickRate: 0.03,
-            winRate: 0.713,
-            starPlayerRate: 0.276,
-            tierScore: 100,
-            tier: "S",
-          },
-        ]}
-        selectedBrawlerId={16000104}
-        onToggleBrawler={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole("button", { pressed: true })).toHaveAccessibleName(
-      /데미안/,
-    );
-  });
-
-  it("순위형 통계 행은 평균순위·전투수 셀을 노출하고 선택 상태를 aria-pressed 로 알린다", () => {
+  it("순위형 통계 행은 평균순위·전투수 셀을 노출한다", () => {
     render(
       <EventRankStatsTable
-        items={[
-          {
-            brawler,
-            totalBattleCount: 275,
-            averageRank: 2.14,
-          },
-        ]}
-        selectedBrawlerId={16000104}
-        onToggleBrawler={vi.fn()}
+        items={[{ brawler, totalBattleCount: 275, averageRank: 2.14 }]}
       />,
     );
 
-    const row = screen.getByRole("button", { pressed: true });
+    const row = screen.getByRole("link", { name: /데미안/ });
     expect(within(row).getByText("2.14")).toBeInTheDocument();
     expect(within(row).getByText("275")).toBeInTheDocument();
   });
 
-  it("결과형 행 클릭 시 onToggleBrawler 로 브롤러 id 를 전달한다", async () => {
-    const onToggle = vi.fn();
+  it("결과형 행은 브롤러 상세로 가는 링크다", () => {
+    render(<EventResultStatsTable items={[{ brawler, ...resultItem }]} />);
+
+    expect(screen.getByRole("link", { name: /데미안/ })).toHaveAttribute(
+      "href",
+      "/brawlers/16000104",
+    );
+  });
+
+  it("순위형 행은 브롤러 상세로 가는 링크다", () => {
+    render(
+      <EventRankStatsTable
+        items={[{ brawler, totalBattleCount: 275, averageRank: 2.14 }]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /데미안/ })).toHaveAttribute(
+      "href",
+      "/brawlers/16000104",
+    );
+  });
+
+  it("브롤러가 없는 행은 링크 없이 그대로 표시된다", () => {
+    render(
+      <>
+        <EventResultStatsTable items={[{ brawler: null, ...resultItem }]} />
+        <EventRankStatsTable
+          items={[{ brawler: null, totalBattleCount: 10, averageRank: 3 }]}
+        />
+      </>,
+    );
+
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getAllByText("-")).toHaveLength(2);
+  });
+
+  it("등급 없는 결과형 행은 표본 부족 배지와 neutral 레일이고 범례가 보인다", () => {
+    render(<EventResultStatsTable items={[{ brawler, ...resultItem, tier: null }]} />);
+
+    expect(screen.getByRole("link", { name: /데미안/ })).toHaveAttribute("data-rail", "neutral");
+    expect(screen.getByLabelText("표본 부족")).toBeInTheDocument();
+    expect(screen.getByText(/표본 부족: 전투 수가 적어 티어를 매기지 않습니다/)).toBeInTheDocument();
+  });
+
+  it("등급이 모두 있으면 범례가 없다", () => {
+    render(<EventResultStatsTable items={[{ brawler, ...resultItem }]} />);
+
+    expect(screen.queryByText(/표본 부족: 전투 수가 적어 티어를 매기지 않습니다/)).toBeNull();
+  });
+
+  it("결과형 표의 티어 정렬에서 등급 없는 행은 아래다", () => {
+    const other: Brawler = { ...brawler, id: 16000105, name: "쉘리" };
     render(
       <EventResultStatsTable
         items={[
-          {
-            brawler,
-            battleCount: 275,
-            pickRate: 0.03,
-            winRate: 0.713,
-            starPlayerRate: 0.276,
-            tierScore: 100,
-            tier: "S",
-          },
+          { brawler, ...resultItem, tier: null, tierScore: 66 },
+          { brawler: other, ...resultItem, tier: "B" as const, tierScore: 50 },
         ]}
-        selectedBrawlerId={null}
-        onToggleBrawler={onToggle}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /데미안/ }));
-    expect(onToggle).toHaveBeenCalledWith(16000104);
+
+    expect(screen.getAllByRole("link")[0]).toHaveAccessibleName(/쉘리/);
   });
 });

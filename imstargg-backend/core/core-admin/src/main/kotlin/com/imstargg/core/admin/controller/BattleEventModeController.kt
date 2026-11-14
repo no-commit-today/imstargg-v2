@@ -1,15 +1,13 @@
 package com.imstargg.core.admin.controller
 
 import com.imstargg.core.admin.application.BattleEventService
+import com.imstargg.core.admin.application.statistics.StatsEventModeService
 import com.imstargg.core.admin.controller.support.toImageUpdate
-import com.imstargg.core.admin.request.BattleEventModeColorUpdateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
-import com.imstargg.core.admin.request.BattleEventModeUpdateRequest
 import com.imstargg.core.admin.request.MessagesUpdateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -21,9 +19,15 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 class BattleEventModeController(
     private val battleEventService: BattleEventService,
+    private val statsEventModeService: StatsEventModeService,
 ) {
     @GetMapping("/event-modes")
-    fun getAll(): ResponseEntity<List<BattleEventModeResponse>> = ResponseEntity.ok(battleEventService.findAllModes())
+    fun getAll(): ResponseEntity<List<BattleEventModeResponse>> {
+        val types = statsEventModeService.findAllTypes()
+        return ResponseEntity.ok(
+            battleEventService.findAllModes().map { it.copy(statsType = types[it.brawlStarsId]) },
+        )
+    }
 
     @PostMapping("/event-modes")
     fun create(
@@ -48,24 +52,6 @@ class BattleEventModeController(
         @RequestPart("file") file: MultipartFile,
     ): ResponseEntity<Unit> {
         battleEventService.updateModeImage(brawlStarsId, file.toImageUpdate())
-        return ResponseEntity.ok().build()
-    }
-
-    @PatchMapping("/event-modes/{brawlStarsId}")
-    fun update(
-        @PathVariable brawlStarsId: Long,
-        @RequestBody request: BattleEventModeUpdateRequest,
-    ): ResponseEntity<Unit> {
-        battleEventService.updateMode(brawlStarsId, request)
-        return ResponseEntity.ok().build()
-    }
-
-    @PutMapping("/event-modes/{brawlStarsId}/color")
-    fun updateColor(
-        @PathVariable brawlStarsId: Long,
-        @RequestBody request: BattleEventModeColorUpdateRequest,
-    ): ResponseEntity<Unit> {
-        battleEventService.updateModeColor(brawlStarsId, request.color)
         return ResponseEntity.ok().build()
     }
 }

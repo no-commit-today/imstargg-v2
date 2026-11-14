@@ -1,0 +1,11 @@
+# core-batch 가 db-core 의 application-db.yml 값을 덮는 설정.
+#
+# 프로필 전용 파일(application-db.yml)은 application.yml 안의 on-profile 문서보다 우선하므로, 겹치는 키는
+# application.yml 이 아니라 이 파일에 둔다. 이 파일은 그룹에서 db 뒤의 batch-db 프로필로 읽혀 application-db.yml 을 이긴다.
+# 가드: BatchDataSourceConfigPrecedenceTest
+storage:
+  datasource:
+    core:
+      data-source-properties:
+        # 배치의 무거운 조회·삭제는 db-core 기본값(3초)을 넘는다. 멈춘 쿼리가 다음 실행까지 잡을 붙잡지 않게 상한은 둔다.
+        socketTimeout: 600

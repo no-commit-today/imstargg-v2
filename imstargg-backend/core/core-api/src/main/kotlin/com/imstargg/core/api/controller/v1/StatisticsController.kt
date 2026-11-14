@@ -3,11 +3,12 @@ package com.imstargg.core.api.controller.v1
 import com.imstargg.core.api.controller.ListResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerEnemyResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerItemOwnershipStatisticsResponse
-import com.imstargg.core.api.controller.v1.response.BrawlerPairRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerPairResultStatisticsItemResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerRankStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultDailyStatisticsResponse
 import com.imstargg.core.api.controller.v1.response.BrawlerResultStatisticsResponse
+import com.imstargg.core.api.controller.v1.response.BrawlerTrioResultStatisticsItemResponse
+import com.imstargg.core.api.controller.v1.response.ComboResultRankingItemResponse
 import com.imstargg.core.api.query.StatisticsQueryComposer
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
 import com.imstargg.core.enums.BrawlerTrophyRange
@@ -41,17 +42,54 @@ class StatisticsController(
 
     @GetMapping("/v1/statistics/brawler/pair/result")
     fun getBrawlerPairResultStatistics(
-        @RequestParam eventId: Long?,
         @RequestParam brawlerId: Long,
-        @RequestParam(required = false) pairBrawlerId: Long?,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<ListResponse<BrawlerPairResultStatisticsItemResponse>> {
         val responses =
             statisticsQueryComposer.getBrawlerPairResultStatistics(
-                eventId = eventId?.let { BrawlStarsId(it) },
                 brawlerId = BrawlStarsId(brawlerId),
-                pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
+                tierRange = tierRange,
+                dateRange = dateRange,
+            )
+        return ResponseEntity.ok(ListResponse(responses))
+    }
+
+    @GetMapping("/v1/statistics/brawler/trio/result")
+    fun getBrawlerTrioResultStatistics(
+        @RequestParam brawlerId: Long,
+        @RequestParam tierRange: StatsTierRange,
+        @RequestParam dateRange: StatsDateRange,
+    ): ResponseEntity<ListResponse<BrawlerTrioResultStatisticsItemResponse>> {
+        val responses =
+            statisticsQueryComposer.getBrawlerTrioResultStatistics(
+                brawlerId = BrawlStarsId(brawlerId),
+                tierRange = tierRange,
+                dateRange = dateRange,
+            )
+        return ResponseEntity.ok(ListResponse(responses))
+    }
+
+    @GetMapping("/v1/statistics/pair/result")
+    fun getPairResultRanking(
+        @RequestParam tierRange: StatsTierRange,
+        @RequestParam dateRange: StatsDateRange,
+    ): ResponseEntity<ListResponse<ComboResultRankingItemResponse>> {
+        val responses =
+            statisticsQueryComposer.getPairResultRanking(
+                tierRange = tierRange,
+                dateRange = dateRange,
+            )
+        return ResponseEntity.ok(ListResponse(responses))
+    }
+
+    @GetMapping("/v1/statistics/trio/result")
+    fun getTrioResultRanking(
+        @RequestParam tierRange: StatsTierRange,
+        @RequestParam dateRange: StatsDateRange,
+    ): ResponseEntity<ListResponse<ComboResultRankingItemResponse>> {
+        val responses =
+            statisticsQueryComposer.getTrioResultRanking(
                 tierRange = tierRange,
                 dateRange = dateRange,
             )
@@ -60,14 +98,12 @@ class StatisticsController(
 
     @GetMapping("/v1/statistics/brawler/enemy/result")
     fun getEnemyResultStatistics(
-        @RequestParam eventId: Long?,
         @RequestParam brawlerId: Long,
         @RequestParam tierRange: StatsTierRange,
         @RequestParam dateRange: StatsDateRange,
     ): ResponseEntity<ListResponse<BrawlerEnemyResultStatisticsItemResponse>> {
         val responses =
             statisticsQueryComposer.getEnemyResultStatistics(
-                eventId = eventId?.let { BrawlStarsId(it) },
                 brawlerId = BrawlStarsId(brawlerId),
                 tierRange = tierRange,
                 dateRange = dateRange,
@@ -86,25 +122,6 @@ class StatisticsController(
                 BrawlStarsId(eventId),
                 tierRange,
                 dateRange,
-            )
-        return ResponseEntity.ok(ListResponse(responses))
-    }
-
-    @GetMapping("/v1/statistics/brawler/pair/rank")
-    fun getBrawlerPairRankStatistics(
-        @RequestParam eventId: Long,
-        @RequestParam brawlerId: Long,
-        @RequestParam(required = false) pairBrawlerId: Long?,
-        @RequestParam tierRange: StatsTierRange,
-        @RequestParam dateRange: StatsDateRange,
-    ): ResponseEntity<ListResponse<BrawlerPairRankStatisticsResponse>> {
-        val responses =
-            statisticsQueryComposer.getBrawlerPairRankStatistics(
-                eventId = BrawlStarsId(eventId),
-                brawlerId = BrawlStarsId(brawlerId),
-                pairBrawlerId = pairBrawlerId?.let { BrawlStarsId(it) },
-                tierRange = tierRange,
-                dateRange = dateRange,
             )
         return ResponseEntity.ok(ListResponse(responses))
     }

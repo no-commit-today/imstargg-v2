@@ -3,8 +3,9 @@ import {
   toBrawlerResultStatistics,
   toBrawlerRankStat,
   toPairResultStat,
-  toPairRankStat,
   toEnemyResultStat,
+  toTrioResultStat,
+  toComboRankingStat,
   toDailyResultStat,
   toItemOwnership,
 } from "@/domain/statistics/mappers";
@@ -63,7 +64,25 @@ describe("toBrawlerResultStatistics", () => {
     expect(result.items[0].brawler).toBeNull();
   });
 
-  it("알 수 없는 tier 는 D 로 fallback", () => {
+  it("tier 가 null 이면 등급 없음(null)으로 매핑한다", () => {
+    const result = toBrawlerResultStatistics({
+      totalBattleCount: 0,
+      items: [
+        {
+          brawler: null,
+          battleCount: 1,
+          pickRate: 0,
+          winRate: 0,
+          starPlayerRate: 0,
+          tierScore: 66,
+          tier: null,
+        },
+      ],
+    });
+    expect(result.items[0].tier).toBeNull();
+  });
+
+  it("알 수 없는 tier 는 등급 없음(null)으로 매핑한다", () => {
     const result = toBrawlerResultStatistics({
       totalBattleCount: 0,
       items: [
@@ -78,7 +97,7 @@ describe("toBrawlerResultStatistics", () => {
         },
       ],
     });
-    expect(result.items[0].tier).toBe("D");
+    expect(result.items[0].tier).toBeNull();
   });
 });
 
@@ -102,21 +121,59 @@ describe("toPairResultStat", () => {
       battleCount: 100,
       pickRate: 0.05,
       winRate: 0.6,
+      tierScore: 55,
+      tier: "A",
     });
     expect(result.brawler?.id).toBe(1);
     expect(result.pairBrawler?.id).toBe(2);
   });
-});
 
-describe("toPairRankStat", () => {
-  it("매핑한다", () => {
-    const result = toPairRankStat({
+  it("toPairResultStat 는 tierScore·tier 를 옮긴다", () => {
+    const result = toPairResultStat({
       brawler: fakeBrawler(1),
       pairBrawler: fakeBrawler(2),
-      totalBattleCount: 50,
-      averageRank: 3.0,
+      battleCount: 100,
+      pickRate: 0.05,
+      winRate: 0.6,
+      tierScore: 57,
+      tier: "S",
     });
-    expect(result.averageRank).toBe(3.0);
+    expect(result.tierScore).toBe(57);
+    expect(result.tier).toBe("S");
+  });
+});
+
+describe("toTrioResultStat", () => {
+  it("toTrioResultStat 는 pairBrawlers 의 null 을 버린다", () => {
+    const result = toTrioResultStat({
+      brawler: fakeBrawler(1),
+      pairBrawlers: [fakeBrawler(2), null],
+      battleCount: 100,
+      pickRate: 0.05,
+      winRate: 0.6,
+      tierScore: 57,
+      tier: "S",
+    });
+    expect(result.brawler?.id).toBe(1);
+    expect(result.pairBrawlers).toHaveLength(1);
+    expect(result.pairBrawlers[0].id).toBe(2);
+    expect(result.tierScore).toBe(57);
+    expect(result.tier).toBe("S");
+  });
+});
+
+describe("toComboRankingStat", () => {
+  it("toComboRankingStat 는 brawlers 를 모두 매핑한다", () => {
+    const result = toComboRankingStat({
+      brawlers: [fakeBrawler(1), fakeBrawler(2), fakeBrawler(3)],
+      battleCount: 100,
+      pickRate: 0.05,
+      winRate: 0.6,
+      tierScore: 57,
+      tier: "B",
+    });
+    expect(result.brawlers.map((b) => b.id)).toEqual([1, 2, 3]);
+    expect(result.tier).toBe("B");
   });
 });
 

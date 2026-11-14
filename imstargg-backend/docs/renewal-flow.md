@@ -22,7 +22,8 @@
 | `REQUESTED` → `PENDING`       | core-api        | SQS 메시지 발행 후      |
 | `PENDING` → `EXECUTING`       | core-worker     | 워커가 처리 시작        |
 | `EXECUTING` → `COMPLETED`     | core-worker     | API 호출 및 DB 갱신 성공 |
-| `EXECUTING` → `NOT_FOUND`     | core-worker     | API 404 응답            |
+| `EXECUTING` → `COMPLETED`     | core-worker     | battlelog 404 — 전투 0건으로 완료 |
+| `EXECUTING` → `NOT_FOUND`     | core-worker     | `/players` 404(클럽은 `/clubs` 404) |
 | `EXECUTING` → `FAILED`        | core-worker     | 예외 발생               |
 | `*` → `REQUESTED`             | core-api        | `reRequest()` 재요청    |
 
@@ -58,7 +59,7 @@
 통계 집계는 COMPLETED 확정 이후의 부가 작업이며 비동기(`@Async`)로 처리한다 — SQS 리스너 스레드를
 빠르게 반환시키기 위함이다. 집계 로직 내부 예외는 `@Async` 스레드에서 `AsyncExceptionHandler` 가
 로그만 남기고(허용된 드문 유실), 재시도(`StatsBattleRetryableAggregator`, 유니크 충돌·일시 DB 오류
-대상) 소진 후의 실패도 여기서 흡수된다. 유실된 플레이어가 `stats_player` 대상이면 축적 스케줄러가
+대상) 소진 후의 실패도 여기서 흡수된다. 유실된 플레이어가 `stats_player` 에 `ACTIVE` 로 있으면 축적 스케줄러가
 7일 내 재수집할 수 있다.
 
 단, 태스크 제출 자체의 실패(executor 큐 포화 시 `TaskRejectedException`, 종료 중 거부)는 호출

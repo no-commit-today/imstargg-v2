@@ -10,12 +10,21 @@ import com.imstargg.core.domain.statistics.BrawlerResultCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyCount
 import com.imstargg.core.domain.statistics.BrawlerResultDailyStatistics
 import com.imstargg.core.domain.statistics.BrawlerResultStatistics
+import com.imstargg.core.domain.statistics.BrawlerTrioResultCount
+import com.imstargg.core.domain.statistics.BrawlerTrioResultStatistics
+import com.imstargg.core.domain.statistics.ComboStatsPolicy
+import com.imstargg.core.domain.statistics.PairResultRanking
 import com.imstargg.core.domain.statistics.ResultCount
+import com.imstargg.core.domain.statistics.StatsRate
+import com.imstargg.core.domain.statistics.TrioResultRanking
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.infrastructure.jpa.toResultCount
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsJpaRepository
-import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerEnemyBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerPairResultProjection
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioBattleResultStatsBackupJpaRepository
+import com.imstargg.infrastructure.db.core.statistics.repository.BrawlerTrioResultProjection
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -23,10 +32,10 @@ import java.time.LocalDate
 @Repository
 @Transactional(readOnly = true)
 class BattleResultStatisticsRepository(
-    private val battleResultJpaRepository: BrawlerBattleResultStatsJpaRepository,
-    private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsJpaRepository,
-    private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsJpaRepository,
-    private val gameSlotRepository: GameSlotRepository,
+    private val battleResultJpaRepository: BrawlerBattleResultStatsBackupJpaRepository,
+    private val enemyBattleResultJpaRepository: BrawlerEnemyBattleResultStatsBackupJpaRepository,
+    private val pairBattleResultJpaRepository: BrawlerPairBattleResultStatsBackupJpaRepository,
+    private val trioBattleResultJpaRepository: BrawlerTrioBattleResultStatsBackupJpaRepository,
 ) {
     fun findBrawlerResultStatistics(
         eventId: BrawlStarsId?,
@@ -54,31 +63,26 @@ class BattleResultStatisticsRepository(
                         starPlayerCount = projection.starPlayerCount,
                     )
                 }
-        val gameSlots = gameSlotRepository.findAllByEventIds(rows.map { it.eventId })
-        return BrawlerResultStatistics.create(rows = rows, gameSlots = gameSlots)
+        return BrawlerResultStatistics.create(rows = rows)
     }
 
     fun findBrawlerPairResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
         tierRange: StatsTierRange,
         startDate: LocalDate,
         endDate: LocalDate,
     ): BrawlerPairResultStatistics {
         val counts: List<BrawlerPairResultCount> =
             pairBattleResultJpaRepository
-                .findAllByConditions(
-                    eventBrawlStarsId = eventId?.value,
+                .findAllByBrawler(
                     brawlerBrawlStarsId = brawlerId.value,
-                    pairBrawlerBrawlStarsId = pairBrawlerId?.value,
                     tierRange = tierRange,
                     startDate = startDate,
                     endDate = endDate,
                 ).map { projection ->
                     BrawlerPairResultCount(
-                        brawlerId = BrawlStarsId(projection.brawlerBrawlStarsId),
-                        pairBrawlerId = BrawlStarsId(projection.pairBrawlerBrawlStarsId),
+                        brawler1Id = BrawlStarsId(projection.brawler1BrawlStarsId),
+                        brawler2Id = BrawlStarsId(projection.brawler2BrawlStarsId),
                         resultCount =
                             ResultCount(
                                 victoryCount = projection.victoryCount,
@@ -87,25 +91,98 @@ class BattleResultStatisticsRepository(
                             ),
                     )
                 }
-        val totalElementCount =
-            pairBattleResultJpaRepository.countDistinctPairBrawlers(
-                eventBrawlStarsId = eventId?.value,
-                brawlerBrawlStarsId = brawlerId.value,
-                pairBrawlerBrawlStarsId = pairBrawlerId?.value,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
+        val totalTeamCount =
+            StatsRate.pairTeamCount(
+                pairBattleResultJpaRepository.sumTotalCount(
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                ),
             )
-        val totalGameCount = computeTotalGameCount(eventId, tierRange, startDate, endDate)
         return BrawlerPairResultStatistics.create(
-            totalBattleCount = totalGameCount,
-            totalElementCount = totalElementCount,
+            brawlerId = brawlerId,
+            totalTeamCount = totalTeamCount,
             counts = counts,
         )
     }
 
+    fun findBrawlerTrioResultStatistics(
+        brawlerId: BrawlStarsId,
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): BrawlerTrioResultStatistics {
+        val counts: List<BrawlerTrioResultCount> =
+            trioBattleResultJpaRepository
+                .findAllByBrawler(
+                    brawlerBrawlStarsId = brawlerId.value,
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                ).map { it.toTrioResultCount() }
+        // 3인 조합 행 하나가 팀 하나라 합이 곧 팀 수다.
+        val totalTeamCount =
+            trioBattleResultJpaRepository.sumTotalCount(
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        return BrawlerTrioResultStatistics.create(
+            brawlerId = brawlerId,
+            totalTeamCount = totalTeamCount,
+            counts = counts,
+        )
+    }
+
+    fun findPairResultRanking(
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): PairResultRanking {
+        val counts: List<BrawlerPairResultCount> =
+            pairBattleResultJpaRepository
+                .findAllHavingTotalCountAtLeast(
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                    minTotalCount = ComboStatsPolicy.RANKING_MIN_BATTLE_COUNT,
+                ).map { it.toPairResultCount() }
+        // 분모는 하한(HAVING)을 걸지 않은 전체 합이다 — 하한 미만 조합도 팀 수에는 들어간다.
+        val totalTeamCount =
+            StatsRate.pairTeamCount(
+                pairBattleResultJpaRepository.sumTotalCount(
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                ),
+            )
+        return PairResultRanking.create(totalTeamCount = totalTeamCount, counts = counts)
+    }
+
+    fun findTrioResultRanking(
+        tierRange: StatsTierRange,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): TrioResultRanking {
+        val counts: List<BrawlerTrioResultCount> =
+            trioBattleResultJpaRepository
+                .findAllHavingTotalCountAtLeast(
+                    tierRange = tierRange,
+                    startDate = startDate,
+                    endDate = endDate,
+                    minTotalCount = ComboStatsPolicy.RANKING_MIN_BATTLE_COUNT,
+                ).map { it.toTrioResultCount() }
+        // 분모는 하한(HAVING)을 걸지 않은 전체 합 그대로다(3인 조합 행 하나가 팀 하나).
+        val totalTeamCount =
+            trioBattleResultJpaRepository.sumTotalCount(
+                tierRange = tierRange,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        return TrioResultRanking.create(totalTeamCount = totalTeamCount, counts = counts)
+    }
+
     fun findBrawlerEnemyResultStatistics(
-        eventId: BrawlStarsId?,
         brawlerId: BrawlStarsId,
         tierRange: StatsTierRange,
         startDate: LocalDate,
@@ -113,8 +190,7 @@ class BattleResultStatisticsRepository(
     ): BrawlerEnemyResultStatistics {
         val counts: List<BrawlerEnemyResultCount> =
             enemyBattleResultJpaRepository
-                .findAllByConditions(
-                    eventBrawlStarsId = eventId?.value,
+                .findAllByBrawler(
                     brawlerBrawlStarsId = brawlerId.value,
                     tierRange = tierRange,
                     startDate = startDate,
@@ -131,20 +207,7 @@ class BattleResultStatisticsRepository(
                             ),
                     )
                 }
-        val totalElementCount =
-            enemyBattleResultJpaRepository.countDistinctEnemyBrawlers(
-                eventBrawlStarsId = eventId?.value,
-                brawlerBrawlStarsId = brawlerId.value,
-                tierRange = tierRange,
-                startDate = startDate,
-                endDate = endDate,
-            )
-        val totalGameCount = computeTotalGameCount(eventId, tierRange, startDate, endDate)
-        return BrawlerEnemyResultStatistics.create(
-            totalBattleCount = totalGameCount,
-            totalElementCount = totalElementCount,
-            counts = counts,
-        )
+        return BrawlerEnemyResultStatistics.create(counts = counts)
     }
 
     fun findBrawlerDailyResultStatistics(
@@ -178,22 +241,28 @@ class BattleResultStatisticsRepository(
         return BrawlerResultDailyStatistics.create(brawlerId = brawlerId, dailyCounts = dailyCounts)
     }
 
-    /** 총 게임 수 — 계산 규칙은 [GameSlots.totalGameCount] 가 단일 진실 출처. */
-    private fun computeTotalGameCount(
-        eventId: BrawlStarsId?,
-        tierRange: StatsTierRange,
-        startDate: LocalDate,
-        endDate: LocalDate,
-    ): Long {
-        val slotSumByEventId =
-            battleResultJpaRepository
-                .findEventTotalSlotSums(
-                    eventBrawlStarsId = eventId?.value,
-                    tierRange = tierRange,
-                    startDate = startDate,
-                    endDate = endDate,
-                ).associate { BrawlStarsId(it.eventBrawlStarsId) to it.totalSlotCount }
-        val gameSlots = gameSlotRepository.findAllByEventIds(slotSumByEventId.keys.toList())
-        return gameSlots.totalGameCount(slotSumByEventId)
-    }
+    private fun BrawlerPairResultProjection.toPairResultCount() =
+        BrawlerPairResultCount(
+            brawler1Id = BrawlStarsId(brawler1BrawlStarsId),
+            brawler2Id = BrawlStarsId(brawler2BrawlStarsId),
+            resultCount =
+                ResultCount(
+                    victoryCount = victoryCount,
+                    defeatCount = defeatCount,
+                    drawCount = drawCount,
+                ),
+        )
+
+    private fun BrawlerTrioResultProjection.toTrioResultCount() =
+        BrawlerTrioResultCount(
+            brawler1Id = BrawlStarsId(brawler1BrawlStarsId),
+            brawler2Id = BrawlStarsId(brawler2BrawlStarsId),
+            brawler3Id = BrawlStarsId(brawler3BrawlStarsId),
+            resultCount =
+                ResultCount(
+                    victoryCount = victoryCount,
+                    defeatCount = defeatCount,
+                    drawCount = drawCount,
+                ),
+        )
 }

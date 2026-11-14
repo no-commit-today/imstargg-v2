@@ -22,29 +22,32 @@ class BrawlerPairBattleResultStatsTaskTest {
     private val sut = BrawlerPairBattleResultStatsTask(reader, writer)
 
     @Test
-    fun `주간 범위마다 이벤트를 조회해 이벤트별로 집계하고 저장한다`() {
+    fun `주간 범위 하나를 집계기 하나로 읽고 한 번에 저장한다`() {
         // given
         val weekRange = WeekRange(start = LocalDate.of(2026, 4, 28), end = LocalDate.of(2026, 5, 4))
-        val eventId = 10L
-        val battle = pairBattle(eventBrawlStarsId = eventId, battleDate = weekRange.start)
+        val battles =
+            listOf(
+                pairBattle(eventBrawlStarsId = 10L, battleDate = weekRange.start, battleKey = "battle-key-1"),
+                pairBattle(eventBrawlStarsId = 20L, battleDate = weekRange.start, battleKey = "battle-key-2"),
+            )
         val aggregatorSlot = slot<BrawlerPairBattleResultStatsAggregator>()
         val consumeSlot = slot<(List<StatsResultBattleEntity>) -> Unit>()
 
-        every { reader.readDistinctEventIds(weekRange) } returns listOf(eventId)
-        every { reader.read(eq(weekRange), eq(eventId), capture(consumeSlot)) } answers {
-            consumeSlot.captured.invoke(listOf(battle))
-            1L
+        every { reader.read(eq(weekRange), capture(consumeSlot)) } answers {
+            consumeSlot.captured.invoke(battles)
+            battles.size.toLong()
         }
-        every { writer.write(eq(weekRange), eq(eventId), capture(aggregatorSlot)) } returns 1L
+        every { writer.write(eq(weekRange), capture(aggregatorSlot)) } returns 1L
 
         // when
         sut.aggregate(listOf(weekRange))
 
         // then
-        assertThat(aggregatorSlot.captured.toEntities()).isNotEmpty()
-        verify(exactly = 1) { reader.readDistinctEventIds(weekRange) }
-        verify(exactly = 1) { reader.read(weekRange, eventId, any()) }
-        verify(exactly = 1) { writer.write(weekRange, eventId, any()) }
+        val entities = aggregatorSlot.captured.toEntities()
+        assertThat(entities).hasSize(2)
+        assertThat(entities.map { it.resultCount.totalCount }).containsOnly(2L)
+        verify(exactly = 1) { reader.read(weekRange, any()) }
+        verify(exactly = 1) { writer.write(weekRange, any()) }
     }
 
     @Test
@@ -52,40 +55,42 @@ class BrawlerPairBattleResultStatsTaskTest {
         // given
         val weekRange1 = WeekRange(start = LocalDate.of(2026, 4, 28), end = LocalDate.of(2026, 5, 4))
         val weekRange2 = WeekRange(start = LocalDate.of(2026, 5, 5), end = LocalDate.of(2026, 5, 11))
-        val eventId1 = 10L
-        val eventId2 = 20L
-        val battle1 = pairBattle(eventBrawlStarsId = eventId1, battleDate = weekRange1.start)
-        val battle2 = pairBattle(eventBrawlStarsId = eventId2, battleDate = weekRange2.start)
+        val battle1 = pairBattle(eventBrawlStarsId = 10L, battleDate = weekRange1.start)
+        val battle2 = pairBattle(eventBrawlStarsId = 20L, battleDate = weekRange2.start)
         val consumeSlot1 = slot<(List<StatsResultBattleEntity>) -> Unit>()
         val consumeSlot2 = slot<(List<StatsResultBattleEntity>) -> Unit>()
+        val aggregators = mutableListOf<BrawlerPairBattleResultStatsAggregator>()
 
-        every { reader.readDistinctEventIds(weekRange1) } returns listOf(eventId1)
-        every { reader.readDistinctEventIds(weekRange2) } returns listOf(eventId2)
-        every { reader.read(eq(weekRange1), eq(eventId1), capture(consumeSlot1)) } answers {
+        every { reader.read(eq(weekRange1), capture(consumeSlot1)) } answers {
             consumeSlot1.captured.invoke(listOf(battle1))
             1L
         }
-        every { reader.read(eq(weekRange2), eq(eventId2), capture(consumeSlot2)) } answers {
+        every { reader.read(eq(weekRange2), capture(consumeSlot2)) } answers {
             consumeSlot2.captured.invoke(listOf(battle2))
             1L
         }
-        every { writer.write(any(), any(), any()) } returns 1L
+        every { writer.write(any(), capture(aggregators)) } returns 1L
 
         // when
         sut.aggregate(listOf(weekRange1, weekRange2))
 
         // then
-        verify(exactly = 1) { reader.readDistinctEventIds(weekRange1) }
-        verify(exactly = 1) { reader.readDistinctEventIds(weekRange2) }
-        verify(exactly = 1) { reader.read(weekRange1, eventId1, any()) }
-        verify(exactly = 1) { reader.read(weekRange2, eventId2, any()) }
-        verify(exactly = 1) { writer.write(weekRange1, eventId1, any()) }
-        verify(exactly = 1) { writer.write(weekRange2, eventId2, any()) }
+        verify(exactly = 1) { reader.read(weekRange1, any()) }
+        verify(exactly = 1) { reader.read(weekRange2, any()) }
+        verify(exactly = 1) { writer.write(weekRange1, any()) }
+        verify(exactly = 1) { writer.write(weekRange2, any()) }
+        assertThat(aggregators).hasSize(2)
+        assertThat(aggregators[0]).isNotSameAs(aggregators[1])
+        assertThat(aggregators[0].toEntities().map { it.startBattleDate to it.endBattleDate }.distinct())
+            .containsExactly(weekRange1.start to weekRange1.end)
+        assertThat(aggregators[1].toEntities().map { it.startBattleDate to it.endBattleDate }.distinct())
+            .containsExactly(weekRange2.start to weekRange2.end)
     }
 
     private fun pairBattle(
         eventBrawlStarsId: Long,
         battleDate: LocalDate,
+        battleKey: String = "battle-key",
     ): StatsResultBattleEntity {
         val teams =
             listOf(
@@ -93,7 +98,7 @@ class BrawlerPairBattleResultStatsTaskTest {
                 listOf(player(index = 3), player(index = 4)),
             )
         return StatsResultBattleEntity(
-            battleKey = "battle-key",
+            battleKey = battleKey,
             battleAt = OffsetDateTime.of(battleDate.atStartOfDay(), java.time.ZoneOffset.ofHours(9)).toInstant(),
             eventBrawlStarsId = eventBrawlStarsId,
             eventModeBrawlStarsId = 2,

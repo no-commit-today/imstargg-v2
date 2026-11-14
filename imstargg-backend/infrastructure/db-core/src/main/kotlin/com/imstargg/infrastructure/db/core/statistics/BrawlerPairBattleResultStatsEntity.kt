@@ -11,64 +11,61 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
-import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
-import java.time.LocalDate
 
+/**
+ * 같은 팀 브롤러 2인 조합의 승/패/무 통계. 패치마다 키별 한 줄이다.
+ *
+ * ## 한 줄의 키
+ * 패치 × 티어 구간 × 브롤러 둘. 티어는 멤버 전원 기준이다(팀 멤버 중 최저 trophies 로 판정).
+ * 조합은 순서가 없으므로 `brawler1BrawlStarsId < brawler2BrawlStarsId` 로 정렬한 한 줄로 저장한다.
+ * 브롤러는 어느 자리에든 있을 수 있어 둘째 브롤러에도 인덱스를 둔다.
+ *
+ * 잡이 SQL 로 직접 쓴다.
+ */
 @Entity
 @Table(
     name = "brawler_pair_battle_result_stats",
     indexes = [
         Index(
-            name = "ix_brawler_pair_battle_result_stats_2",
-            columnList = "brawler_brawlstars_id, tier_range, start_battle_date, end_battle_date",
+            name = "ix_brawler_pair_battle_result_stats__brawler2",
+            columnList = "brawlstars_patch_id, tier_range, brawler2_brawlstars_id",
         ),
     ],
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_brawler_pair_battle_result_stats__1",
             columnNames = [
-                "event_brawlstars_id",
-                "start_battle_date",
-                "end_battle_date",
+                "brawlstars_patch_id",
                 "tier_range",
-                "brawler_brawlstars_id",
-                "pair_brawler_brawlstars_id",
+                "brawler1_brawlstars_id",
+                "brawler2_brawlstars_id",
             ],
         ),
     ],
 )
 class BrawlerPairBattleResultStatsEntity(
-    @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
-    val eventBrawlStarsId: Long,
+    @Column(name = "brawlstars_patch_id", updatable = false, nullable = false)
+    val brawlStarsPatchId: Long,
     @Enumerated(EnumType.STRING)
     @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
     val tierRange: StatsTierRange,
-    @Column(name = "start_battle_date", updatable = false, nullable = false)
-    val startBattleDate: LocalDate,
-    @Column(name = "end_battle_date", updatable = false, nullable = false)
-    val endBattleDate: LocalDate,
-    @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
-    val brawlerBrawlStarsId: Long,
-    @Column(name = "pair_brawler_brawlstars_id", updatable = false, nullable = false)
-    val pairBrawlerBrawlStarsId: Long,
+    @Column(name = "brawler1_brawlstars_id", updatable = false, nullable = false)
+    val brawler1BrawlStarsId: Long,
+    @Column(name = "brawler2_brawlstars_id", updatable = false, nullable = false)
+    val brawler2BrawlStarsId: Long,
     @Embedded
     val resultCount: ResultCountEmbedded,
 ) : BaseTimeEntity() {
     init {
-        require(brawlerBrawlStarsId != pairBrawlerBrawlStarsId) {
-            "brawlerBrawlStarsId($brawlerBrawlStarsId)와 pairBrawlerBrawlStarsId($pairBrawlerBrawlStarsId)는 달라야 합니다."
+        require(brawler1BrawlStarsId < brawler2BrawlStarsId) {
+            "brawler1BrawlStarsId($brawler1BrawlStarsId) < brawler2BrawlStarsId($brawler2BrawlStarsId) 순서여야 합니다."
         }
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerPairBattleResultStatsSeq")
-    @SequenceGenerator(
-        name = "brawlerPairBattleResultStatsSeq",
-        sequenceName = "brawler_pair_battle_result_stats_seq",
-        allocationSize = 100,
-    )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "brawler_pair_battle_result_stats_id", nullable = false)
     val id: Long? = null
 }

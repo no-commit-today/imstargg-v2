@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "victoria-metrics-mcp": {
+      "type": "http",
+      "url": "https://vmauth.zooneon.dev:5443/victoria-metrics-mcp/mcp",
+      "headers": {
+        "Authorization": "Bearer {key}"
+      }
+    },
+    "victoria-logs-mcp": {
+      "type": "http",
+      "url": "https://vmauth.zooneon.dev:5443/victoria-logs-mcp/mcp",
+      "headers": {
+        "Authorization": "Bearer {key}"
+      }
+    }
+  }
+}

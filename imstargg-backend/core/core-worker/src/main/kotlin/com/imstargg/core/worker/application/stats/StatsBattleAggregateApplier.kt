@@ -1,7 +1,9 @@
 package com.imstargg.core.worker.application.stats
 
+import com.imstargg.core.enums.BattleEventModeResultType
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
+import com.imstargg.core.enums.StatsEventModeType
 import com.imstargg.core.enums.StatsTierRange
 import com.imstargg.core.worker.domain.Battle
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
@@ -20,6 +22,7 @@ class StatsBattleAggregateApplier(
     private val clock: Clock,
     private val statsRankBattleRepository: StatsRankBattleJpaRepository,
     private val statsResultBattleRepository: StatsResultBattleJpaRepository,
+    private val statsEventModeSnapshot: StatsEventModeSnapshot,
 ) {
     @Transactional
     fun apply(battles: List<Battle>) {
@@ -54,35 +57,48 @@ class StatsBattleAggregateApplier(
         return battle.battleAt.isAfter(now.minus(Duration.ofDays(BATTLE_MAX_AGE_DAYS)))
     }
 
-    private fun canCreateStatsBattle(battle: Battle): Boolean {
-        val event = battle.event ?: return false
-        if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return false
-        if (battle.mode == null || battle.type == null) return false
+    /**
+     * 통계로 수집할 수 있는 전투면 그 모드의 유형을 돌려주고, 아니면 null 을 돌려준다.
+     *
+     * 모드는 `battle.mode` 문자열이 아니라 `modeBrawlStarsId` 로만 판정한다.
+     * 플레이어 한 명이 브롤러 여러 개를 낸 전투(듀얼 펼침)는 유형과 관계없이 거른다.
+     * 펼침은 전적 표시용이고, 통계에서는 한 명의 브롤러들이 팀원으로 오해된다.
+     *
+     * battlelog 는 하키(45)를 `brawlBall`, 아레나(48)를 `siege` 로 보내는 등 문자열을 믿을 수 없다.
+     */
+    private fun findStatsEventModeType(battle: Battle): StatsEventModeType? {
+        if (battle.brawlersExpanded) return null
+        val event = battle.event ?: return null
+        if (event.brawlStarsId == null || event.modeBrawlStarsId == null || event.map == null) return null
+        if (battle.mode == null || battle.type == null) return null
 
-        val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return false
-        if (battleType == BattleType.FRIENDLY) return false
+        val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return null
+        if (battleType == BattleType.FRIENDLY) return null
 
         val allPlayers = battle.teams.flatten()
         val brawlerIds = allPlayers.map { it.brawler.brawlStarsId }
-        if (brawlerIds.size != brawlerIds.distinct().size) return false
+        if (brawlerIds.size != brawlerIds.distinct().size) return null
 
-        val minTrophies = allPlayers.minOfOrNull { it.brawler.trophies } ?: return false
+        val minTrophies = allPlayers.minOfOrNull { it.brawler.trophies } ?: return null
         if (battleType == BattleType.SOLO_RANKED) {
-            if (minTrophies < StatsTierRange.MIN_SOLO_RANK_TIER.value) return false
+            if (minTrophies < StatsTierRange.MIN_SOLO_RANK_TIER.value) return null
         } else {
-            if (minTrophies < StatsTierRange.MIN_TROPHY) return false
+            if (minTrophies < StatsTierRange.MIN_TROPHY) return null
         }
-        return true
+
+        val type = statsEventModeSnapshot.find(event.modeBrawlStarsId) ?: return null
+        if (!type.matches(battle.teams.map { it.size })) return null
+        return type
     }
 
     private fun canCreateRankBattle(battle: Battle): Boolean {
         if (battle.battleRank == null) return false
-        return canCreateStatsBattle(battle)
+        return findStatsEventModeType(battle)?.resultType == BattleEventModeResultType.RANK
     }
 
     private fun canCreateResultBattle(battle: Battle): Boolean {
         if (battle.result == null) return false
-        return canCreateStatsBattle(battle)
+        return findStatsEventModeType(battle)?.resultType == BattleEventModeResultType.RESULT
     }
 
     private fun toStatsRankBattle(battle: Battle) =
@@ -123,7 +139,9 @@ class StatsBattleAggregateApplier(
                     brawler =
                         StatsBattleEntityTeamPlayerBrawler(
                             brawlStarsId = player.brawler.brawlStarsId,
-                            name = player.brawler.name,
+                            // 통계 JSON 은 jackson-module-kotlin 생성자 주입으로 읽혀 non-null 파라미터에 null 이 오면
+                            // 구버전 core-batch Reader 가 실패한다 — 빈 문자열이면 배포 순서·롤백 제약이 없다
+                            name = player.brawler.name ?: "",
                             power = player.brawler.power,
                             trophies = player.brawler.trophies,
                         ),

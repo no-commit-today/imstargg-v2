@@ -4,7 +4,7 @@ import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 
@@ -20,12 +20,14 @@ import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEn
  *   예: 아군이 승리하면 적군 각 브롤러에는 패배로 집계
  * - **스타 플레이어**: 해당 배틀의 스타 플레이어와 태그가 일치하면 카운트 증가
  * - **티어 구간**: 각 플레이어 본인의 트로피 기준으로 결정
+ * - **봇 전투**: 봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다
  */
-class BrawlerBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBattleEntity, BrawlerBattleResultStatsEntity> {
+class BrawlerBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBattleEntity, BrawlerBattleResultStatsBackupEntity> {
     private val resultCounts = ResultCountAccumulator<BrawlerBattleStatsKey>()
     private val starPlayerCounts = StarPlayerCountAccumulator<BrawlerBattleStatsKey>()
 
     override fun aggregate(battle: StatsResultBattleEntity) {
+        if (StatsBotBattlePolicy.isBotBattle(battle)) return
         val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
         val battleResult = EnumCodeType.findByCode<BattleResult>(battle.result) ?: return
 
@@ -61,10 +63,10 @@ class BrawlerBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBatt
         }
     }
 
-    override fun forEachEntity(consumer: (BrawlerBattleResultStatsEntity) -> Unit) {
+    override fun forEachEntity(consumer: (BrawlerBattleResultStatsBackupEntity) -> Unit) {
         resultCounts.forEach { key, resultCount ->
             consumer(
-                BrawlerBattleResultStatsEntity(
+                BrawlerBattleResultStatsBackupEntity(
                     eventBrawlStarsId = key.eventBrawlStarsId,
                     tierRange = key.tierRange,
                     battleDate = key.battleDate,
@@ -76,7 +78,7 @@ class BrawlerBattleResultStatsAggregator : BattleStatsAggregator<StatsResultBatt
         }
     }
 
-    override fun toEntities(): List<BrawlerBattleResultStatsEntity> =
+    override fun toEntities(): List<BrawlerBattleResultStatsBackupEntity> =
         buildList {
             forEachEntity { add(it) }
         }

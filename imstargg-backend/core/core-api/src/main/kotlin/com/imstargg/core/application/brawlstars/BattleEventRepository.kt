@@ -85,9 +85,6 @@ class BattleEventRepository(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages),
                     iconImageUrl = modeIconImage?.toImageUrl(),
-                    resultType = modeEntity.resultType,
-                    playerCounts = modeEntity.playerCounts,
-                    color = modeEntity.color,
                 )
             }
 
@@ -110,9 +107,6 @@ class BattleEventRepository(
                     id = BrawlStarsId(modeEntity.brawlStarsId),
                     name = toMessages(modeNameMessages[modeEntity.brawlStarsId]),
                     iconImageUrl = modeIconImages[modeEntity.brawlStarsId]?.toImageUrl(),
-                    resultType = modeEntity.resultType,
-                    playerCounts = modeEntity.playerCounts,
-                    color = modeEntity.color,
                 )
             }
         return BattleEvent(

@@ -6,8 +6,8 @@ import type {
   Gear,
   BattleEvent,
   BattleEventMode,
-  BattleEventModeResultType,
   Maintenance,
+  StatsEventModeType,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
@@ -223,10 +223,7 @@ export const getEventModes = () => request<BattleEventMode[]>("/event-modes");
 export const createEventMode = (data: {
   brawlStarsId: number;
   brawlStarsName: string;
-  resultType?: BattleEventModeResultType;
   names: Record<string, string>;
-  playerCounts: number[];
-  color: string;
 }) => request<void>("/event-modes", { method: "POST", body: JSON.stringify(data) });
 
 export const updateEventModeMessages = (brawlStarsId: number, messages: Record<string, string>) =>
@@ -235,26 +232,17 @@ export const updateEventModeMessages = (brawlStarsId: number, messages: Record<s
     body: JSON.stringify({ messages }),
   });
 
+export const updateEventModeStatsType = (brawlStarsId: number, type: StatsEventModeType | null) =>
+  request<void>(`/event-modes/${brawlStarsId}/stats-type`, {
+    method: "PUT",
+    body: JSON.stringify({ type }),
+  });
+
 export const uploadEventModeImage = (brawlStarsId: number, file: File) => {
   const formData = new FormData();
   formData.append("file", file);
   return request<void>(`/event-modes/${brawlStarsId}/image`, { method: "PUT", body: formData });
 };
-
-export const updateEventMode = (
-  brawlStarsId: number,
-  data: { resultType: BattleEventModeResultType; playerCounts: number[] },
-) =>
-  request<void>(`/event-modes/${brawlStarsId}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
-
-export const updateEventModeColor = (brawlStarsId: number, color: string) =>
-  request<void>(`/event-modes/${brawlStarsId}/color`, {
-    method: "PUT",
-    body: JSON.stringify({ color }),
-  });
 
 // Maintenance
 export const getMaintenances = () => request<Maintenance[]>("/maintenances");

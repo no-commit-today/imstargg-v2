@@ -11,6 +11,7 @@ import com.imstargg.infrastructure.db.core.brawlstars.MessageType
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.BattleEventSoloRankEventEntity
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventJpaRepository
+import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventModeJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.event.repository.BattleEventSoloRankEventJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.repository.MessageJpaRepository
 import com.imstargg.infrastructure.db.core.test.CleanUp
@@ -33,6 +34,7 @@ class BattleEventServiceTest(
     private val sut: BattleEventService,
     private val cleanUp: CleanUp,
     private val battleEventJpaRepository: BattleEventJpaRepository,
+    private val battleEventModeJpaRepository: BattleEventModeJpaRepository,
     private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
     private val messageJpaRepository: MessageJpaRepository,
     private val cacheManager: CacheManager,

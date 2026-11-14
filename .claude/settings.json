@@ -1,9 +1,12 @@
 {
-  "enabledPlugins": {},
   "permissions": {
     "deny": [
       "Read(//**/imstargg-tools/.secrets/**)",
       "Edit(//**/imstargg-tools/.secrets/**)"
     ]
+  },
+  "enabledPlugins": {
+    "superdomain@superkit": true,
+    "superglossary@superkit": true
   }
 }

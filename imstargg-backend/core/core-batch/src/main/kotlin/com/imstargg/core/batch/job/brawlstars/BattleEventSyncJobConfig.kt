@@ -1,5 +1,6 @@
 package com.imstargg.core.batch.job.brawlstars
 
+import com.imstargg.core.batch.job.brawlstars.task.UnregisteredRotationEventAlertTask
 import com.imstargg.core.batch.support.alert.AlertManager
 import com.imstargg.core.batch.support.parameter.DateJobParameter
 import com.imstargg.core.batch.support.querydsl.KeysetItemReader
@@ -15,14 +16,26 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.job.parameters.DefaultJobParametersValidator
-import org.springframework.batch.core.job.parameters.RunIdIncrementer
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.ChunkOrientedStepBuilder
+import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
+/**
+ * 배틀 이벤트 등록 상태를 점검(미등록·불일치 알림)하고 경쟁전 맵 목록을 만드는 잡. 전투 기반 두 스텝 뒤에
+ * 로테이션 기반 스텝이 붙는다.
+ *
+ * 통계 전투는 허용 목록의 모드만 담으므로 전투만 보면 미지원 모드의 새 맵을 놓친다.
+ * 그래서 [STEP_3_NAME] 이 그날 로테이션에 나온 미등록 이벤트를 알린다. 자세한 이유와 전투 단계와의 중복 제거
+ * 방식은 [UnregisteredRotationEventAlertTask] 를 본다.
+ *
+ * 전투 스텝(1·2)이 실패하면 [STEP_3_NAME] 도 그날은 건너뛴다. 그 이벤트가 아직 로테이션에 있으면 다음 날 실행이
+ * 다시 알린다.
+ */
 @Configuration
 class BattleEventSyncJobConfig(
     private val jobRepository: JobRepository,
@@ -31,12 +44,14 @@ class BattleEventSyncJobConfig(
     private val alertManager: AlertManager,
     private val battleEventJpaRepository: BattleEventJpaRepository,
     private val battleEventSoloRankEventJpaRepository: BattleEventSoloRankEventJpaRepository,
+    private val unregisteredRotationEventAlertTask: UnregisteredRotationEventAlertTask,
 ) {
     companion object {
         const val JOB_NAME = "battleEventSyncJob"
         const val DATE_PARAMETER_NAME = "battleEventSyncJobDateJobParameter"
         const val STEP_1_NAME = "battleEventSyncFromRankBattleStep"
         const val STEP_2_NAME = "battleEventSyncFromResultBattleStep"
+        const val STEP_3_NAME = "battleEventSyncFromRotationStep"
         private const val CHUNK_SIZE = 1000
     }
 
@@ -44,6 +59,10 @@ class BattleEventSyncJobConfig(
     @JobScope
     fun dateJobParameter() = DateJobParameter()
 
+    /**
+     * incrementer 를 두지 않는다: 잡에 incrementer 가 있으면 `JobOperator.start` 가 실행 인자를 버리고
+     * run.id 만 넘겨, 필수 파라미터 `date` 검증에서 매번 실패한다.
+     */
     @Bean(JOB_NAME)
     fun battleEventSyncJob(): Job =
         JobBuilder(JOB_NAME, jobRepository)
@@ -54,7 +73,7 @@ class BattleEventSyncJobConfig(
                 ),
             ).start(battleEventSyncFromRankBattleStep())
             .next(battleEventSyncFromResultBattleStep())
-            .incrementer(RunIdIncrementer())
+            .next(battleEventSyncFromRotationStep())
             .build()
 
     @Bean(STEP_1_NAME)
@@ -73,6 +92,16 @@ class BattleEventSyncJobConfig(
             .transactionManager(txManager)
             .reader(battleEventSyncResultBattleReader())
             .writer(battleEventSyncFromResultBattleWriter())
+            .build()
+
+    @Bean(STEP_3_NAME)
+    @JobScope
+    fun battleEventSyncFromRotationStep(): Step =
+        StepBuilder(STEP_3_NAME, jobRepository)
+            .tasklet({ _, _ ->
+                unregisteredRotationEventAlertTask.alert(dateJobParameter().date!!)
+                RepeatStatus.FINISHED
+            })
             .build()
 
     @Bean

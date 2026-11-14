@@ -169,6 +169,7 @@ class BattleBuilderTest {
         // then
         assertBattle(result, battleResponse)
         assertBattleTeams(result.teams, battleResponse.battle.teams!!)
+        assertThat(result.brawlersExpanded).isFalse()
     }
 
     @Test
@@ -412,6 +413,7 @@ class BattleBuilderTest {
         // then
         assertBattle(result, battleResponse)
         assertBattlePlayers(result.teams, battleResponse.battle.players!!)
+        assertThat(result.brawlersExpanded).isFalse()
     }
 
     @Test
@@ -466,6 +468,7 @@ class BattleBuilderTest {
         // then
         assertBattle(result, battleResponse)
         assertBattlePlayers(result.teams, battleResponse.battle.players!!)
+        assertThat(result.brawlersExpanded).isTrue()
     }
 
     @Test
@@ -532,6 +535,57 @@ class BattleBuilderTest {
         // then
         assertThat(result.mode).isNull()
         assertBattle(result, battleResponse)
+    }
+
+    @Test
+    fun `브롤러_이름이_null이어도_Battle을_생성한다`() {
+        // given
+        val hiddenBrawler =
+            BattleResultBrawlerResponse(
+                id = 16000088L,
+                name = null,
+                power = 11,
+                trophies = 500,
+                trophyChange = null,
+            )
+        val battleResponse =
+            BattleResponse(
+                battleTime = battleTime,
+                event = createEventResponse(BattleEvent.KNOCKOUT),
+                battle =
+                    BattleResultResponse(
+                        mode = "knockout",
+                        type = "soloRanked",
+                        result = "victory",
+                        duration = 117,
+                        rank = null,
+                        trophyChange = null,
+                        starPlayer = null,
+                        teams =
+                            listOf(
+                                listOf(
+                                    createPlayerResponse("#player1", "player1", hiddenBrawler),
+                                    createPlayerResponse("#player2", "player2", createBrawlerResponse(Brawler.TICK)),
+                                    createPlayerResponse("#player3", "player3", createBrawlerResponse(Brawler.BUSTER)),
+                                ),
+                                listOf(
+                                    createPlayerResponse("#player4", "player4", createBrawlerResponse(Brawler.SPROUT)),
+                                    createPlayerResponse("#player5", "player5", createBrawlerResponse(Brawler.MOE)),
+                                    createPlayerResponse("#player6", "player6", createBrawlerResponse(Brawler.SQUEAK)),
+                                ),
+                            ),
+                        players = null,
+                    ),
+            )
+
+        // when
+        val sut = BattleBuilder(playerBrawlStarsTag, battleResponse)
+        val actual = sut.build()
+
+        // then
+        assertThat(actual.teams[0][0].brawler.name).isNull()
+        assertThat(actual.teams[0][0].brawler.brawlStarsId).isEqualTo(16000088L)
+        assertThat(actual.teams[0][1].brawler.name).isEqualTo("Tick")
     }
 
     @Test
@@ -740,9 +794,9 @@ class BattleBuilderTest {
         assertThat(actual.battleAt).isEqualTo(expected.battleTime.toInstant())
         assertThat(actual.event).isNotNull
         assertThat(actual.event!!.brawlStarsId).isEqualTo(expected.event.id)
-        assertThat(actual.event!!.modeBrawlStarsName).isEqualTo(expected.event.mode)
-        assertThat(actual.event!!.modeBrawlStarsId).isEqualTo(expected.event.modeId.toLong())
-        assertThat(actual.event!!.map).isEqualTo(expected.event.map)
+        assertThat(actual.event.modeBrawlStarsName).isEqualTo(expected.event.mode)
+        assertThat(actual.event.modeBrawlStarsId).isEqualTo(expected.event.modeId.toLong())
+        assertThat(actual.event.map).isEqualTo(expected.event.map)
         assertThat(actual.mode).isEqualTo(expected.battle.mode)
         assertThat(actual.type).isEqualTo(expected.battle.type)
         assertThat(actual.result).isEqualTo(expected.battle.result)

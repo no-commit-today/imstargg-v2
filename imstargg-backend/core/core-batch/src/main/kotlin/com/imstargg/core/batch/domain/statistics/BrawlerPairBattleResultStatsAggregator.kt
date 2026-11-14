@@ -4,50 +4,67 @@ import com.imstargg.core.enums.BattleResult
 import com.imstargg.core.enums.BattleType
 import com.imstargg.core.enums.EnumCodeType
 import com.imstargg.core.enums.StatsTierRange
-import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.BrawlerPairBattleResultStatsBackupEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsBattleEntityTeamPlayer
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsResultBattleEntity
 import java.time.LocalDate
 
 /**
- * 기준 브롤러 관점의 방향성 pair 승/패/무 결과 통계를 집계한다.
+ * 같은 팀 브롤러 2인 조합의 승/패/무 결과 통계를 집계한다.
+ *
+ * ## 집계 키
+ * (브롤러1 < 브롤러2) × 티어 구간. 조합은 순서가 없으므로 팀의 모든 `i < j` 쌍을 id 오름차순 키 1개로 센다(방향 중복 없음).
+ * 이벤트는 키에 없다 — 2026-11 스펙 B 에서 이벤트별 값은 표본만 얇게 흩어 예측에 보탬이 없다고 보고 뺐다.
+ *
+ * ## 티어 규칙
+ * 두 멤버 trophies 의 최솟값으로 [StatsTierRange.resolveAll] 한다(조합 전원이 그 티어 이상이어야 그 티어에 집계).
+ *
+ * ## 결과 방향
+ * 아군 팀은 전투 결과 그대로, 적 팀은 [BattleResult.opposite] 로 집계한다.
+ *
+ * ## 봇 전투 제외
+ * 봇 전투([StatsBotBattlePolicy])는 전투 단위로 건너뛴다. 티어 구간을 정하기 전이라 어느 티어 행에도 들지 않는다.
  */
 class BrawlerPairBattleResultStatsAggregator(
     private val startBattleDate: LocalDate,
     private val endBattleDate: LocalDate,
-) : BattleStatsAggregator<StatsResultBattleEntity, BrawlerPairBattleResultStatsEntity> {
+) : BattleStatsAggregator<StatsResultBattleEntity, BrawlerPairBattleResultStatsBackupEntity> {
     private val resultCounts = ResultCountAccumulator<BrawlerPairBattleStatsKey>()
 
     override fun aggregate(battle: StatsResultBattleEntity) {
+        if (StatsBotBattlePolicy.isBotBattle(battle)) return
         val battleType = EnumCodeType.findByCode<BattleType>(battle.type) ?: return
         val battleResult = EnumCodeType.findByCode<BattleResult>(battle.result) ?: return
 
         for (team in battle.playerTeams()) {
-            doAggregate(team, battle, battleType, battleResult)
+            doAggregate(team, battleType, battleResult)
         }
         for (team in battle.enemyTeams()) {
-            doAggregate(team, battle, battleType, battleResult.opposite())
+            doAggregate(team, battleType, battleResult.opposite())
         }
     }
 
     private fun doAggregate(
         team: List<StatsBattleEntityTeamPlayer>,
-        battle: StatsResultBattleEntity,
         battleType: BattleType,
         battleResult: BattleResult,
     ) {
         if (team.size < MIN_PAIR_TEAM_SIZE) return
 
-        for (player in team) {
-            val tierRanges = StatsTierRange.resolveAll(battleType, player.brawler.trophies)
-            for (pairPlayer in team) {
-                if (player.brawler.brawlStarsId == pairPlayer.brawler.brawlStarsId) continue
+        for (i in team.indices) {
+            for (j in i + 1 until team.size) {
+                val first = team[i].brawler
+                val second = team[j].brawler
+                require(first.brawlStarsId != second.brawlStarsId) {
+                    "같은 팀에 중복된 브롤러가 있습니다. brawlStarsId=${first.brawlStarsId}"
+                }
+
+                val tierRanges = StatsTierRange.resolveAll(battleType, minOf(first.trophies, second.trophies))
                 for (tierRange in tierRanges) {
                     val key =
                         BrawlerPairBattleStatsKey(
-                            brawlerBrawlStarsId = player.brawler.brawlStarsId,
-                            pairBrawlerBrawlStarsId = pairPlayer.brawler.brawlStarsId,
-                            eventBrawlStarsId = battle.eventBrawlStarsId,
+                            brawler1BrawlStarsId = minOf(first.brawlStarsId, second.brawlStarsId),
+                            brawler2BrawlStarsId = maxOf(first.brawlStarsId, second.brawlStarsId),
                             tierRange = tierRange,
                         )
                     resultCounts.add(key, battleResult)
@@ -56,23 +73,22 @@ class BrawlerPairBattleResultStatsAggregator(
         }
     }
 
-    override fun forEachEntity(consumer: (BrawlerPairBattleResultStatsEntity) -> Unit) {
+    override fun forEachEntity(consumer: (BrawlerPairBattleResultStatsBackupEntity) -> Unit) {
         resultCounts.forEach { key, resultCount ->
             consumer(
-                BrawlerPairBattleResultStatsEntity(
-                    eventBrawlStarsId = key.eventBrawlStarsId,
+                BrawlerPairBattleResultStatsBackupEntity(
                     tierRange = key.tierRange,
                     startBattleDate = startBattleDate,
                     endBattleDate = endBattleDate,
-                    brawlerBrawlStarsId = key.brawlerBrawlStarsId,
-                    pairBrawlerBrawlStarsId = key.pairBrawlerBrawlStarsId,
+                    brawler1BrawlStarsId = key.brawler1BrawlStarsId,
+                    brawler2BrawlStarsId = key.brawler2BrawlStarsId,
                     resultCount = resultCount,
                 ),
             )
         }
     }
 
-    override fun toEntities(): List<BrawlerPairBattleResultStatsEntity> =
+    override fun toEntities(): List<BrawlerPairBattleResultStatsBackupEntity> =
         buildList {
             forEachEntity { add(it) }
         }

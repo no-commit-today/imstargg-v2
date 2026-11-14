@@ -10,7 +10,7 @@ data class BrawlerResultStatisticsItemResponse(
     val winRate: Double,
     val starPlayerRate: Double,
     val tierScore: Int,
-    val tier: String,
+    val tier: String?,
 ) {
     /** 구버전 프론트 호환용 (= [battleCount]). 프론트의 battleCount 전환 배포 후 제거 예정. */
     val totalBattleCount: Long
@@ -36,7 +36,7 @@ data class BrawlerResultStatisticsResponse(
                         winRate = item.winRate,
                         starPlayerRate = item.starPlayerRate,
                         tierScore = item.tierScore.value,
-                        tier = item.tierScore.tier().name,
+                        tier = item.tierScore.grade?.name,
                     )
                 },
         )

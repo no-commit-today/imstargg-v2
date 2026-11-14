@@ -20,20 +20,12 @@ data class BrawlerResultStatistics(
     val items: List<BrawlerResultStatisticsItem>,
 ) {
     companion object {
-        fun create(
-            rows: List<BrawlerEventResultCount>,
-            gameSlots: GameSlots,
-        ): BrawlerResultStatistics {
+        fun create(rows: List<BrawlerEventResultCount>): BrawlerResultStatistics {
             if (rows.isEmpty()) {
                 return BrawlerResultStatistics(totalBattleCount = 0L, items = emptyList())
             }
 
-            val totalBattleCount: Long =
-                gameSlots.totalGameCount(
-                    rows
-                        .groupBy { it.eventId }
-                        .mapValues { (_, eventRows) -> eventRows.sumOf { it.resultCount.totalCount } },
-                )
+            val totalBattleCount: Long = StatsRate.resultGameCount(rows.sumOf { it.resultCount.totalCount })
 
             val brawlerAggregates =
                 rows
@@ -45,7 +37,10 @@ data class BrawlerResultStatistics(
                             starPlayerCount = brawlerRows.sumOf { it.starPlayerCount },
                         )
                     }
-            val tierScores = BrawlerTierScore.create(brawlerAggregates)
+            val tierScores =
+                BrawlerTierScore.create(
+                    brawlerAggregates.associate { it.brawlerId to it.resultCount },
+                )
 
             val items =
                 brawlerAggregates.map { agg ->
@@ -60,12 +55,17 @@ data class BrawlerResultStatistics(
                                 agg.starPlayerCount,
                                 agg.resultCount.totalCount,
                             ),
-                        tierScore = tierScores[agg.brawlerId] ?: BrawlerTierScore(50),
+                        tierScore = tierScores.getValue(agg.brawlerId),
                     )
                 }
             return BrawlerResultStatistics(
                 totalBattleCount = totalBattleCount,
-                items = items.sortedByDescending { it.tierScore.value },
+                items =
+                    items.sortedWith(
+                        compareByDescending<BrawlerResultStatisticsItem> { it.tierScore.grade != null }
+                            .thenByDescending { it.tierScore.value }
+                            .thenByDescending { it.battleCount },
+                    ),
             )
         }
     }

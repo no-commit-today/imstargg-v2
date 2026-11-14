@@ -1,17 +1,17 @@
 package com.imstargg.core.worker.config
 
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler
 import java.lang.reflect.Method
 
-class AsyncExceptionHandler : AsyncUncaughtExceptionHandler {
-    private val log = LoggerFactory.getLogger(javaClass)
+private val log = KotlinLogging.logger {}
 
+class AsyncExceptionHandler : AsyncUncaughtExceptionHandler {
     override fun handleUncaughtException(
         ex: Throwable,
         method: Method,
         vararg params: Any?,
     ) {
-        log.error("Async error: '${method.name}(${params.joinToString(", ") { it?.toString() ?: "null" }})", ex)
+        log.error(ex) { "Async error: '${method.name}(${params.joinToString(", ") { it?.toString() ?: "null" }})" }
     }
 }

@@ -70,17 +70,29 @@ export const TIER_RANGE_ICONS: Record<StatsTierRange, string> = {
 
 export const TROPHY_RANGE_ICON = "/assets/icon_trophy.png";
 
+/** 브롤러 메타 페이지의 보기 탭. 쿼리스트링 값이 소문자라 enum 도 소문자다. */
+export const BRAWLER_META_VIEWS = ["brawler", "pair", "trio"] as const;
+export type BrawlerMetaView = (typeof BRAWLER_META_VIEWS)[number];
+
+export const BRAWLER_META_VIEW_LABELS: Record<BrawlerMetaView, string> = {
+  brawler: "브롤러",
+  pair: "2인 조합",
+  trio: "3인 조합",
+};
+
 export const DEFAULT_TIER_RANGE: StatsTierRange = "TROPHY_1000_PLUS";
 export const DEFAULT_DATE_RANGE: StatsDateRange = "SINCE_LAST_WEEK";
 export const DEFAULT_TROPHY_RANGE: BrawlerTrophyRange = "TROPHY_1000_PLUS";
+export const DEFAULT_BRAWLER_META_VIEW: BrawlerMetaView = "brawler";
 
 function parseEnum<T extends string>(
   value: unknown,
   values: readonly T[],
   fallback: T,
+  normalize: (value: string) => string = (v) => v.toUpperCase(),
 ): T {
   if (typeof value !== "string") return fallback;
-  const normalized = value.trim().toUpperCase();
+  const normalized = normalize(value.trim());
   return (values as readonly string[]).includes(normalized) ? (normalized as T) : fallback;
 }
 
@@ -94,4 +106,8 @@ export function parseDateRange(value: unknown): StatsDateRange {
 
 export function parseTrophyRange(value: unknown): BrawlerTrophyRange {
   return parseEnum(value, BRAWLER_TROPHY_RANGES, DEFAULT_TROPHY_RANGE);
+}
+
+export function parseBrawlerMetaView(value: unknown): BrawlerMetaView {
+  return parseEnum(value, BRAWLER_META_VIEWS, DEFAULT_BRAWLER_META_VIEW, (v) => v.toLowerCase());
 }

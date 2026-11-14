@@ -7,9 +7,11 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.BrawlerRankingItem
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.RankingEntityPlayer
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingItemJpaRepository
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.BrawlerRankingJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import java.time.Clock
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class BrawlerRankingCollectTask(
@@ -19,10 +21,10 @@ class BrawlerRankingCollectTask(
     private val brawlerRankingItemJpaRepository: BrawlerRankingItemJpaRepository,
 ) {
     fun collect() {
-        log.info("[{}] 시작", STEP_NAME)
+        log.info { "[$STEP_NAME] 시작" }
         val brawlers = brawlStarsClient.getBrawlers().items
         Country.entries.forEach { country ->
-            log.info("[{}] 국가 {} 진행 - 브롤러 {}개", STEP_NAME, country, brawlers.size)
+            log.info { "[$STEP_NAME] 국가 $country 진행 - 브롤러 ${brawlers.size}개" }
             brawlers.forEach { brawler ->
                 val collectedAt = clock.instant()
                 val response = brawlStarsClient.getBrawlerRanking(country.code, brawler.id)
@@ -55,7 +57,7 @@ class BrawlerRankingCollectTask(
                 deleteOutdated(country, brawler.id)
             }
         }
-        log.info("[{}] 완료", STEP_NAME)
+        log.info { "[$STEP_NAME] 완료" }
     }
 
     private fun deleteOutdated(
@@ -77,6 +79,5 @@ class BrawlerRankingCollectTask(
     companion object {
         private const val STEP_NAME = "brawlerRankingCollectStep"
         private const val SNAPSHOT_RETENTION_COUNT = 2
-        private val log = LoggerFactory.getLogger(BrawlerRankingCollectTask::class.java)
     }
 }

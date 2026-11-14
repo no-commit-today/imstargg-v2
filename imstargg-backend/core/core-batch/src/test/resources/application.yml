@@ -2,6 +2,12 @@ spring:
   profiles:
     active: test-db
 
+  # 운영과 같은 HTTP 클라이언트 설정(HC5·타임아웃)으로 띄운다. brawlstars-client.yml 은 가져오지 않는다 —
+  # import 한 파일의 값이 이 파일 값보다 우선해 아래 테스트용 app.client.brawlstars.* 값이 덮인다.
+  config:
+    import:
+      - http-client.yml
+
   main.web-application-type: none
 
   batch:
@@ -40,3 +46,6 @@ app:
     url: http://localhost:0
   player-ranking-renewal:
     request-interval-millis: 0
+  brawlstars-news:
+    request-interval-min-millis: 0
+    request-interval-max-millis: 0

@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "tag": "#88J8Q9RPV",
+      "name": "Player",
+      "nameColor": null,
+      "icon": {
+        "id": 28000000
+      },
+      "trophies": 30000,
+      "rank": 1,
+      "club": {
+        "name": "Club"
+      }
+    }
+  ],
+  "paging": {
+    "cursors": {}
+  }
+}

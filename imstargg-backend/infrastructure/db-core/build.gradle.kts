@@ -6,6 +6,7 @@ allOpen {
 
 dependencies {
     implementation(project(":core:core-enum"))
+    implementation(project(":support:logging"))
 
     // Retry
     implementation("org.springframework.retry:spring-retry")

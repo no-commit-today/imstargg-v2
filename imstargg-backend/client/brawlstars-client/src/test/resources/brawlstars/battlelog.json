@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "battleTime": "20261102T010203.000Z",
+      "event": {
+        "id": 15000007,
+        "mode": "gemGrab",
+        "modeId": 0,
+        "map": "Hard Rock Mine"
+      },
+      "battle": {
+        "mode": "gemGrab",
+        "type": "ranked",
+        "result": "victory",
+        "duration": 120,
+        "trophyChange": 8,
+        "starPlayer": {
+          "tag": "#88J8Q9RPV",
+          "name": "Player",
+          "brawler": {
+            "id": 16000000,
+            "name": "SHELLY",
+            "power": 11,
+            "trophies": 500
+          }
+        },
+        "teams": [
+          [
+            {
+              "tag": "#88J8Q9RPV",
+              "name": "Player",
+              "brawler": {
+                "id": 16000000,
+                "name": "SHELLY",
+                "power": 11,
+                "trophies": 500
+              }
+            }
+          ],
+          [
+            {
+              "tag": "#2U8CVLQQ9",
+              "name": "Opponent",
+              "brawler": {
+                "id": 16000001,
+                "name": "COLT",
+                "power": 10,
+                "trophies": 480
+              }
+            }
+          ]
+        ]
+      },
+      "unknownField": 1
+    }
+  ],
+  "paging": {
+    "cursors": {}
+  }
+}

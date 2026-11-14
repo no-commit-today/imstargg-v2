@@ -37,7 +37,7 @@ export function EventHero({ event }: { event: BattleEvent }) {
         <h1 className="mt-1 font-display text-3xl font-bold tracking-[0.02em]">
           {event.mapName}
         </h1>
-        {event.mode && (
+        {event.mode?.resultType && (
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge variant="outline">{RESULT_TYPE_LABEL[event.mode.resultType]}</Badge>
           </div>

@@ -3,7 +3,7 @@ package com.imstargg.core.batch.job.statistics.battlerank
 import com.imstargg.core.batch.domain.statistics.BrawlerBattleRankStatsAggregator
 import com.imstargg.core.batch.job.statistics.BattleStatsConstants
 import com.imstargg.core.batch.support.transaction.JpaBatchTransactionRunner
-import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleRankStatsEntity.Companion.brawlerBattleRankStatsEntity
+import com.imstargg.infrastructure.db.core.statistics.QBrawlerBattleRankStatsBackupEntity.Companion.brawlerBattleRankStatsBackupEntity
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
@@ -18,8 +18,8 @@ class BrawlerBattleRankStatsWriter(
         var totalEntities = 0L
         transactionRunner.run { em, queryFactory ->
             queryFactory
-                .delete(brawlerBattleRankStatsEntity)
-                .where(brawlerBattleRankStatsEntity.battleDate.eq(date))
+                .delete(brawlerBattleRankStatsBackupEntity)
+                .where(brawlerBattleRankStatsBackupEntity.battleDate.eq(date))
                 .execute()
 
             aggregator.flushEntityChunks(BattleStatsConstants.BATCH_SIZE) { batch ->

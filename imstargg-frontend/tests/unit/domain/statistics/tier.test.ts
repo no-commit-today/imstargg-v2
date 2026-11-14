@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STAT_TIERS, TIER_COLOR, parseTier } from "@/domain/statistics/tier";
+import { STAT_TIERS, TIER_COLOR, parseBrawlerTier, parseTier } from "@/domain/statistics/tier";
 
 describe("STAT_TIERS", () => {
   it("S/A/B/C/D 5단계", () => {
@@ -31,5 +31,21 @@ describe("parseTier", () => {
     expect(parseTier("F")).toBe("D");
     expect(parseTier("foo")).toBe("D");
     expect(parseTier(undefined)).toBe("D");
+  });
+});
+
+describe("parseBrawlerTier", () => {
+  it("S~D 는 그 등급이다", () => {
+    expect(parseBrawlerTier("S")).toBe("S");
+    expect(parseBrawlerTier("D")).toBe("D");
+  });
+  it("소문자와 공백을 정규화한다", () => {
+    expect(parseBrawlerTier(" a ")).toBe("A");
+  });
+  it("null·누락·모르는 문자열은 null 이다", () => {
+    expect(parseBrawlerTier(null)).toBeNull();
+    expect(parseBrawlerTier(undefined)).toBeNull();
+    expect(parseBrawlerTier("F")).toBeNull();
+    expect(parseBrawlerTier("")).toBeNull();
   });
 });

@@ -7,8 +7,10 @@ import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerR
 import com.imstargg.infrastructure.db.core.brawlstars.ranking.repository.PlayerRankingJpaRepository
 import com.imstargg.infrastructure.db.core.statistics.battle.StatsPlayerEntity
 import com.imstargg.infrastructure.db.core.statistics.battle.repository.StatsPlayerJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class StatsPlayerSyncFromRankingTask(
@@ -19,7 +21,7 @@ class StatsPlayerSyncFromRankingTask(
     private val brawlerRankingItemJpaRepository: BrawlerRankingItemJpaRepository,
 ) {
     fun sync() {
-        log.info("[{}] 시작", JOB_NAME)
+        log.info { "[$JOB_NAME] 시작" }
         val allTags = latestRankingTags()
         var totalNew = 0
 
@@ -39,7 +41,7 @@ class StatsPlayerSyncFromRankingTask(
             }
         }
 
-        log.info("[{}] 완료 - 대상 태그: {}건, 신규: {}건", JOB_NAME, allTags.size, totalNew)
+        log.info { "[$JOB_NAME] 완료 - 대상 태그: ${allTags.size}건, 신규: ${totalNew}건" }
     }
 
     private fun latestRankingTags(): List<String> {
@@ -70,6 +72,5 @@ class StatsPlayerSyncFromRankingTask(
     companion object {
         private const val JOB_NAME = "statsPlayerSyncFromRankingJob"
         private const val CHUNK_SIZE = 1000
-        private val log = LoggerFactory.getLogger(StatsPlayerSyncFromRankingTask::class.java)
     }
 }

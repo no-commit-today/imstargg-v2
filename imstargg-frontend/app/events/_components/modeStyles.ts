@@ -16,14 +16,36 @@ function pickFg(hex: string): string {
   return luminance > 0.6 ? "#14161B" : "#FFFFFF";
 }
 
-/** 색이 없는 이벤트(mode=null 등)의 폴백 회색. 백엔드 DEFAULT_COLOR(#2A2E38)와 일치. */
+/**
+ * 모드(modeId) → 이벤트 카드 배경색. 통계를 모으는 모드만 둔다.
+ * 관리자 화면에서 통계 수집을 켠 모드는 여기에 색을 더한다. 없으면 기본 회색이다.
+ * 아레나(48)는 색이 정해지지 않아 넣지 않았다(기본 회색). 색을 정하면 한 줄 추가한다.
+ */
+const MODE_COLORS: Record<number, string> = {
+  0: "#8F43EA", // 젬그랩
+  2: "#C763CD", // 하이스트
+  3: "#FFC60A", // 바운티
+  5: "#909FDB", // 브롤볼
+  17: "#FF8A1F", // 핫존
+  20: "#E8893A", // 녹아웃
+  22: "#62C1F4", // 농구
+  45: "#D2D2FB", // 하키
+  6: "#95D449", // 솔로 쇼다운
+  9: "#95D449", // 듀오 쇼다운
+  38: "#95D449", // 트리오 쇼다운
+};
+
+/** 색이 정해지지 않은 모드(mode=null, 통계 미지원 모드 등)의 폴백 회색. */
 const DEFAULT_STYLE: ModeStyle = { bg: "#2A2E38", fg: "#FFFFFF" };
 
 /**
- * 백엔드가 제공하는 모드 색(`mode.color`)으로 카드 배경/텍스트 스타일을 만든다.
- * 색 데이터의 단일 출처는 백엔드(`battle_event_mode.color`)이며, 여기서는 명도로 텍스트색만 보강한다.
+ * 모드 id(`mode.id`)로 카드 배경/텍스트 스타일을 만든다. 배경색은 `MODE_COLORS` 에서 찾고,
+ * 명도로 텍스트색만 보강한다.
+ * 젬그랩의 modeId 는 0 이므로 존재 검사에 truthiness 를 쓰지 않는다.
  */
-export function getModeStyle(color: string | null | undefined): ModeStyle {
-  if (!color) return DEFAULT_STYLE;
+export function getModeStyle(modeId: number | null | undefined): ModeStyle {
+  if (modeId == null) return DEFAULT_STYLE;
+  const color: string | undefined = MODE_COLORS[modeId];
+  if (color === undefined) return DEFAULT_STYLE;
   return { bg: color, fg: pickFg(color) };
 }

@@ -6,7 +6,7 @@ const baseDto: BattleResponse = {
   battleTime: "2026-04-29T11:00:00Z",
   event: {
     id: 1,
-    mode: { id: 10, name: { ko: "젬 그랩", en: "Gem Grab" }, iconImageUrl: "x.png", resultType: "RESULT", color: "#8F43EA" },
+    mode: { id: 10, name: { ko: "젬 그랩", en: "Gem Grab" }, iconImageUrl: "x.png", resultType: "RESULT" },
     mapName: { ko: "다이아몬드 광산", en: "Diamond Mine" },
   },
   mode: "GEM_GRAB",
@@ -44,7 +44,6 @@ describe("toBattle", () => {
     expect(sut.event?.mapName).toBe("다이아몬드 광산");
     expect(sut.event?.modeName).toBe("젬 그랩");
     expect(sut.event?.modeIconUrl).toBe("x.png");
-    expect(sut.event?.modeResultType).toBe("RESULT");
   });
 
   it("event 가 null 이면 event=null", () => {
@@ -52,14 +51,13 @@ describe("toBattle", () => {
     expect(sut.event).toBeNull();
   });
 
-  it("event.mode 가 null 이면 modeName/modeIconUrl/modeResultType 모두 null", () => {
+  it("event.mode 가 null 이면 modeName/modeIconUrl 모두 null", () => {
     const sut = toBattle({
       ...baseDto,
       event: { id: 1, mode: null, mapName: { ko: "맵", en: "Map" } },
     });
     expect(sut.event?.modeName).toBeNull();
     expect(sut.event?.modeIconUrl).toBeNull();
-    expect(sut.event?.modeResultType).toBeNull();
     expect(sut.event?.mapName).toBe("맵");
   });
 

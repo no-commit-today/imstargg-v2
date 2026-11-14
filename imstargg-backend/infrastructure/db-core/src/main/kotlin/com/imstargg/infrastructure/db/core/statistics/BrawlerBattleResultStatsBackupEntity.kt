@@ -1,0 +1,89 @@
+package com.imstargg.infrastructure.db.core.statistics
+
+import com.imstargg.core.enums.StatsTierRange
+import com.imstargg.infrastructure.db.core.BaseTimeEntity
+import jakarta.persistence.Column
+import jakarta.persistence.Embedded
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.SequenceGenerator
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
+import java.time.LocalDate
+
+/**
+ * 패치 기준 통계로 전환하는 동안 남겨 두는 옛 통계다. 2단계에서 지운다.
+ *
+ * 결과형(승/패/무) 배틀 통계의 브롤러 단위 집계.
+ *
+ * ## 집계 단위
+ * 브롤러 × 이벤트 × 티어 구간 × 날짜.
+ *
+ * ## 집계 범위
+ * 한 배틀의 **양 팀 모든 슬롯**이 카운트된다 — 자기 팀은 본래 결과로, 적군 팀은 반대 결과로.
+ * 3v3 의 경우 한 게임당 6 슬롯이 다수 row 에 분산 기록된다.
+ *
+ * ## 게임 수 도출
+ * 결과형 지원 모드는 모두 2×3 이라 게임 수 = 슬롯 합 ÷ `StatsEventModeType.RESULT_SLOTS_PER_GAME` 이다:
+ *
+ *     slotSum   = Σ totalCount over brawlers
+ *     gameCount = slotSum / StatsEventModeType.RESULT_SLOTS_PER_GAME
+ *
+ * 픽률 (= 브롤러 슬롯 수 / 게임 수) 계산이 이 관계에 의존한다.
+ * `BrawlerBattleRankStatsBackupEntity` 와의 결정적 차이는 이 엔티티가 양 팀을 모두 집계한다는 점이다.
+ */
+@Entity
+@Table(
+    name = "brawler_battle_result_stats_backup",
+    indexes = [
+        Index(
+            name = "ix_brawler_battle_result_stats_backup_1",
+            columnList = "event_brawlstars_id, tier_range, battle_date",
+        ),
+        Index(
+            name = "ix_brawler_battle_result_stats_backup_2",
+            columnList = "brawler_brawlstars_id, tier_range, battle_date",
+        ),
+    ],
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_brawler_battle_result_stats_backup__1",
+            columnNames = [
+                "event_brawlstars_id",
+                "tier_range",
+                "battle_date",
+                "brawler_brawlstars_id",
+            ],
+        ),
+    ],
+)
+class BrawlerBattleResultStatsBackupEntity(
+    @Column(name = "event_brawlstars_id", updatable = false, nullable = false)
+    val eventBrawlStarsId: Long,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tier_range", columnDefinition = "varchar(45)", updatable = false, nullable = false)
+    val tierRange: StatsTierRange,
+    @Column(name = "battle_date", updatable = false, nullable = false)
+    val battleDate: LocalDate,
+    @Column(name = "brawler_brawlstars_id", updatable = false, nullable = false)
+    val brawlerBrawlStarsId: Long,
+    @Embedded
+    val resultCount: ResultCountEmbedded,
+    @Column(name = "star_player_count", updatable = false, nullable = false)
+    val starPlayerCount: Long,
+) : BaseTimeEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "brawlerBattleResultStatsBackupSeq")
+    @SequenceGenerator(
+        name = "brawlerBattleResultStatsBackupSeq",
+        sequenceName = "brawler_battle_result_stats_backup_seq",
+        allocationSize = 100,
+    )
+    @Column(name = "brawler_battle_result_stats_id", nullable = false)
+    val id: Long? = null
+}

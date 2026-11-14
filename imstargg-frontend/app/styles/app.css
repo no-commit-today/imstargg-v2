@@ -363,13 +363,6 @@ img { display: block; max-width: 100%; }
 .data-row[data-rail="gold"]    { --row-rail: var(--tier-gold); }
 .data-row[data-rail="silver"]  { --row-rail: var(--tier-silver); }
 .data-row[data-rail="bronze"]  { --row-rail: var(--tier-bronze); }
-.data-row[data-selected="true"] {
-  --row-rail: var(--color-brand-yellow);
-  background: rgba(255, 224, 130, 0.4);
-}
-.data-row[data-selected="true"]:hover {
-  background: rgba(255, 224, 130, 0.55);
-}
 
 /* ===== Section title ===== */
 .section-title {

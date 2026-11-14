@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { eventApi } from "@/api/endpoints/event";
 import { CACHE_SECONDS } from "@/config/cache";
 import { toBattleEvent } from "@/domain/event/mappers";
+import { eventMetadataDescription } from "@/domain/event/metadata";
 import { NotFoundError } from "@/api/errors";
 import { buildMetadata } from "@/lib/seo";
 import { EventContent } from "./_components/EventContent";
@@ -31,10 +32,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const dto = await eventApi.get(id, { next: { revalidate: CACHE_SECONDS.SHORT } });
     const event = toBattleEvent(dto);
     const modeName = event.mode?.name ?? "이벤트";
-    const resultLabel = event.mode?.resultType === "RANK" ? "순위형" : "결과형";
     return buildMetadata({
       title: `${event.mapName} (${modeName}) | ImStarGG`,
-      description: `모드: ${modeName} · 결과 타입: ${resultLabel}`,
+      description: eventMetadataDescription(event),
       path: `/events/${id}`,
       image: event.mode?.iconImageUrl ?? undefined,
     });

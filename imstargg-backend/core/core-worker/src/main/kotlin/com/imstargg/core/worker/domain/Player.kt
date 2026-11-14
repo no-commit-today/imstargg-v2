@@ -1,6 +1,7 @@
 package com.imstargg.core.worker.domain
 
 import com.imstargg.client.brawlstars.response.BrawlerStatResponse
+import com.imstargg.client.brawlstars.response.PlayerClubResponse
 import com.imstargg.client.brawlstars.response.PlayerResponse
 import com.imstargg.core.enums.BuffyType
 import com.imstargg.infrastructure.db.core.brawlstars.player.PlayerBrawlerBuffyEntity
@@ -51,7 +52,7 @@ class Player(
             bestRoboRumbleTime = response.bestRoboRumbleTime,
             bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
             totalPrestigeLevel = response.totalPrestigeLevel,
-            club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
+            club = response.club.toEntityClub(),
         )
 
         val existingBrawlers = _brawlers.associateBy { it.brawlerBrawlStarsId }
@@ -163,8 +164,16 @@ class Player(
                         bestRoboRumbleTime = response.bestRoboRumbleTime,
                         bestTimeAsBigBrawler = response.bestTimeAsBigBrawler,
                         totalPrestigeLevel = response.totalPrestigeLevel,
-                        club = response.club?.let { PlayerEntityClub(it.tag, it.name) },
+                        club = response.club.toEntityClub(),
                     ),
             )
     }
+}
+
+// 클럽이 없는 플레이어는 API 가 "club": {} 로 내려준다 — tag·name 이 없는 club 객체는 클럽 없음으로 다룬다
+private fun PlayerClubResponse?.toEntityClub(): PlayerEntityClub? {
+    if (this == null) return null
+    val tag = tag ?: return null
+    val name = name ?: return null
+    return PlayerEntityClub(tag, name)
 }

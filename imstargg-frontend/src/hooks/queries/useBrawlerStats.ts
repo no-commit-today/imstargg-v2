@@ -13,11 +13,13 @@ import {
   toDailyResultStat,
   toEnemyResultStat,
   toPairResultStat,
+  toTrioResultStat,
 } from "@/domain/statistics/mappers";
 import type {
   DailyResultStat,
   EnemyResultStat,
   PairResultStat,
+  TrioResultStat,
 } from "@/domain/statistics/types";
 import { queryKeys } from "@/hooks/queries/queryKeys";
 
@@ -38,6 +40,7 @@ export function isDefaultStatsFilter(filter: StatsFilter): boolean {
 export interface BrawlerStatsInitial {
   daily: DailyResultStat[];
   pair: PairResultStat[];
+  trio: TrioResultStat[];
   enemy: EnemyResultStat[];
 }
 
@@ -67,6 +70,13 @@ export function useBrawlerStats(
     initialData: useInitial?.pair,
     ...common,
   });
+  const trio = useQuery({
+    queryKey: queryKeys.statistics.trioResult(params),
+    queryFn: ({ signal }) =>
+      statisticsApi.trioResult(params, { signal }).then((r) => r.content.map(toTrioResultStat)),
+    initialData: useInitial?.trio,
+    ...common,
+  });
   const enemy = useQuery({
     queryKey: queryKeys.statistics.enemyResult(params),
     queryFn: ({ signal }) =>
@@ -77,5 +87,5 @@ export function useBrawlerStats(
     ...common,
   });
 
-  return { daily, pair, enemy };
+  return { daily, pair, trio, enemy };
 }

@@ -3,7 +3,6 @@ package com.imstargg.core.admin.application
 import com.imstargg.core.admin.config.CloudFrontProperties
 import com.imstargg.core.admin.request.BattleEventCreateRequest
 import com.imstargg.core.admin.request.BattleEventModeCreateRequest
-import com.imstargg.core.admin.request.BattleEventModeUpdateRequest
 import com.imstargg.core.admin.response.BattleEventModeResponse
 import com.imstargg.core.admin.response.BattleEventResponse
 import com.imstargg.core.enums.Language
@@ -68,9 +67,6 @@ class BattleEventService(
                 brawlStarsName = mode.brawlStarsName,
                 names = toNameMap(messagesByBrawlStarsId[mode.brawlStarsId]),
                 iconImageUrl = imagesByBrawlStarsId[mode.brawlStarsId]?.let { "${cloudFrontProperties.baseUrl}/${it.storedName}" },
-                resultType = mode.resultType,
-                playerCounts = mode.playerCounts,
-                color = mode.color,
             )
         }
     }
@@ -81,35 +77,9 @@ class BattleEventService(
             BattleEventModeEntity(
                 brawlStarsId = request.brawlStarsId,
                 brawlStarsName = request.brawlStarsName,
-                resultType = request.resultType,
-                playerCounts = request.playerCounts,
-                color = request.color,
             ),
         )
         doUpdateMessages(MessageType.BATTLE_EVENT_MODE_NAME, request.brawlStarsId, request.names)
-    }
-
-    @Transactional
-    fun updateMode(
-        brawlStarsId: Long,
-        request: BattleEventModeUpdateRequest,
-    ) {
-        val entity =
-            battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
-                ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
-        entity.updateResultType(request.resultType)
-        entity.updatePlayerCounts(request.playerCounts)
-    }
-
-    @Transactional
-    fun updateModeColor(
-        brawlStarsId: Long,
-        color: String,
-    ) {
-        val entity =
-            battleEventModeJpaRepository.findByBrawlStarsId(brawlStarsId)
-                ?: throw IllegalArgumentException("BattleEventMode not found: $brawlStarsId")
-        entity.updateColor(color.ifBlank { BattleEventModeEntity.DEFAULT_COLOR })
     }
 
     @Transactional

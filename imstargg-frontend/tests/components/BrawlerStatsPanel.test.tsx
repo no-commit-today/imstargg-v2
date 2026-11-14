@@ -38,8 +38,17 @@ const colt: Brawler = { id: 16000002, name: "콜트", rarity: "EPIC", role: "TAN
 const initial = {
   daily: [],
   pair: [
-    { brawler: self, pairBrawler: shelly, battleCount: 100, pickRate: 0.1, winRate: 0.55 },
+    {
+      brawler: self,
+      pairBrawler: shelly,
+      battleCount: 100,
+      pickRate: 0.1,
+      winRate: 0.55,
+      tierScore: 55,
+      tier: "S" as const,
+    },
   ],
+  trio: [],
   enemy: [],
 };
 
@@ -47,6 +56,11 @@ describe("BrawlerStatsPanel", () => {
   it("서버 initial 데이터를 즉시 렌더한다 (조합 브롤러명 노출)", async () => {
     renderWithProviders(<BrawlerStatsPanel brawlerId={16000000} initial={initial} />);
     expect(await screen.findByText("쉘리")).toBeInTheDocument();
+  });
+
+  it("3인 조합 제목이 보인다", async () => {
+    renderWithProviders(<BrawlerStatsPanel brawlerId={16000000} initial={initial} />);
+    expect(await screen.findByRole("heading", { name: "3인 조합" })).toBeInTheDocument();
   });
 
   it("티어 필터 변경 시 해당 필터로 통계를 다시 가져오고 URL 을 갱신한다", async () => {
@@ -65,10 +79,13 @@ describe("BrawlerStatsPanel", () => {
               battleCount: 42,
               pickRate: 0.1,
               winRate: 0.61,
+              tierScore: 61,
+              tier: "S",
             },
           ],
         });
       }),
+      http.get("*/v1/statistics/brawler/trio/result", () => HttpResponse.json({ content: [] })),
       http.get("*/v1/statistics/brawler/enemy/result", () => HttpResponse.json({ content: [] })),
     );
 

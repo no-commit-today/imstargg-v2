@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface BattleEventRotationItemJpaRepository : JpaRepository<BattleEventRotationItemEntity, Long> {
     fun findAllByBattleEventRotation(battleEventRotation: BattleEventRotationEntity): List<BattleEventRotationItemEntity>
+
+    fun findAllByBattleEventRotationIn(rotations: Collection<BattleEventRotationEntity>): List<BattleEventRotationItemEntity>
 }

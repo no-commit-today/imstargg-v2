@@ -211,6 +211,97 @@ class BattleEventSyncItemWriterTest(
         assertThat(alert.captured.title).contains("배틀 이벤트 불일치")
     }
 
+    @Test
+    fun `같은 청크에 같은 미등록 이벤트의 전투가 여러 번 있어도 한 번만 경고한다`() {
+        // when
+        sut.write(
+            Chunk(
+                listOf(
+                    soloRankBattle(battleKey = "battle-1"),
+                    soloRankBattle(battleKey = "battle-2"),
+                    soloRankBattle(battleKey = "battle-3"),
+                ),
+            ),
+        )
+
+        // then
+        verify(exactly = 1) { alertManager.alert(any()) }
+    }
+
+    @Test
+    fun `같은 청크에 미등록 이벤트가 둘이면 이벤트마다 한 번씩 경고한다`() {
+        // when
+        sut.write(
+            Chunk(
+                listOf(
+                    soloRankBattle(battleKey = "battle-1"),
+                    soloRankBattle(battleKey = "battle-2"),
+                    soloRankBattle(battleKey = "battle-3", eventBrawlStarsId = OTHER_EVENT_ID),
+                ),
+            ),
+        )
+
+        // then
+        val alerts = mutableListOf<AlertCommand>()
+        verify(exactly = 2) { alertManager.alert(capture(alerts)) }
+        assertThat(alerts.map { it.content })
+            .anySatisfy { assertThat(it).contains("eventBrawlStarsId=$EVENT_ID,") }
+            .anySatisfy { assertThat(it).contains("eventBrawlStarsId=$OTHER_EVENT_ID,") }
+    }
+
+    @Test
+    fun `같은 청크에 같은 이벤트의 불일치 전투가 여러 번 있어도 한 번만 경고한다`() {
+        // given
+        battleEventJpaRepository.save(
+            aBattleEventEntity()
+                .withBrawlStarsId(EVENT_ID)
+                .withMode(null)
+                .withMapBrawlStarsName(MAP_NAME)
+                .build(),
+        )
+
+        // when
+        sut.write(
+            Chunk(
+                listOf(
+                    soloRankBattle(battleKey = "battle-1", eventMap = "Another Map"),
+                    soloRankBattle(battleKey = "battle-2", eventMap = "Another Map"),
+                ),
+            ),
+        )
+
+        // then
+        verify(exactly = 1) { alertManager.alert(any()) }
+    }
+
+    @Test
+    fun `같은 청크에서 앞 전투가 일치해도 뒤 전투가 다르면 불일치를 경고한다`() {
+        // given
+        battleEventJpaRepository.save(
+            aBattleEventEntity()
+                .withBrawlStarsId(EVENT_ID)
+                .withMode(null)
+                .withMapBrawlStarsName(MAP_NAME)
+                .build(),
+        )
+
+        // when
+        sut.write(
+            Chunk(
+                listOf(
+                    soloRankBattle(battleKey = "battle-1"),
+                    soloRankBattle(battleKey = "battle-2", eventMap = "Another Map"),
+                ),
+            ),
+        )
+
+        // then
+        val alert = slot<AlertCommand>()
+        verify(exactly = 1) { alertManager.alert(capture(alert)) }
+        assertThat(alert.captured.title).contains("배틀 이벤트 불일치")
+        assertThat(alert.captured.content).contains("map=Another Map")
+    }
+
     /** 모드·맵이 배틀과 일치해 불일치 경고가 나가지 않는 이벤트를 등록한다. */
     private fun saveRegisteredEvent(eventBrawlStarsId: Long) {
         val mode = battleEventModeJpaRepository.save(aBattleEventModeEntity().withBrawlStarsId(MODE_ID).build())
@@ -225,6 +316,7 @@ class BattleEventSyncItemWriterTest(
 
     private fun soloRankBattle(
         battleKey: String,
+        eventBrawlStarsId: Long = EVENT_ID,
         battleAt: Instant = BATTLE_AT_SEASON_2_1,
         type: String = BattleType.SOLO_RANKED.code,
         eventMap: String = MAP_NAME,
@@ -234,7 +326,7 @@ class BattleEventSyncItemWriterTest(
         return StatsRankBattleEntity(
             battleKey = battleKey,
             battleAt = battleAt,
-            eventBrawlStarsId = EVENT_ID,
+            eventBrawlStarsId = eventBrawlStarsId,
             eventModeBrawlStarsId = eventModeBrawlStarsId,
             eventMap = eventMap,
             mode = "gemGrab",
@@ -262,6 +354,7 @@ class BattleEventSyncItemWriterTest(
 
     companion object {
         private const val EVENT_ID = 15_000_001L
+        private const val OTHER_EVENT_ID = 15_000_002L
         private const val MODE_ID = 1L
         private const val MAP_NAME = "Hard Rock Mine"
         private const val SEASON_2_1 = "2-1"

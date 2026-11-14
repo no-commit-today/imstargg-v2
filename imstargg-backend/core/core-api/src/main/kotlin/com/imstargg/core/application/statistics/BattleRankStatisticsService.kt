@@ -1,7 +1,6 @@
 package com.imstargg.core.application.statistics
 
 import com.imstargg.core.domain.brawlstars.BrawlStarsId
-import com.imstargg.core.domain.statistics.BrawlerPairRankStatistics
 import com.imstargg.core.domain.statistics.BrawlerRankStatistics
 import com.imstargg.core.enums.StatsDateRange
 import com.imstargg.core.enums.StatsTierRange
@@ -21,24 +20,6 @@ class BattleRankStatisticsService(
         val (startDate, endDate) = dateRange.dateRange(clock)
         return rankRepository.findBrawlerRankStatistics(
             eventId = eventId,
-            tierRange = tierRange,
-            startDate = startDate,
-            endDate = endDate,
-        )
-    }
-
-    fun getBrawlerPairRankStatistics(
-        eventId: BrawlStarsId,
-        brawlerId: BrawlStarsId,
-        pairBrawlerId: BrawlStarsId?,
-        tierRange: StatsTierRange,
-        dateRange: StatsDateRange,
-    ): BrawlerPairRankStatistics {
-        val (startDate, endDate) = dateRange.dateRange(clock)
-        return rankRepository.findBrawlerPairRankStatistics(
-            eventId = eventId,
-            brawlerId = brawlerId,
-            pairBrawlerId = pairBrawlerId,
             tierRange = tierRange,
             startDate = startDate,
             endDate = endDate,

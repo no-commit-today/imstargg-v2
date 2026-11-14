@@ -1,20 +1,20 @@
 package com.imstargg.core.worker.application.club
 
 import com.imstargg.infrastructure.db.core.brawlstars.player.repository.ClubJpaRepository
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class ClubDeactivator(
     private val clubRepository: ClubJpaRepository,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     @Transactional
     fun deactivate(brawlStarsTag: String) {
         val club = clubRepository.findByBrawlStarsTag(brawlStarsTag)
         club?.toDeleted()
-        log.info("[클럽 비활성화] tag={}", brawlStarsTag)
+        log.info { "[클럽 비활성화] tag=$brawlStarsTag" }
     }
 }

@@ -1,7 +1,7 @@
 package com.imstargg.core.batch.job
 
 import com.imstargg.core.batch.support.parameter.DateJobParameter
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -16,14 +16,18 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import java.sql.Date
 
+private val log = KotlinLogging.logger {}
+
+/**
+ * 원본 전투의 일 파티션을 만들고 지운다.
+ * 조합 통계의 월 파티션은 패치 기준 통계 1단계부터 관리하지 않는다(새 테이블은 파티션이 없다).
+ */
 @Configuration
 class PartitionManageJobConfig(
     private val jobRepository: JobRepository,
     private val txManager: PlatformTransactionManager,
     private val jdbcTemplate: JdbcTemplate,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     companion object {
         const val JOB_NAME = "partitionManageJob"
         const val DATE_PARAMETER_NAME = "partitionManageJobDateJobParameter"
@@ -36,8 +40,8 @@ class PartitionManageJobConfig(
          * 주간 통계 잡의 최대 룩백([com.imstargg.core.enums.StatsWeekRange.currentAndPrevious] 기준
          * 최대 7일 + 실행일 보정 1일)을 커버해야 한다 — 가드: PartitionRetentionLookbackTest
          *
-         * 45 는 패치 기준 통계 재설계(새 집계 구조) 가동 전까지 원본을 보존하기 위한 임시값이다(기존 10).
-         * 새 집계 구조가 가동되면 다시 줄인다.
+         * 45 는 패치일 등록 기한(30일)보다 길어야 하는 값이다. 범위 맞추기가 등록 기한 안의 날짜를
+         * 원본에서 다시 읽으므로 보관이 그보다 짧으면 통계가 불완전해진다 — 가드: PartitionRetentionLookbackTest
          */
         const val RETENTION_DAYS = 45
     }
@@ -64,14 +68,14 @@ class PartitionManageJobConfig(
         StepBuilder(CREATE_STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
                 val date = dateJobParameter().date!!
-                log.info("파티션 생성 시작. date={}, daysAhead={}", date, DAYS_AHEAD)
+                log.info { "파티션 생성 시작. date=$date, daysAhead=$DAYS_AHEAD" }
                 jdbcTemplate.queryForObject(
                     "SELECT create_partitions(?, ?)",
                     Any::class.java,
                     Date.valueOf(date),
                     DAYS_AHEAD,
                 )
-                log.info("파티션 생성 완료")
+                log.info { "파티션 생성 완료" }
                 RepeatStatus.FINISHED
             }, txManager)
             .build()
@@ -82,14 +86,14 @@ class PartitionManageJobConfig(
         StepBuilder(DROP_STEP_NAME, jobRepository)
             .tasklet({ _, _ ->
                 val date = dateJobParameter().date!!
-                log.info("오래된 파티션 삭제 시작. date={}, retentionDays={}", date, RETENTION_DAYS)
+                log.info { "오래된 파티션 삭제 시작. date=$date, retentionDays=$RETENTION_DAYS" }
                 jdbcTemplate.queryForObject(
                     "SELECT drop_old_partitions(?, ?)",
                     Any::class.java,
                     Date.valueOf(date),
                     RETENTION_DAYS,
                 )
-                log.info("오래된 파티션 삭제 완료")
+                log.info { "오래된 파티션 삭제 완료" }
                 RepeatStatus.FINISHED
             }, txManager)
             .build()
